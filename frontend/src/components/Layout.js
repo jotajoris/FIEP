@@ -37,6 +37,11 @@ const Layout = ({ children }) => {
                   </Link>
                 </li>
                 <li>
+                  <Link to="/resumo-completo" className={`nav-link ${isActive('/resumo-completo')}`} data-testid="nav-resumo-completo">
+                    Resumo Completo
+                  </Link>
+                </li>
+                <li>
                   <Link to="/admin" className={`nav-link ${isActive('/admin')}`} data-testid="nav-admin">
                     Admin
                   </Link>
