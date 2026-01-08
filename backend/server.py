@@ -143,7 +143,8 @@ class POItem(BaseModel):
     preco_compra: Optional[float] = None
     preco_venda: Optional[float] = None
     imposto: Optional[float] = None
-    custo_frete: Optional[float] = None
+    frete_compra: Optional[float] = None
+    frete_envio: Optional[float] = None
     lucro_liquido: Optional[float] = None
     data_cotacao: Optional[datetime] = None
     data_compra: Optional[datetime] = None
