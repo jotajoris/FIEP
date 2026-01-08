@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import CreatePO from './pages/CreatePO';
 import PODetails from './pages/PODetails';
 import AdminPanel from './pages/AdminPanel';
+import AllItemsSummary from './pages/AllItemsSummary';
 import OwnerPanel from './pages/OwnerPanel';
 import Login from './pages/Login';
 import ChangePassword from './pages/ChangePassword';
