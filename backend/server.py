@@ -695,6 +695,45 @@ async def delete_purchase_order(po_id: str, current_user: dict = Depends(require
     
     return {"message": "Ordem de Compra deletada com sucesso"}
 
+@api_router.put("/purchase-orders/{po_id}")
+async def update_purchase_order(po_id: str, po_update: PurchaseOrderCreate, current_user: dict = Depends(require_admin)):
+    """Atualizar uma OC (ADMIN ONLY)"""
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    # Processar itens
+    processed_items = []
+    for item in po_update.items:
+        ref_item = await db.reference_items.find_one(
+            {"codigo_item": item.codigo_item},
+            {"_id": 0}
+        )
+        
+        if ref_item:
+            item.responsavel = ref_item['responsavel']
+            item.lote = ref_item['lote']
+            item.lot_number = ref_item['lot_number']
+            item.regiao = ref_item['regiao']
+            if not item.descricao:
+                item.descricao = ref_item['descricao']
+            if not item.marca_modelo:
+                item.marca_modelo = ref_item['marca_modelo']
+        
+        processed_items.append(item)
+    
+    # Atualizar
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {
+            "numero_oc": po_update.numero_oc,
+            "items": [item.model_dump() for item in processed_items]
+        }}
+    )
+    
+    return {"message": "Ordem de Compra atualizada com sucesso"}
+
 @api_router.patch("/purchase-orders/{po_id}/items/{codigo_item}")
 async def update_item_status(po_id: str, codigo_item: str, update: ItemStatusUpdate, current_user: dict = Depends(get_current_user)):
     """Atualizar status de um item"""
