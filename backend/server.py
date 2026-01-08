@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File
 from fastapi.security import HTTPBearer
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -14,6 +14,8 @@ from datetime import datetime, timezone, timedelta
 from enum import Enum
 import openpyxl
 import resend
+import fitz  # PyMuPDF
+import re
 from auth import (
     verify_password, get_password_hash, create_access_token,
     get_current_user, require_admin
