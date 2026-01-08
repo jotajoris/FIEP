@@ -310,6 +310,22 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                                             if unit_line in ['UN', 'UND', 'UNID', 'KG', 'PC', 'M', 'L', 'CX', 'PAR', 'PCT', 'KIT']:
                                                 quantidade = qty
                                                 unidade = 'UN' if unit_line in ['UND', 'UNID'] else unit_line
+                                                
+                                                # EXTRAIR PREÇO: Após a unidade vem o preço unitário (formato: 518,95)
+                                                # Estrutura: QTD -> UN -> PREÇO_UNITARIO -> TOTAL
+                                                preco_pdf = None
+                                                if j+2 < len(lines):
+                                                    preco_line = lines[j+2].strip()
+                                                    # Preço no formato brasileiro: 518,95 ou 1.234,56
+                                                    preco_match = re.match(r'^(\d{1,3}(?:\.\d{3})*,\d{2})$', preco_line)
+                                                    if preco_match:
+                                                        # Converter formato BR para float
+                                                        preco_str = preco_match.group(1).replace('.', '').replace(',', '.')
+                                                        try:
+                                                            preco_pdf = float(preco_str)
+                                                        except:
+                                                            pass
+                                                
                                                 break
                                 
                                 if quantidade > 0:
@@ -317,14 +333,18 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                                     if key not in seen_items:
                                         seen_items.add(key)
                                         descricao = ' '.join(descricao_parts[:6]) if descricao_parts else f"Item {codigo}"
-                                        items.append({
+                                        item_data = {
                                             "codigo_item": codigo,
                                             "quantidade": quantidade,
                                             "descricao": descricao[:250],
                                             "unidade": unidade,
                                             "endereco_entrega": endereco_entrega,
                                             "regiao": regiao
-                                        })
+                                        }
+                                        # Adicionar preço extraído do PDF se encontrado
+                                        if 'preco_pdf' in dir() and preco_pdf is not None:
+                                            item_data["preco_venda_pdf"] = preco_pdf
+                                        items.append(item_data)
                         except ValueError:
                             pass
         
