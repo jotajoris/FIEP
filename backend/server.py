@@ -265,13 +265,15 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
         seen_items = set()
         lines = full_text.split('\n')
         
-        # Método 1: Buscar por padrão LINHA_NUM -> CÓDIGO_6_DIGITOS -> QUANTIDADE -> UNIDADE
+        # Códigos de produto FIEP começam com 0 ou 1 (ex: 089847, 114720)
+        # Códigos NCM começam com 8 ou 9 (ex: 853890, 903180) - ignorar
+        
         for i, line in enumerate(lines):
-            line = line.strip()
+            line_stripped = line.strip()
             
-            # Procurar código de 6 dígitos
-            if re.match(r'^(\d{6})$', line):
-                codigo = line
+            # Procurar código de 6 dígitos que começa com 0 ou 1
+            if re.match(r'^([01]\d{5})$', line_stripped):
+                codigo = line_stripped
                 
                 # Verificar se linha anterior é número de linha (1-50)
                 if i > 0:
@@ -280,45 +282,45 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                         try:
                             linha_num = int(prev)
                             if 1 <= linha_num <= 100:
-                                # Procurar quantidade nas próximas 15 linhas
+                                # Procurar quantidade nas próximas linhas
                                 quantidade = 0
                                 unidade = "UN"
                                 descricao_parts = []
                                 
-                                for j in range(i+1, min(i+18, len(lines))):
+                                for j in range(i+1, min(i+25, len(lines))):
                                     check_line = lines[j].strip()
                                     
-                                    # Se encontrar outro código, parar
-                                    if re.match(r'^(\d{6})$', check_line):
+                                    # Se encontrar outro código de produto, parar
+                                    if re.match(r'^([01]\d{5})$', check_line):
                                         break
                                     
-                                    # Coletar descrição
-                                    if len(check_line) > 3 and not re.match(r'^[\d.,]+$', check_line):
-                                        if check_line not in ['UN', 'UND', 'UNID', 'KG', 'PC', 'M', 'L', 'CX', 'PAR']:
+                                    # Coletar descrição (até encontrar quantidade)
+                                    if len(check_line) > 2 and not re.match(r'^[\d.,]+$', check_line):
+                                        if check_line not in ['UN', 'UND', 'UNID', 'KG', 'PC', 'M', 'L', 'CX', 'PAR', 'KIT']:
                                             if 'Descritivo Completo' not in check_line and 'CFOP' not in check_line:
                                                 descricao_parts.append(check_line)
                                     
-                                    # Procurar quantidade (número isolado)
+                                    # Procurar quantidade (número isolado seguido de unidade)
                                     qty_match = re.match(r'^(\d+)$', check_line)
                                     if qty_match and quantidade == 0:
                                         qty = int(qty_match.group(1))
                                         # Verificar se próxima linha é unidade
                                         if j+1 < len(lines):
                                             unit_line = lines[j+1].strip().upper()
-                                            if unit_line in ['UN', 'UND', 'UNID', 'KG', 'PC', 'M', 'L', 'CX', 'PAR', 'PCT']:
+                                            if unit_line in ['UN', 'UND', 'UNID', 'KG', 'PC', 'M', 'L', 'CX', 'PAR', 'PCT', 'KIT']:
                                                 quantidade = qty
-                                                unidade = unit_line if unit_line != 'UND' else 'UN'
+                                                unidade = 'UN' if unit_line in ['UND', 'UNID'] else unit_line
                                                 break
                                 
                                 if quantidade > 0:
                                     key = f"{linha_num}-{codigo}"
                                     if key not in seen_items:
                                         seen_items.add(key)
-                                        descricao = ' '.join(descricao_parts[:5]) if descricao_parts else f"Item {codigo}"
+                                        descricao = ' '.join(descricao_parts[:6]) if descricao_parts else f"Item {codigo}"
                                         items.append({
                                             "codigo_item": codigo,
                                             "quantidade": quantidade,
-                                            "descricao": descricao[:200],
+                                            "descricao": descricao[:250],
                                             "unidade": unidade,
                                             "endereco_entrega": endereco_entrega,
                                             "regiao": regiao
@@ -332,7 +334,8 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
             seen_codes = set()
             
             for i, line in enumerate(lines):
-                codigo_match = re.search(r'\b(\d{6})\b', line)
+                # Procurar códigos que começam com 0 ou 1
+                codigo_match = re.search(r'\b([01]\d{5})\b', line)
                 if codigo_match:
                     codigo = codigo_match.group(1)
                     
@@ -343,13 +346,13 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                     quantidade = 0
                     unidade = "UN"
                     
-                    qty_match = re.search(r'\b(\d+)\s*(UN|UND|UNID|KG|PC|M|L|CX)\b', line, re.IGNORECASE)
+                    qty_match = re.search(r'\b(\d+)\s*(UN|UND|UNID|KG|PC|M|L|CX|KIT)\b', line, re.IGNORECASE)
                     if qty_match:
                         quantidade = int(qty_match.group(1))
                         unidade = qty_match.group(2).upper()
                     else:
-                        for j in range(i+1, min(i+5, len(lines))):
-                            qty_match = re.search(r'\b(\d+)\s*(UN|UND|UNID|KG|PC|M|L|CX)\b', lines[j], re.IGNORECASE)
+                        for j in range(i+1, min(i+8, len(lines))):
+                            qty_match = re.search(r'\b(\d+)\s*(UN|UND|UNID|KG|PC|M|L|CX|KIT)\b', lines[j], re.IGNORECASE)
                             if qty_match:
                                 quantidade = int(qty_match.group(1))
                                 unidade = qty_match.group(2).upper()
