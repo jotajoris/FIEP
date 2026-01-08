@@ -899,14 +899,15 @@ async def update_item_status(po_id: str, codigo_item: str, update: ItemStatusUpd
             
             item['status'] = update.status
             
-            # Todos podem atualizar link de compra
+            # Todos podem atualizar link de compra e preço de compra
             if update.link_compra is not None:
                 item['link_compra'] = update.link_compra
             
-            # Apenas admins podem editar preços
+            if update.preco_compra is not None:
+                item['preco_compra'] = update.preco_compra
+            
+            # Apenas admins podem editar preço de venda, impostos e frete
             if current_user['role'] == 'admin':
-                if update.preco_compra is not None:
-                    item['preco_compra'] = update.preco_compra
                 if update.preco_venda is not None:
                     item['preco_venda'] = update.preco_venda
                 if update.imposto is not None:
@@ -914,7 +915,7 @@ async def update_item_status(po_id: str, codigo_item: str, update: ItemStatusUpd
                 if update.custo_frete is not None:
                     item['custo_frete'] = update.custo_frete
                 
-                # Calcular lucro líquido
+                # Calcular lucro líquido (apenas admins veem)
                 if (item.get('preco_venda') is not None and 
                     item.get('preco_compra') is not None):
                     lucro_bruto = (item['preco_venda'] - item['preco_compra']) * item['quantidade']
