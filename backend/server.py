@@ -793,6 +793,11 @@ async def upload_pdf_purchase_order(file: UploadFile = File(...), current_user: 
     if not oc_data["items"]:
         raise HTTPException(status_code=400, detail="Nenhum item encontrado no PDF. Verifique o formato do arquivo.")
     
+    # Verificar se OC já existe
+    existing_po = await db.purchase_orders.find_one({"numero_oc": oc_data["numero_oc"]}, {"_id": 0})
+    if existing_po:
+        raise HTTPException(status_code=409, detail=f"Ordem de Compra {oc_data['numero_oc']} já existe no sistema")
+    
     # Processar itens com dados de referência
     processed_items = []
     items_without_ref = []
