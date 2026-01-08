@@ -719,6 +719,14 @@ async def create_purchase_order(po_create: PurchaseOrderCreate, current_user: di
                 item.descricao = ref_item['descricao']
             if not item.marca_modelo:
                 item.marca_modelo = ref_item.get('marca_modelo', '')
+            
+            # Preencher preço de venda automaticamente
+            if not item.preco_venda and ref_item.get('preco_venda_unitario'):
+                item.preco_venda = ref_item['preco_venda_unitario']
+            
+            # Calcular imposto automaticamente (11% do preço de venda)
+            if item.preco_venda and not item.imposto:
+                item.imposto = round(item.preco_venda * item.quantidade * 0.11, 2)
         else:
             # Item não encontrado - marcar claramente
             items_not_found.append(item.codigo_item)
