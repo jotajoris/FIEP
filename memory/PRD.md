@@ -103,6 +103,9 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 - [08/01/2026] ✅ Atualização do cálculo de lucro líquido
 - [08/01/2026] ✅ Proteção do campo frete_envio (apenas admin)
 - [08/01/2026] ✅ Exibição de fretes na UI e resumo financeiro
+- [08/01/2026] ✅ Endereço de entrega único para toda OC
+- [08/01/2026] ✅ Campo de preço de venda unitário no cadastro de item
+- [08/01/2026] ✅ **Multi-Fornecedor**: Comprar de múltiplos locais por item
 
 ## Próximas Tarefas (Backlog)
 
@@ -113,9 +116,6 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 ### P2 - Média Prioridade
 - [ ] **Refatoração do Backend** - Dividir server.py em módulos menores
 - [ ] **Extrair lógica de atribuição** - Função reutilizável
-
-### P3 - Baixa Prioridade
-- [ ] **Multi-Fornecedor** - Comprar item de múltiplos fornecedores
 
 ## Credenciais de Teste
 ```
