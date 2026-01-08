@@ -569,6 +569,14 @@ async def seed_reference_items(current_user: dict = Depends(require_admin)):
             
             responsavel = get_responsible_by_lot(lot_number)
             
+            # Extrair preço unitário (coluna F - index 5)
+            preco_venda = None
+            if row[5] is not None:
+                try:
+                    preco_venda = float(row[5])
+                except:
+                    pass
+            
             item = ReferenceItem(
                 lote=lote_str,
                 lot_number=lot_number,
@@ -577,7 +585,8 @@ async def seed_reference_items(current_user: dict = Depends(require_admin)):
                 unidade=str(row[3]) if row[3] else "",
                 marca_modelo=str(row[11]) if row[11] else "",
                 codigo_item=codigo_item,
-                responsavel=responsavel
+                responsavel=responsavel,
+                preco_venda_unitario=preco_venda
             )
             items.append(item.model_dump())
         
