@@ -7,11 +7,12 @@ import { v4 as uuidv4 } from 'uuid';
 const ItemsByStatus = () => {
   const { status } = useParams();
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({});
+  const [showOnlyMine, setShowOnlyMine] = useState(false);
 
   const statusLabels = {
     'pendente': 'Pendentes',
@@ -48,6 +49,11 @@ const ItemsByStatus = () => {
       setLoading(false);
     }
   };
+
+  // Filtrar itens baseado no toggle "Meus Itens"
+  const filteredItems = showOnlyMine && user?.owner_name
+    ? items.filter(item => item.responsavel === user.owner_name)
+    : items;
 
   const startEdit = (item) => {
     setEditingItem(`${item.po_id}-${item.codigo_item}`);
