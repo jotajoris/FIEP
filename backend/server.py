@@ -1019,7 +1019,8 @@ async def get_admin_summary(current_user: dict = Depends(require_admin)):
                     preco_compra=item.get('preco_compra'),
                     preco_venda=item.get('preco_venda'),
                     imposto=item.get('imposto'),
-                    custo_frete=item.get('custo_frete'),
+                    frete_compra=item.get('frete_compra'),
+                    frete_envio=item.get('frete_envio'),
                     lucro_liquido=item.get('lucro_liquido'),
                     status=item['status']
                 )
