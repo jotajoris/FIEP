@@ -65,6 +65,7 @@ const PODetails = () => {
     try {
       await apiPatch(`${API}/purchase-orders/${id}/items/${item.codigo_item}`, {
         status: formData.status,
+        link_compra: formData.link_compra || null,
         preco_compra: formData.preco_compra ? parseFloat(formData.preco_compra) : null,
         preco_venda: formData.preco_venda ? parseFloat(formData.preco_venda) : null,
         imposto: formData.imposto ? parseFloat(formData.imposto) : null,
