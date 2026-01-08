@@ -94,15 +94,22 @@ const CreatePO = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao fazer upload do PDF');
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Erro ao fazer upload do PDF');
       }
 
       const data = await response.json();
-      alert(`OC ${data.numero_oc} criada com sucesso! ${data.total_items} itens importados.`);
-      navigate('/');
+      
+      let message = `OC ${data.numero_oc} criada com sucesso! ${data.total_items} itens importados.`;
+      if (data.items_without_ref && data.items_without_ref.length > 0) {
+        message += `\n\nAVISO: ${data.items_without_ref.length} itens não foram encontrados no banco de referência e não foram atribuídos a responsáveis.`;
+      }
+      
+      alert(message);
+      navigate(`/po/${data.po_id}`);
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
-      alert('Erro ao processar PDF. Verifique o arquivo e tente novamente.');
+      alert(error.message || 'Erro ao processar PDF. Verifique o arquivo e tente novamente.');
     } finally {
       setLoading(false);
     }
