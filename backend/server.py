@@ -166,6 +166,7 @@ class PurchaseOrderCreate(BaseModel):
 
 class ItemStatusUpdate(BaseModel):
     status: ItemStatus
+    link_compra: Optional[str] = None
     preco_compra: Optional[float] = None
     preco_venda: Optional[float] = None
     imposto: Optional[float] = None
