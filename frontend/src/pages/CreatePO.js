@@ -188,18 +188,7 @@ const CreatePO = () => {
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '700' }}>Itens da OC</h3>
-                <button 
-                  type="button" 
-                  onClick={addItem} 
-                  className="btn btn-primary" 
-                  data-testid="add-item-btn"
-                  style={{ fontSize: '0.95rem' }}
-                >
-                  + Adicionar Item
-                </button>
-              </div>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '1rem' }}>Itens da OC</h3>
 
               {items.map((item, index) => (
                 <div key={index} className="card" style={{ marginBottom: '1rem', background: '#f7fafc' }} data-testid={`item-form-${index}`}>
@@ -288,6 +277,15 @@ const CreatePO = () => {
             </div>
 
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button 
+                type="button" 
+                onClick={addItem} 
+                className="btn btn-secondary" 
+                data-testid="add-item-btn"
+                style={{ marginRight: 'auto' }}
+              >
+                + Adicionar Item
+              </button>
               <button type="button" onClick={() => navigate('/')} className="btn btn-secondary" data-testid="cancel-btn">
                 Cancelar
               </button>
