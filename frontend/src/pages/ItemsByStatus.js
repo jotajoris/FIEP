@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { apiGet, apiPatch, API } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -50,14 +50,18 @@ const ItemsByStatus = () => {
     }
   };
 
-  // Calcular itens a serem mostrados
-  const displayItems = showOnlyMine && user?.owner_name
-    ? items.filter(item => item.responsavel === user.owner_name)
-    : items;
+  // Usar useMemo para garantir o recálculo correto quando o filtro mudar
+  const displayItems = useMemo(() => {
+    if (showOnlyMine && user?.owner_name) {
+      return items.filter(item => item.responsavel === user.owner_name);
+    }
+    return items;
+  }, [items, showOnlyMine, user?.owner_name]);
   
-  const myItemsCount = user?.owner_name 
-    ? items.filter(item => item.responsavel === user.owner_name).length 
-    : 0;
+  const myItemsCount = useMemo(() => {
+    if (!user?.owner_name) return 0;
+    return items.filter(item => item.responsavel === user.owner_name).length;
+  }, [items, user?.owner_name]);
 
   const startEdit = (item) => {
     setEditingItem(`${item.po_id}-${item.codigo_item}`);
