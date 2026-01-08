@@ -53,6 +53,8 @@ const AllItemsSummary = () => {
   const totalLucro = filteredItems.reduce((sum, item) => sum + (item.lucro_liquido || 0), 0);
   const totalVenda = filteredItems.reduce((sum, item) => sum + ((item.preco_venda || 0) * item.quantidade), 0);
   const totalCompra = filteredItems.reduce((sum, item) => sum + ((item.preco_compra || 0) * item.quantidade), 0);
+  const totalFreteCompra = filteredItems.reduce((sum, item) => sum + (item.frete_compra || 0), 0);
+  const totalFreteEnvio = filteredItems.reduce((sum, item) => sum + (item.frete_envio || 0), 0);
 
   if (loading) {
     return <div className="loading" data-testid="loading-summary">Carregando...</div>;
@@ -78,6 +80,14 @@ const AllItemsSummary = () => {
         <div className="stat-card" style={{ borderColor: '#f59e0b' }}>
           <div className="stat-label">Valor Total Compra</div>
           <div className="stat-value" style={{ color: '#f59e0b', fontSize: '1.8rem' }}>R$ {totalCompra.toFixed(2)}</div>
+        </div>
+        <div className="stat-card" style={{ borderColor: '#6366f1' }}>
+          <div className="stat-label">Total Frete Compra</div>
+          <div className="stat-value" style={{ color: '#6366f1', fontSize: '1.8rem' }}>R$ {totalFreteCompra.toFixed(2)}</div>
+        </div>
+        <div className="stat-card" style={{ borderColor: '#ec4899' }}>
+          <div className="stat-label">Total Frete Envio</div>
+          <div className="stat-value" style={{ color: '#ec4899', fontSize: '1.8rem' }}>R$ {totalFreteEnvio.toFixed(2)}</div>
         </div>
         <div className="stat-card" style={{ borderColor: totalLucro > 0 ? '#10b981' : '#ef4444' }}>
           <div className="stat-label">Lucro Total</div>
