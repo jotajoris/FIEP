@@ -94,14 +94,30 @@ const PODetails = () => {
   return (
     <div data-testid="po-details-page">
       <div className="page-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button onClick={() => navigate('/')} className="btn btn-secondary" data-testid="back-btn">
-            ← Voltar
-          </button>
-          <div>
-            <h1 className="page-title" data-testid="po-number">OC {po.numero_oc}</h1>
-            <p className="page-subtitle">Criada em {new Date(po.created_at).toLocaleDateString('pt-BR')}</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <button onClick={() => navigate('/')} className="btn btn-secondary" data-testid="back-btn">
+              ← Voltar
+            </button>
+            <div>
+              <h1 className="page-title" data-testid="po-number">OC {po.numero_oc}</h1>
+              <p className="page-subtitle">Criada em {new Date(po.created_at).toLocaleDateString('pt-BR')}</p>
+            </div>
           </div>
+          {isAdmin() && (
+            <button 
+              onClick={handleDelete} 
+              className="btn" 
+              style={{ 
+                background: '#ef4444', 
+                color: 'white',
+                padding: '0.75rem 1.5rem'
+              }}
+              data-testid="delete-po-btn"
+            >
+              🗑️ Deletar OC
+            </button>
+          )}
         </div>
       </div>
 
