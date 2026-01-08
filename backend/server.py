@@ -127,6 +127,15 @@ class ReferenceItem(BaseModel):
     preco_venda_unitario: Optional[float] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class FonteCompra(BaseModel):
+    """Representa uma fonte/local de compra para um item"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    quantidade: int
+    preco_unitario: float
+    frete: float = 0
+    link: str = ""
+    fornecedor: str = ""
+
 class POItem(BaseModel):
     codigo_item: str
     descricao: str = ""
@@ -146,6 +155,7 @@ class POItem(BaseModel):
     frete_compra: Optional[float] = None
     frete_envio: Optional[float] = None
     lucro_liquido: Optional[float] = None
+    fontes_compra: List[FonteCompra] = []  # Lista de fontes/locais de compra
     data_cotacao: Optional[datetime] = None
     data_compra: Optional[datetime] = None
     data_entrega: Optional[datetime] = None
