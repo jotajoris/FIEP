@@ -704,27 +704,44 @@ async def create_purchase_order(po_create: PurchaseOrderCreate, current_user: di
     items_not_found = []
     
     for item in po_create.items:
-        ref_item = await db.reference_items.find_one(
+        # Buscar TODAS as ocorrências deste código (em todos os lotes)
+        ref_items = await db.reference_items.find(
             {"codigo_item": item.codigo_item},
             {"_id": 0}
-        )
+        ).to_list(100)
         
-        if ref_item:
-            # Preencher com dados da referência
-            item.responsavel = ref_item['responsavel']
-            item.lote = ref_item['lote']
-            item.lot_number = ref_item['lot_number']
-            item.regiao = ref_item.get('regiao', item.regiao or '')
+        if ref_items:
+            # Se existem múltiplas ocorrências (item em vários lotes)
+            if len(ref_items) > 1:
+                # Pegar apenas responsáveis não-admin
+                import random
+                non_admin_items = [ri for ri in ref_items if ri['responsavel'] in ['Maria', 'Mylena', 'Fabio']]
+                
+                if non_admin_items:
+                    # Escolher aleatoriamente entre os não-admins
+                    selected_ref = random.choice(non_admin_items)
+                else:
+                    # Se não houver não-admins, usar o primeiro disponível
+                    selected_ref = ref_items[0]
+            else:
+                # Se existe apenas uma ocorrência, usar ela
+                selected_ref = ref_items[0]
+            
+            # Preencher com dados da referência selecionada
+            item.responsavel = selected_ref['responsavel']
+            item.lote = selected_ref['lote']
+            item.lot_number = selected_ref['lot_number']
+            item.regiao = selected_ref.get('regiao', item.regiao or '')
             if not item.descricao or len(item.descricao) < 10:
-                item.descricao = ref_item['descricao']
+                item.descricao = selected_ref['descricao']
             if not item.marca_modelo:
-                item.marca_modelo = ref_item.get('marca_modelo', '')
+                item.marca_modelo = selected_ref.get('marca_modelo', '')
             
             # Preencher preço de venda automaticamente
-            if not item.preco_venda and ref_item.get('preco_venda_unitario'):
-                item.preco_venda = ref_item['preco_venda_unitario']
+            if not item.preco_venda and selected_ref.get('preco_venda_unitario'):
+                item.preco_venda = selected_ref['preco_venda_unitario']
             
-            # Calcular imposto automaticamente (11% do preço de venda)
+            # Calcular imposto automaticamente (11% do preço de venda total)
             if item.preco_venda and not item.imposto:
                 item.imposto = round(item.preco_venda * item.quantidade * 0.11, 2)
         else:
