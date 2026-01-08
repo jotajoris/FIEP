@@ -71,6 +71,12 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       
+      <Route path="/items/status/:status" element={
+        <ProtectedRoute>
+          <Layout><ItemsByStatus /></Layout>
+        </ProtectedRoute>
+      } />
+      
       <Route path="/owner/:name" element={
         <ProtectedRoute>
           <Layout><OwnerPanel /></Layout>
