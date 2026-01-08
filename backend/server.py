@@ -888,6 +888,11 @@ async def upload_pdf_purchase_order(file: UploadFile = File(...), current_user: 
 async def create_purchase_order(po_create: PurchaseOrderCreate, current_user: dict = Depends(require_admin)):
     """Criar nova Ordem de Compra (ADMIN ONLY)"""
     
+    # Verificar se OC já existe
+    existing_po = await db.purchase_orders.find_one({"numero_oc": po_create.numero_oc}, {"_id": 0})
+    if existing_po:
+        raise HTTPException(status_code=409, detail=f"Ordem de Compra {po_create.numero_oc} já existe no sistema")
+    
     processed_items = []
     items_not_found = []
     
