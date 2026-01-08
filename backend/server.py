@@ -251,7 +251,6 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
             endereco_match = re.search(pattern, full_text, re.IGNORECASE | re.DOTALL)
             if endereco_match:
                 endereco_entrega = endereco_match.group(1).strip()
-                # Limpar quebras de linha
                 endereco_entrega = ' '.join(endereco_entrega.split())
                 break
         
@@ -261,64 +260,111 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
         if regiao_match:
             regiao = regiao_match.group(1).strip()
         
-        # Extrair itens - procurar por código de 6 dígitos seguido de quantidade e descrição
+        # ========== PARSER MELHORADO PARA PDFS FIEP ==========
         items = []
-        
-        # Padrão mais robusto para extrair itens da tabela
-        # Procura por: CÓDIGO (6 dígitos) seguido de quantidade e unidade
+        seen_items = set()
         lines = full_text.split('\n')
         
+        # Método 1: Buscar por padrão LINHA_NUM -> CÓDIGO_6_DIGITOS -> QUANTIDADE -> UNIDADE
         for i, line in enumerate(lines):
-            # Procurar por código de 6 dígitos
-            codigo_match = re.search(r'\b(\d{6})\b', line)
-            if codigo_match:
-                codigo = codigo_match.group(1)
+            line = line.strip()
+            
+            # Procurar código de 6 dígitos
+            if re.match(r'^(\d{6})$', line):
+                codigo = line
                 
-                # Tentar extrair quantidade e unidade na mesma linha ou próximas
-                quantidade = 0
-                unidade = "UN"
-                
-                # Procurar padrão: NÚMERO seguido de UN/KG/PC/M etc
-                qty_match = re.search(r'\b(\d+)\s*(UN|UND|UNID|KG|PC|M|L|CX)\b', line, re.IGNORECASE)
-                if qty_match:
-                    quantidade = int(qty_match.group(1))
-                    unidade = qty_match.group(2).upper()
-                else:
-                    # Procurar nas próximas 2 linhas
-                    for j in range(i+1, min(i+3, len(lines))):
-                        qty_match = re.search(r'\b(\d+)\s*(UN|UND|UNID|KG|PC|M|L|CX)\b', lines[j], re.IGNORECASE)
-                        if qty_match:
-                            quantidade = int(qty_match.group(1))
-                            unidade = qty_match.group(2).upper()
-                            break
-                
-                if quantidade > 0:
-                    # Extrair descrição (geralmente está na linha seguinte ou na mesma linha após o código)
-                    descricao = ""
+                # Verificar se linha anterior é número de linha (1-50)
+                if i > 0:
+                    prev = lines[i-1].strip()
+                    if re.match(r'^\d{1,2}$', prev):
+                        try:
+                            linha_num = int(prev)
+                            if 1 <= linha_num <= 100:
+                                # Procurar quantidade nas próximas 15 linhas
+                                quantidade = 0
+                                unidade = "UN"
+                                descricao_parts = []
+                                
+                                for j in range(i+1, min(i+18, len(lines))):
+                                    check_line = lines[j].strip()
+                                    
+                                    # Se encontrar outro código, parar
+                                    if re.match(r'^(\d{6})$', check_line):
+                                        break
+                                    
+                                    # Coletar descrição
+                                    if len(check_line) > 3 and not re.match(r'^[\d.,]+$', check_line):
+                                        if check_line not in ['UN', 'UND', 'UNID', 'KG', 'PC', 'M', 'L', 'CX', 'PAR']:
+                                            if 'Descritivo Completo' not in check_line and 'CFOP' not in check_line:
+                                                descricao_parts.append(check_line)
+                                    
+                                    # Procurar quantidade (número isolado)
+                                    qty_match = re.match(r'^(\d+)$', check_line)
+                                    if qty_match and quantidade == 0:
+                                        qty = int(qty_match.group(1))
+                                        # Verificar se próxima linha é unidade
+                                        if j+1 < len(lines):
+                                            unit_line = lines[j+1].strip().upper()
+                                            if unit_line in ['UN', 'UND', 'UNID', 'KG', 'PC', 'M', 'L', 'CX', 'PAR', 'PCT']:
+                                                quantidade = qty
+                                                unidade = unit_line if unit_line != 'UND' else 'UN'
+                                                break
+                                
+                                if quantidade > 0:
+                                    key = f"{linha_num}-{codigo}"
+                                    if key not in seen_items:
+                                        seen_items.add(key)
+                                        descricao = ' '.join(descricao_parts[:5]) if descricao_parts else f"Item {codigo}"
+                                        items.append({
+                                            "codigo_item": codigo,
+                                            "quantidade": quantidade,
+                                            "descricao": descricao[:200],
+                                            "unidade": unidade,
+                                            "endereco_entrega": endereco_entrega,
+                                            "regiao": regiao
+                                        })
+                        except ValueError:
+                            pass
+        
+        # Método 2 (fallback): Se poucos itens, tentar padrão mais genérico
+        if len(items) < 3:
+            items = []
+            seen_codes = set()
+            
+            for i, line in enumerate(lines):
+                codigo_match = re.search(r'\b(\d{6})\b', line)
+                if codigo_match:
+                    codigo = codigo_match.group(1)
                     
-                    # Tentar extrair descrição da linha atual (após o código)
-                    desc_part = line.split(codigo, 1)
-                    if len(desc_part) > 1:
-                        descricao = desc_part[1].strip()
-                        # Remover quantidade e unidade se aparecerem na descrição
-                        descricao = re.sub(r'\b\d+\s*(UN|UND|UNID|KG|PC|M|L|CX)\b', '', descricao, flags=re.IGNORECASE)
-                        descricao = descricao.strip()
+                    if codigo in seen_codes:
+                        continue
                     
-                    # Se descrição está vazia, procurar nas próximas linhas
-                    if not descricao or len(descricao) < 5:
-                        for j in range(i+1, min(i+4, len(lines))):
-                            if lines[j].strip() and not re.match(r'^\d+$', lines[j].strip()):
-                                descricao = lines[j].strip()
+                    # Procurar quantidade
+                    quantidade = 0
+                    unidade = "UN"
+                    
+                    qty_match = re.search(r'\b(\d+)\s*(UN|UND|UNID|KG|PC|M|L|CX)\b', line, re.IGNORECASE)
+                    if qty_match:
+                        quantidade = int(qty_match.group(1))
+                        unidade = qty_match.group(2).upper()
+                    else:
+                        for j in range(i+1, min(i+5, len(lines))):
+                            qty_match = re.search(r'\b(\d+)\s*(UN|UND|UNID|KG|PC|M|L|CX)\b', lines[j], re.IGNORECASE)
+                            if qty_match:
+                                quantidade = int(qty_match.group(1))
+                                unidade = qty_match.group(2).upper()
                                 break
                     
-                    items.append({
-                        "codigo_item": codigo,
-                        "quantidade": quantidade,
-                        "descricao": descricao or f"Item {codigo}",
-                        "unidade": unidade,
-                        "endereco_entrega": endereco_entrega,
-                        "regiao": regiao
-                    })
+                    if quantidade > 0:
+                        seen_codes.add(codigo)
+                        items.append({
+                            "codigo_item": codigo,
+                            "quantidade": quantidade,
+                            "descricao": f"Item {codigo}",
+                            "unidade": unidade,
+                            "endereco_entrega": endereco_entrega,
+                            "regiao": regiao
+                        })
         
         return {
             "numero_oc": numero_oc,
