@@ -293,7 +293,17 @@ const ItemsByStatus = () => {
                           <strong>Imposto:</strong> R$ {item.imposto.toFixed(2)}
                         </span>
                       )}
-                      {isAdmin() && item.lucro_liquido && (
+                      {item.frete_compra && (
+                        <span>
+                          <strong>Frete Compra:</strong> R$ {item.frete_compra.toFixed(2)}
+                        </span>
+                      )}
+                      {isAdmin() && item.frete_envio && (
+                        <span>
+                          <strong>Frete Envio:</strong> R$ {item.frete_envio.toFixed(2)}
+                        </span>
+                      )}
+                      {isAdmin() && item.lucro_liquido !== undefined && item.lucro_liquido !== null && (
                         <span>
                           <strong>Lucro Líquido:</strong>{' '}
                           <span style={{ color: item.lucro_liquido > 0 ? '#10b981' : '#ef4444', fontWeight: '700' }}>
