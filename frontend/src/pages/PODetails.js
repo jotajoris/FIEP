@@ -48,6 +48,7 @@ const PODetails = () => {
     setEditingItem(item.codigo_item);
     setFormData({
       status: item.status,
+      link_compra: item.link_compra || '',
       preco_compra: item.preco_compra || '',
       preco_venda: item.preco_venda || '',
       imposto: item.imposto || '',
