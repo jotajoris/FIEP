@@ -568,6 +568,27 @@ async def change_password(request: ChangePasswordRequest, current_user: dict = D
     
     return {"message": "Senha alterada com sucesso"}
 
+class UpdateProfileRequest(BaseModel):
+    owner_name: str
+
+@api_router.patch("/auth/profile")
+async def update_profile(request: UpdateProfileRequest, current_user: dict = Depends(get_current_user)):
+    """Atualizar perfil do usuário logado"""
+    await db.users.update_one(
+        {"email": current_user['sub']},
+        {"$set": {"owner_name": request.owner_name}}
+    )
+    
+    return {"message": "Perfil atualizado com sucesso", "owner_name": request.owner_name}
+
+@api_router.get("/auth/me")
+async def get_current_user_profile(current_user: dict = Depends(get_current_user)):
+    """Obter dados do usuário logado"""
+    user = await db.users.find_one({"email": current_user['sub']}, {"_id": 0, "hashed_password": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    return user
+
 @api_router.post("/auth/reset-password")
 async def reset_password(request: ResetPasswordRequest):
     """Solicitar reset de senha"""
