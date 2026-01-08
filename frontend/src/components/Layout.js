@@ -57,9 +57,39 @@ const Layout = ({ children }) => {
             )}
             <li>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <span style={{ color: '#4a5568', fontSize: '0.9rem', fontWeight: '500' }} data-testid="user-email">
-                  {user?.email}
-                </span>
+                <Link 
+                  to="/profile" 
+                  style={{ 
+                    color: '#4a5568', 
+                    fontSize: '0.9rem', 
+                    fontWeight: '500',
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '8px',
+                    background: location.pathname === '/profile' ? '#edf2f7' : 'transparent',
+                    transition: 'background 0.2s'
+                  }} 
+                  data-testid="user-profile-link"
+                >
+                  <span style={{ 
+                    width: '28px', 
+                    height: '28px', 
+                    borderRadius: '50%', 
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.75rem',
+                    fontWeight: '700'
+                  }}>
+                    {(user?.owner_name || user?.email || '?').charAt(0).toUpperCase()}
+                  </span>
+                  {user?.owner_name || user?.email}
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="btn btn-secondary"
