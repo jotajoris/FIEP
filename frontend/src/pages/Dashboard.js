@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { apiGet, apiPost, API } from '../utils/api';
+import { apiGet, apiPost, apiDelete, API } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 
 const Dashboard = () => {
@@ -37,6 +37,21 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Erro ao popular banco:', error);
       alert('Erro ao popular banco de dados');
+    }
+  };
+
+  const handleDeleteOrder = async (orderId, numeroOC) => {
+    if (!window.confirm(`Tem certeza que deseja deletar a OC ${numeroOC}?`)) {
+      return;
+    }
+
+    try {
+      await apiDelete(`${API}/purchase-orders/${orderId}`);
+      alert('OC deletada com sucesso!');
+      loadData(); // Recarregar dados
+    } catch (error) {
+      console.error('Erro ao deletar OC:', error);
+      alert('Erro ao deletar OC');
     }
   };
 
