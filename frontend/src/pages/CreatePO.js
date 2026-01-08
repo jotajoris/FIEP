@@ -15,12 +15,47 @@ const CreatePO = () => {
   }]);
   const [pdfFile, setPdfFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   
   // Estados para preview do PDF
   const [pdfPreview, setPdfPreview] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
   const [editingPreviewItem, setEditingPreviewItem] = useState(null);
   const [editForm, setEditForm] = useState({});
+
+  // Handlers para drag and drop
+  const handleDragEnter = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        setPdfFile(file);
+      } else {
+        alert('Por favor, selecione apenas arquivos PDF');
+      }
+    }
+  }, []);
 
   const addItem = () => {
     setItems([...items, {
