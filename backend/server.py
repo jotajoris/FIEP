@@ -342,14 +342,17 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                                             "regiao": regiao
                                         }
                                         # Adicionar preço extraído do PDF se encontrado
-                                        if 'preco_pdf' in dir() and preco_pdf is not None:
-                                            item_data["preco_venda_pdf"] = preco_pdf
+                                        try:
+                                            if preco_pdf is not None:
+                                                item_data["preco_venda_pdf"] = preco_pdf
+                                        except NameError:
+                                            pass
                                         items.append(item_data)
                         except ValueError:
                             pass
         
-        # Método 2 (fallback): Se poucos itens, tentar padrão mais genérico
-        if len(items) < 3:
+        # Método 2 (fallback): Se NENHUM item encontrado, tentar padrão mais genérico
+        if len(items) == 0:
             items = []
             seen_codes = set()
             
