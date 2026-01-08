@@ -107,6 +107,8 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 - [08/01/2026] ✅ Campo de preço de venda unitário no cadastro de item
 - [08/01/2026] ✅ **Multi-Fornecedor**: Comprar de múltiplos locais por item
 - [08/01/2026] ✅ **Filtro "Meus Itens"**: Permite usuários (incluindo admins) ver apenas seus itens na página de status. Usa useMemo para garantir renderização correta.
+- [08/01/2026] ✅ **Correção Parser PDF**: Corrigido bug onde PDFs com menos de 3 itens não eram parseados. O fallback agora só é acionado quando NENHUM item é encontrado.
+- [08/01/2026] ✅ **Correção Upload PDF**: Corrigido erro "body stream already read" no frontend ao fazer upload de PDFs.
 
 ## Próximas Tarefas (Backlog)
 
