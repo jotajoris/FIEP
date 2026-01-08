@@ -65,15 +65,15 @@ class ReferenceItem(BaseModel):
 
 class POItem(BaseModel):
     codigo_item: str
-    descricao: str
+    descricao: str = ""
     quantidade: int
-    unidade: str
-    marca_modelo: str
-    lote: str
-    lot_number: int
-    regiao: str
-    endereco_entrega: str
-    responsavel: str
+    unidade: str = "UN"
+    marca_modelo: str = ""
+    lote: str = ""
+    lot_number: int = 0
+    regiao: str = ""
+    endereco_entrega: str = ""
+    responsavel: str = ""
     status: ItemStatus = ItemStatus.PENDENTE
     preco_compra: Optional[float] = None
     preco_venda: Optional[float] = None
