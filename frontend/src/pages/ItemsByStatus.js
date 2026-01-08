@@ -213,13 +213,16 @@ const ItemsByStatus = () => {
       </div>
 
       <div className="card">
-        {items.length === 0 ? (
+        {filteredItems.length === 0 ? (
           <p style={{ textAlign: 'center', color: '#718096', padding: '2rem' }} data-testid="no-items-message">
-            Nenhum item com status "{status}" encontrado.
+            {showOnlyMine 
+              ? `Nenhum item de ${user?.owner_name} com status "${status}" encontrado.`
+              : `Nenhum item com status "${status}" encontrado.`
+            }
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {items.map((item, index) => (
+            {filteredItems.map((item, index) => (
               <div 
                 key={`${item.po_id}-${item.codigo_item}`} 
                 className="card" 
