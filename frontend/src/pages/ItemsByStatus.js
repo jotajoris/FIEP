@@ -191,6 +191,19 @@ const ItemsByStatus = () => {
                         />
                       </div>
                       
+                      <div className="form-group">
+                        <label className="form-label">Frete Compra (R$)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="form-input"
+                          value={formData.frete_compra}
+                          onChange={(e) => setFormData({ ...formData, frete_compra: e.target.value })}
+                          placeholder="Frete da compra"
+                          data-testid={`input-frete-compra-${item.codigo_item}`}
+                        />
+                      </div>
+                      
                       {isAdmin() && (
                         <>
                           <div className="form-group">
@@ -216,14 +229,15 @@ const ItemsByStatus = () => {
                             />
                           </div>
                           <div className="form-group">
-                            <label className="form-label">Frete (R$)</label>
+                            <label className="form-label">Frete Envio/Embalagem (R$)</label>
                             <input
                               type="number"
                               step="0.01"
                               className="form-input"
-                              value={formData.custo_frete}
-                              onChange={(e) => setFormData({ ...formData, custo_frete: e.target.value })}
-                              data-testid={`input-frete-${item.codigo_item}`}
+                              value={formData.frete_envio}
+                              onChange={(e) => setFormData({ ...formData, frete_envio: e.target.value })}
+                              placeholder="Frete de envio/embalagem"
+                              data-testid={`input-frete-envio-${item.codigo_item}`}
                             />
                           </div>
                         </>
