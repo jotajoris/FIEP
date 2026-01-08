@@ -902,29 +902,34 @@ async def update_item_status(po_id: str, codigo_item: str, update: ItemStatusUpd
             
             item['status'] = update.status
             
-            # Todos podem atualizar link de compra e preço de compra
+            # Todos podem atualizar link de compra, preço de compra e frete de compra
             if update.link_compra is not None:
                 item['link_compra'] = update.link_compra
             
             if update.preco_compra is not None:
                 item['preco_compra'] = update.preco_compra
             
-            # Apenas admins podem editar preço de venda, impostos e frete
+            # Frete de compra - todos podem editar
+            if update.frete_compra is not None:
+                item['frete_compra'] = update.frete_compra
+            
+            # Apenas admins podem editar preço de venda, impostos e frete de envio
             if current_user['role'] == 'admin':
                 if update.preco_venda is not None:
                     item['preco_venda'] = update.preco_venda
                 if update.imposto is not None:
                     item['imposto'] = update.imposto
-                if update.custo_frete is not None:
-                    item['custo_frete'] = update.custo_frete
-                
-                # Calcular lucro líquido (apenas admins veem)
-                if (item.get('preco_venda') is not None and 
-                    item.get('preco_compra') is not None):
-                    lucro_bruto = (item['preco_venda'] - item['preco_compra']) * item['quantidade']
-                    impostos = item.get('imposto', 0)
-                    frete = item.get('custo_frete', 0)
-                    item['lucro_liquido'] = lucro_bruto - impostos - frete
+                if update.frete_envio is not None:
+                    item['frete_envio'] = update.frete_envio
+            
+            # Calcular lucro líquido (apenas se tiver dados suficientes)
+            if (item.get('preco_venda') is not None and 
+                item.get('preco_compra') is not None):
+                lucro_bruto = (item['preco_venda'] - item['preco_compra']) * item['quantidade']
+                impostos = item.get('imposto', 0) or 0
+                frete_compra = item.get('frete_compra', 0) or 0
+                frete_envio = item.get('frete_envio', 0) or 0
+                item['lucro_liquido'] = lucro_bruto - impostos - frete_compra - frete_envio
             
             # Atualizar datas
             now = datetime.now(timezone.utc).isoformat()
