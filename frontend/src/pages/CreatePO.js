@@ -10,10 +10,8 @@ const CreatePO = () => {
   const [numeroOC, setNumeroOC] = useState('');
   const [items, setItems] = useState([{
     codigo_item: '',
-    descricao: '',
     quantidade: 1,
     unidade: 'UN',
-    marca_modelo: '',
     endereco_entrega: ''
   }]);
   const [loading, setLoading] = useState(false);
