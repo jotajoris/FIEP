@@ -913,15 +913,32 @@ async def update_item_status(po_id: str, codigo_item: str, update: ItemStatusUpd
             
             item['status'] = update.status
             
-            # Todos podem atualizar link de compra, preço de compra e frete de compra
+            # Atualizar fontes de compra (todos podem editar)
+            if update.fontes_compra is not None:
+                item['fontes_compra'] = [fc.model_dump() for fc in update.fontes_compra]
+                
+                # Calcular totais das fontes de compra
+                total_custo = 0
+                total_frete = 0
+                total_qtd = 0
+                for fc in update.fontes_compra:
+                    total_custo += fc.quantidade * fc.preco_unitario
+                    total_frete += fc.frete
+                    total_qtd += fc.quantidade
+                
+                # Atualizar campos consolidados baseados nas fontes
+                if total_qtd > 0:
+                    item['preco_compra'] = round(total_custo / total_qtd, 2)  # Preço médio unitário
+                item['frete_compra'] = total_frete
+            
+            # Campos simples - todos podem atualizar
             if update.link_compra is not None:
                 item['link_compra'] = update.link_compra
             
-            if update.preco_compra is not None:
+            if update.preco_compra is not None and not update.fontes_compra:
                 item['preco_compra'] = update.preco_compra
             
-            # Frete de compra - todos podem editar
-            if update.frete_compra is not None:
+            if update.frete_compra is not None and not update.fontes_compra:
                 item['frete_compra'] = update.frete_compra
             
             # Apenas admins podem editar preço de venda, impostos e frete de envio
@@ -933,10 +950,24 @@ async def update_item_status(po_id: str, codigo_item: str, update: ItemStatusUpd
                 if update.frete_envio is not None:
                     item['frete_envio'] = update.frete_envio
             
-            # Calcular lucro líquido (apenas se tiver dados suficientes)
-            if (item.get('preco_venda') is not None and 
-                item.get('preco_compra') is not None):
-                lucro_bruto = (item['preco_venda'] - item['preco_compra']) * item['quantidade']
+            # Calcular lucro líquido
+            preco_venda = item.get('preco_venda')
+            quantidade = item.get('quantidade', 0)
+            
+            # Se tem fontes de compra, usar os totais das fontes
+            fontes = item.get('fontes_compra', [])
+            if fontes and len(fontes) > 0:
+                total_custo_compra = sum(fc['quantidade'] * fc['preco_unitario'] for fc in fontes)
+                total_frete_compra = sum(fc.get('frete', 0) for fc in fontes)
+                
+                if preco_venda is not None:
+                    receita_total = preco_venda * quantidade
+                    impostos = item.get('imposto', 0) or 0
+                    frete_envio = item.get('frete_envio', 0) or 0
+                    item['lucro_liquido'] = receita_total - total_custo_compra - total_frete_compra - impostos - frete_envio
+            elif item.get('preco_compra') is not None and preco_venda is not None:
+                # Cálculo tradicional
+                lucro_bruto = (preco_venda - item['preco_compra']) * quantidade
                 impostos = item.get('imposto', 0) or 0
                 frete_compra = item.get('frete_compra', 0) or 0
                 frete_envio = item.get('frete_envio', 0) or 0
