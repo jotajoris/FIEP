@@ -53,9 +53,12 @@ const CreatePO = () => {
     try {
       const response = await apiPost(`${API}/purchase-orders`, {
         numero_oc: numeroOC,
+        endereco_entrega: enderecoEntrega,
         items: items.map(item => ({
           ...item,
           quantidade: parseInt(item.quantidade),
+          preco_venda: item.preco_venda ? parseFloat(item.preco_venda) : null,
+          endereco_entrega: enderecoEntrega,
           lote: '',
           lot_number: 0,
           regiao: ''
