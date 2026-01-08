@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import { apiPost, API } from '../utils/api';
 
 const CreatePO = () => {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('manual'); // 'manual' or 'pdf'
   const [numeroOC, setNumeroOC] = useState('');
   const [items, setItems] = useState([{
     codigo_item: '',
@@ -14,6 +12,7 @@ const CreatePO = () => {
     unidade: 'UN',
     endereco_entrega: ''
   }]);
+  const [pdfFile, setPdfFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const addItem = () => {
