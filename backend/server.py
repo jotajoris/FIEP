@@ -691,6 +691,8 @@ async def create_purchase_order(po_create: PurchaseOrderCreate, current_user: di
     """Criar nova Ordem de Compra (ADMIN ONLY)"""
     
     processed_items = []
+    items_not_found = []
+    
     for item in po_create.items:
         ref_item = await db.reference_items.find_one(
             {"codigo_item": item.codigo_item},
@@ -698,14 +700,27 @@ async def create_purchase_order(po_create: PurchaseOrderCreate, current_user: di
         )
         
         if ref_item:
+            # Preencher com dados da referência
             item.responsavel = ref_item['responsavel']
             item.lote = ref_item['lote']
             item.lot_number = ref_item['lot_number']
-            item.regiao = ref_item['regiao']
-            if not item.descricao:
+            item.regiao = ref_item.get('regiao', item.regiao or '')
+            if not item.descricao or len(item.descricao) < 10:
                 item.descricao = ref_item['descricao']
             if not item.marca_modelo:
-                item.marca_modelo = ref_item['marca_modelo']
+                item.marca_modelo = ref_item.get('marca_modelo', '')
+        else:
+            # Item não encontrado - marcar claramente
+            items_not_found.append(item.codigo_item)
+            if not item.responsavel:
+                item.responsavel = "⚠️ NÃO ENCONTRADO"
+            if not item.lote:
+                item.lote = "⚠️ NÃO ENCONTRADO"
+            if not item.regiao:
+                item.regiao = item.regiao or "Verificar PDF"
+            item.lot_number = 0
+            if not item.descricao:
+                item.descricao = f"Item {item.codigo_item} - VERIFICAR MANUALMENTE"
         
         processed_items.append(item)
     
@@ -719,6 +734,7 @@ async def create_purchase_order(po_create: PurchaseOrderCreate, current_user: di
     doc['created_at'] = doc['created_at'].isoformat()
     
     await db.purchase_orders.insert_one(doc)
+    
     return po
 
 @api_router.get("/purchase-orders", response_model=List[PurchaseOrder])
