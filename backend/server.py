@@ -139,6 +139,7 @@ class POItem(BaseModel):
     endereco_entrega: str = ""
     responsavel: str = ""
     status: ItemStatus = ItemStatus.PENDENTE
+    link_compra: Optional[str] = None
     preco_compra: Optional[float] = None
     preco_venda: Optional[float] = None
     imposto: Optional[float] = None
