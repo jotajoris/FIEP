@@ -50,15 +50,14 @@ const ItemsByStatus = () => {
     }
   };
 
-  // Filtrar itens baseado no toggle "Meus Itens"
-  const getFilteredItems = () => {
-    if (showOnlyMine && user?.owner_name) {
-      return items.filter(item => item.responsavel === user.owner_name);
-    }
-    return items;
-  };
+  // Calcular itens a serem mostrados
+  const displayItems = showOnlyMine && user?.owner_name
+    ? items.filter(item => item.responsavel === user.owner_name)
+    : items;
   
-  const filteredItems = getFilteredItems();
+  const myItemsCount = user?.owner_name 
+    ? items.filter(item => item.responsavel === user.owner_name).length 
+    : 0;
 
   const startEdit = (item) => {
     setEditingItem(`${item.po_id}-${item.codigo_item}`);
