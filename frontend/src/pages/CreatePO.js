@@ -448,6 +448,14 @@ const CreatePO = () => {
 
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', borderTop: '2px solid #e2e8f0', paddingTop: '1.5rem' }}>
               <button 
+                onClick={addPreviewItem}
+                className="btn btn-secondary"
+                style={{ marginRight: 'auto' }}
+                data-testid="add-preview-item-btn-bottom"
+              >
+                + Adicionar Item
+              </button>
+              <button 
                 onClick={cancelPreview} 
                 className="btn btn-secondary"
                 style={{ padding: '0.75rem 1.5rem' }}
@@ -458,11 +466,11 @@ const CreatePO = () => {
               <button 
                 onClick={handleConfirmPDF} 
                 className="btn btn-primary"
-                disabled={loading}
+                disabled={loading || editingPreviewItem !== null}
                 style={{ padding: '0.75rem 2rem', fontSize: '1.1rem' }}
                 data-testid="confirm-oc-btn"
               >
-                {loading ? 'Criando...' : `✓ Confirmar e Criar OC (${pdfPreview.total_items} itens)`}
+                {loading ? 'Criando...' : `✓ Confirmar e Criar OC (${pdfPreview.items.length} itens)`}
               </button>
             </div>
           </div>
