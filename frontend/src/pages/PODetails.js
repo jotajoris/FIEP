@@ -52,7 +52,8 @@ const PODetails = () => {
       preco_compra: item.preco_compra || '',
       preco_venda: item.preco_venda || '',
       imposto: item.imposto || '',
-      custo_frete: item.custo_frete || ''
+      frete_compra: item.frete_compra || '',
+      frete_envio: item.frete_envio || ''
     });
   };
 
@@ -69,7 +70,8 @@ const PODetails = () => {
         preco_compra: formData.preco_compra ? parseFloat(formData.preco_compra) : null,
         preco_venda: formData.preco_venda ? parseFloat(formData.preco_venda) : null,
         imposto: formData.imposto ? parseFloat(formData.imposto) : null,
-        custo_frete: formData.custo_frete ? parseFloat(formData.custo_frete) : null
+        frete_compra: formData.frete_compra ? parseFloat(formData.frete_compra) : null,
+        frete_envio: formData.frete_envio ? parseFloat(formData.frete_envio) : null
       });
       
       setEditingItem(null);
