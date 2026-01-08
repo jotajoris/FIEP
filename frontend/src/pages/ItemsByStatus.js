@@ -177,7 +177,7 @@ const ItemsByStatus = () => {
               </h1>
               <p className="page-subtitle">
                 {showOnlyMine ? (
-                  <>{filteredItems.length} de {items.length} itens (filtrado por {user?.owner_name})</>
+                  <>{displayItems.length} de {items.length} itens (filtrado por {user?.owner_name})</>
                 ) : (
                   <>{items.length} {items.length === 1 ? 'item' : 'itens'} com status "{status}"</>
                 )}
@@ -208,7 +208,7 @@ const ItemsByStatus = () => {
                   fontSize: '0.8rem',
                   fontWeight: '700'
                 }}>
-                  {filteredItems.length}
+                  {displayItems.length}
                 </span>
               )}
             </button>
@@ -217,7 +217,7 @@ const ItemsByStatus = () => {
       </div>
 
       <div className="card">
-        {filteredItems.length === 0 ? (
+        {displayItems.length === 0 ? (
           <p style={{ textAlign: 'center', color: '#718096', padding: '2rem' }} data-testid="no-items-message">
             {showOnlyMine 
               ? `Nenhum item de ${user?.owner_name} com status "${status}" encontrado.`
@@ -226,7 +226,7 @@ const ItemsByStatus = () => {
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {filteredItems.map((item, index) => (
+            {displayItems.map((item, index) => (
               <div 
                 key={`${item.po_id}-${item.codigo_item}`} 
                 className="card" 
