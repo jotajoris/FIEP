@@ -19,6 +19,8 @@ const CreatePO = () => {
   // Estados para preview do PDF
   const [pdfPreview, setPdfPreview] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [editingPreviewItem, setEditingPreviewItem] = useState(null);
+  const [editForm, setEditForm] = useState({});
 
   const addItem = () => {
     setItems([...items, {
