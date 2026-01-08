@@ -19,10 +19,8 @@ const CreatePO = () => {
   const addItem = () => {
     setItems([...items, {
       codigo_item: '',
-      descricao: '',
       quantidade: 1,
       unidade: 'UN',
-      marca_modelo: '',
       endereco_entrega: ''
     }]);
   };
