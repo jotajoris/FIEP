@@ -115,41 +115,35 @@ const CreatePO = () => {
     }
   };
 
-  // Confirmar criação da OC após preview
+  // Confirmar criação da OC após preview (usa dados editados)
   const handleConfirmPDF = async () => {
-    if (!pdfFile || !pdfPreview) {
-      alert('Erro: dados do PDF não disponíveis');
+    if (!pdfPreview || pdfPreview.items.length === 0) {
+      alert('Erro: nenhum item para criar');
       return;
     }
 
     setLoading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', pdfFile);
-
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API}/purchase-orders/upload-pdf`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
+      // Criar OC usando os dados editados do preview (não re-processa o PDF)
+      const response = await apiPost(`${API}/purchase-orders`, {
+        numero_oc: pdfPreview.numero_oc,
+        endereco_entrega: pdfPreview.endereco_entrega || '',
+        items: pdfPreview.items.map(item => ({
+          codigo_item: item.codigo_item,
+          quantidade: parseInt(item.quantidade) || 1,
+          unidade: item.unidade || 'UN',
+          descricao: item.descricao || '',
+          endereco_entrega: pdfPreview.endereco_entrega || '',
+          responsavel: item.responsavel || '',
+          lote: item.lote || '',
+          lot_number: 0,
+          regiao: item.regiao || '',
+          preco_venda: item.preco_venda || null
+        }))
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Erro ao criar OC');
-      }
-
-      const data = await response.json();
-      
-      let message = `OC ${data.numero_oc} criada com sucesso! ${data.total_items} itens importados.`;
-      if (data.items_without_ref && data.items_without_ref.length > 0) {
-        message += `\n\nAVISO: ${data.items_without_ref.length} itens não foram encontrados no banco de referência.`;
-      }
-      
-      alert(message);
-      navigate(`/po/${data.po_id}`);
+      alert(`OC ${pdfPreview.numero_oc} criada com sucesso! ${pdfPreview.items.length} itens.`);
+      navigate(`/po/${response.data.id}`);
     } catch (error) {
       console.error('Erro ao criar OC:', error);
       alert(error.message || 'Erro ao criar Ordem de Compra.');
