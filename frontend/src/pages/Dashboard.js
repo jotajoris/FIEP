@@ -85,22 +85,42 @@ const Dashboard = () => {
                 <div className="stat-value" style={{ color: '#667eea' }}>{stats.total_ocs}</div>
               </div>
             )}
-            <div className="stat-card" style={{ borderColor: '#f59e0b' }} data-testid="stat-pendentes">
+            <Link 
+              to="/items/status/pendente" 
+              className="stat-card" 
+              style={{ borderColor: '#f59e0b', cursor: 'pointer', textDecoration: 'none' }} 
+              data-testid="stat-pendentes"
+            >
               <div className="stat-label">Pendentes</div>
               <div className="stat-value" style={{ color: '#f59e0b' }}>{stats.items_pendentes}</div>
-            </div>
-            <div className="stat-card" style={{ borderColor: '#3b82f6' }} data-testid="stat-cotados">
+            </Link>
+            <Link 
+              to="/items/status/cotado" 
+              className="stat-card" 
+              style={{ borderColor: '#3b82f6', cursor: 'pointer', textDecoration: 'none' }} 
+              data-testid="stat-cotados"
+            >
               <div className="stat-label">Cotados</div>
               <div className="stat-value" style={{ color: '#3b82f6' }}>{stats.items_cotados}</div>
-            </div>
-            <div className="stat-card" style={{ borderColor: '#10b981' }} data-testid="stat-comprados">
+            </Link>
+            <Link 
+              to="/items/status/comprado" 
+              className="stat-card" 
+              style={{ borderColor: '#10b981', cursor: 'pointer', textDecoration: 'none' }} 
+              data-testid="stat-comprados"
+            >
               <div className="stat-label">Comprados</div>
               <div className="stat-value" style={{ color: '#10b981' }}>{stats.items_comprados}</div>
-            </div>
-            <div className="stat-card" style={{ borderColor: '#22c55e' }} data-testid="stat-entregues">
+            </Link>
+            <Link 
+              to="/items/status/entregue" 
+              className="stat-card" 
+              style={{ borderColor: '#22c55e', cursor: 'pointer', textDecoration: 'none' }} 
+              data-testid="stat-entregues"
+            >
               <div className="stat-label">Entregues</div>
               <div className="stat-value" style={{ color: '#22c55e' }}>{stats.items_entregues}</div>
-            </div>
+            </Link>
             <div className="stat-card" style={{ borderColor: '#8b5cf6' }} data-testid="stat-total-items">
               <div className="stat-label">Total Itens</div>
               <div className="stat-value" style={{ color: '#8b5cf6' }}>{stats.total_items}</div>
