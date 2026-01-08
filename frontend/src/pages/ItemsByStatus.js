@@ -51,18 +51,14 @@ const ItemsByStatus = () => {
   };
 
   // Filtrar itens baseado no toggle "Meus Itens"
-  const filteredItems = React.useMemo(() => {
+  const getFilteredItems = () => {
     if (showOnlyMine && user?.owner_name) {
-      console.log('Filtering by owner_name:', user.owner_name);
-      const filtered = items.filter(item => {
-        console.log(`  Item ${item.codigo_item}: responsavel="${item.responsavel}" === "${user.owner_name}" ?`, item.responsavel === user.owner_name);
-        return item.responsavel === user.owner_name;
-      });
-      console.log('Filtered items count:', filtered.length);
-      return filtered;
+      return items.filter(item => item.responsavel === user.owner_name);
     }
     return items;
-  }, [items, showOnlyMine, user?.owner_name]);
+  };
+  
+  const filteredItems = getFilteredItems();
 
   const startEdit = (item) => {
     setEditingItem(`${item.po_id}-${item.codigo_item}`);
