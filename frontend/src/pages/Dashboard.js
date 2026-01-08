@@ -151,9 +151,26 @@ const Dashboard = () => {
                     <td>{new Date(order.created_at).toLocaleDateString('pt-BR')}</td>
                     <td>{order.items.length}</td>
                     <td>
-                      <Link to={`/po/${order.id}`} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} data-testid={`view-po-${order.numero_oc}`}>
-                        Ver Detalhes
-                      </Link>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <Link to={`/po/${order.id}`} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} data-testid={`view-po-${order.numero_oc}`}>
+                          Ver Detalhes
+                        </Link>
+                        {isAdmin() && (
+                          <button 
+                            onClick={() => handleDeleteOrder(order.id, order.numero_oc)}
+                            className="btn"
+                            style={{ 
+                              padding: '0.5rem 1rem', 
+                              fontSize: '0.85rem',
+                              background: '#ef4444',
+                              color: 'white'
+                            }}
+                            data-testid={`delete-po-${order.numero_oc}`}
+                          >
+                            Deletar
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
