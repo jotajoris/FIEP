@@ -79,10 +79,12 @@ const Dashboard = () => {
       {stats && (
         <>
           <div className="stats-grid">
-            <div className="stat-card" style={{ borderColor: '#667eea' }} data-testid="stat-total-ocs">
-              <div className="stat-label">Total OCs</div>
-              <div className="stat-value" style={{ color: '#667eea' }}>{stats.total_ocs}</div>
-            </div>
+            {isAdmin() && (
+              <div className="stat-card" style={{ borderColor: '#667eea' }} data-testid="stat-total-ocs">
+                <div className="stat-label">Total OCs</div>
+                <div className="stat-value" style={{ color: '#667eea' }}>{stats.total_ocs}</div>
+              </div>
+            )}
             <div className="stat-card" style={{ borderColor: '#f59e0b' }} data-testid="stat-pendentes">
               <div className="stat-label">Pendentes</div>
               <div className="stat-value" style={{ color: '#f59e0b' }}>{stats.items_pendentes}</div>
@@ -105,17 +107,19 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="card" style={{ marginBottom: '2rem' }}>
-            <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: '700' }}>Itens por Responsável</h2>
-            <div className="owner-grid">
-              {Object.entries(stats.items_por_responsavel).map(([owner, count]) => (
-                <Link key={owner} to={`/owner/${owner}`} className="owner-card" data-testid={`owner-card-${owner.toLowerCase()}`}>
-                  <div className="owner-name">{owner}</div>
-                  <div className="owner-count">{count}</div>
-                </Link>
-              ))}
+          {isAdmin() && (
+            <div className="card" style={{ marginBottom: '2rem' }}>
+              <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: '700' }}>Itens por Responsável</h2>
+              <div className="owner-grid">
+                {Object.entries(stats.items_por_responsavel).map(([owner, count]) => (
+                  <Link key={owner} to={`/owner/${owner}`} className="owner-card" data-testid={`owner-card-${owner.toLowerCase()}`}>
+                    <div className="owner-name">{owner}</div>
+                    <div className="owner-count">{count}</div>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
 
