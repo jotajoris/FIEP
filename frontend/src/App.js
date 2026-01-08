@@ -64,6 +64,12 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       
+      <Route path="/resumo-completo" element={
+        <ProtectedRoute adminOnly>
+          <Layout><AllItemsSummary /></Layout>
+        </ProtectedRoute>
+      } />
+      
       <Route path="/owner/:name" element={
         <ProtectedRoute>
           <Layout><OwnerPanel /></Layout>
