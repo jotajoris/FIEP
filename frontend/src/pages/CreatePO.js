@@ -799,8 +799,8 @@ const CreatePO = () => {
             )}
 
             {/* Formulário PDF */}
-            {activeTab === 'pdf' && (
-              <form onSubmit={handlePreviewPDF}>
+            {activeTab === 'pdf' && !multipleResults && (
+              <form onSubmit={uploadMode === 'single' ? handlePreviewPDF : (e) => { e.preventDefault(); handleMultipleUpload(); }}>
                 <div 
                   onDragEnter={handleDragEnter}
                   onDragLeave={handleDragLeave}
@@ -827,20 +827,17 @@ const CreatePO = () => {
                     {isDragging ? '📥' : '📄'}
                   </div>
                   <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem' }}>
-                    {isDragging ? 'Solte o PDF aqui!' : 'Upload de PDF da Ordem de Compra'}
+                    {isDragging ? 'Solte os PDFs aqui!' : 'Upload de PDFs de Ordens de Compra'}
                   </h3>
                   <p style={{ color: '#718096', marginBottom: '2rem', maxWidth: '600px', margin: '0 auto 2rem' }}>
                     {isDragging ? (
-                      <span style={{ color: '#667eea', fontWeight: '600' }}>Solte o arquivo para fazer upload</span>
+                      <span style={{ color: '#667eea', fontWeight: '600' }}>Solte os arquivos para fazer upload</span>
                     ) : (
                       <>
-                        <strong>Arraste e solte</strong> o PDF aqui ou clique para selecionar
+                        <strong>Arraste e solte</strong> um ou mais PDFs aqui ou clique para selecionar
                         <br /><br />
-                        O sistema irá extrair automaticamente:
-                        <br />• Número da OC
-                        <br />• Código dos itens
-                        <br />• Quantidades
-                        <br />• Endereço de entrega
+                        📑 <strong>1 PDF:</strong> Preview e edição antes de criar
+                        <br />📚 <strong>Múltiplos PDFs:</strong> Criação automática em lote
                       </>
                     )}
                   </p>
@@ -849,7 +846,8 @@ const CreatePO = () => {
                     <input
                       type="file"
                       accept=".pdf"
-                      onChange={(e) => setPdfFile(e.target.files[0])}
+                      multiple
+                      onChange={handleFileSelect}
                       style={{ display: 'none' }}
                       id="pdf-upload"
                       data-testid="input-pdf-file"
@@ -866,25 +864,40 @@ const CreatePO = () => {
                         }}
                         onClick={(e) => e.stopPropagation()}
                       >
-                        📁 Selecionar PDF
+                        📁 Selecionar PDF(s)
                       </label>
                     )}
-                    {pdfFile && (
+                    {pdfFiles.length > 0 && (
                       <div style={{ 
                         marginTop: '1.5rem', 
                         padding: '1rem', 
-                        background: '#d4edda', 
+                        background: uploadMode === 'multiple' ? '#fff3cd' : '#d4edda', 
                         borderRadius: '8px',
-                        display: 'inline-block'
+                        display: 'inline-block',
+                        maxWidth: '500px'
                       }}>
-                        <p style={{ color: '#155724', fontWeight: '600', margin: 0 }}>
-                          ✓ Arquivo selecionado: {pdfFile.name}
+                        <p style={{ color: uploadMode === 'multiple' ? '#856404' : '#155724', fontWeight: '600', margin: 0 }}>
+                          {uploadMode === 'multiple' ? '📚' : '✓'} {pdfFiles.length} arquivo(s) selecionado(s):
                         </p>
+                        <ul style={{ 
+                          textAlign: 'left', 
+                          margin: '0.5rem 0', 
+                          padding: '0 1rem',
+                          maxHeight: '150px',
+                          overflowY: 'auto'
+                        }}>
+                          {pdfFiles.map((file, idx) => (
+                            <li key={idx} style={{ fontSize: '0.9rem', color: '#4a5568' }}>
+                              {file.name}
+                            </li>
+                          ))}
+                        </ul>
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setPdfFile(null);
+                            setPdfFiles([]);
+                            setUploadMode('single');
                           }}
                           style={{
                             marginTop: '0.5rem',
@@ -896,7 +909,7 @@ const CreatePO = () => {
                             fontSize: '0.9rem'
                           }}
                         >
-                          Remover arquivo
+                          Limpar seleção
                         </button>
                       </div>
                     )}
@@ -910,14 +923,155 @@ const CreatePO = () => {
                   <button 
                     type="submit" 
                     className="btn btn-primary" 
-                    disabled={loading || !pdfFile}
+                    disabled={loading || pdfFiles.length === 0}
                     data-testid="preview-pdf-btn"
                     style={{ padding: '0.75rem 2rem' }}
                   >
-                    {loading ? 'Processando...' : '→ Ler PDF e Visualizar'}
+                    {loading ? 'Processando...' : (
+                      uploadMode === 'multiple' 
+                        ? `🚀 Criar ${pdfFiles.length} OCs Automaticamente` 
+                        : '→ Ler PDF e Visualizar'
+                    )}
                   </button>
                 </div>
               </form>
+            )}
+            
+            {/* Resultados do Upload Múltiplo */}
+            {activeTab === 'pdf' && multipleResults && (
+              <div className="card" style={{ padding: '2rem' }}>
+                <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  📊 Resultado do Upload em Lote
+                </h2>
+                
+                {/* Resumo */}
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(4, 1fr)', 
+                  gap: '1rem', 
+                  marginBottom: '2rem' 
+                }}>
+                  <div style={{ padding: '1rem', background: '#e8f5e9', borderRadius: '8px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#2e7d32' }}>
+                      {multipleResults.success.length}
+                    </div>
+                    <div style={{ color: '#388e3c' }}>Criadas ✓</div>
+                  </div>
+                  <div style={{ padding: '1rem', background: '#fff3e0', borderRadius: '8px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f57c00' }}>
+                      {multipleResults.duplicates.length}
+                    </div>
+                    <div style={{ color: '#ef6c00' }}>Duplicadas</div>
+                  </div>
+                  <div style={{ padding: '1rem', background: '#ffebee', borderRadius: '8px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#c62828' }}>
+                      {multipleResults.failed.length}
+                    </div>
+                    <div style={{ color: '#d32f2f' }}>Erro</div>
+                  </div>
+                  <div style={{ padding: '1rem', background: '#e3f2fd', borderRadius: '8px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#1565c0' }}>
+                      {multipleResults.total_items_created}
+                    </div>
+                    <div style={{ color: '#1976d2' }}>Itens criados</div>
+                  </div>
+                </div>
+                
+                {/* OCs Criadas com Sucesso */}
+                {multipleResults.success.length > 0 && (
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <h3 style={{ color: '#2e7d32', marginBottom: '0.5rem' }}>✓ OCs Criadas com Sucesso:</h3>
+                    <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                      {multipleResults.success.map((item, idx) => (
+                        <div key={idx} style={{ 
+                          padding: '0.5rem 1rem', 
+                          background: '#e8f5e9', 
+                          marginBottom: '0.25rem',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}>
+                          <span><strong>{item.numero_oc}</strong> - {item.total_items} itens</span>
+                          <button 
+                            onClick={() => navigate(`/po/${item.po_id}`)}
+                            className="btn btn-secondary"
+                            style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}
+                          >
+                            Ver OC
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* OCs Duplicadas */}
+                {multipleResults.duplicates.length > 0 && (
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <h3 style={{ color: '#f57c00', marginBottom: '0.5rem' }}>⚠️ OCs já existentes (não criadas):</h3>
+                    <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                      {multipleResults.duplicates.map((item, idx) => (
+                        <div key={idx} style={{ 
+                          padding: '0.5rem 1rem', 
+                          background: '#fff3e0', 
+                          marginBottom: '0.25rem',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}>
+                          <span>{item.numero_oc} <small>({item.filename})</small></span>
+                          <button 
+                            onClick={() => navigate(`/po/${item.existing_id}`)}
+                            className="btn btn-secondary"
+                            style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}
+                          >
+                            Ver existente
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Erros */}
+                {multipleResults.failed.length > 0 && (
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <h3 style={{ color: '#c62828', marginBottom: '0.5rem' }}>❌ Erros:</h3>
+                    <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                      {multipleResults.failed.map((item, idx) => (
+                        <div key={idx} style={{ 
+                          padding: '0.5rem 1rem', 
+                          background: '#ffebee', 
+                          marginBottom: '0.25rem',
+                          borderRadius: '4px'
+                        }}>
+                          <strong>{item.filename}</strong>: {item.error}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+                  <button 
+                    onClick={() => {
+                      setMultipleResults(null);
+                      setPdfFiles([]);
+                    }}
+                    className="btn btn-secondary"
+                  >
+                    Fazer novo upload
+                  </button>
+                  <button 
+                    onClick={() => navigate('/')}
+                    className="btn btn-primary"
+                  >
+                    Ir para Dashboard
+                  </button>
+                </div>
+              </div>
             )}
           </>
         )}
