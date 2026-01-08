@@ -4,7 +4,7 @@ import { apiPost, API } from '../utils/api';
 
 const CreatePO = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('manual'); // 'manual' or 'pdf'
+  const [activeTab, setActiveTab] = useState('pdf'); // 'pdf' or 'manual'
   const [numeroOC, setNumeroOC] = useState('');
   const [enderecoEntrega, setEnderecoEntrega] = useState('');
   const [items, setItems] = useState([{
