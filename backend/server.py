@@ -884,6 +884,28 @@ async def upload_pdf_purchase_order(file: UploadFile = File(...), current_user: 
         "items_without_ref": items_without_ref
     }
 
+@api_router.get("/purchase-orders/check-duplicate/{numero_oc}")
+async def check_duplicate_purchase_order(numero_oc: str, current_user: dict = Depends(require_admin)):
+    """Verificar se OC já existe (ADMIN ONLY)"""
+    existing_po = await db.purchase_orders.find_one({"numero_oc": numero_oc}, {"_id": 0})
+    
+    if existing_po:
+        return {
+            "exists": True,
+            "message": f"Ordem de Compra {numero_oc} já existe no sistema",
+            "existing_po": {
+                "id": existing_po["id"],
+                "numero_oc": existing_po["numero_oc"],
+                "created_at": existing_po["created_at"],
+                "total_items": len(existing_po["items"])
+            }
+        }
+    else:
+        return {
+            "exists": False,
+            "message": f"Ordem de Compra {numero_oc} não existe no sistema"
+        }
+
 @api_router.post("/purchase-orders", response_model=PurchaseOrder)
 async def create_purchase_order(po_create: PurchaseOrderCreate, current_user: dict = Depends(require_admin)):
     """Criar nova Ordem de Compra (ADMIN ONLY)"""
