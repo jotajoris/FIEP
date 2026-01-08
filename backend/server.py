@@ -889,6 +889,123 @@ async def upload_pdf_purchase_order(file: UploadFile = File(...), current_user: 
         "items_without_ref": items_without_ref
     }
 
+@api_router.post("/purchase-orders/upload-multiple-pdfs")
+async def upload_multiple_pdfs(files: List[UploadFile] = File(...), current_user: dict = Depends(require_admin)):
+    """Upload de múltiplos PDFs de Ordens de Compra (ADMIN ONLY)"""
+    import random
+    
+    results = {
+        "success": [],
+        "failed": [],
+        "duplicates": [],
+        "total_processed": 0,
+        "total_items_created": 0
+    }
+    
+    for file in files:
+        try:
+            if not file.filename.endswith('.pdf'):
+                results["failed"].append({
+                    "filename": file.filename,
+                    "error": "Arquivo não é PDF"
+                })
+                continue
+            
+            # Ler conteúdo do PDF
+            pdf_content = await file.read()
+            
+            # Extrair dados
+            oc_data = extract_oc_from_pdf(pdf_content)
+            
+            if not oc_data.get("items"):
+                results["failed"].append({
+                    "filename": file.filename,
+                    "error": "Nenhum item encontrado no PDF"
+                })
+                continue
+            
+            # Verificar se OC já existe
+            existing_po = await db.purchase_orders.find_one({"numero_oc": oc_data["numero_oc"]}, {"_id": 0})
+            if existing_po:
+                results["duplicates"].append({
+                    "filename": file.filename,
+                    "numero_oc": oc_data["numero_oc"],
+                    "existing_id": existing_po["id"]
+                })
+                continue
+            
+            # Processar itens com dados de referência
+            processed_items = []
+            
+            for item in oc_data["items"]:
+                # Buscar referência
+                ref_items = await db.reference_items.find(
+                    {"codigo_item": item["codigo_item"]},
+                    {"_id": 0}
+                ).to_list(100)
+                
+                responsavel = item.get("responsavel", "")
+                lote = item.get("lote", "")
+                lot_number = 0
+                
+                if ref_items:
+                    ref_item = ref_items[0]
+                    if len(ref_items) > 1:
+                        ref_item = random.choice(ref_items)
+                    responsavel = ref_item.get("quem_cotou", "")
+                    lote = ref_item.get("lote", "")
+                    try:
+                        lot_number = int(''.join(filter(str.isdigit, lote))) if lote else 0
+                    except:
+                        lot_number = 0
+                
+                preco_venda = item.get("preco_venda_pdf") or item.get("preco_venda")
+                
+                processed_items.append(POItem(
+                    codigo_item=item["codigo_item"],
+                    quantidade=int(item.get("quantidade", 1)),
+                    unidade=item.get("unidade", "UN"),
+                    descricao=item.get("descricao", ""),
+                    endereco_entrega=oc_data.get("endereco_entrega", ""),
+                    responsavel=responsavel,
+                    lote=lote,
+                    lot_number=lot_number,
+                    regiao=item.get("regiao", ""),
+                    status="pendente",
+                    preco_venda=preco_venda
+                ))
+            
+            # Criar OC
+            po = PurchaseOrder(
+                numero_oc=oc_data["numero_oc"],
+                endereco_entrega=oc_data.get("endereco_entrega", ""),
+                items=processed_items,
+                created_by=current_user.get('sub')
+            )
+            
+            doc = po.model_dump()
+            doc['created_at'] = doc['created_at'].isoformat()
+            
+            await db.purchase_orders.insert_one(doc)
+            
+            results["success"].append({
+                "filename": file.filename,
+                "numero_oc": po.numero_oc,
+                "po_id": po.id,
+                "total_items": len(processed_items)
+            })
+            results["total_items_created"] += len(processed_items)
+            
+        except Exception as e:
+            results["failed"].append({
+                "filename": file.filename,
+                "error": str(e)
+            })
+    
+    results["total_processed"] = len(files)
+    
+    return results
+
 @api_router.get("/purchase-orders/check-duplicate/{numero_oc}")
 async def check_duplicate_purchase_order(numero_oc: str, current_user: dict = Depends(require_admin)):
     """Verificar se OC já existe (ADMIN ONLY)"""
