@@ -570,18 +570,6 @@ const CreatePO = () => {
             {/* Tabs */}
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '2px solid #e2e8f0' }}>
               <button
-                onClick={() => setActiveTab('manual')}
-                className={activeTab === 'manual' ? 'btn btn-primary' : 'btn btn-secondary'}
-                style={{ 
-                  borderRadius: '8px 8px 0 0', 
-                  borderBottom: activeTab === 'manual' ? '3px solid #667eea' : 'none',
-                  padding: '0.75rem 2rem'
-                }}
-                data-testid="tab-manual"
-              >
-                📝 Cadastro Manual
-              </button>
-              <button
                 onClick={() => setActiveTab('pdf')}
                 className={activeTab === 'pdf' ? 'btn btn-primary' : 'btn btn-secondary'}
                 style={{ 
@@ -592,6 +580,18 @@ const CreatePO = () => {
                 data-testid="tab-pdf"
               >
                 📄 Upload PDF
+              </button>
+              <button
+                onClick={() => setActiveTab('manual')}
+                className={activeTab === 'manual' ? 'btn btn-primary' : 'btn btn-secondary'}
+                style={{ 
+                  borderRadius: '8px 8px 0 0', 
+                  borderBottom: activeTab === 'manual' ? '3px solid #667eea' : 'none',
+                  padding: '0.75rem 2rem'
+                }}
+                data-testid="tab-manual"
+              >
+                📝 Cadastro Manual
               </button>
             </div>
 
