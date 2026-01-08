@@ -949,15 +949,21 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     """Estatísticas do dashboard"""
     pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(1000)
     
-    total_ocs = len(pos)
     all_items = []
+    ocs_with_user_items = 0
+    
     for po in pos:
         # Filtrar itens baseado no role
         if current_user['role'] != 'admin' and current_user.get('owner_name'):
             filtered_items = [item for item in po['items'] if item.get('responsavel') == current_user['owner_name']]
+            if filtered_items:  # Só contar OCs que têm itens do usuário
+                ocs_with_user_items += 1
             all_items.extend(filtered_items)
         else:
             all_items.extend(po['items'])
+    
+    # Para admins, total_ocs é o total de OCs. Para usuários, é apenas OCs com seus itens
+    total_ocs = len(pos) if current_user['role'] == 'admin' else ocs_with_user_items
     
     total_items = len(all_items)
     items_pendentes = sum(1 for item in all_items if item['status'] == ItemStatus.PENDENTE)
@@ -965,9 +971,17 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     items_comprados = sum(1 for item in all_items if item['status'] == ItemStatus.COMPRADO)
     items_entregues = sum(1 for item in all_items if item['status'] == ItemStatus.ENTREGUE)
     
+    # Para usuários não-admin, mostrar apenas seus próprios itens no breakdown por responsável
     items_por_responsavel = {}
-    for owner in ['Maria', 'Mateus', 'João', 'Mylena', 'Fabio']:
-        items_por_responsavel[owner] = sum(1 for item in all_items if item.get('responsavel') == owner)
+    if current_user['role'] == 'admin':
+        # Admin vê todos os responsáveis
+        for owner in ['Maria', 'Mateus', 'João', 'Mylena', 'Fabio']:
+            items_por_responsavel[owner] = sum(1 for item in all_items if item.get('responsavel') == owner)
+    else:
+        # Usuário não-admin vê apenas seus próprios itens
+        owner_name = current_user.get('owner_name')
+        if owner_name:
+            items_por_responsavel[owner_name] = sum(1 for item in all_items if item.get('responsavel') == owner_name)
     
     return DashboardStats(
         total_ocs=total_ocs,
