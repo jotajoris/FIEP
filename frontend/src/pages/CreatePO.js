@@ -264,10 +264,17 @@ const CreatePO = () => {
                   📋 Preview da OC: {pdfPreview.numero_oc}
                 </h2>
                 <p style={{ color: '#718096' }}>
-                  {pdfPreview.total_items} itens encontrados • Revise antes de confirmar
+                  {pdfPreview.items.length} itens • Revise e edite antes de confirmar
                 </p>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button 
+                  onClick={addPreviewItem}
+                  className="btn btn-secondary"
+                  data-testid="add-preview-item-btn"
+                >
+                  + Adicionar Item
+                </button>
                 <button 
                   onClick={cancelPreview} 
                   className="btn btn-secondary"
@@ -292,7 +299,7 @@ const CreatePO = () => {
               </div>
             )}
 
-            <div style={{ maxHeight: '400px', overflowY: 'auto', marginBottom: '1.5rem' }}>
+            <div style={{ maxHeight: '450px', overflowY: 'auto', marginBottom: '1.5rem' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead style={{ position: 'sticky', top: 0, background: '#667eea', color: 'white' }}>
                   <tr>
@@ -303,38 +310,143 @@ const CreatePO = () => {
                     <th style={{ padding: '0.75rem', textAlign: 'left' }}>Responsável</th>
                     <th style={{ padding: '0.75rem', textAlign: 'left' }}>Lote</th>
                     <th style={{ padding: '0.75rem', textAlign: 'right' }}>Preço Venda</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'center' }}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pdfPreview.items.map((item, index) => (
-                    <tr 
-                      key={index} 
-                      style={{ 
-                        background: index % 2 === 0 ? '#f7fafc' : 'white',
-                        borderBottom: '1px solid #e2e8f0'
-                      }}
-                    >
-                      <td style={{ padding: '0.75rem' }}>{index + 1}</td>
-                      <td style={{ padding: '0.75rem', fontWeight: '600' }}>{item.codigo_item}</td>
-                      <td style={{ padding: '0.75rem', maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {item.descricao}
-                      </td>
-                      <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                        {item.quantidade} {item.unidade}
-                      </td>
-                      <td style={{ padding: '0.75rem' }}>
-                        <span style={{ 
-                          color: item.responsavel.includes('NÃO ENCONTRADO') ? '#ef4444' : '#667eea',
-                          fontWeight: '600'
-                        }}>
-                          {item.responsavel}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.75rem' }}>{item.lote}</td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                        {item.preco_venda ? `R$ ${item.preco_venda.toFixed(2)}` : '-'}
-                      </td>
-                    </tr>
+                    editingPreviewItem === index ? (
+                      <tr key={index} style={{ background: '#e8f4fd' }}>
+                        <td style={{ padding: '0.5rem' }}>{index + 1}</td>
+                        <td style={{ padding: '0.5rem' }}>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={editForm.codigo_item}
+                            onChange={(e) => setEditForm({...editForm, codigo_item: e.target.value})}
+                            style={{ padding: '0.4rem', width: '90px' }}
+                          />
+                        </td>
+                        <td style={{ padding: '0.5rem' }}>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={editForm.descricao}
+                            onChange={(e) => setEditForm({...editForm, descricao: e.target.value})}
+                            style={{ padding: '0.4rem', width: '100%' }}
+                          />
+                        </td>
+                        <td style={{ padding: '0.5rem' }}>
+                          <div style={{ display: 'flex', gap: '0.25rem' }}>
+                            <input
+                              type="number"
+                              className="form-input"
+                              value={editForm.quantidade}
+                              onChange={(e) => setEditForm({...editForm, quantidade: e.target.value})}
+                              style={{ padding: '0.4rem', width: '60px' }}
+                              min="1"
+                            />
+                            <input
+                              type="text"
+                              className="form-input"
+                              value={editForm.unidade}
+                              onChange={(e) => setEditForm({...editForm, unidade: e.target.value})}
+                              style={{ padding: '0.4rem', width: '50px' }}
+                            />
+                          </div>
+                        </td>
+                        <td style={{ padding: '0.5rem' }}>
+                          <select
+                            className="form-input"
+                            value={editForm.responsavel}
+                            onChange={(e) => setEditForm({...editForm, responsavel: e.target.value})}
+                            style={{ padding: '0.4rem' }}
+                          >
+                            <option value="">Selecione...</option>
+                            <option value="Maria">Maria</option>
+                            <option value="Mateus">Mateus</option>
+                            <option value="João">João</option>
+                            <option value="Mylena">Mylena</option>
+                            <option value="Fabio">Fabio</option>
+                          </select>
+                        </td>
+                        <td style={{ padding: '0.5rem' }}>{item.lote || '-'}</td>
+                        <td style={{ padding: '0.5rem' }}>
+                          <input
+                            type="number"
+                            step="0.01"
+                            className="form-input"
+                            value={editForm.preco_venda}
+                            onChange={(e) => setEditForm({...editForm, preco_venda: e.target.value})}
+                            style={{ padding: '0.4rem', width: '80px' }}
+                            placeholder="R$"
+                          />
+                        </td>
+                        <td style={{ padding: '0.5rem', textAlign: 'center' }}>
+                          <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
+                            <button
+                              onClick={saveEditPreviewItem}
+                              style={{ background: '#10b981', color: 'white', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
+                            >
+                              ✓
+                            </button>
+                            <button
+                              onClick={cancelEditPreviewItem}
+                              style={{ background: '#6b7280', color: 'white', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      <tr 
+                        key={index} 
+                        style={{ 
+                          background: index % 2 === 0 ? '#f7fafc' : 'white',
+                          borderBottom: '1px solid #e2e8f0'
+                        }}
+                      >
+                        <td style={{ padding: '0.75rem' }}>{index + 1}</td>
+                        <td style={{ padding: '0.75rem', fontWeight: '600' }}>{item.codigo_item}</td>
+                        <td style={{ padding: '0.75rem', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {item.descricao}
+                        </td>
+                        <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                          {item.quantidade} {item.unidade}
+                        </td>
+                        <td style={{ padding: '0.75rem' }}>
+                          <span style={{ 
+                            color: item.responsavel?.includes('NÃO ENCONTRADO') ? '#ef4444' : '#667eea',
+                            fontWeight: '600'
+                          }}>
+                            {item.responsavel || '-'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '0.75rem' }}>{item.lote || '-'}</td>
+                        <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                          {item.preco_venda ? `R$ ${item.preco_venda.toFixed(2)}` : '-'}
+                        </td>
+                        <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                          <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
+                            <button
+                              onClick={() => startEditPreviewItem(index)}
+                              style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
+                              title="Editar"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              onClick={() => removePreviewItem(index)}
+                              style={{ background: '#ef4444', color: 'white', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
+                              title="Remover"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
                   ))}
                 </tbody>
               </table>
