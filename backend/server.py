@@ -183,6 +183,7 @@ class ItemStatusUpdate(BaseModel):
     imposto: Optional[float] = None
     frete_compra: Optional[float] = None
     frete_envio: Optional[float] = None
+    fontes_compra: Optional[List[FonteCompra]] = None
 
 class DashboardStats(BaseModel):
     total_ocs: int
