@@ -247,7 +247,7 @@ async def send_password_reset_email(email: str, reset_token: str):
 
 # Authentication Routes
 @api_router.post("/auth/seed-users")
-async def seed_users():
+async def seed_users(force_recreate: bool = False):
     """Criar usuários iniciais do sistema"""
     users_data = [
         # Admins
@@ -263,11 +263,19 @@ async def seed_users():
     default_password = "on123456"
     created_count = 0
     
+    # Se force_recreate, deletar todos os usuários
+    if force_recreate:
+        await db.users.delete_many({})
+    
     for user_data in users_data:
         # Verificar se usuário já existe
         existing = await db.users.find_one({"email": user_data["email"]}, {"_id": 0})
-        if existing:
+        if existing and not force_recreate:
             continue
+        
+        # Se existe e force_recreate, deletar
+        if existing and force_recreate:
+            await db.users.delete_one({"email": user_data["email"]})
         
         # Criar reset token
         reset_token = str(uuid.uuid4())
@@ -278,7 +286,7 @@ async def seed_users():
             hashed_password=get_password_hash(default_password),
             role=user_data["role"],
             owner_name=user_data["owner_name"],
-            needs_password_change=True,
+            needs_password_change=False,  # Não forçar troca de senha
             reset_token=reset_token,
             reset_token_expires=reset_expires
         )
@@ -290,11 +298,13 @@ async def seed_users():
         
         await db.users.insert_one(doc)
         
-        # Enviar email
-        await send_password_reset_email(user.email, reset_token)
+        # Enviar email apenas se RESEND_API_KEY estiver configurado
+        if os.environ.get('RESEND_API_KEY'):
+            await send_password_reset_email(user.email, reset_token)
+        
         created_count += 1
     
-    return {"message": f"{created_count} usuários criados e emails enviados"}
+    return {"message": f"{created_count} usuários criados com senha padrão: on123456"}
 
 @api_router.post("/auth/login", response_model=LoginResponse)
 async def login(request: LoginRequest):
