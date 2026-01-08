@@ -201,11 +201,11 @@ const CreatePO = () => {
     }
   };
 
-  // Preview do PDF (não cria a OC ainda)
+  // Preview do PDF (não cria a OC ainda) - modo single
   const handlePreviewPDF = async (e) => {
     e.preventDefault();
     
-    if (!pdfFile) {
+    if (pdfFiles.length === 0) {
       alert('Por favor, selecione um arquivo PDF');
       return;
     }
@@ -213,7 +213,7 @@ const CreatePO = () => {
     setLoading(true);
     try {
       const formData = new FormData();
-      formData.append('file', pdfFile);
+      formData.append('file', pdfFiles[0]);
 
       const token = localStorage.getItem('token');
       const response = await fetch(`${API}/purchase-orders/preview-pdf`, {
