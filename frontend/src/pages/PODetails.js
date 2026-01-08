@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import { apiGet, apiPatch, apiDelete, API } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const PODetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const [po, setPo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState(null);
@@ -19,7 +18,7 @@ const PODetails = () => {
 
   const loadPO = async () => {
     try {
-      const response = await axios.get(`${API}/purchase-orders/${id}`);
+      const response = await apiGet(`${API}/purchase-orders/${id}`);
       setPo(response.data);
     } catch (error) {
       console.error('Erro ao carregar OC:', error);
@@ -27,6 +26,21 @@ const PODetails = () => {
       navigate('/');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Tem certeza que deseja deletar esta Ordem de Compra? Esta ação não pode ser desfeita.')) {
+      return;
+    }
+
+    try {
+      await apiDelete(`${API}/purchase-orders/${id}`);
+      alert('Ordem de Compra deletada com sucesso!');
+      navigate('/');
+    } catch (error) {
+      console.error('Erro ao deletar OC:', error);
+      alert('Erro ao deletar Ordem de Compra');
     }
   };
 
