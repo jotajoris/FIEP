@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { apiGet, apiPatch, API } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
+import { v4 as uuidv4 } from 'uuid';
 
 const ItemsByStatus = () => {
   const { status } = useParams();
@@ -27,7 +28,6 @@ const ItemsByStatus = () => {
     try {
       const response = await apiGet(`${API}/purchase-orders`);
       
-      // Flatten todos os itens de todas as OCs
       const allItems = [];
       response.data.forEach(po => {
         po.items.forEach(item => {
@@ -51,14 +51,26 @@ const ItemsByStatus = () => {
 
   const startEdit = (item) => {
     setEditingItem(`${item.po_id}-${item.codigo_item}`);
+    
+    // Se já tem fontes de compra, usar elas; senão criar uma vazia
+    const fontesExistentes = item.fontes_compra && item.fontes_compra.length > 0 
+      ? item.fontes_compra 
+      : [];
+    
     setFormData({
       status: item.status,
-      link_compra: item.link_compra || '',
-      preco_compra: item.preco_compra || '',
       preco_venda: item.preco_venda || '',
       imposto: item.imposto || '',
-      frete_compra: item.frete_compra || '',
-      frete_envio: item.frete_envio || ''
+      frete_envio: item.frete_envio || '',
+      fontes_compra: fontesExistentes.length > 0 ? fontesExistentes : [{
+        id: uuidv4(),
+        quantidade: item.quantidade || 1,
+        preco_unitario: item.preco_compra || '',
+        frete: item.frete_compra || '',
+        link: item.link_compra || '',
+        fornecedor: ''
+      }],
+      quantidade_total: item.quantidade
     });
   };
 
@@ -67,17 +79,66 @@ const ItemsByStatus = () => {
     setFormData({});
   };
 
+  const addFonteCompra = () => {
+    setFormData({
+      ...formData,
+      fontes_compra: [...formData.fontes_compra, {
+        id: uuidv4(),
+        quantidade: 1,
+        preco_unitario: '',
+        frete: '',
+        link: '',
+        fornecedor: ''
+      }]
+    });
+  };
+
+  const removeFonteCompra = (index) => {
+    const newFontes = formData.fontes_compra.filter((_, i) => i !== index);
+    setFormData({ ...formData, fontes_compra: newFontes });
+  };
+
+  const updateFonteCompra = (index, field, value) => {
+    const newFontes = [...formData.fontes_compra];
+    newFontes[index] = { ...newFontes[index], [field]: value };
+    setFormData({ ...formData, fontes_compra: newFontes });
+  };
+
+  const calcularTotalFontes = () => {
+    let totalQtd = 0;
+    let totalCusto = 0;
+    let totalFrete = 0;
+    
+    formData.fontes_compra?.forEach(fc => {
+      const qtd = parseInt(fc.quantidade) || 0;
+      const preco = parseFloat(fc.preco_unitario) || 0;
+      const frete = parseFloat(fc.frete) || 0;
+      totalQtd += qtd;
+      totalCusto += qtd * preco;
+      totalFrete += frete;
+    });
+    
+    return { totalQtd, totalCusto, totalFrete };
+  };
+
   const saveEdit = async (item) => {
     try {
-      await apiPatch(`${API}/purchase-orders/${item.po_id}/items/${item.codigo_item}`, {
+      const payload = {
         status: formData.status,
-        link_compra: formData.link_compra || null,
-        preco_compra: formData.preco_compra ? parseFloat(formData.preco_compra) : null,
         preco_venda: formData.preco_venda ? parseFloat(formData.preco_venda) : null,
         imposto: formData.imposto ? parseFloat(formData.imposto) : null,
-        frete_compra: formData.frete_compra ? parseFloat(formData.frete_compra) : null,
-        frete_envio: formData.frete_envio ? parseFloat(formData.frete_envio) : null
-      });
+        frete_envio: formData.frete_envio ? parseFloat(formData.frete_envio) : null,
+        fontes_compra: formData.fontes_compra.map(fc => ({
+          id: fc.id,
+          quantidade: parseInt(fc.quantidade) || 0,
+          preco_unitario: parseFloat(fc.preco_unitario) || 0,
+          frete: parseFloat(fc.frete) || 0,
+          link: fc.link || '',
+          fornecedor: fc.fornecedor || ''
+        })).filter(fc => fc.quantidade > 0)
+      };
+      
+      await apiPatch(`${API}/purchase-orders/${item.po_id}/items/${item.codigo_item}`, payload);
       
       setEditingItem(null);
       setFormData({});
@@ -150,7 +211,8 @@ const ItemsByStatus = () => {
 
                 {editingItem === `${item.po_id}-${item.codigo_item}` ? (
                   <div style={{ marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: '8px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                    {/* Status */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
                       <div className="form-group">
                         <label className="form-label">Status</label>
                         <select
@@ -166,48 +228,10 @@ const ItemsByStatus = () => {
                         </select>
                       </div>
                       
-                      <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                        <label className="form-label">Link de Compra</label>
-                        <input
-                          type="url"
-                          className="form-input"
-                          value={formData.link_compra}
-                          onChange={(e) => setFormData({ ...formData, link_compra: e.target.value })}
-                          placeholder="https://..."
-                          data-testid={`input-link-${item.codigo_item}`}
-                        />
-                      </div>
-                      
-                      <div className="form-group">
-                        <label className="form-label">Preço Compra (R$)</label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          className="form-input"
-                          value={formData.preco_compra}
-                          onChange={(e) => setFormData({ ...formData, preco_compra: e.target.value })}
-                          placeholder="Preço que você conseguiu"
-                          data-testid={`input-preco-compra-${item.codigo_item}`}
-                        />
-                      </div>
-                      
-                      <div className="form-group">
-                        <label className="form-label">Frete Compra (R$)</label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          className="form-input"
-                          value={formData.frete_compra}
-                          onChange={(e) => setFormData({ ...formData, frete_compra: e.target.value })}
-                          placeholder="Frete da compra"
-                          data-testid={`input-frete-compra-${item.codigo_item}`}
-                        />
-                      </div>
-                      
                       {isAdmin() && (
                         <>
                           <div className="form-group">
-                            <label className="form-label">Preço Venda (R$)</label>
+                            <label className="form-label">Preço Venda Unit. (R$)</label>
                             <input
                               type="number"
                               step="0.01"
@@ -236,14 +260,156 @@ const ItemsByStatus = () => {
                               className="form-input"
                               value={formData.frete_envio}
                               onChange={(e) => setFormData({ ...formData, frete_envio: e.target.value })}
-                              placeholder="Frete de envio/embalagem"
                               data-testid={`input-frete-envio-${item.codigo_item}`}
                             />
                           </div>
                         </>
                       )}
                     </div>
-                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+
+                    {/* Fontes de Compra */}
+                    <div style={{ borderTop: '2px solid #e2e8f0', paddingTop: '1rem', marginTop: '1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '600', color: '#4a5568' }}>
+                          📦 Locais de Compra
+                        </h4>
+                        <button
+                          type="button"
+                          onClick={addFonteCompra}
+                          className="btn btn-secondary"
+                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+                          data-testid={`add-fonte-${item.codigo_item}`}
+                        >
+                          + Adicionar Local
+                        </button>
+                      </div>
+
+                      {formData.fontes_compra?.map((fonte, idx) => (
+                        <div 
+                          key={fonte.id} 
+                          style={{ 
+                            background: '#f0f4f8', 
+                            padding: '1rem', 
+                            borderRadius: '8px', 
+                            marginBottom: '0.75rem',
+                            border: '1px solid #e2e8f0'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                            <span style={{ fontWeight: '600', color: '#667eea', fontSize: '0.9rem' }}>
+                              Local #{idx + 1}
+                            </span>
+                            {formData.fontes_compra.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeFonteCompra(idx)}
+                                style={{ 
+                                  background: '#ef4444', 
+                                  color: 'white', 
+                                  border: 'none', 
+                                  padding: '0.25rem 0.5rem', 
+                                  borderRadius: '4px', 
+                                  cursor: 'pointer',
+                                  fontSize: '0.8rem'
+                                }}
+                              >
+                                Remover
+                              </button>
+                            )}
+                          </div>
+                          
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.75rem' }}>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                              <label className="form-label" style={{ fontSize: '0.8rem' }}>Quantidade</label>
+                              <input
+                                type="number"
+                                className="form-input"
+                                value={fonte.quantidade}
+                                onChange={(e) => updateFonteCompra(idx, 'quantidade', e.target.value)}
+                                min="1"
+                                style={{ padding: '0.5rem' }}
+                              />
+                            </div>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                              <label className="form-label" style={{ fontSize: '0.8rem' }}>Preço Unit. (R$)</label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                className="form-input"
+                                value={fonte.preco_unitario}
+                                onChange={(e) => updateFonteCompra(idx, 'preco_unitario', e.target.value)}
+                                style={{ padding: '0.5rem' }}
+                              />
+                            </div>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                              <label className="form-label" style={{ fontSize: '0.8rem' }}>Frete (R$)</label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                className="form-input"
+                                value={fonte.frete}
+                                onChange={(e) => updateFonteCompra(idx, 'frete', e.target.value)}
+                                style={{ padding: '0.5rem' }}
+                              />
+                            </div>
+                            <div className="form-group" style={{ marginBottom: 0, gridColumn: 'span 2' }}>
+                              <label className="form-label" style={{ fontSize: '0.8rem' }}>Link de Compra</label>
+                              <input
+                                type="url"
+                                className="form-input"
+                                value={fonte.link}
+                                onChange={(e) => updateFonteCompra(idx, 'link', e.target.value)}
+                                placeholder="https://..."
+                                style={{ padding: '0.5rem' }}
+                              />
+                            </div>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                              <label className="form-label" style={{ fontSize: '0.8rem' }}>Fornecedor</label>
+                              <input
+                                type="text"
+                                className="form-input"
+                                value={fonte.fornecedor}
+                                onChange={(e) => updateFonteCompra(idx, 'fornecedor', e.target.value)}
+                                placeholder="Nome do fornecedor"
+                                style={{ padding: '0.5rem' }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Resumo das fontes */}
+                      {formData.fontes_compra?.length > 0 && (
+                        <div style={{ 
+                          background: '#e8f4fd', 
+                          padding: '0.75rem 1rem', 
+                          borderRadius: '8px', 
+                          marginTop: '1rem',
+                          display: 'flex',
+                          gap: '2rem',
+                          flexWrap: 'wrap',
+                          fontSize: '0.9rem'
+                        }}>
+                          {(() => {
+                            const { totalQtd, totalCusto, totalFrete } = calcularTotalFontes();
+                            const qtdRestante = (formData.quantidade_total || item.quantidade) - totalQtd;
+                            return (
+                              <>
+                                <span>
+                                  <strong>Total Qtd:</strong> {totalQtd} / {formData.quantidade_total || item.quantidade}
+                                  {qtdRestante > 0 && <span style={{ color: '#f59e0b' }}> (faltam {qtdRestante})</span>}
+                                  {qtdRestante < 0 && <span style={{ color: '#ef4444' }}> (excedeu {Math.abs(qtdRestante)})</span>}
+                                </span>
+                                <span><strong>Custo Total:</strong> R$ {totalCusto.toFixed(2)}</span>
+                                <span><strong>Frete Total:</strong> R$ {totalFrete.toFixed(2)}</span>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
                       <button onClick={cancelEdit} className="btn btn-secondary" style={{ padding: '0.5rem 1rem' }} data-testid={`cancel-edit-${item.codigo_item}`}>
                         Cancelar
                       </button>
@@ -253,73 +419,83 @@ const ItemsByStatus = () => {
                     </div>
                   </div>
                 ) : (
-                  <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.9rem', flexWrap: 'wrap' }}>
-                      {item.link_compra && (
-                        <span>
-                          <strong>Link:</strong>{' '}
-                          <a 
-                            href={item.link_compra} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            style={{ color: '#667eea', textDecoration: 'underline' }}
-                          >
-                            Ver link de compra
-                          </a>
-                        </span>
-                      )}
-                      {item.preco_venda && (
-                        <span>
-                          <strong>Preço Venda Unit.:</strong> R$ {item.preco_venda.toFixed(2)}
-                        </span>
-                      )}
-                      {item.preco_venda && (
-                        <span>
-                          <strong>Valor Total Venda:</strong> <strong style={{ color: '#3b82f6' }}>R$ {(item.preco_venda * item.quantidade).toFixed(2)}</strong>
-                        </span>
-                      )}
-                      {item.preco_compra && (
-                        <span>
-                          <strong>Preço Compra Unit.:</strong> R$ {item.preco_compra.toFixed(2)}
-                        </span>
-                      )}
-                      {item.preco_compra && (
-                        <span>
-                          <strong>Total Compra:</strong> R$ {(item.preco_compra * item.quantidade).toFixed(2)}
-                        </span>
-                      )}
-                      {item.imposto && (
-                        <span>
-                          <strong>Imposto:</strong> R$ {item.imposto.toFixed(2)}
-                        </span>
-                      )}
-                      {item.frete_compra && (
-                        <span>
-                          <strong>Frete Compra:</strong> R$ {item.frete_compra.toFixed(2)}
-                        </span>
-                      )}
-                      {isAdmin() && item.frete_envio && (
-                        <span>
-                          <strong>Frete Envio:</strong> R$ {item.frete_envio.toFixed(2)}
-                        </span>
-                      )}
-                      {isAdmin() && item.lucro_liquido !== undefined && item.lucro_liquido !== null && (
-                        <span>
-                          <strong>Lucro Líquido:</strong>{' '}
-                          <span style={{ color: item.lucro_liquido > 0 ? '#10b981' : '#ef4444', fontWeight: '700' }}>
-                            R$ {item.lucro_liquido.toFixed(2)}
+                  <div style={{ marginTop: '1rem' }}>
+                    {/* Mostrar fontes de compra se existirem */}
+                    {item.fontes_compra && item.fontes_compra.length > 0 && (
+                      <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#e8f4fd', borderRadius: '8px' }}>
+                        <div style={{ fontWeight: '600', marginBottom: '0.5rem', color: '#4a5568', fontSize: '0.9rem' }}>
+                          📦 Locais de Compra ({item.fontes_compra.length})
+                        </div>
+                        {item.fontes_compra.map((fc, idx) => (
+                          <div key={fc.id || idx} style={{ 
+                            display: 'flex', 
+                            gap: '1rem', 
+                            fontSize: '0.85rem',
+                            padding: '0.5rem',
+                            background: 'white',
+                            borderRadius: '4px',
+                            marginBottom: '0.25rem',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span><strong>Qtd:</strong> {fc.quantidade}</span>
+                            <span><strong>Preço:</strong> R$ {fc.preco_unitario?.toFixed(2)}</span>
+                            <span><strong>Frete:</strong> R$ {(fc.frete || 0).toFixed(2)}</span>
+                            {fc.fornecedor && <span><strong>Fornecedor:</strong> {fc.fornecedor}</span>}
+                            {fc.link && (
+                              <a href={fc.link} target="_blank" rel="noopener noreferrer" style={{ color: '#667eea' }}>
+                                Ver link
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.9rem', flexWrap: 'wrap' }}>
+                        {item.preco_venda && (
+                          <span>
+                            <strong>Preço Venda Unit.:</strong> R$ {item.preco_venda.toFixed(2)}
                           </span>
-                        </span>
-                      )}
+                        )}
+                        {item.preco_venda && (
+                          <span>
+                            <strong>Valor Total Venda:</strong> <strong style={{ color: '#3b82f6' }}>R$ {(item.preco_venda * item.quantidade).toFixed(2)}</strong>
+                          </span>
+                        )}
+                        {item.preco_compra && (
+                          <span>
+                            <strong>Preço Compra Médio:</strong> R$ {item.preco_compra.toFixed(2)}
+                          </span>
+                        )}
+                        {item.frete_compra && (
+                          <span>
+                            <strong>Frete Compra:</strong> R$ {item.frete_compra.toFixed(2)}
+                          </span>
+                        )}
+                        {isAdmin() && item.frete_envio && (
+                          <span>
+                            <strong>Frete Envio:</strong> R$ {item.frete_envio.toFixed(2)}
+                          </span>
+                        )}
+                        {isAdmin() && item.lucro_liquido !== undefined && item.lucro_liquido !== null && (
+                          <span>
+                            <strong>Lucro Líquido:</strong>{' '}
+                            <span style={{ color: item.lucro_liquido > 0 ? '#10b981' : '#ef4444', fontWeight: '700' }}>
+                              R$ {item.lucro_liquido.toFixed(2)}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                      <button 
+                        onClick={() => startEdit(item)} 
+                        className="btn btn-secondary" 
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} 
+                        data-testid={`edit-item-${item.codigo_item}`}
+                      >
+                        Editar
+                      </button>
                     </div>
-                    <button 
-                      onClick={() => startEdit(item)} 
-                      className="btn btn-secondary" 
-                      style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} 
-                      data-testid={`edit-item-${item.codigo_item}`}
-                    >
-                      Editar
-                    </button>
                   </div>
                 )}
               </div>
