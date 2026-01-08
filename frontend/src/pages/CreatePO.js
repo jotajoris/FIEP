@@ -13,11 +13,13 @@ const CreatePO = () => {
     unidade: 'UN',
     preco_venda: ''
   }]);
-  const [pdfFile, setPdfFile] = useState(null);
+  const [pdfFiles, setPdfFiles] = useState([]);  // Alterado para múltiplos arquivos
   const [loading, setLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [uploadMode, setUploadMode] = useState('single'); // 'single' ou 'multiple'
+  const [multipleResults, setMultipleResults] = useState(null); // Resultados do upload múltiplo
   
-  // Estados para preview do PDF
+  // Estados para preview do PDF (modo single)
   const [pdfPreview, setPdfPreview] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
   const [editingPreviewItem, setEditingPreviewItem] = useState(null);
@@ -46,16 +48,76 @@ const CreatePO = () => {
     e.stopPropagation();
     setIsDragging(false);
     
-    const files = e.dataTransfer.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-        setPdfFile(file);
+    const files = Array.from(e.dataTransfer.files).filter(
+      f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+    );
+    
+    if (files.length > 0) {
+      if (files.length === 1) {
+        setPdfFiles(files);
+        setUploadMode('single');
       } else {
-        alert('Por favor, selecione apenas arquivos PDF');
+        setPdfFiles(files);
+        setUploadMode('multiple');
       }
+    } else {
+      alert('Por favor, selecione apenas arquivos PDF');
     }
   }, []);
+  
+  // Handler para seleção de arquivos via input
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files).filter(
+      f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+    );
+    if (files.length > 0) {
+      if (files.length === 1) {
+        setPdfFiles(files);
+        setUploadMode('single');
+      } else {
+        setPdfFiles(files);
+        setUploadMode('multiple');
+      }
+    }
+  };
+  
+  // Upload múltiplo
+  const handleMultipleUpload = async () => {
+    if (pdfFiles.length === 0) return;
+    
+    setLoading(true);
+    setMultipleResults(null);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      pdfFiles.forEach(file => {
+        formData.append('files', file);
+      });
+      
+      const response = await fetch(`${API}/purchase-orders/upload-multiple-pdfs`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.detail || 'Erro ao processar PDFs');
+      }
+      
+      setMultipleResults(data);
+      
+    } catch (error) {
+      console.error('Erro no upload múltiplo:', error);
+      alert(error.message || 'Erro ao processar PDFs');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const addItem = () => {
     setItems([...items, {
