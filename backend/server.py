@@ -286,6 +286,7 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                                 quantidade = 0
                                 unidade = "UN"
                                 descricao_parts = []
+                                preco_pdf = None  # Inicializar aqui
                                 
                                 for j in range(i+1, min(i+25, len(lines))):
                                     check_line = lines[j].strip()
