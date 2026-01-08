@@ -176,19 +176,21 @@ const ItemsByStatus = () => {
                         />
                       </div>
                       
+                      <div className="form-group">
+                        <label className="form-label">Preço Compra (R$)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="form-input"
+                          value={formData.preco_compra}
+                          onChange={(e) => setFormData({ ...formData, preco_compra: e.target.value })}
+                          placeholder="Preço que você conseguiu"
+                          data-testid={`input-preco-compra-${item.codigo_item}`}
+                        />
+                      </div>
+                      
                       {isAdmin() && (
                         <>
-                          <div className="form-group">
-                            <label className="form-label">Preço Compra (R$)</label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              className="form-input"
-                              value={formData.preco_compra}
-                              onChange={(e) => setFormData({ ...formData, preco_compra: e.target.value })}
-                              data-testid={`input-preco-compra-${item.codigo_item}`}
-                            />
-                          </div>
                           <div className="form-group">
                             <label className="form-label">Preço Venda (R$)</label>
                             <input
@@ -250,24 +252,38 @@ const ItemsByStatus = () => {
                           </a>
                         </span>
                       )}
-                      {isAdmin() && (
-                        <>
-                          {item.preco_venda && (
-                            <span>
-                              <strong>Venda:</strong> R$ {item.preco_venda.toFixed(2)}
-                              <small> (Total: R$ {(item.preco_venda * item.quantidade).toFixed(2)})</small>
-                            </span>
-                          )}
-                          {item.preco_compra && <span><strong>Compra:</strong> R$ {item.preco_compra.toFixed(2)}</span>}
-                          {item.lucro_liquido && (
-                            <span>
-                              <strong>Lucro:</strong>{' '}
-                              <span style={{ color: item.lucro_liquido > 0 ? '#10b981' : '#ef4444', fontWeight: '700' }}>
-                                R$ {item.lucro_liquido.toFixed(2)}
-                              </span>
-                            </span>
-                          )}
-                        </>
+                      {item.preco_venda && (
+                        <span>
+                          <strong>Preço Venda Unit.:</strong> R$ {item.preco_venda.toFixed(2)}
+                        </span>
+                      )}
+                      {item.preco_venda && (
+                        <span>
+                          <strong>Valor Total Venda:</strong> <strong style={{ color: '#3b82f6' }}>R$ {(item.preco_venda * item.quantidade).toFixed(2)}</strong>
+                        </span>
+                      )}
+                      {item.preco_compra && (
+                        <span>
+                          <strong>Preço Compra Unit.:</strong> R$ {item.preco_compra.toFixed(2)}
+                        </span>
+                      )}
+                      {item.preco_compra && (
+                        <span>
+                          <strong>Total Compra:</strong> R$ {(item.preco_compra * item.quantidade).toFixed(2)}
+                        </span>
+                      )}
+                      {item.imposto && (
+                        <span>
+                          <strong>Imposto:</strong> R$ {item.imposto.toFixed(2)}
+                        </span>
+                      )}
+                      {isAdmin() && item.lucro_liquido && (
+                        <span>
+                          <strong>Lucro Líquido:</strong>{' '}
+                          <span style={{ color: item.lucro_liquido > 0 ? '#10b981' : '#ef4444', fontWeight: '700' }}>
+                            R$ {item.lucro_liquido.toFixed(2)}
+                          </span>
+                        </span>
                       )}
                     </div>
                     <button 
