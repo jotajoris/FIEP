@@ -205,39 +205,109 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
         
         doc.close()
         
-        # Extrair número da OC
-        oc_match = re.search(r'OC[- ]?(\d+[\.\d]+)', full_text, re.IGNORECASE)
-        numero_oc = oc_match.group(0) if oc_match else "OC-" + str(uuid.uuid4())[:8]
+        # Extrair número da OC - procurar por padrões como OC-X.XXXXXX
+        oc_patterns = [
+            r'OC[- ]?(\d+[\.\d]+)',  # OC-2.121437 ou OC 2.121437
+            r'Ordem de Compra[:\s]+(\d+[\.\d]+)',
+            r'N[úu]mero[:\s]+(\d+[\.\d]+)'
+        ]
+        
+        numero_oc = None
+        for pattern in oc_patterns:
+            oc_match = re.search(pattern, full_text, re.IGNORECASE)
+            if oc_match:
+                numero_oc = f"OC-{oc_match.group(1)}"
+                break
+        
+        if not numero_oc:
+            numero_oc = "OC-" + str(uuid.uuid4())[:8]
         
         # Extrair endereço de entrega
-        endereco_match = re.search(r'Endereço de Entrega[:\s]*(.*?)(?:\n|Linha)', full_text, re.IGNORECASE | re.DOTALL)
-        endereco_entrega = endereco_match.group(1).strip() if endereco_match else ""
+        endereco_patterns = [
+            r'Endere[çc]o de Entrega[:\s]*(.*?)(?:\n\n|Linha|Item)',
+            r'Local de Entrega[:\s]*(.*?)(?:\n\n|Linha|Item)',
+            r'Entregar em[:\s]*(.*?)(?:\n\n|Linha|Item)'
+        ]
         
-        # Extrair itens - procurar por códigos de 6 dígitos seguidos de descrição
+        endereco_entrega = ""
+        for pattern in endereco_patterns:
+            endereco_match = re.search(pattern, full_text, re.IGNORECASE | re.DOTALL)
+            if endereco_match:
+                endereco_entrega = endereco_match.group(1).strip()
+                # Limpar quebras de linha
+                endereco_entrega = ' '.join(endereco_entrega.split())
+                break
+        
+        # Extrair região de entrega
+        regiao = ""
+        regiao_match = re.search(r'Regi[ãa]o[:\s]*(.*?)(?:\n|$)', full_text, re.IGNORECASE)
+        if regiao_match:
+            regiao = regiao_match.group(1).strip()
+        
+        # Extrair itens - procurar por código de 6 dígitos seguido de quantidade e descrição
         items = []
-        item_pattern = r'(\d{6})\s*([^\n]+)\s+(\d+)\s+UN\s+([\d,\.]+)\s+([\d,\.]+)'
         
-        for match in re.finditer(item_pattern, full_text):
-            codigo = match.group(1)
-            quantidade = int(match.group(3))
-            
-            # Procurar descrição completa para este código
-            desc_pattern = f'{codigo}\\s*-\\s*([^\\n]+(?:\\n(?!\\d{{6}})[^\\n]+)*)'
-            desc_match = re.search(desc_pattern, full_text, re.MULTILINE)
-            descricao = desc_match.group(1).strip() if desc_match else match.group(2).strip()
-            
-            items.append({
-                "codigo_item": codigo,
-                "quantidade": quantidade,
-                "descricao": descricao,
-                "unidade": "UN",
-                "endereco_entrega": endereco_entrega
-            })
+        # Padrão mais robusto para extrair itens da tabela
+        # Procura por: CÓDIGO (6 dígitos) seguido de quantidade e unidade
+        lines = full_text.split('\n')
+        
+        for i, line in enumerate(lines):
+            # Procurar por código de 6 dígitos
+            codigo_match = re.search(r'\b(\d{6})\b', line)
+            if codigo_match:
+                codigo = codigo_match.group(1)
+                
+                # Tentar extrair quantidade e unidade na mesma linha ou próximas
+                quantidade = 0
+                unidade = "UN"
+                
+                # Procurar padrão: NÚMERO seguido de UN/KG/PC/M etc
+                qty_match = re.search(r'\b(\d+)\s*(UN|UND|UNID|KG|PC|M|L|CX)\b', line, re.IGNORECASE)
+                if qty_match:
+                    quantidade = int(qty_match.group(1))
+                    unidade = qty_match.group(2).upper()
+                else:
+                    # Procurar nas próximas 2 linhas
+                    for j in range(i+1, min(i+3, len(lines))):
+                        qty_match = re.search(r'\b(\d+)\s*(UN|UND|UNID|KG|PC|M|L|CX)\b', lines[j], re.IGNORECASE)
+                        if qty_match:
+                            quantidade = int(qty_match.group(1))
+                            unidade = qty_match.group(2).upper()
+                            break
+                
+                if quantidade > 0:
+                    # Extrair descrição (geralmente está na linha seguinte ou na mesma linha após o código)
+                    descricao = ""
+                    
+                    # Tentar extrair descrição da linha atual (após o código)
+                    desc_part = line.split(codigo, 1)
+                    if len(desc_part) > 1:
+                        descricao = desc_part[1].strip()
+                        # Remover quantidade e unidade se aparecerem na descrição
+                        descricao = re.sub(r'\b\d+\s*(UN|UND|UNID|KG|PC|M|L|CX)\b', '', descricao, flags=re.IGNORECASE)
+                        descricao = descricao.strip()
+                    
+                    # Se descrição está vazia, procurar nas próximas linhas
+                    if not descricao or len(descricao) < 5:
+                        for j in range(i+1, min(i+4, len(lines))):
+                            if lines[j].strip() and not re.match(r'^\d+$', lines[j].strip()):
+                                descricao = lines[j].strip()
+                                break
+                    
+                    items.append({
+                        "codigo_item": codigo,
+                        "quantidade": quantidade,
+                        "descricao": descricao or f"Item {codigo}",
+                        "unidade": unidade,
+                        "endereco_entrega": endereco_entrega,
+                        "regiao": regiao
+                    })
         
         return {
             "numero_oc": numero_oc,
             "items": items,
-            "endereco_entrega": endereco_entrega
+            "endereco_entrega": endereco_entrega,
+            "regiao": regiao
         }
     
     except Exception as e:
