@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const Login = () => {
@@ -107,7 +107,9 @@ const Login = () => {
         </form>
 
         <p style={{ textAlign: 'center', marginTop: '1.5rem', color: '#718096', fontSize: '0.9rem' }}>
-          Esqueceu sua senha? Entre em contato com o administrador.
+          <Link to="/forgot-password" style={{ color: '#667eea', textDecoration: 'none' }}>
+            Esqueceu sua senha?
+          </Link>
         </p>
       </div>
     </div>
