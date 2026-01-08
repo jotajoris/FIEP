@@ -158,18 +158,33 @@ const CreatePO = () => {
         {/* Formulário Manual */}
         {activeTab === 'manual' && (
           <form onSubmit={handleSubmitManual}>
-            <div className="form-group">
-              <label className="form-label" htmlFor="numero-oc">Número da OC *</label>
-              <input
-                id="numero-oc"
-                type="text"
-                className="form-input"
-                value={numeroOC}
-                onChange={(e) => setNumeroOC(e.target.value)}
-                placeholder="Ex: OC-2024-001"
-                required
-                data-testid="input-numero-oc"
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div className="form-group">
+                <label className="form-label" htmlFor="numero-oc">Número da OC *</label>
+                <input
+                  id="numero-oc"
+                  type="text"
+                  className="form-input"
+                  value={numeroOC}
+                  onChange={(e) => setNumeroOC(e.target.value)}
+                  placeholder="Ex: OC-2024-001"
+                  required
+                  data-testid="input-numero-oc"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="endereco-entrega">Endereço de Entrega</label>
+                <input
+                  id="endereco-entrega"
+                  type="text"
+                  className="form-input"
+                  value={enderecoEntrega}
+                  onChange={(e) => setEnderecoEntrega(e.target.value)}
+                  placeholder="Rua, número, bairro, cidade (aplica para todos os itens)"
+                  data-testid="input-endereco-oc"
+                />
+              </div>
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>
@@ -210,7 +225,7 @@ const CreatePO = () => {
                     )}
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
                     <div className="form-group">
                       <label className="form-label">Código do Item *</label>
                       <input
@@ -223,7 +238,7 @@ const CreatePO = () => {
                         data-testid={`input-codigo-${index}`}
                       />
                       <small style={{ color: '#718096', fontSize: '0.85rem' }}>
-                        Sistema buscará descrição e marca/modelo automaticamente
+                        Descrição e marca serão buscadas automaticamente
                       </small>
                     </div>
 
@@ -252,16 +267,20 @@ const CreatePO = () => {
                       />
                     </div>
 
-                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                      <label className="form-label">Endereço de Entrega</label>
+                    <div className="form-group">
+                      <label className="form-label">Preço Venda Unit. (R$)</label>
                       <input
-                        type="text"
+                        type="number"
+                        step="0.01"
                         className="form-input"
-                        value={item.endereco_entrega}
-                        onChange={(e) => updateItem(index, 'endereco_entrega', e.target.value)}
-                        placeholder="Rua, número, bairro, cidade"
-                        data-testid={`input-endereco-${index}`}
+                        value={item.preco_venda}
+                        onChange={(e) => updateItem(index, 'preco_venda', e.target.value)}
+                        placeholder="Opcional"
+                        data-testid={`input-preco-venda-${index}`}
                       />
+                      <small style={{ color: '#718096', fontSize: '0.85rem' }}>
+                        Deixe vazio para usar valor da planilha
+                      </small>
                     </div>
                   </div>
                 </div>
