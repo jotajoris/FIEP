@@ -171,7 +171,8 @@ class ItemStatusUpdate(BaseModel):
     preco_compra: Optional[float] = None
     preco_venda: Optional[float] = None
     imposto: Optional[float] = None
-    custo_frete: Optional[float] = None
+    frete_compra: Optional[float] = None
+    frete_envio: Optional[float] = None
 
 class DashboardStats(BaseModel):
     total_ocs: int
@@ -190,7 +191,8 @@ class AdminSummary(BaseModel):
     preco_compra: Optional[float]
     preco_venda: Optional[float]
     imposto: Optional[float]
-    custo_frete: Optional[float]
+    frete_compra: Optional[float]
+    frete_envio: Optional[float]
     lucro_liquido: Optional[float]
     status: str
 
