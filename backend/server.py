@@ -534,6 +534,65 @@ async def get_reference_items(codigo: Optional[str] = None, current_user: dict =
             item['created_at'] = datetime.fromisoformat(item['created_at'])
     return items
 
+@api_router.post("/purchase-orders/upload-pdf")
+async def upload_pdf_purchase_order(file: UploadFile = File(...), current_user: dict = Depends(require_admin)):
+    """Upload de PDF de Ordem de Compra (ADMIN ONLY)"""
+    
+    if not file.filename.endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Apenas arquivos PDF são aceitos")
+    
+    # Ler conteúdo do PDF
+    pdf_content = await file.read()
+    
+    # Extrair dados
+    oc_data = extract_oc_from_pdf(pdf_content)
+    
+    # Processar itens com dados de referência
+    processed_items = []
+    for item in oc_data["items"]:
+        ref_item = await db.reference_items.find_one(
+            {"codigo_item": item["codigo_item"]},
+            {"_id": 0}
+        )
+        
+        if ref_item:
+            item["responsavel"] = ref_item['responsavel']
+            item["lote"] = ref_item['lote']
+            item["lot_number"] = ref_item['lot_number']
+            item["regiao"] = ref_item['regiao']
+            if not item.get("descricao") or len(item["descricao"]) < 10:
+                item["descricao"] = ref_item['descricao']
+            if not item.get("marca_modelo"):
+                item["marca_modelo"] = ref_item.get('marca_modelo', '')
+        else:
+            item["responsavel"] = ""
+            item["lote"] = ""
+            item["lot_number"] = 0
+            item["regiao"] = ""
+            item["marca_modelo"] = ""
+        
+        po_item = POItem(**item)
+        processed_items.append(po_item)
+    
+    # Criar OC
+    po = PurchaseOrder(
+        numero_oc=oc_data["numero_oc"],
+        items=processed_items,
+        created_by=current_user.get('sub')
+    )
+    
+    doc = po.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.purchase_orders.insert_one(doc)
+    
+    return {
+        "message": "OC criada com sucesso a partir do PDF",
+        "numero_oc": po.numero_oc,
+        "total_items": len(processed_items),
+        "items_preview": [{"codigo": item.codigo_item, "responsavel": item.responsavel} for item in processed_items[:5]]
+    }
+
 @api_router.post("/purchase-orders", response_model=PurchaseOrder)
 async def create_purchase_order(po_create: PurchaseOrderCreate, current_user: dict = Depends(require_admin)):
     """Criar nova Ordem de Compra (ADMIN ONLY)"""
