@@ -458,10 +458,10 @@ async def send_password_reset_email(email: str, reset_token: str):
 async def seed_users(force_recreate: bool = False):
     """Criar usuários iniciais do sistema"""
     users_data = [
-        # Admins
-        {"email": "projetos.onsolucoes@gmail.com", "role": UserRole.ADMIN, "owner_name": None},
-        {"email": "comercial.onsolucoes@gmail.com", "role": UserRole.ADMIN, "owner_name": None},
-        {"email": "gerencia.onsolucoes@gmail.com", "role": UserRole.ADMIN, "owner_name": None},
+        # Admins (com owner_name associado)
+        {"email": "projetos.onsolucoes@gmail.com", "role": UserRole.ADMIN, "owner_name": "João"},
+        {"email": "comercial.onsolucoes@gmail.com", "role": UserRole.ADMIN, "owner_name": "Mateus"},
+        {"email": "gerencia.onsolucoes@gmail.com", "role": UserRole.ADMIN, "owner_name": "Roberto"},
         # Users
         {"email": "maria.onsolucoes@gmail.com", "role": UserRole.USER, "owner_name": "Maria"},
         {"email": "mylena.onsolucoes@gmail.com", "role": UserRole.USER, "owner_name": "Mylena"},
