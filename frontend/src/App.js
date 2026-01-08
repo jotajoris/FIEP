@@ -10,6 +10,9 @@ import ItemsByStatus from './pages/ItemsByStatus';
 import OwnerPanel from './pages/OwnerPanel';
 import Login from './pages/Login';
 import ChangePassword from './pages/ChangePassword';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import Profile from './pages/Profile';
 import Layout from './components/Layout';
 import './App.css';
 
@@ -39,11 +42,19 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/change-password" element={<ChangePassword />} />
       
       <Route path="/" element={
         <ProtectedRoute>
           <Layout><Dashboard /></Layout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <Layout><Profile /></Layout>
         </ProtectedRoute>
       } />
       
