@@ -124,6 +124,7 @@ class ReferenceItem(BaseModel):
     marca_modelo: str
     codigo_item: str
     responsavel: str
+    preco_venda_unitario: Optional[float] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class POItem(BaseModel):
