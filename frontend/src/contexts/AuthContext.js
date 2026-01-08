@@ -104,6 +104,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const response = await axios.get(`${API}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUser({
+        email: response.data.email,
+        role: response.data.role,
+        owner_name: response.data.owner_name,
+        needs_password_change: response.data.needs_password_change
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar dados do usuário:', error);
+    }
+  };
+
   const isAdmin = () => user?.role === 'admin';
 
   const getAuthHeaders = () => {
@@ -119,6 +135,7 @@ export const AuthProvider = ({ children }) => {
     changePassword,
     resetPassword,
     confirmResetPassword,
+    refreshUser,
     isAdmin,
     getAuthHeaders
   };
