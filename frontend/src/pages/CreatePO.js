@@ -35,7 +35,7 @@ const CreatePO = () => {
     setItems(newItems);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmitManual = async (e) => {
     e.preventDefault();
     
     if (!numeroOC.trim()) {
@@ -50,7 +50,7 @@ const CreatePO = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post(`${API}/purchase-orders`, {
+      const response = await apiPost(`${API}/purchase-orders`, {
         numero_oc: numeroOC,
         items: items.map(item => ({
           ...item,
@@ -66,6 +66,43 @@ const CreatePO = () => {
     } catch (error) {
       console.error('Erro ao criar OC:', error);
       alert('Erro ao criar Ordem de Compra. Verifique os dados.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitPDF = async (e) => {
+    e.preventDefault();
+    
+    if (!pdfFile) {
+      alert('Por favor, selecione um arquivo PDF');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', pdfFile);
+
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/purchase-orders/upload-pdf`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao fazer upload do PDF');
+      }
+
+      const data = await response.json();
+      alert(`OC ${data.numero_oc} criada com sucesso! ${data.total_items} itens importados.`);
+      navigate('/');
+    } catch (error) {
+      console.error('Erro ao fazer upload:', error);
+      alert('Erro ao processar PDF. Verifique o arquivo e tente novamente.');
     } finally {
       setLoading(false);
     }
