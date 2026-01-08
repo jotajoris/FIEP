@@ -683,17 +683,48 @@ const CreatePO = () => {
             {/* Formulário PDF */}
             {activeTab === 'pdf' && (
               <form onSubmit={handlePreviewPDF}>
-                <div style={{ textAlign: 'center', padding: '3rem', background: '#f7fafc', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📄</div>
+                <div 
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  style={{ 
+                    textAlign: 'center', 
+                    padding: '3rem', 
+                    background: isDragging ? '#e8f4fd' : '#f7fafc', 
+                    borderRadius: '12px',
+                    border: isDragging ? '3px dashed #667eea' : '3px dashed #e2e8f0',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => document.getElementById('pdf-upload').click()}
+                  data-testid="pdf-drop-zone"
+                >
+                  <div style={{ 
+                    fontSize: '4rem', 
+                    marginBottom: '1rem',
+                    transform: isDragging ? 'scale(1.1)' : 'scale(1)',
+                    transition: 'transform 0.2s ease'
+                  }}>
+                    {isDragging ? '📥' : '📄'}
+                  </div>
                   <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem' }}>
-                    Upload de PDF da Ordem de Compra
+                    {isDragging ? 'Solte o PDF aqui!' : 'Upload de PDF da Ordem de Compra'}
                   </h3>
                   <p style={{ color: '#718096', marginBottom: '2rem', maxWidth: '600px', margin: '0 auto 2rem' }}>
-                    Faça upload do PDF da OC recebida do FIEP. O sistema irá extrair automaticamente:
-                    <br />• Número da OC
-                    <br />• Código dos itens
-                    <br />• Quantidades
-                    <br />• Endereço de entrega
+                    {isDragging ? (
+                      <span style={{ color: '#667eea', fontWeight: '600' }}>Solte o arquivo para fazer upload</span>
+                    ) : (
+                      <>
+                        <strong>Arraste e solte</strong> o PDF aqui ou clique para selecionar
+                        <br /><br />
+                        O sistema irá extrair automaticamente:
+                        <br />• Número da OC
+                        <br />• Código dos itens
+                        <br />• Quantidades
+                        <br />• Endereço de entrega
+                      </>
+                    )}
                   </p>
 
                   <div className="form-group">
@@ -705,22 +736,51 @@ const CreatePO = () => {
                       id="pdf-upload"
                       data-testid="input-pdf-file"
                     />
-                    <label 
-                      htmlFor="pdf-upload" 
-                      className="btn btn-primary"
-                      style={{ 
-                        padding: '1rem 3rem', 
-                        fontSize: '1.1rem', 
-                        cursor: 'pointer',
-                        display: 'inline-block'
-                      }}
-                    >
-                      📁 Selecionar PDF
-                    </label>
+                    {!isDragging && (
+                      <label 
+                        htmlFor="pdf-upload" 
+                        className="btn btn-primary"
+                        style={{ 
+                          padding: '1rem 3rem', 
+                          fontSize: '1.1rem', 
+                          cursor: 'pointer',
+                          display: 'inline-block'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        📁 Selecionar PDF
+                      </label>
+                    )}
                     {pdfFile && (
-                      <p style={{ marginTop: '1rem', color: '#4a5568', fontWeight: '600' }}>
-                        ✓ Arquivo selecionado: {pdfFile.name}
-                      </p>
+                      <div style={{ 
+                        marginTop: '1.5rem', 
+                        padding: '1rem', 
+                        background: '#d4edda', 
+                        borderRadius: '8px',
+                        display: 'inline-block'
+                      }}>
+                        <p style={{ color: '#155724', fontWeight: '600', margin: 0 }}>
+                          ✓ Arquivo selecionado: {pdfFile.name}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPdfFile(null);
+                          }}
+                          style={{
+                            marginTop: '0.5rem',
+                            background: 'transparent',
+                            border: 'none',
+                            color: '#856404',
+                            cursor: 'pointer',
+                            textDecoration: 'underline',
+                            fontSize: '0.9rem'
+                          }}
+                        >
+                          Remover arquivo
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
