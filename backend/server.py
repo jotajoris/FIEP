@@ -899,6 +899,10 @@ async def update_item_status(po_id: str, codigo_item: str, update: ItemStatusUpd
             
             item['status'] = update.status
             
+            # Todos podem atualizar link de compra
+            if update.link_compra is not None:
+                item['link_compra'] = update.link_compra
+            
             # Apenas admins podem editar preços
             if current_user['role'] == 'admin':
                 if update.preco_compra is not None:
