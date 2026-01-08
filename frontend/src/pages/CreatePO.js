@@ -212,37 +212,27 @@ const CreatePO = () => {
       
       // Verificar se é erro de OC duplicada
       if (error.response?.status === 409) {
-        const continuar = window.confirm(
-          `A Ordem de Compra "${pdfPreview.numero_oc}" já existe no sistema.\n\n` +
-          `Deseja continuar mesmo assim? Isso criará uma OC duplicada.`
+        const verExistente = window.confirm(
+          `⚠️ A Ordem de Compra "${pdfPreview.numero_oc}" já existe no sistema!\n\n` +
+          `Não é possível criar uma OC com o mesmo número.\n\n` +
+          `Deseja visualizar a OC existente?`
         );
         
-        if (continuar) {
-          // Tentar novamente com número modificado
-          const novoNumero = `${pdfPreview.numero_oc}-DUPLICATA-${Date.now()}`;
+        if (verExistente) {
+          // Buscar ID da OC existente e navegar
           try {
-            const response = await apiPost(`${API}/purchase-orders`, {
-              numero_oc: novoNumero,
-              endereco_entrega: pdfPreview.endereco_entrega || '',
-              items: pdfPreview.items.map(item => ({
-                codigo_item: item.codigo_item,
-                quantidade: parseInt(item.quantidade) || 1,
-                unidade: item.unidade || 'UN',
-                descricao: item.descricao || '',
-                endereco_entrega: pdfPreview.endereco_entrega || '',
-                responsavel: item.responsavel || '',
-                lote: item.lote || '',
-                lot_number: 0,
-                regiao: item.regiao || '',
-                preco_venda: item.preco_venda || null
-              }))
+            const token = localStorage.getItem('token');
+            const checkResponse = await fetch(`${API}/purchase-orders/check-duplicate/${encodeURIComponent(pdfPreview.numero_oc)}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
             });
-            
-            alert(`OC criada com número modificado: ${novoNumero}! ${pdfPreview.items.length} itens.`);
-            navigate(`/po/${response.data.id}`);
-          } catch (secondError) {
-            console.error('Erro ao criar OC duplicada:', secondError);
-            alert('Erro ao criar Ordem de Compra duplicada. Tente novamente.');
+            const checkData = await checkResponse.json();
+            if (checkData.exists && checkData.existing_po?.id) {
+              navigate(`/po/${checkData.existing_po.id}`);
+            } else {
+              navigate('/');
+            }
+          } catch {
+            navigate('/');
           }
         }
       } else {
