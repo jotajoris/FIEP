@@ -98,7 +98,13 @@ const CreatePO = () => {
           <div style={{ marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: '700' }}>Itens da OC</h3>
-              <button type="button" onClick={addItem} className="btn btn-secondary" data-testid="add-item-btn">
+              <button 
+                type="button" 
+                onClick={addItem} 
+                className="btn btn-primary" 
+                data-testid="add-item-btn"
+                style={{ fontSize: '0.95rem' }}
+              >
                 + Adicionar Item
               </button>
             </div>
@@ -108,7 +114,20 @@ const CreatePO = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <h4 style={{ fontSize: '1rem', fontWeight: '600' }}>Item {index + 1}</h4>
                   {items.length > 1 && (
-                    <button type="button" onClick={() => removeItem(index)} style={{ background: '#ef4444', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', cursor: 'pointer' }} data-testid={`remove-item-${index}`}>
+                    <button 
+                      type="button" 
+                      onClick={() => removeItem(index)} 
+                      style={{ 
+                        background: '#ef4444', 
+                        color: 'white', 
+                        padding: '0.5rem 1rem', 
+                        borderRadius: '8px', 
+                        border: 'none', 
+                        cursor: 'pointer',
+                        fontWeight: '600'
+                      }} 
+                      data-testid={`remove-item-${index}`}
+                    >
                       Remover
                     </button>
                   )}
@@ -126,18 +145,9 @@ const CreatePO = () => {
                       required
                       data-testid={`input-codigo-${index}`}
                     />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Descrição</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={item.descricao}
-                      onChange={(e) => updateItem(index, 'descricao', e.target.value)}
-                      placeholder="Descrição do item"
-                      data-testid={`input-descricao-${index}`}
-                    />
+                    <small style={{ color: '#718096', fontSize: '0.85rem' }}>
+                      Sistema buscará descrição e marca/modelo automaticamente
+                    </small>
                   </div>
 
                   <div className="form-group">
@@ -160,31 +170,19 @@ const CreatePO = () => {
                       className="form-input"
                       value={item.unidade}
                       onChange={(e) => updateItem(index, 'unidade', e.target.value)}
-                      placeholder="UN"
+                      placeholder="UN, KG, M, etc"
                       data-testid={`input-unidade-${index}`}
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Marca/Modelo</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={item.marca_modelo}
-                      onChange={(e) => updateItem(index, 'marca_modelo', e.target.value)}
-                      placeholder="Marca ou modelo"
-                      data-testid={`input-marca-${index}`}
-                    />
-                  </div>
-
-                  <div className="form-group">
+                  <div className="form-group" style={{ gridColumn: 'span 2' }}>
                     <label className="form-label">Endereço de Entrega</label>
                     <input
                       type="text"
                       className="form-input"
                       value={item.endereco_entrega}
                       onChange={(e) => updateItem(index, 'endereco_entrega', e.target.value)}
-                      placeholder="Endereço"
+                      placeholder="Rua, número, bairro, cidade"
                       data-testid={`input-endereco-${index}`}
                     />
                   </div>
