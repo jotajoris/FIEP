@@ -6,11 +6,12 @@ const CreatePO = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('manual'); // 'manual' or 'pdf'
   const [numeroOC, setNumeroOC] = useState('');
+  const [enderecoEntrega, setEnderecoEntrega] = useState('');
   const [items, setItems] = useState([{
     codigo_item: '',
     quantidade: 1,
     unidade: 'UN',
-    endereco_entrega: ''
+    preco_venda: ''
   }]);
   const [pdfFile, setPdfFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -20,7 +21,7 @@ const CreatePO = () => {
       codigo_item: '',
       quantidade: 1,
       unidade: 'UN',
-      endereco_entrega: ''
+      preco_venda: ''
     }]);
   };
 
