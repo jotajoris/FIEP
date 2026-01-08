@@ -156,6 +156,7 @@ const PODetails = () => {
                     <span><strong>Região:</strong> {item.regiao}</span>
                     <span><strong>Responsável:</strong> <strong style={{ color: '#667eea' }}>{item.responsavel}</strong></span>
                     <span><strong>Quantidade:</strong> {item.quantidade} {item.unidade}</span>
+                    {item.marca_modelo && <span><strong>Marca/Modelo:</strong> {item.marca_modelo}</span>}
                   </div>
                 </div>
                 <div>
