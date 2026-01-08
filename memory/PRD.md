@@ -43,15 +43,24 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 - Itens em múltiplos lotes: sorteio entre não-admins (Maria, Mylena, Fabio)
 
 ### ✅ Campos Financeiros (Atualizado: 08/01/2026)
-- **Preço de Venda** - Auto-preenchido do Excel de referência
-- **Preço de Compra** - Editável por todos
+- **Preço de Venda** - Auto-preenchido do Excel de referência ou informado manualmente
+- **Preço de Compra** - Editável por todos (ou calculado das fontes)
 - **Imposto** - Calculado (11% do valor de venda)
-- **Frete Compra** - Editável por todos os usuários
+- **Frete Compra** - Editável por todos (ou soma das fontes)
 - **Frete Envio/Embalagem** - Editável apenas por admins
 - **Lucro Líquido** - Calculado automaticamente:
   ```
-  lucro = (preco_venda - preco_compra) * quantidade - imposto - frete_compra - frete_envio
+  lucro = receita_venda - custo_compras - frete_compra - imposto - frete_envio
   ```
+
+### ✅ Multi-Fornecedor (Atualizado: 08/01/2026)
+- Cada item pode ter múltiplas **fontes de compra**
+- Cada fonte tem: Quantidade, Preço Unitário, Frete, Link, Fornecedor
+- Sistema calcula automaticamente:
+  - Preço médio de compra
+  - Total de frete de compra
+  - Lucro líquido considerando todas as fontes
+- UI mostra indicador de quantidade restante vs total
 
 ### ✅ Dashboard
 - Estatísticas por status (clicáveis)
