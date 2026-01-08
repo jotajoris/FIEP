@@ -1,20 +1,30 @@
-from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File
+from fastapi import FastAPI, APIRouter, HTTPException, Depends
+from fastapi.security import HTTPBearer
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import asyncio
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional, Dict
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from enum import Enum
 import openpyxl
-from io import BytesIO
+import resend
+from auth import (
+    verify_password, get_password_hash, create_access_token,
+    get_current_user, require_admin
+)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+
+# Resend configuration
+resend.api_key = os.environ.get('RESEND_API_KEY', '')
+SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'onboarding@resend.dev')
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
@@ -26,6 +36,7 @@ app = FastAPI()
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+security = HTTPBearer()
 
 # Mapeamento de lotes para responsáveis
 LOT_ASSIGNMENTS = {
@@ -42,6 +53,17 @@ for owner, lots in LOT_ASSIGNMENTS.items():
     for lot in lots:
         LOT_TO_OWNER[lot] = owner
 
+# Email to owner name mapping
+EMAIL_TO_OWNER = {
+    'maria.onsolucoes@gmail.com': 'Maria',
+    'mylena.onsolucoes@gmail.com': 'Mylena',
+    'fabioonsolucoes@gmail.com': 'Fabio'
+}
+
+class UserRole(str, Enum):
+    ADMIN = "admin"
+    USER = "user"
+
 class ItemStatus(str, Enum):
     PENDENTE = "pendente"
     COTADO = "cotado"
@@ -49,6 +71,45 @@ class ItemStatus(str, Enum):
     ENTREGUE = "entregue"
 
 # Models
+class User(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    email: EmailStr
+    hashed_password: str
+    role: UserRole
+    owner_name: Optional[str] = None  # Para usuários não-admin
+    needs_password_change: bool = True
+    reset_token: Optional[str] = None
+    reset_token_expires: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    role: UserRole
+    owner_name: Optional[str] = None
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: dict
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ConfirmResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
 class ReferenceItem(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
@@ -131,14 +192,227 @@ class AdminSummary(BaseModel):
 def get_responsible_by_lot(lot_number: int) -> str:
     return LOT_TO_OWNER.get(lot_number, "Não atribuído")
 
+async def send_password_reset_email(email: str, reset_token: str):
+    """Envia email com link de reset de senha"""
+    reset_link = f"{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/reset-password?token={reset_token}"
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+            .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+            .button {{ display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+            .footer {{ text-align: center; margin-top: 20px; color: #666; font-size: 12px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>FIEP | Gestão OC</h1>
+            </div>
+            <div class="content">
+                <h2>Troca de Senha</h2>
+                <p>Olá,</p>
+                <p>Você recebeu acesso à plataforma de Gestão de Ordens de Compra FIEP.</p>
+                <p>Sua senha temporária é: <strong>on123456</strong></p>
+                <p>Por favor, clique no botão abaixo para alterar sua senha:</p>
+                <a href="{reset_link}" class="button">Alterar Senha</a>
+                <p><small>Ou copie e cole este link no navegador:<br>{reset_link}</small></p>
+                <p>Este link expira em 24 horas.</p>
+            </div>
+            <div class="footer">
+                <p>Se você não solicitou este email, por favor ignore.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    try:
+        params = {
+            "from": SENDER_EMAIL,
+            "to": [email],
+            "subject": "Bem-vindo à Plataforma FIEP - Troca de Senha",
+            "html": html_content
+        }
+        await asyncio.to_thread(resend.Emails.send, params)
+        return True
+    except Exception as e:
+        logging.error(f"Erro ao enviar email: {str(e)}")
+        return False
+
+# Authentication Routes
+@api_router.post("/auth/seed-users")
+async def seed_users():
+    """Criar usuários iniciais do sistema"""
+    users_data = [
+        # Admins
+        {"email": "projetos.onsolucoes@gmail.com", "role": UserRole.ADMIN, "owner_name": None},
+        {"email": "comercial.onsolucoes@gmail.com", "role": UserRole.ADMIN, "owner_name": None},
+        {"email": "gerencia.onsolucoes@gmail.com", "role": UserRole.ADMIN, "owner_name": None},
+        # Users
+        {"email": "maria.onsolucoes@gmail.com", "role": UserRole.USER, "owner_name": "Maria"},
+        {"email": "mylena.onsolucoes@gmail.com", "role": UserRole.USER, "owner_name": "Mylena"},
+        {"email": "fabioonsolucoes@gmail.com", "role": UserRole.USER, "owner_name": "Fabio"},
+    ]
+    
+    default_password = "on123456"
+    created_count = 0
+    
+    for user_data in users_data:
+        # Verificar se usuário já existe
+        existing = await db.users.find_one({"email": user_data["email"]}, {"_id": 0})
+        if existing:
+            continue
+        
+        # Criar reset token
+        reset_token = str(uuid.uuid4())
+        reset_expires = datetime.now(timezone.utc) + timedelta(hours=24)
+        
+        user = User(
+            email=user_data["email"],
+            hashed_password=get_password_hash(default_password),
+            role=user_data["role"],
+            owner_name=user_data["owner_name"],
+            needs_password_change=True,
+            reset_token=reset_token,
+            reset_token_expires=reset_expires
+        )
+        
+        doc = user.model_dump()
+        doc['created_at'] = doc['created_at'].isoformat()
+        if doc['reset_token_expires']:
+            doc['reset_token_expires'] = doc['reset_token_expires'].isoformat()
+        
+        await db.users.insert_one(doc)
+        
+        # Enviar email
+        await send_password_reset_email(user.email, reset_token)
+        created_count += 1
+    
+    return {"message": f"{created_count} usuários criados e emails enviados"}
+
+@api_router.post("/auth/login", response_model=LoginResponse)
+async def login(request: LoginRequest):
+    """Login de usuário"""
+    user = await db.users.find_one({"email": request.email}, {"_id": 0})
+    
+    if not user or not verify_password(request.password, user['hashed_password']):
+        raise HTTPException(status_code=401, detail="Email ou senha incorretos")
+    
+    # Criar token
+    access_token = create_access_token(
+        data={
+            "sub": user['email'],
+            "role": user['role'],
+            "owner_name": user.get('owner_name'),
+            "user_id": user['id']
+        }
+    )
+    
+    return LoginResponse(
+        access_token=access_token,
+        user={
+            "email": user['email'],
+            "role": user['role'],
+            "owner_name": user.get('owner_name'),
+            "needs_password_change": user.get('needs_password_change', False)
+        }
+    )
+
+@api_router.post("/auth/change-password")
+async def change_password(request: ChangePasswordRequest, current_user: dict = Depends(get_current_user)):
+    """Trocar senha do usuário logado"""
+    user = await db.users.find_one({"email": current_user['sub']}, {"_id": 0})
+    
+    if not user or not verify_password(request.current_password, user['hashed_password']):
+        raise HTTPException(status_code=401, detail="Senha atual incorreta")
+    
+    # Atualizar senha
+    new_hashed = get_password_hash(request.new_password)
+    await db.users.update_one(
+        {"email": current_user['sub']},
+        {"$set": {
+            "hashed_password": new_hashed,
+            "needs_password_change": False,
+            "reset_token": None,
+            "reset_token_expires": None
+        }}
+    )
+    
+    return {"message": "Senha alterada com sucesso"}
+
+@api_router.post("/auth/reset-password")
+async def reset_password(request: ResetPasswordRequest):
+    """Solicitar reset de senha"""
+    user = await db.users.find_one({"email": request.email}, {"_id": 0})
+    
+    if not user:
+        # Não revelar se email existe
+        return {"message": "Se o email existir, você receberá instruções"}
+    
+    # Gerar token
+    reset_token = str(uuid.uuid4())
+    reset_expires = datetime.now(timezone.utc) + timedelta(hours=24)
+    
+    await db.users.update_one(
+        {"email": request.email},
+        {"$set": {
+            "reset_token": reset_token,
+            "reset_token_expires": reset_expires.isoformat()
+        }}
+    )
+    
+    # Enviar email
+    await send_password_reset_email(request.email, reset_token)
+    
+    return {"message": "Se o email existir, você receberá instruções"}
+
+@api_router.post("/auth/confirm-reset-password")
+async def confirm_reset_password(request: ConfirmResetPasswordRequest):
+    """Confirmar reset de senha com token"""
+    user = await db.users.find_one({"reset_token": request.token}, {"_id": 0})
+    
+    if not user:
+        raise HTTPException(status_code=400, detail="Token inválido")
+    
+    # Verificar expiração
+    if user.get('reset_token_expires'):
+        expires = datetime.fromisoformat(user['reset_token_expires'])
+        if datetime.now(timezone.utc) > expires:
+            raise HTTPException(status_code=400, detail="Token expirado")
+    
+    # Atualizar senha
+    new_hashed = get_password_hash(request.new_password)
+    await db.users.update_one(
+        {"reset_token": request.token},
+        {"$set": {
+            "hashed_password": new_hashed,
+            "needs_password_change": False,
+            "reset_token": None,
+            "reset_token_expires": None
+        }}
+    )
+    
+    return {"message": "Senha alterada com sucesso"}
+
+@api_router.get("/auth/me")
+async def get_me(current_user: dict = Depends(get_current_user)):
+    """Obter informações do usuário logado"""
+    return current_user
+
 # Routes
 @api_router.get("/")
 async def root():
     return {"message": "Sistema de Gestão de Ordens de Compra FIEP"}
 
 @api_router.post("/reference-items/seed")
-async def seed_reference_items():
-    """Popula banco com itens de referência do Excel"""
+async def seed_reference_items(current_user: dict = Depends(require_admin)):
+    """Popula banco com itens de referência do Excel (ADMIN ONLY)"""
     try:
         file_path = Path("/app/items_data.xlsx")
         if not file_path.exists():
@@ -155,7 +429,6 @@ async def seed_reference_items():
             if not lote_str or not codigo_item:
                 continue
             
-            # Extrair número do lote
             try:
                 lot_number = int(lote_str.replace("Lote", "").replace("lote", "").strip())
             except:
@@ -175,10 +448,8 @@ async def seed_reference_items():
             )
             items.append(item.model_dump())
         
-        # Limpar coleção existente
         await db.reference_items.delete_many({})
         
-        # Inserir novos itens
         if items:
             for item in items:
                 item['created_at'] = item['created_at'].isoformat()
@@ -190,7 +461,7 @@ async def seed_reference_items():
         raise HTTPException(status_code=500, detail=f"Erro ao carregar itens: {str(e)}")
 
 @api_router.get("/reference-items", response_model=List[ReferenceItem])
-async def get_reference_items(codigo: Optional[str] = None):
+async def get_reference_items(codigo: Optional[str] = None, current_user: dict = Depends(get_current_user)):
     query = {}
     if codigo:
         query["codigo_item"] = codigo
@@ -202,13 +473,11 @@ async def get_reference_items(codigo: Optional[str] = None):
     return items
 
 @api_router.post("/purchase-orders", response_model=PurchaseOrder)
-async def create_purchase_order(po_create: PurchaseOrderCreate):
-    """Criar nova Ordem de Compra"""
+async def create_purchase_order(po_create: PurchaseOrderCreate, current_user: dict = Depends(require_admin)):
+    """Criar nova Ordem de Compra (ADMIN ONLY)"""
     
-    # Processar cada item e atribuir responsável
     processed_items = []
     for item in po_create.items:
-        # Buscar item de referência
         ref_item = await db.reference_items.find_one(
             {"codigo_item": item.codigo_item},
             {"_id": 0}
@@ -229,7 +498,7 @@ async def create_purchase_order(po_create: PurchaseOrderCreate):
     po = PurchaseOrder(
         numero_oc=po_create.numero_oc,
         items=processed_items,
-        created_by=po_create.created_by
+        created_by=current_user.get('sub')
     )
     
     doc = po.model_dump()
@@ -239,7 +508,7 @@ async def create_purchase_order(po_create: PurchaseOrderCreate):
     return po
 
 @api_router.get("/purchase-orders", response_model=List[PurchaseOrder])
-async def get_purchase_orders(responsavel: Optional[str] = None):
+async def get_purchase_orders(current_user: dict = Depends(get_current_user)):
     """Listar Ordens de Compra"""
     query = {}
     
@@ -249,14 +518,14 @@ async def get_purchase_orders(responsavel: Optional[str] = None):
         if isinstance(po['created_at'], str):
             po['created_at'] = datetime.fromisoformat(po['created_at'])
         
-        # Filtrar items se responsável especificado
-        if responsavel:
-            po['items'] = [item for item in po['items'] if item.get('responsavel') == responsavel]
+        # Se não for admin, filtrar apenas itens do responsável
+        if current_user['role'] != 'admin' and current_user.get('owner_name'):
+            po['items'] = [item for item in po['items'] if item.get('responsavel') == current_user['owner_name']]
     
     return pos
 
 @api_router.get("/purchase-orders/{po_id}", response_model=PurchaseOrder)
-async def get_purchase_order(po_id: str):
+async def get_purchase_order(po_id: str, current_user: dict = Depends(get_current_user)):
     """Obter detalhes de uma OC"""
     po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
     
@@ -266,38 +535,57 @@ async def get_purchase_order(po_id: str):
     if isinstance(po['created_at'], str):
         po['created_at'] = datetime.fromisoformat(po['created_at'])
     
+    # Se não for admin, filtrar apenas itens do responsável
+    if current_user['role'] != 'admin' and current_user.get('owner_name'):
+        po['items'] = [item for item in po['items'] if item.get('responsavel') == current_user['owner_name']]
+    
     return po
 
+@api_router.delete("/purchase-orders/{po_id}")
+async def delete_purchase_order(po_id: str, current_user: dict = Depends(require_admin)):
+    """Deletar uma OC (ADMIN ONLY)"""
+    result = await db.purchase_orders.delete_one({"id": po_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    return {"message": "Ordem de Compra deletada com sucesso"}
+
 @api_router.patch("/purchase-orders/{po_id}/items/{codigo_item}")
-async def update_item_status(po_id: str, codigo_item: str, update: ItemStatusUpdate):
+async def update_item_status(po_id: str, codigo_item: str, update: ItemStatusUpdate, current_user: dict = Depends(get_current_user)):
     """Atualizar status de um item"""
     po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
     
     if not po:
         raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
     
-    # Atualizar item
     item_updated = False
     for item in po['items']:
         if item['codigo_item'] == codigo_item:
+            # Verificar permissão
+            if current_user['role'] != 'admin' and item.get('responsavel') != current_user.get('owner_name'):
+                raise HTTPException(status_code=403, detail="Você só pode editar seus próprios itens")
+            
             item['status'] = update.status
             
-            if update.preco_compra is not None:
-                item['preco_compra'] = update.preco_compra
-            if update.preco_venda is not None:
-                item['preco_venda'] = update.preco_venda
-            if update.imposto is not None:
-                item['imposto'] = update.imposto
-            if update.custo_frete is not None:
-                item['custo_frete'] = update.custo_frete
-            
-            # Calcular lucro líquido
-            if (item.get('preco_venda') is not None and 
-                item.get('preco_compra') is not None):
-                lucro_bruto = (item['preco_venda'] - item['preco_compra']) * item['quantidade']
-                impostos = item.get('imposto', 0)
-                frete = item.get('custo_frete', 0)
-                item['lucro_liquido'] = lucro_bruto - impostos - frete
+            # Apenas admins podem editar preços
+            if current_user['role'] == 'admin':
+                if update.preco_compra is not None:
+                    item['preco_compra'] = update.preco_compra
+                if update.preco_venda is not None:
+                    item['preco_venda'] = update.preco_venda
+                if update.imposto is not None:
+                    item['imposto'] = update.imposto
+                if update.custo_frete is not None:
+                    item['custo_frete'] = update.custo_frete
+                
+                # Calcular lucro líquido
+                if (item.get('preco_venda') is not None and 
+                    item.get('preco_compra') is not None):
+                    lucro_bruto = (item['preco_venda'] - item['preco_compra']) * item['quantidade']
+                    impostos = item.get('imposto', 0)
+                    frete = item.get('custo_frete', 0)
+                    item['lucro_liquido'] = lucro_bruto - impostos - frete
             
             # Atualizar datas
             now = datetime.now(timezone.utc).isoformat()
@@ -314,7 +602,6 @@ async def update_item_status(po_id: str, codigo_item: str, update: ItemStatusUpd
     if not item_updated:
         raise HTTPException(status_code=404, detail="Item não encontrado")
     
-    # Salvar atualização
     await db.purchase_orders.update_one(
         {"id": po_id},
         {"$set": {"items": po['items']}}
@@ -323,14 +610,19 @@ async def update_item_status(po_id: str, codigo_item: str, update: ItemStatusUpd
     return {"message": "Item atualizado com sucesso"}
 
 @api_router.get("/dashboard", response_model=DashboardStats)
-async def get_dashboard_stats():
+async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     """Estatísticas do dashboard"""
     pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(1000)
     
     total_ocs = len(pos)
     all_items = []
     for po in pos:
-        all_items.extend(po['items'])
+        # Filtrar itens baseado no role
+        if current_user['role'] != 'admin' and current_user.get('owner_name'):
+            filtered_items = [item for item in po['items'] if item.get('responsavel') == current_user['owner_name']]
+            all_items.extend(filtered_items)
+        else:
+            all_items.extend(po['items'])
     
     total_items = len(all_items)
     items_pendentes = sum(1 for item in all_items if item['status'] == ItemStatus.PENDENTE)
@@ -353,8 +645,8 @@ async def get_dashboard_stats():
     )
 
 @api_router.get("/admin/summary", response_model=List[AdminSummary])
-async def get_admin_summary():
-    """Resumo financeiro para admins"""
+async def get_admin_summary(current_user: dict = Depends(require_admin)):
+    """Resumo financeiro para admins (ADMIN ONLY)"""
     pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(1000)
     
     summaries = []
@@ -378,13 +670,19 @@ async def get_admin_summary():
     return summaries
 
 @api_router.get("/items/duplicates")
-async def get_duplicate_items():
+async def get_duplicate_items(current_user: dict = Depends(get_current_user)):
     """Encontrar itens duplicados por código"""
     pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(1000)
     
     codigo_count = {}
     for po in pos:
-        for item in po['items']:
+        items_to_check = po['items']
+        
+        # Filtrar por responsável se não for admin
+        if current_user['role'] != 'admin' and current_user.get('owner_name'):
+            items_to_check = [item for item in po['items'] if item.get('responsavel') == current_user['owner_name']]
+        
+        for item in items_to_check:
             codigo = item['codigo_item']
             if codigo not in codigo_count:
                 codigo_count[codigo] = []
