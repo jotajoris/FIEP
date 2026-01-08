@@ -547,8 +547,13 @@ async def upload_pdf_purchase_order(file: UploadFile = File(...), current_user: 
     # Extrair dados
     oc_data = extract_oc_from_pdf(pdf_content)
     
+    if not oc_data["items"]:
+        raise HTTPException(status_code=400, detail="Nenhum item encontrado no PDF. Verifique o formato do arquivo.")
+    
     # Processar itens com dados de referência
     processed_items = []
+    items_without_ref = []
+    
     for item in oc_data["items"]:
         ref_item = await db.reference_items.find_one(
             {"codigo_item": item["codigo_item"]},
@@ -565,11 +570,23 @@ async def upload_pdf_purchase_order(file: UploadFile = File(...), current_user: 
             if not item.get("marca_modelo"):
                 item["marca_modelo"] = ref_item.get('marca_modelo', '')
         else:
-            item["responsavel"] = ""
+            # Item não encontrado na referência
+            items_without_ref.append(item["codigo_item"])
+            item["responsavel"] = "Não atribuído"
             item["lote"] = ""
             item["lot_number"] = 0
             item["regiao"] = ""
             item["marca_modelo"] = ""
+            if not item.get("descricao"):
+                item["descricao"] = f"Item {item['codigo_item']}"
+        
+        # Garantir que todos os campos obrigatórios existem
+        item.setdefault("status", ItemStatus.PENDENTE)
+        item.setdefault("preco_compra", None)
+        item.setdefault("preco_venda", None)
+        item.setdefault("imposto", None)
+        item.setdefault("custo_frete", None)
+        item.setdefault("lucro_liquido", None)
         
         po_item = POItem(**item)
         processed_items.append(po_item)
@@ -586,11 +603,17 @@ async def upload_pdf_purchase_order(file: UploadFile = File(...), current_user: 
     
     await db.purchase_orders.insert_one(doc)
     
+    warning = ""
+    if items_without_ref:
+        warning = f" ATENÇÃO: {len(items_without_ref)} itens não encontrados no banco de referência: {', '.join(items_without_ref[:5])}"
+    
     return {
-        "message": "OC criada com sucesso a partir do PDF",
+        "success": True,
+        "message": f"OC criada com sucesso a partir do PDF{warning}",
+        "po_id": po.id,
         "numero_oc": po.numero_oc,
         "total_items": len(processed_items),
-        "items_preview": [{"codigo": item.codigo_item, "responsavel": item.responsavel} for item in processed_items[:5]]
+        "items_without_ref": items_without_ref
     }
 
 @api_router.post("/purchase-orders", response_model=PurchaseOrder)
