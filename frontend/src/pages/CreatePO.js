@@ -15,6 +15,10 @@ const CreatePO = () => {
   }]);
   const [pdfFile, setPdfFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  
+  // Estados para preview do PDF
+  const [pdfPreview, setPdfPreview] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const addItem = () => {
     setItems([...items, {
@@ -39,13 +43,8 @@ const CreatePO = () => {
   const handleSubmitManual = async (e) => {
     e.preventDefault();
     
-    if (!numeroOC.trim()) {
-      alert('Por favor, preencha o número da OC');
-      return;
-    }
-
-    if (items.some(item => !item.codigo_item.trim())) {
-      alert('Por favor, preencha o código de todos os itens');
+    if (!items.some(item => item.codigo_item)) {
+      alert('Adicione pelo menos um item com código');
       return;
     }
 
@@ -75,11 +74,49 @@ const CreatePO = () => {
     }
   };
 
-  const handleSubmitPDF = async (e) => {
+  // Preview do PDF (não cria a OC ainda)
+  const handlePreviewPDF = async (e) => {
     e.preventDefault();
     
     if (!pdfFile) {
       alert('Por favor, selecione um arquivo PDF');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', pdfFile);
+
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/purchase-orders/preview-pdf`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Erro ao processar PDF');
+      }
+
+      const data = await response.json();
+      setPdfPreview(data);
+      setShowPreview(true);
+    } catch (error) {
+      console.error('Erro ao processar PDF:', error);
+      alert(error.message || 'Erro ao processar PDF. Verifique o arquivo e tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Confirmar criação da OC após preview
+  const handleConfirmPDF = async () => {
+    if (!pdfFile || !pdfPreview) {
+      alert('Erro: dados do PDF não disponíveis');
       return;
     }
 
@@ -99,24 +136,30 @@ const CreatePO = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Erro ao fazer upload do PDF');
+        throw new Error(errorData.detail || 'Erro ao criar OC');
       }
 
       const data = await response.json();
       
       let message = `OC ${data.numero_oc} criada com sucesso! ${data.total_items} itens importados.`;
       if (data.items_without_ref && data.items_without_ref.length > 0) {
-        message += `\n\nAVISO: ${data.items_without_ref.length} itens não foram encontrados no banco de referência e não foram atribuídos a responsáveis.`;
+        message += `\n\nAVISO: ${data.items_without_ref.length} itens não foram encontrados no banco de referência.`;
       }
       
       alert(message);
       navigate(`/po/${data.po_id}`);
     } catch (error) {
-      console.error('Erro ao fazer upload:', error);
-      alert(error.message || 'Erro ao processar PDF. Verifique o arquivo e tente novamente.');
+      console.error('Erro ao criar OC:', error);
+      alert(error.message || 'Erro ao criar Ordem de Compra.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const cancelPreview = () => {
+    setShowPreview(false);
+    setPdfPreview(null);
+    setPdfFile(null);
   };
 
   return (
@@ -127,238 +170,344 @@ const CreatePO = () => {
       </div>
 
       <div className="card">
-        {/* Tabs */}
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '2px solid #e2e8f0' }}>
-          <button
-            onClick={() => setActiveTab('manual')}
-            className={activeTab === 'manual' ? 'btn btn-primary' : 'btn btn-secondary'}
-            style={{ 
-              borderRadius: '8px 8px 0 0', 
-              borderBottom: activeTab === 'manual' ? '3px solid #667eea' : 'none',
-              padding: '0.75rem 2rem'
-            }}
-            data-testid="tab-manual"
-          >
-            📝 Cadastro Manual
-          </button>
-          <button
-            onClick={() => setActiveTab('pdf')}
-            className={activeTab === 'pdf' ? 'btn btn-primary' : 'btn btn-secondary'}
-            style={{ 
-              borderRadius: '8px 8px 0 0', 
-              borderBottom: activeTab === 'pdf' ? '3px solid #667eea' : 'none',
-              padding: '0.75rem 2rem'
-            }}
-            data-testid="tab-pdf"
-          >
-            📄 Upload PDF
-          </button>
-        </div>
-
-        {/* Formulário Manual */}
-        {activeTab === 'manual' && (
-          <form onSubmit={handleSubmitManual}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem', marginBottom: '1.5rem' }}>
-              <div className="form-group">
-                <label className="form-label" htmlFor="numero-oc">Número da OC *</label>
-                <input
-                  id="numero-oc"
-                  type="text"
-                  className="form-input"
-                  value={numeroOC}
-                  onChange={(e) => setNumeroOC(e.target.value)}
-                  placeholder="Ex: OC-2024-001"
-                  required
-                  data-testid="input-numero-oc"
-                />
+        {/* Preview do PDF */}
+        {showPreview && pdfPreview ? (
+          <div data-testid="pdf-preview">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <div>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.5rem' }}>
+                  📋 Preview da OC: {pdfPreview.numero_oc}
+                </h2>
+                <p style={{ color: '#718096' }}>
+                  {pdfPreview.total_items} itens encontrados • Revise antes de confirmar
+                </p>
               </div>
-
-              <div className="form-group">
-                <label className="form-label" htmlFor="endereco-entrega">Endereço de Entrega</label>
-                <input
-                  id="endereco-entrega"
-                  type="text"
-                  className="form-input"
-                  value={enderecoEntrega}
-                  onChange={(e) => setEnderecoEntrega(e.target.value)}
-                  placeholder="Rua, número, bairro, cidade (aplica para todos os itens)"
-                  data-testid="input-endereco-oc"
-                />
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button 
+                  onClick={cancelPreview} 
+                  className="btn btn-secondary"
+                  data-testid="cancel-preview-btn"
+                >
+                  ← Voltar
+                </button>
               </div>
             </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '1rem' }}>Itens da OC</h3>
+            {pdfPreview.endereco_entrega && (
+              <div style={{ background: '#f0f4f8', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                <strong>Endereço de Entrega:</strong> {pdfPreview.endereco_entrega}
+              </div>
+            )}
 
-              {items.map((item, index) => (
-                <div key={index} className="card" style={{ marginBottom: '1rem', background: '#f7fafc' }} data-testid={`item-form-${index}`}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h4 style={{ fontSize: '1rem', fontWeight: '600' }}>Item {index + 1}</h4>
-                    {items.length > 1 && (
-                      <button 
-                        type="button" 
-                        onClick={() => removeItem(index)} 
-                        style={{ 
-                          background: '#ef4444', 
-                          color: 'white', 
-                          padding: '0.5rem 1rem', 
-                          borderRadius: '8px', 
-                          border: 'none', 
-                          cursor: 'pointer',
+            {pdfPreview.items_without_ref?.length > 0 && (
+              <div style={{ background: '#fef3c7', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', border: '1px solid #f59e0b' }}>
+                <strong>⚠️ Atenção:</strong> {pdfPreview.items_without_ref.length} itens não encontrados no banco de referência:
+                <br />
+                <small>{pdfPreview.items_without_ref.join(', ')}</small>
+              </div>
+            )}
+
+            <div style={{ maxHeight: '400px', overflowY: 'auto', marginBottom: '1.5rem' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead style={{ position: 'sticky', top: 0, background: '#667eea', color: 'white' }}>
+                  <tr>
+                    <th style={{ padding: '0.75rem', textAlign: 'left' }}>#</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left' }}>Código</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left' }}>Descrição</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'center' }}>Qtd</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left' }}>Responsável</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left' }}>Lote</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'right' }}>Preço Venda</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pdfPreview.items.map((item, index) => (
+                    <tr 
+                      key={index} 
+                      style={{ 
+                        background: index % 2 === 0 ? '#f7fafc' : 'white',
+                        borderBottom: '1px solid #e2e8f0'
+                      }}
+                    >
+                      <td style={{ padding: '0.75rem' }}>{index + 1}</td>
+                      <td style={{ padding: '0.75rem', fontWeight: '600' }}>{item.codigo_item}</td>
+                      <td style={{ padding: '0.75rem', maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {item.descricao}
+                      </td>
+                      <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                        {item.quantidade} {item.unidade}
+                      </td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <span style={{ 
+                          color: item.responsavel.includes('NÃO ENCONTRADO') ? '#ef4444' : '#667eea',
                           fontWeight: '600'
-                        }} 
-                        data-testid={`remove-item-${index}`}
-                      >
-                        Remover
-                      </button>
+                        }}>
+                          {item.responsavel}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.75rem' }}>{item.lote}</td>
+                      <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                        {item.preco_venda ? `R$ ${item.preco_venda.toFixed(2)}` : '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', borderTop: '2px solid #e2e8f0', paddingTop: '1.5rem' }}>
+              <button 
+                onClick={cancelPreview} 
+                className="btn btn-secondary"
+                style={{ padding: '0.75rem 1.5rem' }}
+                data-testid="cancel-confirm-btn"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleConfirmPDF} 
+                className="btn btn-primary"
+                disabled={loading}
+                style={{ padding: '0.75rem 2rem', fontSize: '1.1rem' }}
+                data-testid="confirm-oc-btn"
+              >
+                {loading ? 'Criando...' : `✓ Confirmar e Criar OC (${pdfPreview.total_items} itens)`}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Tabs */}
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '2px solid #e2e8f0' }}>
+              <button
+                onClick={() => setActiveTab('manual')}
+                className={activeTab === 'manual' ? 'btn btn-primary' : 'btn btn-secondary'}
+                style={{ 
+                  borderRadius: '8px 8px 0 0', 
+                  borderBottom: activeTab === 'manual' ? '3px solid #667eea' : 'none',
+                  padding: '0.75rem 2rem'
+                }}
+                data-testid="tab-manual"
+              >
+                📝 Cadastro Manual
+              </button>
+              <button
+                onClick={() => setActiveTab('pdf')}
+                className={activeTab === 'pdf' ? 'btn btn-primary' : 'btn btn-secondary'}
+                style={{ 
+                  borderRadius: '8px 8px 0 0', 
+                  borderBottom: activeTab === 'pdf' ? '3px solid #667eea' : 'none',
+                  padding: '0.75rem 2rem'
+                }}
+                data-testid="tab-pdf"
+              >
+                📄 Upload PDF
+              </button>
+            </div>
+
+            {/* Formulário Manual */}
+            {activeTab === 'manual' && (
+              <form onSubmit={handleSubmitManual}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="numero-oc">Número da OC *</label>
+                    <input
+                      id="numero-oc"
+                      type="text"
+                      className="form-input"
+                      value={numeroOC}
+                      onChange={(e) => setNumeroOC(e.target.value)}
+                      placeholder="Ex: OC-2024-001"
+                      required
+                      data-testid="input-numero-oc"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="endereco-entrega">Endereço de Entrega</label>
+                    <input
+                      id="endereco-entrega"
+                      type="text"
+                      className="form-input"
+                      value={enderecoEntrega}
+                      onChange={(e) => setEnderecoEntrega(e.target.value)}
+                      placeholder="Rua, número, bairro, cidade (aplica para todos os itens)"
+                      data-testid="input-endereco-oc"
+                    />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '1rem' }}>Itens da OC</h3>
+
+                  {items.map((item, index) => (
+                    <div key={index} className="card" style={{ marginBottom: '1rem', background: '#f7fafc' }} data-testid={`item-form-${index}`}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h4 style={{ fontSize: '1rem', fontWeight: '600' }}>Item {index + 1}</h4>
+                        {items.length > 1 && (
+                          <button 
+                            type="button" 
+                            onClick={() => removeItem(index)} 
+                            style={{ 
+                              background: '#ef4444', 
+                              color: 'white', 
+                              padding: '0.5rem 1rem', 
+                              borderRadius: '8px', 
+                              border: 'none', 
+                              cursor: 'pointer',
+                              fontWeight: '600'
+                            }} 
+                            data-testid={`remove-item-${index}`}
+                          >
+                            Remover
+                          </button>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+                        <div className="form-group">
+                          <label className="form-label">Código do Item *</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={item.codigo_item}
+                            onChange={(e) => updateItem(index, 'codigo_item', e.target.value)}
+                            placeholder="Ex: 107712"
+                            required
+                            data-testid={`input-codigo-${index}`}
+                          />
+                          <small style={{ color: '#718096', fontSize: '0.85rem' }}>
+                            Descrição e marca serão buscadas automaticamente
+                          </small>
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">Quantidade *</label>
+                          <input
+                            type="number"
+                            className="form-input"
+                            value={item.quantidade}
+                            onChange={(e) => updateItem(index, 'quantidade', e.target.value)}
+                            min="1"
+                            required
+                            data-testid={`input-quantidade-${index}`}
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">Unidade</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={item.unidade}
+                            onChange={(e) => updateItem(index, 'unidade', e.target.value)}
+                            placeholder="UN, KG, M, etc"
+                            data-testid={`input-unidade-${index}`}
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">Preço Venda Unit. (R$)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            className="form-input"
+                            value={item.preco_venda}
+                            onChange={(e) => updateItem(index, 'preco_venda', e.target.value)}
+                            placeholder="Opcional"
+                            data-testid={`input-preco-venda-${index}`}
+                          />
+                          <small style={{ color: '#718096', fontSize: '0.85rem' }}>
+                            Deixe vazio para usar valor da planilha
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                  <button 
+                    type="button" 
+                    onClick={addItem} 
+                    className="btn btn-secondary" 
+                    data-testid="add-item-btn"
+                    style={{ marginRight: 'auto' }}
+                  >
+                    + Adicionar Item
+                  </button>
+                  <button type="button" onClick={() => navigate('/')} className="btn btn-secondary" data-testid="cancel-btn">
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={loading} data-testid="submit-po-btn">
+                    {loading ? 'Criando...' : 'Criar Ordem de Compra'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Formulário PDF */}
+            {activeTab === 'pdf' && (
+              <form onSubmit={handlePreviewPDF}>
+                <div style={{ textAlign: 'center', padding: '3rem', background: '#f7fafc', borderRadius: '12px' }}>
+                  <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📄</div>
+                  <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem' }}>
+                    Upload de PDF da Ordem de Compra
+                  </h3>
+                  <p style={{ color: '#718096', marginBottom: '2rem', maxWidth: '600px', margin: '0 auto 2rem' }}>
+                    Faça upload do PDF da OC recebida do FIEP. O sistema irá extrair automaticamente:
+                    <br />• Número da OC
+                    <br />• Código dos itens
+                    <br />• Quantidades
+                    <br />• Endereço de entrega
+                  </p>
+
+                  <div className="form-group">
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      onChange={(e) => setPdfFile(e.target.files[0])}
+                      style={{ display: 'none' }}
+                      id="pdf-upload"
+                      data-testid="input-pdf-file"
+                    />
+                    <label 
+                      htmlFor="pdf-upload" 
+                      className="btn btn-primary"
+                      style={{ 
+                        padding: '1rem 3rem', 
+                        fontSize: '1.1rem', 
+                        cursor: 'pointer',
+                        display: 'inline-block'
+                      }}
+                    >
+                      📁 Selecionar PDF
+                    </label>
+                    {pdfFile && (
+                      <p style={{ marginTop: '1rem', color: '#4a5568', fontWeight: '600' }}>
+                        ✓ Arquivo selecionado: {pdfFile.name}
+                      </p>
                     )}
                   </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
-                    <div className="form-group">
-                      <label className="form-label">Código do Item *</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={item.codigo_item}
-                        onChange={(e) => updateItem(index, 'codigo_item', e.target.value)}
-                        placeholder="Ex: 107712"
-                        required
-                        data-testid={`input-codigo-${index}`}
-                      />
-                      <small style={{ color: '#718096', fontSize: '0.85rem' }}>
-                        Descrição e marca serão buscadas automaticamente
-                      </small>
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Quantidade *</label>
-                      <input
-                        type="number"
-                        className="form-input"
-                        value={item.quantidade}
-                        onChange={(e) => updateItem(index, 'quantidade', e.target.value)}
-                        min="1"
-                        required
-                        data-testid={`input-quantidade-${index}`}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Unidade</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={item.unidade}
-                        onChange={(e) => updateItem(index, 'unidade', e.target.value)}
-                        placeholder="UN, KG, M, etc"
-                        data-testid={`input-unidade-${index}`}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Preço Venda Unit. (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        className="form-input"
-                        value={item.preco_venda}
-                        onChange={(e) => updateItem(index, 'preco_venda', e.target.value)}
-                        placeholder="Opcional"
-                        data-testid={`input-preco-venda-${index}`}
-                      />
-                      <small style={{ color: '#718096', fontSize: '0.85rem' }}>
-                        Deixe vazio para usar valor da planilha
-                      </small>
-                    </div>
-                  </div>
                 </div>
-              ))}
-            </div>
 
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-              <button 
-                type="button" 
-                onClick={addItem} 
-                className="btn btn-secondary" 
-                data-testid="add-item-btn"
-                style={{ marginRight: 'auto' }}
-              >
-                + Adicionar Item
-              </button>
-              <button type="button" onClick={() => navigate('/')} className="btn btn-secondary" data-testid="cancel-btn">
-                Cancelar
-              </button>
-              <button type="submit" className="btn btn-primary" disabled={loading} data-testid="submit-po-btn">
-                {loading ? 'Criando...' : 'Criar Ordem de Compra'}
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* Formulário PDF */}
-        {activeTab === 'pdf' && (
-          <form onSubmit={handleSubmitPDF}>
-            <div style={{ textAlign: 'center', padding: '3rem', background: '#f7fafc', borderRadius: '12px' }}>
-              <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📄</div>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem' }}>
-                Upload de PDF da Ordem de Compra
-              </h3>
-              <p style={{ color: '#718096', marginBottom: '2rem', maxWidth: '600px', margin: '0 auto 2rem' }}>
-                Faça upload do PDF da OC recebida do FIEP. O sistema irá extrair automaticamente:
-                <br />• Número da OC
-                <br />• Código dos itens
-                <br />• Quantidades
-                <br />• Endereço de entrega
-              </p>
-
-              <div className="form-group">
-                <input
-                  type="file"
-                  accept=".pdf"
-                  onChange={(e) => setPdfFile(e.target.files[0])}
-                  style={{ display: 'none' }}
-                  id="pdf-upload"
-                  data-testid="input-pdf-file"
-                />
-                <label 
-                  htmlFor="pdf-upload" 
-                  className="btn btn-primary"
-                  style={{ 
-                    padding: '1rem 3rem', 
-                    fontSize: '1.1rem',
-                    cursor: 'pointer',
-                    display: 'inline-block'
-                  }}
-                  data-testid="pdf-upload-label"
-                >
-                  Selecionar Arquivo PDF
-                </label>
-              </div>
-
-              {pdfFile && (
-                <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'white', borderRadius: '8px' }}>
-                  <p style={{ color: '#10b981', fontWeight: '600' }} data-testid="selected-file-name">
-                    ✓ Arquivo selecionado: {pdfFile.name}
-                  </p>
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem' }}>
+                  <button type="button" onClick={() => navigate('/')} className="btn btn-secondary" data-testid="cancel-pdf-btn">
+                    Cancelar
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary" 
+                    disabled={loading || !pdfFile}
+                    data-testid="preview-pdf-btn"
+                    style={{ padding: '0.75rem 2rem' }}
+                  >
+                    {loading ? 'Processando...' : '→ Ler PDF e Visualizar'}
+                  </button>
                 </div>
-              )}
-            </div>
-
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem' }}>
-              <button type="button" onClick={() => navigate('/')} className="btn btn-secondary" data-testid="cancel-pdf-btn">
-                Cancelar
-              </button>
-              <button 
-                type="submit" 
-                className="btn btn-primary" 
-                disabled={loading || !pdfFile}
-                data-testid="submit-pdf-btn"
-              >
-                {loading ? 'Processando PDF...' : 'Importar OC do PDF'}
-              </button>
-            </div>
-          </form>
+              </form>
+            )}
+          </>
         )}
       </div>
     </div>
