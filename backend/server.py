@@ -679,6 +679,74 @@ async def get_reference_items(codigo: Optional[str] = None, current_user: dict =
             item['created_at'] = datetime.fromisoformat(item['created_at'])
     return items
 
+@api_router.post("/purchase-orders/preview-pdf")
+async def preview_pdf_purchase_order(file: UploadFile = File(...), current_user: dict = Depends(require_admin)):
+    """Preview de PDF de Ordem de Compra - retorna itens sem criar OC (ADMIN ONLY)"""
+    
+    if not file.filename.endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Apenas arquivos PDF são aceitos")
+    
+    # Ler conteúdo do PDF
+    pdf_content = await file.read()
+    
+    # Extrair dados
+    oc_data = extract_oc_from_pdf(pdf_content)
+    
+    if not oc_data["items"]:
+        raise HTTPException(status_code=400, detail="Nenhum item encontrado no PDF. Verifique o formato do arquivo.")
+    
+    # Processar itens com dados de referência (preview apenas)
+    preview_items = []
+    items_without_ref = []
+    
+    import random
+    
+    for item in oc_data["items"]:
+        # Buscar TODAS as ocorrências deste código (em todos os lotes)
+        ref_items = await db.reference_items.find(
+            {"codigo_item": item["codigo_item"]},
+            {"_id": 0}
+        ).to_list(100)
+        
+        preview_item = {
+            "codigo_item": item["codigo_item"],
+            "quantidade": item["quantidade"],
+            "unidade": item.get("unidade", "UN"),
+            "descricao": item.get("descricao", ""),
+            "endereco_entrega": item.get("endereco_entrega", ""),
+            "regiao": item.get("regiao", "")
+        }
+        
+        if ref_items:
+            if len(ref_items) > 1:
+                non_admin_items = [ri for ri in ref_items if ri['responsavel'] in ['Maria', 'Mylena', 'Fabio']]
+                selected_ref = random.choice(non_admin_items) if non_admin_items else ref_items[0]
+            else:
+                selected_ref = ref_items[0]
+            
+            preview_item["responsavel"] = selected_ref['responsavel']
+            preview_item["lote"] = selected_ref['lote']
+            preview_item["marca_modelo"] = selected_ref.get('marca_modelo', '')
+            if not preview_item["descricao"] or len(preview_item["descricao"]) < 10:
+                preview_item["descricao"] = selected_ref['descricao']
+            if selected_ref.get('preco_venda_unitario'):
+                preview_item["preco_venda"] = selected_ref['preco_venda_unitario']
+        else:
+            items_without_ref.append(item["codigo_item"])
+            preview_item["responsavel"] = "⚠️ NÃO ENCONTRADO"
+            preview_item["lote"] = "⚠️ NÃO ENCONTRADO"
+            preview_item["marca_modelo"] = ""
+        
+        preview_items.append(preview_item)
+    
+    return {
+        "numero_oc": oc_data["numero_oc"],
+        "endereco_entrega": oc_data.get("endereco_entrega", ""),
+        "items": preview_items,
+        "total_items": len(preview_items),
+        "items_without_ref": items_without_ref
+    }
+
 @api_router.post("/purchase-orders/upload-pdf")
 async def upload_pdf_purchase_order(file: UploadFile = File(...), current_user: dict = Depends(require_admin)):
     """Upload de PDF de Ordem de Compra (ADMIN ONLY)"""
