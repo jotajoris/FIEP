@@ -99,12 +99,12 @@ const CreatePO = () => {
         body: formData
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Erro ao processar PDF');
+        throw new Error(data.detail || 'Erro ao processar PDF');
       }
 
-      const data = await response.json();
       setPdfPreview(data);
       setShowPreview(true);
     } catch (error) {
