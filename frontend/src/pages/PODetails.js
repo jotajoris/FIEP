@@ -168,7 +168,7 @@ const PODetails = () => {
 
               {editingItem === item.codigo_item ? (
                 <div style={{ marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: '8px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
                     <div className="form-group">
                       <label className="form-label">Status</label>
                       <select
@@ -183,50 +183,67 @@ const PODetails = () => {
                         <option value="entregue">Entregue</option>
                       </select>
                     </div>
-                    <div className="form-group">
-                      <label className="form-label">Preço Compra (R$)</label>
+                    
+                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                      <label className="form-label">Link de Compra</label>
                       <input
-                        type="number"
-                        step="0.01"
+                        type="url"
                         className="form-input"
-                        value={formData.preco_compra}
-                        onChange={(e) => setFormData({ ...formData, preco_compra: e.target.value })}
-                        data-testid={`input-preco-compra-${item.codigo_item}`}
+                        value={formData.link_compra}
+                        onChange={(e) => setFormData({ ...formData, link_compra: e.target.value })}
+                        placeholder="https://..."
+                        data-testid={`input-link-compra-${item.codigo_item}`}
                       />
                     </div>
-                    <div className="form-group">
-                      <label className="form-label">Preço Venda (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        className="form-input"
-                        value={formData.preco_venda}
-                        onChange={(e) => setFormData({ ...formData, preco_venda: e.target.value })}
-                        data-testid={`input-preco-venda-${item.codigo_item}`}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Imposto (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        className="form-input"
-                        value={formData.imposto}
-                        onChange={(e) => setFormData({ ...formData, imposto: e.target.value })}
-                        data-testid={`input-imposto-${item.codigo_item}`}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Frete (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        className="form-input"
-                        value={formData.custo_frete}
-                        onChange={(e) => setFormData({ ...formData, custo_frete: e.target.value })}
-                        data-testid={`input-frete-${item.codigo_item}`}
-                      />
-                    </div>
+                    
+                    {isAdmin() && (
+                      <>
+                        <div className="form-group">
+                          <label className="form-label">Preço Compra (R$)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            className="form-input"
+                            value={formData.preco_compra}
+                            onChange={(e) => setFormData({ ...formData, preco_compra: e.target.value })}
+                            data-testid={`input-preco-compra-${item.codigo_item}`}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Preço Venda (R$)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            className="form-input"
+                            value={formData.preco_venda}
+                            onChange={(e) => setFormData({ ...formData, preco_venda: e.target.value })}
+                            data-testid={`input-preco-venda-${item.codigo_item}`}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Imposto (R$)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            className="form-input"
+                            value={formData.imposto}
+                            onChange={(e) => setFormData({ ...formData, imposto: e.target.value })}
+                            data-testid={`input-imposto-${item.codigo_item}`}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Frete (R$)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            className="form-input"
+                            value={formData.custo_frete}
+                            onChange={(e) => setFormData({ ...formData, custo_frete: e.target.value })}
+                            data-testid={`input-frete-${item.codigo_item}`}
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                     <button onClick={cancelEdit} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }} data-testid={`cancel-edit-${item.codigo_item}`}>
@@ -240,17 +257,34 @@ const PODetails = () => {
               ) : (
                 <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.9rem', flexWrap: 'wrap' }}>
-                    {item.marca_modelo && <span><strong>Marca/Modelo:</strong> {item.marca_modelo}</span>}
-                    {item.preco_venda && (
+                    {item.link_compra && (
                       <span>
-                        <strong>Preço Venda:</strong> R$ {item.preco_venda.toFixed(2)}
-                        {item.quantidade && <small> (Total: R$ {(item.preco_venda * item.quantidade).toFixed(2)})</small>}
+                        <strong>Link:</strong>{' '}
+                        <a 
+                          href={item.link_compra} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ color: '#667eea', textDecoration: 'underline' }}
+                        >
+                          Ver link de compra
+                        </a>
                       </span>
                     )}
-                    {item.preco_compra && <span><strong>Compra:</strong> R$ {item.preco_compra.toFixed(2)}</span>}
-                    {item.imposto && <span><strong>Imposto:</strong> R$ {item.imposto.toFixed(2)}</span>}
-                    {item.custo_frete && <span><strong>Frete:</strong> R$ {item.custo_frete.toFixed(2)}</span>}
-                    {item.lucro_liquido && <span><strong>Lucro:</strong> <span style={{ color: item.lucro_liquido > 0 ? '#10b981' : '#ef4444', fontWeight: '700' }}>R$ {item.lucro_liquido.toFixed(2)}</span></span>}
+                    {item.marca_modelo && <span><strong>Marca/Modelo:</strong> {item.marca_modelo}</span>}
+                    {isAdmin() && (
+                      <>
+                        {item.preco_venda && (
+                          <span>
+                            <strong>Preço Venda:</strong> R$ {item.preco_venda.toFixed(2)}
+                            {item.quantidade && <small> (Total: R$ {(item.preco_venda * item.quantidade).toFixed(2)})</small>}
+                          </span>
+                        )}
+                        {item.preco_compra && <span><strong>Compra:</strong> R$ {item.preco_compra.toFixed(2)}</span>}
+                        {item.imposto && <span><strong>Imposto:</strong> R$ {item.imposto.toFixed(2)}</span>}
+                        {item.custo_frete && <span><strong>Frete:</strong> R$ {item.custo_frete.toFixed(2)}</span>}
+                        {item.lucro_liquido && <span><strong>Lucro:</strong> <span style={{ color: item.lucro_liquido > 0 ? '#10b981' : '#ef4444', fontWeight: '700' }}>R$ {item.lucro_liquido.toFixed(2)}</span></span>}
+                      </>
+                    )}
                   </div>
                   <button onClick={() => startEdit(item)} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} data-testid={`edit-item-${item.codigo_item}`}>
                     Editar
