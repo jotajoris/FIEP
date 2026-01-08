@@ -107,9 +107,11 @@ const Dashboard = () => {
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}>Ordens de Compra</h2>
-          <Link to="/create-po" className="btn btn-primary" data-testid="create-po-btn">
-            + Nova OC
-          </Link>
+          {isAdmin() && (
+            <Link to="/create-po" className="btn btn-primary" data-testid="create-po-btn">
+              + Nova OC
+            </Link>
+          )}
         </div>
         
         {orders.length === 0 ? (
