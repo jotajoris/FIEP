@@ -153,6 +153,8 @@ const AllItemsSummary = () => {
                   <th>Link</th>
                   <th>Venda</th>
                   <th>Compra</th>
+                  <th>Fr. Compra</th>
+                  <th>Fr. Envio</th>
                   <th>Lucro</th>
                   <th>Ações</th>
                 </tr>
@@ -162,7 +164,7 @@ const AllItemsSummary = () => {
                   <tr key={index} data-testid={`item-row-${item.codigo_item}`}>
                     <td><strong>{item.numero_oc}</strong></td>
                     <td>{item.codigo_item}</td>
-                    <td style={{ maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {item.descricao}
                     </td>
                     <td><strong style={{ color: '#667eea' }}>{item.responsavel}</strong></td>
@@ -182,7 +184,13 @@ const AllItemsSummary = () => {
                       {item.preco_compra ? `R$ ${(item.preco_compra * item.quantidade).toFixed(2)}` : '-'}
                     </td>
                     <td>
-                      {item.lucro_liquido ? (
+                      {item.frete_compra ? `R$ ${item.frete_compra.toFixed(2)}` : '-'}
+                    </td>
+                    <td>
+                      {item.frete_envio ? `R$ ${item.frete_envio.toFixed(2)}` : '-'}
+                    </td>
+                    <td>
+                      {item.lucro_liquido !== undefined && item.lucro_liquido !== null ? (
                         <strong style={{ color: item.lucro_liquido > 0 ? '#10b981' : '#ef4444' }}>
                           R$ {item.lucro_liquido.toFixed(2)}
                         </strong>
