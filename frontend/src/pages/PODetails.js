@@ -236,9 +236,17 @@ const PODetails = () => {
                 </div>
               ) : (
                 <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.9rem' }}>
+                  <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.9rem', flexWrap: 'wrap' }}>
+                    {item.marca_modelo && <span><strong>Marca/Modelo:</strong> {item.marca_modelo}</span>}
+                    {item.preco_venda && (
+                      <span>
+                        <strong>Preço Venda:</strong> R$ {item.preco_venda.toFixed(2)}
+                        {item.quantidade && <small> (Total: R$ {(item.preco_venda * item.quantidade).toFixed(2)})</small>}
+                      </span>
+                    )}
                     {item.preco_compra && <span><strong>Compra:</strong> R$ {item.preco_compra.toFixed(2)}</span>}
-                    {item.preco_venda && <span><strong>Venda:</strong> R$ {item.preco_venda.toFixed(2)}</span>}
+                    {item.imposto && <span><strong>Imposto:</strong> R$ {item.imposto.toFixed(2)}</span>}
+                    {item.custo_frete && <span><strong>Frete:</strong> R$ {item.custo_frete.toFixed(2)}</span>}
                     {item.lucro_liquido && <span><strong>Lucro:</strong> <span style={{ color: item.lucro_liquido > 0 ? '#10b981' : '#ef4444', fontWeight: '700' }}>R$ {item.lucro_liquido.toFixed(2)}</span></span>}
                   </div>
                   <button onClick={() => startEdit(item)} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} data-testid={`edit-item-${item.codigo_item}`}>
