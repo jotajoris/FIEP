@@ -106,6 +106,7 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 - [08/01/2026] ✅ Endereço de entrega único para toda OC
 - [08/01/2026] ✅ Campo de preço de venda unitário no cadastro de item
 - [08/01/2026] ✅ **Multi-Fornecedor**: Comprar de múltiplos locais por item
+- [08/01/2026] ✅ **Filtro "Meus Itens"**: Permite usuários (incluindo admins) ver apenas seus itens na página de status. Usa useMemo para garantir renderização correta.
 
 ## Próximas Tarefas (Backlog)
 
