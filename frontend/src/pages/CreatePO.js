@@ -162,6 +162,89 @@ const CreatePO = () => {
     setShowPreview(false);
     setPdfPreview(null);
     setPdfFile(null);
+    setEditingPreviewItem(null);
+    setEditForm({});
+  };
+
+  // Funções para editar itens no preview
+  const startEditPreviewItem = (index) => {
+    const item = pdfPreview.items[index];
+    setEditingPreviewItem(index);
+    setEditForm({
+      codigo_item: item.codigo_item,
+      quantidade: item.quantidade,
+      unidade: item.unidade,
+      descricao: item.descricao || '',
+      responsavel: item.responsavel || '',
+      preco_venda: item.preco_venda || ''
+    });
+  };
+
+  const saveEditPreviewItem = () => {
+    if (editingPreviewItem === null) return;
+    
+    const updatedItems = [...pdfPreview.items];
+    updatedItems[editingPreviewItem] = {
+      ...updatedItems[editingPreviewItem],
+      codigo_item: editForm.codigo_item,
+      quantidade: parseInt(editForm.quantidade) || 1,
+      unidade: editForm.unidade,
+      descricao: editForm.descricao,
+      responsavel: editForm.responsavel,
+      preco_venda: editForm.preco_venda ? parseFloat(editForm.preco_venda) : null
+    };
+    
+    setPdfPreview({
+      ...pdfPreview,
+      items: updatedItems
+    });
+    setEditingPreviewItem(null);
+    setEditForm({});
+  };
+
+  const cancelEditPreviewItem = () => {
+    setEditingPreviewItem(null);
+    setEditForm({});
+  };
+
+  const removePreviewItem = (index) => {
+    if (!window.confirm('Remover este item da OC?')) return;
+    
+    const updatedItems = pdfPreview.items.filter((_, i) => i !== index);
+    setPdfPreview({
+      ...pdfPreview,
+      items: updatedItems,
+      total_items: updatedItems.length
+    });
+  };
+
+  const addPreviewItem = () => {
+    const newItem = {
+      codigo_item: '',
+      quantidade: 1,
+      unidade: 'UN',
+      descricao: '',
+      responsavel: '',
+      lote: '',
+      preco_venda: null
+    };
+    
+    setPdfPreview({
+      ...pdfPreview,
+      items: [...pdfPreview.items, newItem],
+      total_items: pdfPreview.items.length + 1
+    });
+    
+    // Iniciar edição do novo item
+    setEditingPreviewItem(pdfPreview.items.length);
+    setEditForm({
+      codigo_item: '',
+      quantidade: 1,
+      unidade: 'UN',
+      descricao: '',
+      responsavel: '',
+      preco_venda: ''
+    });
   };
 
   return (
