@@ -162,18 +162,53 @@ const ItemsByStatus = () => {
   return (
     <div data-testid="items-by-status-page">
       <div className="page-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button onClick={() => navigate('/')} className="btn btn-secondary" data-testid="back-btn">
-            ← Voltar
-          </button>
-          <div>
-            <h1 className="page-title" data-testid="status-title">
-              Itens {statusLabels[status] || status}
-            </h1>
-            <p className="page-subtitle">
-              {items.length} {items.length === 1 ? 'item' : 'itens'} com status "{status}"
-            </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <button onClick={() => navigate('/')} className="btn btn-secondary" data-testid="back-btn">
+              ← Voltar
+            </button>
+            <div>
+              <h1 className="page-title" data-testid="status-title">
+                Itens {statusLabels[status] || status}
+              </h1>
+              <p className="page-subtitle">
+                {showOnlyMine ? (
+                  <>{filteredItems.length} de {items.length} itens (filtrado por {user?.owner_name})</>
+                ) : (
+                  <>{items.length} {items.length === 1 ? 'item' : 'itens'} com status "{status}"</>
+                )}
+              </p>
+            </div>
           </div>
+          
+          {/* Botão Meus Itens */}
+          {user?.owner_name && (
+            <button
+              onClick={() => setShowOnlyMine(!showOnlyMine)}
+              className={showOnlyMine ? 'btn btn-primary' : 'btn btn-secondary'}
+              style={{ 
+                padding: '0.6rem 1.2rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+              data-testid="filter-my-items-btn"
+            >
+              {showOnlyMine ? '👤 Meus Itens ✓' : '👤 Meus Itens'}
+              {showOnlyMine && (
+                <span style={{ 
+                  background: 'white', 
+                  color: '#667eea', 
+                  borderRadius: '50%', 
+                  padding: '0.1rem 0.5rem',
+                  fontSize: '0.8rem',
+                  fontWeight: '700'
+                }}>
+                  {filteredItems.length}
+                </span>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
