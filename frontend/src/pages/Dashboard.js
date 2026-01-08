@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import { apiGet, apiPost, API } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const Dashboard = () => {
+  const { isAdmin } = useAuth();
   const [stats, setStats] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,8 +17,8 @@ const Dashboard = () => {
   const loadData = async () => {
     try {
       const [statsRes, ordersRes] = await Promise.all([
-        axios.get(`${API}/dashboard`),
-        axios.get(`${API}/purchase-orders`)
+        apiGet(`${API}/dashboard`),
+        apiGet(`${API}/purchase-orders`)
       ]);
       setStats(statsRes.data);
       setOrders(ordersRes.data);
@@ -33,7 +32,7 @@ const Dashboard = () => {
   const seedDatabase = async () => {
     try {
       setSeeded(true);
-      const response = await axios.post(`${API}/reference-items/seed`);
+      const response = await apiPost(`${API}/reference-items/seed`);
       alert(response.data.message);
     } catch (error) {
       console.error('Erro ao popular banco:', error);
