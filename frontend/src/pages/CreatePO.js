@@ -216,7 +216,45 @@ const CreatePO = () => {
       navigate(`/po/${response.data.id}`);
     } catch (error) {
       console.error('Erro ao criar OC:', error);
-      alert(error.message || 'Erro ao criar Ordem de Compra.');
+      
+      // Verificar se é erro de OC duplicada
+      if (error.response?.status === 409) {
+        const continuar = window.confirm(
+          `A Ordem de Compra "${pdfPreview.numero_oc}" já existe no sistema.\n\n` +
+          `Deseja continuar mesmo assim? Isso criará uma OC duplicada.`
+        );
+        
+        if (continuar) {
+          // Tentar novamente com número modificado
+          const novoNumero = `${pdfPreview.numero_oc}-DUPLICATA-${Date.now()}`;
+          try {
+            const response = await apiPost(`${API}/purchase-orders`, {
+              numero_oc: novoNumero,
+              endereco_entrega: pdfPreview.endereco_entrega || '',
+              items: pdfPreview.items.map(item => ({
+                codigo_item: item.codigo_item,
+                quantidade: parseInt(item.quantidade) || 1,
+                unidade: item.unidade || 'UN',
+                descricao: item.descricao || '',
+                endereco_entrega: pdfPreview.endereco_entrega || '',
+                responsavel: item.responsavel || '',
+                lote: item.lote || '',
+                lot_number: 0,
+                regiao: item.regiao || '',
+                preco_venda: item.preco_venda || null
+              }))
+            });
+            
+            alert(`OC criada com número modificado: ${novoNumero}! ${pdfPreview.items.length} itens.`);
+            navigate(`/po/${response.data.id}`);
+          } catch (secondError) {
+            console.error('Erro ao criar OC duplicada:', secondError);
+            alert('Erro ao criar Ordem de Compra duplicada. Tente novamente.');
+          }
+        }
+      } else {
+        alert(error.response?.data?.detail || error.message || 'Erro ao criar Ordem de Compra.');
+      }
     } finally {
       setLoading(false);
     }
