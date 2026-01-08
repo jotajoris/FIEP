@@ -194,6 +194,56 @@ class AdminSummary(BaseModel):
 def get_responsible_by_lot(lot_number: int) -> str:
     return LOT_TO_OWNER.get(lot_number, "Não atribuído")
 
+def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
+    """Extrair dados de OC de um PDF"""
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        full_text = ""
+        
+        for page in doc:
+            full_text += page.get_text()
+        
+        doc.close()
+        
+        # Extrair número da OC
+        oc_match = re.search(r'OC[- ]?(\d+[\.\d]+)', full_text, re.IGNORECASE)
+        numero_oc = oc_match.group(0) if oc_match else "OC-" + str(uuid.uuid4())[:8]
+        
+        # Extrair endereço de entrega
+        endereco_match = re.search(r'Endereço de Entrega[:\s]*(.*?)(?:\n|Linha)', full_text, re.IGNORECASE | re.DOTALL)
+        endereco_entrega = endereco_match.group(1).strip() if endereco_match else ""
+        
+        # Extrair itens - procurar por códigos de 6 dígitos seguidos de descrição
+        items = []
+        item_pattern = r'(\d{6})\s*([^\n]+)\s+(\d+)\s+UN\s+([\d,\.]+)\s+([\d,\.]+)'
+        
+        for match in re.finditer(item_pattern, full_text):
+            codigo = match.group(1)
+            quantidade = int(match.group(3))
+            
+            # Procurar descrição completa para este código
+            desc_pattern = f'{codigo}\\s*-\\s*([^\\n]+(?:\\n(?!\\d{{6}})[^\\n]+)*)'
+            desc_match = re.search(desc_pattern, full_text, re.MULTILINE)
+            descricao = desc_match.group(1).strip() if desc_match else match.group(2).strip()
+            
+            items.append({
+                "codigo_item": codigo,
+                "quantidade": quantidade,
+                "descricao": descricao,
+                "unidade": "UN",
+                "endereco_entrega": endereco_entrega
+            })
+        
+        return {
+            "numero_oc": numero_oc,
+            "items": items,
+            "endereco_entrega": endereco_entrega
+        }
+    
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erro ao processar PDF: {str(e)}")
+
+
 async def send_password_reset_email(email: str, reset_token: str):
     """Envia email com link de reset de senha"""
     reset_link = f"{os.environ.get('FRONTEND_URL', 'http://localhost:3000')}/reset-password?token={reset_token}"
