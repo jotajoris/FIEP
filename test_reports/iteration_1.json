@@ -26,7 +26,7 @@
     "admin": {"email": "projetos.onsolucoes@gmail.com", "password": "on123456"},
     "user": {"email": "fabioonsolucoes@gmail.com", "password": "on123456"}
   },
-  "seed_data_creation": "Used existing OC: ID=e4741742-0534-427f-bb97-915e6d3e0c9b, numero=OC-2.121437, Item codigo=113415",
+  "seed_data_creation": "Used existing OC: ID=ordermgr-2, numero=OC-2.121437, Item codigo=113415",
   "retest_needed": false,
   "should_main_agent_self_test": false,
   "context_for_next_testing_agent": "Frete fields implementation is complete and working. Backend tests in /app/tests/test_frete_fields.py cover: authentication, frete_compra/frete_envio field updates, permission checks (user cannot update frete_envio), and lucro_liquido calculation. Test data: preco_venda=100, preco_compra=50, quantidade=34, imposto=20, frete_compra=10, frete_envio=5, lucro_liquido=1665.",
