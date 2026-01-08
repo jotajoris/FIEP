@@ -737,6 +737,10 @@ async def preview_pdf_purchase_order(file: UploadFile = File(...), current_user:
             "regiao": item.get("regiao", "")
         }
         
+        # PRIORIDADE: Usar preço do PDF se disponível
+        if item.get("preco_venda_pdf"):
+            preview_item["preco_venda"] = item["preco_venda_pdf"]
+        
         if ref_items:
             if len(ref_items) > 1:
                 non_admin_items = [ri for ri in ref_items if ri['responsavel'] in ['Maria', 'Mylena', 'Fabio']]
@@ -749,7 +753,9 @@ async def preview_pdf_purchase_order(file: UploadFile = File(...), current_user:
             preview_item["marca_modelo"] = selected_ref.get('marca_modelo', '')
             if not preview_item["descricao"] or len(preview_item["descricao"]) < 10:
                 preview_item["descricao"] = selected_ref['descricao']
-            if selected_ref.get('preco_venda_unitario'):
+            
+            # Só usa preço da planilha se não tiver preço do PDF
+            if not preview_item.get("preco_venda") and selected_ref.get('preco_venda_unitario'):
                 preview_item["preco_venda"] = selected_ref['preco_venda_unitario']
         else:
             items_without_ref.append(item["codigo_item"])
