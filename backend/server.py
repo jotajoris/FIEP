@@ -195,6 +195,7 @@ class ItemStatusUpdate(BaseModel):
     frete_compra: Optional[float] = None
     frete_envio: Optional[float] = None
     fontes_compra: Optional[List[FonteCompra]] = None
+    codigo_rastreio: Optional[str] = None  # Código de rastreio dos Correios
 
 class ItemFullUpdate(BaseModel):
     """Atualização completa do item - apenas admin"""
@@ -211,6 +212,7 @@ class DashboardStats(BaseModel):
     items_pendentes: int
     items_cotados: int
     items_comprados: int
+    items_em_transito: int
     items_entregues: int
     items_por_responsavel: Dict[str, int]
 
