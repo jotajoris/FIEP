@@ -90,14 +90,14 @@ const AdminPanel = () => {
                         <td>{item.codigo_item}</td>
                         <td>{item.nome_item}</td>
                         <td><strong style={{ color: '#667eea' }}>{item.quem_cotou}</strong></td>
-                        <td>{item.preco_compra ? `R$ ${item.preco_compra.toFixed(2)}` : '-'}</td>
-                        <td>{item.preco_venda ? `R$ ${item.preco_venda.toFixed(2)}` : '-'}</td>
-                        <td>{item.imposto ? `R$ ${item.imposto.toFixed(2)}` : '-'}</td>
-                        <td>{item.custo_frete ? `R$ ${item.custo_frete.toFixed(2)}` : '-'}</td>
+                        <td>{item.preco_compra ? formatBRL(item.preco_compra) : '-'}</td>
+                        <td>{item.preco_venda ? formatBRL(item.preco_venda) : '-'}</td>
+                        <td>{item.imposto ? formatBRL(item.imposto) : '-'}</td>
+                        <td>{item.custo_frete ? formatBRL(item.custo_frete) : '-'}</td>
                         <td>
                           {item.lucro_liquido ? (
                             <strong style={{ color: item.lucro_liquido > 0 ? '#10b981' : '#ef4444' }}>
-                              R$ {item.lucro_liquido.toFixed(2)}
+                              {formatBRL(item.lucro_liquido)}
                             </strong>
                           ) : '-'}
                         </td>
