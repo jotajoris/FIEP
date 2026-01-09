@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { apiGet, apiPatch, API, formatBRL } from '../utils/api';
+import { apiGet, apiPatch, apiPost, API, formatBRL } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -14,11 +14,15 @@ const ItemsByStatus = () => {
   const [formData, setFormData] = useState({});
   const [showOnlyMine, setShowOnlyMine] = useState(false);
   const [filterFornecedor, setFilterFornecedor] = useState('todos');
+  const [expandedRastreio, setExpandedRastreio] = useState({});
+  const [codigoRastreio, setCodigoRastreio] = useState('');
+  const [salvandoRastreio, setSalvandoRastreio] = useState(null);
 
   const statusLabels = {
     'pendente': 'Pendentes',
     'cotado': 'Cotados',
     'comprado': 'Comprados',
+    'em_transito': 'Em Trânsito',
     'entregue': 'Entregues'
   };
 
