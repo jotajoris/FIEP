@@ -95,12 +95,21 @@ const ItemsByStatus = () => {
     setEditingItem(`${item.po_id}-${item.codigo_item}`);
     
     // Se já tem fontes de compra, usar elas; senão criar uma vazia
-    const fontesExistentes = item.fontes_compra && item.fontes_compra.length > 0 
-      ? item.fontes_compra 
+    // Garantir que cada fonte tenha um ID
+    const fontesExistentes = (item.fontes_compra && item.fontes_compra.length > 0)
+      ? item.fontes_compra.map(fc => ({
+          ...fc,
+          id: fc.id || uuidv4(),
+          quantidade: fc.quantidade || 1,
+          preco_unitario: fc.preco_unitario || '',
+          frete: fc.frete || '',
+          link: fc.link || '',
+          fornecedor: fc.fornecedor || ''
+        }))
       : [];
     
     setFormData({
-      status: item.status,
+      status: item.status || 'pendente',
       preco_venda: item.preco_venda || '',
       imposto: item.imposto || '',
       frete_envio: item.frete_envio || '',
@@ -112,7 +121,7 @@ const ItemsByStatus = () => {
         link: item.link_compra || '',
         fornecedor: ''
       }],
-      quantidade_total: item.quantidade
+      quantidade_total: item.quantidade || 1
     });
   };
 
