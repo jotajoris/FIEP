@@ -210,6 +210,15 @@ const Dashboard = () => {
               <div className="stat-value" style={{ color: '#10b981' }}>{stats.items_comprados}</div>
             </Link>
             <Link 
+              to="/items/status/em_transito" 
+              className="stat-card" 
+              style={{ borderColor: '#8b5cf6', cursor: 'pointer', textDecoration: 'none' }} 
+              data-testid="stat-em-transito"
+            >
+              <div className="stat-label">Em Trânsito</div>
+              <div className="stat-value" style={{ color: '#8b5cf6' }}>{stats.items_em_transito || 0}</div>
+            </Link>
+            <Link 
               to="/items/status/entregue" 
               className="stat-card" 
               style={{ borderColor: '#22c55e', cursor: 'pointer', textDecoration: 'none' }} 
@@ -218,9 +227,9 @@ const Dashboard = () => {
               <div className="stat-label">Entregues</div>
               <div className="stat-value" style={{ color: '#22c55e' }}>{stats.items_entregues}</div>
             </Link>
-            <div className="stat-card" style={{ borderColor: '#8b5cf6' }} data-testid="stat-total-items">
+            <div className="stat-card" style={{ borderColor: '#6b7280' }} data-testid="stat-total-items">
               <div className="stat-label">Total Itens</div>
-              <div className="stat-value" style={{ color: '#8b5cf6' }}>{stats.total_items}</div>
+              <div className="stat-value" style={{ color: '#6b7280' }}>{stats.total_items}</div>
             </div>
           </div>
 
