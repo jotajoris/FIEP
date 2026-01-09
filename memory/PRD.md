@@ -6,7 +6,7 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 ## Requisitos Principais
 1. **Criação de OCs** - Manual ou via upload de PDF
 2. **Distribuição automática** - Itens distribuídos para responsáveis baseado em lotes
-3. **Rastreamento de status** - Pendente, Cotado, Comprado, Entregue
+3. **Rastreamento de status** - Pendente, Cotado, Comprado, Em Separação, Em Trânsito, Entregue
 4. **Controle de acesso** - Roles: admin e user
 5. **Cálculo financeiro** - Preços, impostos, fretes e lucro líquido
 
