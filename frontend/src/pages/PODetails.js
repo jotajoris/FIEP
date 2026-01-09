@@ -224,7 +224,7 @@ const PODetails = () => {
           <div>
             <div className="stat-label">Valor Total (Venda)</div>
             <div style={{ fontSize: '1.25rem', fontWeight: '700', color: valorTotal > 0 ? '#059669' : '#718096' }}>
-              {valorTotal > 0 ? formatCurrency(valorTotal) : 'Não informado'}
+              {valorTotal > 0 ? formatBRL(valorTotal) : 'Não informado'}
             </div>
           </div>
         </div>
