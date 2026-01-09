@@ -71,6 +71,12 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       
+      <Route path="/edit-po/:id" element={
+        <ProtectedRoute adminOnly>
+          <Layout><EditPO /></Layout>
+        </ProtectedRoute>
+      } />
+      
       <Route path="/admin" element={
         <ProtectedRoute adminOnly>
           <Layout><AdminPanel /></Layout>
