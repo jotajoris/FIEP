@@ -5,6 +5,15 @@ import { useAuth } from '../contexts/AuthContext';
 
 const RESPONSAVEIS = ['Maria', 'Mateus', 'João', 'Mylena', 'Fabio'];
 
+// Função para remover acentos e converter para maiúsculas
+const normalizeText = (text) => {
+  if (!text) return '';
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase();
+};
+
 const EditPO = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -12,7 +21,7 @@ const EditPO = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
+  const [editingItem, setEditingItem] = useState(null); // Agora usa índice
   const [editForm, setEditForm] = useState({});
 
   useEffect(() => {
