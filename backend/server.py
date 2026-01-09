@@ -1489,6 +1489,7 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         items_pendentes=items_pendentes,
         items_cotados=items_cotados,
         items_comprados=items_comprados,
+        items_em_separacao=items_em_separacao,
         items_em_transito=items_em_transito,
         items_entregues=items_entregues,
         items_por_responsavel=items_por_responsavel
