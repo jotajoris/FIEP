@@ -1925,6 +1925,89 @@ async def marcar_todas_lidas(current_user: dict = Depends(get_current_user)):
     )
     return {"message": "Todas as notificações marcadas como lidas"}
 
+# ================== VERIFICAÇÃO AUTOMÁTICA DE RASTREIO ==================
+
+async def verificar_rastreios_em_transito():
+    """Verifica todos os itens em trânsito e atualiza status se entregue"""
+    logger = logging.getLogger(__name__)
+    
+    while True:
+        try:
+            logger.info("Iniciando verificação automática de rastreios...")
+            
+            # Buscar todas as OCs com itens em trânsito
+            cursor = db.purchase_orders.find(
+                {"items.status": "em_transito"},
+                {"_id": 0}
+            )
+            
+            itens_atualizados = 0
+            
+            async for po in cursor:
+                for item in po['items']:
+                    if item.get('status') == 'em_transito' and item.get('codigo_rastreio'):
+                        codigo = item['codigo_rastreio']
+                        
+                        # Tentar buscar rastreio
+                        result = await buscar_rastreio_api(codigo)
+                        
+                        if result.get('success') and result.get('eventos'):
+                            eventos = result['eventos']
+                            item['rastreio_eventos'] = eventos
+                            
+                            # Verificar se foi entregue
+                            entregue = False
+                            for evento in eventos:
+                                status_lower = (evento.get('status') or '').lower()
+                                if 'entregue' in status_lower or 'entrega realizada' in status_lower or 'destinatário' in status_lower:
+                                    entregue = True
+                                    break
+                            
+                            if entregue:
+                                now = datetime.now(timezone.utc)
+                                item['status'] = ItemStatus.ENTREGUE.value
+                                item['data_entrega'] = now.isoformat()
+                                
+                                # Criar notificação
+                                notificacao = {
+                                    "id": str(uuid.uuid4()),
+                                    "tipo": "entrega",
+                                    "titulo": "Item Entregue",
+                                    "numero_oc": po.get('numero_oc', ''),
+                                    "codigo_item": item['codigo_item'],
+                                    "descricao_item": item.get('descricao', '')[:30] + ('...' if len(item.get('descricao', '')) > 30 else ''),
+                                    "lida": False,
+                                    "created_at": now.isoformat()
+                                }
+                                await db.notificacoes.insert_one(notificacao)
+                                
+                                itens_atualizados += 1
+                                logger.info(f"Item {item['codigo_item']} da OC {po['numero_oc']} marcado como entregue automaticamente")
+                            
+                            # Atualizar OC no banco
+                            await db.purchase_orders.update_one(
+                                {"id": po['id']},
+                                {"$set": {"items": po['items']}}
+                            )
+            
+            if itens_atualizados > 0:
+                logger.info(f"Verificação concluída. {itens_atualizados} itens atualizados para entregue.")
+            else:
+                logger.info("Verificação concluída. Nenhum item novo entregue.")
+                
+        except Exception as e:
+            logger.error(f"Erro na verificação automática de rastreios: {str(e)}")
+        
+        # Aguardar 30 minutos antes da próxima verificação
+        await asyncio.sleep(1800)
+
+@app.on_event("startup")
+async def startup_event():
+    """Iniciar job de verificação de rastreios ao iniciar o servidor"""
+    global rastreio_task
+    rastreio_task = asyncio.create_task(verificar_rastreios_em_transito())
+    logging.getLogger(__name__).info("Job de verificação de rastreios iniciado")
+
 # Include the router in the main app
 app.include_router(api_router)
 
