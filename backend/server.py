@@ -220,6 +220,8 @@ class ItemFullUpdate(BaseModel):
     responsavel: Optional[str] = None
     lote: Optional[str] = None
     marca_modelo: Optional[str] = None
+    status: Optional[str] = None
+    preco_venda: Optional[float] = None
 
 class DashboardStats(BaseModel):
     total_ocs: int
