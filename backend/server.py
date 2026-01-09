@@ -1445,6 +1445,7 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     items_pendentes = sum(1 for item in all_items if item['status'] == ItemStatus.PENDENTE)
     items_cotados = sum(1 for item in all_items if item['status'] == ItemStatus.COTADO)
     items_comprados = sum(1 for item in all_items if item['status'] == ItemStatus.COMPRADO)
+    items_em_transito = sum(1 for item in all_items if item['status'] == ItemStatus.EM_TRANSITO)
     items_entregues = sum(1 for item in all_items if item['status'] == ItemStatus.ENTREGUE)
     
     # Para usuários não-admin, mostrar apenas seus próprios itens no breakdown por responsável
@@ -1465,6 +1466,7 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         items_pendentes=items_pendentes,
         items_cotados=items_cotados,
         items_comprados=items_comprados,
+        items_em_transito=items_em_transito,
         items_entregues=items_entregues,
         items_por_responsavel=items_por_responsavel
     )
