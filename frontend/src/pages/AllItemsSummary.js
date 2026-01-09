@@ -100,10 +100,25 @@ const AllItemsSummary = () => {
           <div className="stat-label">Total Frete Envio</div>
           <div className="stat-value" style={{ color: '#ec4899', fontSize: '1.8rem' }}>{formatBRL(totalFreteEnvio)}</div>
         </div>
-        <div className="stat-card" style={{ borderColor: totalLucro > 0 ? '#10b981' : '#ef4444' }}>
-          <div className="stat-label">Lucro Total</div>
-          <div className="stat-value" style={{ color: totalLucro > 0 ? '#10b981' : '#ef4444', fontSize: '1.8rem' }}>
-            {formatBRL(totalLucro)}
+        <div className="stat-card" style={{ borderColor: totalLucroPrevisto > 0 ? '#10b981' : '#ef4444' }}>
+          <div className="stat-label">Lucro Previsto</div>
+          <div className="stat-value" style={{ color: totalLucroPrevisto > 0 ? '#10b981' : '#ef4444', fontSize: '1.8rem' }}>
+            {formatBRL(totalLucroPrevisto)}
+          </div>
+        </div>
+        <div className="stat-card" style={{ borderColor: '#dc2626' }}>
+          <div className="stat-label">Imposto Previsto (11%)</div>
+          <div className="stat-value" style={{ color: '#dc2626', fontSize: '1.8rem' }}>
+            {formatBRL(totalImpostoPrevisto)}
+          </div>
+        </div>
+        <div className="stat-card" style={{ borderColor: '#059669', background: '#f0fdf4' }}>
+          <div className="stat-label">Lucro Realizado</div>
+          <div className="stat-value" style={{ color: '#059669', fontSize: '1.8rem', fontWeight: '800' }}>
+            {formatBRL(totalLucroRealizado)}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+            (Em trânsito + Entregues)
           </div>
         </div>
       </div>
