@@ -245,6 +245,16 @@ h1, h2, h3, h4, h5, h6 {
   color: #10b981;
 }
 
+.status-em_separacao {
+  background: rgba(249, 115, 22, 0.15);
+  color: #f97316;
+}
+
+.status-em_transito {
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+}
+
 .status-entregue {
   background: rgba(34, 197, 94, 0.15);
   color: #22c55e;
