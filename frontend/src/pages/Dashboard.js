@@ -210,6 +210,15 @@ const Dashboard = () => {
               <div className="stat-value" style={{ color: '#10b981' }}>{stats.items_comprados}</div>
             </Link>
             <Link 
+              to="/items/status/em_separacao" 
+              className="stat-card" 
+              style={{ borderColor: '#f97316', cursor: 'pointer', textDecoration: 'none' }} 
+              data-testid="stat-em-separacao"
+            >
+              <div className="stat-label">Em Separação</div>
+              <div className="stat-value" style={{ color: '#f97316' }}>{stats.items_em_separacao || 0}</div>
+            </Link>
+            <Link 
               to="/items/status/em_transito" 
               className="stat-card" 
               style={{ borderColor: '#8b5cf6', cursor: 'pointer', textDecoration: 'none' }} 
