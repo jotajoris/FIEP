@@ -14,6 +14,8 @@ const Dashboard = () => {
   
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchCodigoItem, setSearchCodigoItem] = useState('');
+  const [searchResponsavel, setSearchResponsavel] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
