@@ -102,12 +102,12 @@ const Dashboard = () => {
     setSelectedOrders(newSelected);
   };
 
-  // Selecionar/deselecionar todas
+  // Selecionar/deselecionar todas (apenas das filtradas)
   const toggleSelectAll = () => {
-    if (selectedOrders.size === orders.length) {
+    if (selectedOrders.size === filteredOrders.length) {
       setSelectedOrders(new Set());
     } else {
-      setSelectedOrders(new Set(orders.map(o => o.id)));
+      setSelectedOrders(new Set(filteredOrders.map(o => o.id)));
     }
   };
 
