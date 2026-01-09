@@ -347,9 +347,12 @@ const Dashboard = () => {
           </div>
         )}
         
-        {orders.length === 0 ? (
+        {filteredOrders.length === 0 ? (
           <p style={{ textAlign: 'center', color: '#718096', padding: '2rem' }} data-testid="no-orders-message">
-            Nenhuma ordem de compra cadastrada ainda.
+            {orders.length === 0 
+              ? 'Nenhuma ordem de compra cadastrada ainda.'
+              : 'Nenhuma OC encontrada com os filtros aplicados.'
+            }
           </p>
         ) : (
           <div className="table-container">
@@ -360,7 +363,7 @@ const Dashboard = () => {
                     <th style={{ width: '40px', textAlign: 'center' }}>
                       <input 
                         type="checkbox"
-                        checked={selectedOrders.size === orders.length && orders.length > 0}
+                        checked={selectedOrders.size === filteredOrders.length && filteredOrders.length > 0}
                         onChange={toggleSelectAll}
                         style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                         title="Selecionar todas"
@@ -376,7 +379,7 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {orders.map((order) => {
+                {filteredOrders.map((order) => {
                   const valorTotal = calcularValorTotalOC(order);
                   return (
                     <tr 
@@ -419,19 +422,34 @@ const Dashboard = () => {
                             Ver Detalhes
                           </Link>
                           {isAdmin() && (
-                            <button 
-                              onClick={() => handleDeleteOrder(order.id, order.numero_oc)}
-                              className="btn"
-                              style={{ 
-                                padding: '0.5rem 1rem', 
-                                fontSize: '0.85rem',
-                                background: '#ef4444',
-                                color: 'white'
-                              }}
-                              data-testid={`delete-po-${order.numero_oc}`}
-                            >
-                              Deletar
-                            </button>
+                            <>
+                              <Link 
+                                to={`/edit-po/${order.id}`} 
+                                className="btn"
+                                style={{ 
+                                  padding: '0.5rem 1rem', 
+                                  fontSize: '0.85rem',
+                                  background: '#f59e0b',
+                                  color: 'white'
+                                }}
+                                data-testid={`edit-po-${order.numero_oc}`}
+                              >
+                                Editar
+                              </Link>
+                              <button 
+                                onClick={() => handleDeleteOrder(order.id, order.numero_oc)}
+                                className="btn"
+                                style={{ 
+                                  padding: '0.5rem 1rem', 
+                                  fontSize: '0.85rem',
+                                  background: '#ef4444',
+                                  color: 'white'
+                                }}
+                                data-testid={`delete-po-${order.numero_oc}`}
+                              >
+                                Deletar
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>
