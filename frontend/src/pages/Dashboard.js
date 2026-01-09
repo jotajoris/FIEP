@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { apiGet, apiPost, apiDelete, API, formatBRL } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,10 +11,49 @@ const Dashboard = () => {
   const [seeded, setSeeded] = useState(false);
   const [selectedOrders, setSelectedOrders] = useState(new Set());
   const [deleting, setDeleting] = useState(false);
+  
+  // Filtros
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   useEffect(() => {
     loadData();
   }, []);
+
+  // Filtrar ordens
+  const filteredOrders = useMemo(() => {
+    return orders.filter(order => {
+      // Filtro por número da OC
+      if (searchTerm && !order.numero_oc.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return false;
+      }
+      
+      // Filtro por data
+      const orderDate = new Date(order.created_at);
+      orderDate.setHours(0, 0, 0, 0);
+      
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        if (orderDate < fromDate) return false;
+      }
+      
+      if (dateTo) {
+        const toDate = new Date(dateTo);
+        toDate.setHours(23, 59, 59, 999);
+        if (orderDate > toDate) return false;
+      }
+      
+      return true;
+    });
+  }, [orders, searchTerm, dateFrom, dateTo]);
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setDateFrom('');
+    setDateTo('');
+  };
 
   const loadData = async () => {
     try {
