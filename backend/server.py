@@ -1604,6 +1604,182 @@ async def fix_marca_modelo(current_user: dict = Depends(require_admin)):
     
     return {"message": f"{total_fixed} itens corrigidos com marca/modelo"}
 
+# ================== RASTREAMENTO CORREIOS ==================
+
+import httpx
+
+@api_router.get("/rastreio/{codigo}")
+async def buscar_rastreio(codigo: str, current_user: dict = Depends(get_current_user)):
+    """Buscar rastreamento de um código dos Correios"""
+    try:
+        # Usar API pública de rastreamento
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            # Tentar API do Seu Rastreio primeiro
+            try:
+                response = await client.get(
+                    f"https://api.seurastreio.com.br/api/public/rastreio/{codigo}",
+                    headers={"Accept": "application/json"}
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    return data
+            except Exception:
+                pass
+            
+            # Fallback: usar outra API pública de rastreamento
+            try:
+                response = await client.get(
+                    f"https://api.linketrack.com/track/json?user=teste&token=1abcd00b2731640e886fb41a8a9671ad1434c599dbaa0a0de9a5aa619f29a83f&codigo={codigo}",
+                    headers={"Accept": "application/json"}
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    # Converter para formato padronizado
+                    eventos = []
+                    for evento in data.get('eventos', []):
+                        eventos.append({
+                            "data": evento.get('data', ''),
+                            "hora": evento.get('hora', ''),
+                            "local": evento.get('local', ''),
+                            "status": evento.get('status', ''),
+                            "subStatus": evento.get('subStatus', [])
+                        })
+                    return {
+                        "codigo": codigo,
+                        "success": True,
+                        "eventos": eventos,
+                        "quantidade": len(eventos)
+                    }
+            except Exception:
+                pass
+        
+        return {"codigo": codigo, "success": False, "message": "Não foi possível rastrear o objeto"}
+    except Exception as e:
+        return {"codigo": codigo, "success": False, "message": str(e)}
+
+@api_router.post("/purchase-orders/{po_id}/items/{codigo_item}/rastreio")
+async def definir_codigo_rastreio(
+    po_id: str,
+    codigo_item: str,
+    data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Definir código de rastreio para um item e mudar status para em_transito"""
+    codigo_rastreio = data.get('codigo_rastreio', '').strip().upper()
+    
+    if not codigo_rastreio:
+        raise HTTPException(status_code=400, detail="Código de rastreio é obrigatório")
+    
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not po:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    item_found = False
+    for item in po['items']:
+        if item['codigo_item'] == codigo_item:
+            item['codigo_rastreio'] = codigo_rastreio
+            item['status'] = ItemStatus.EM_TRANSITO.value
+            item['data_envio'] = datetime.now(timezone.utc).isoformat()
+            
+            # Tentar buscar rastreio inicial
+            try:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    response = await client.get(
+                        f"https://api.linketrack.com/track/json?user=teste&token=1abcd00b2731640e886fb41a8a9671ad1434c599dbaa0a0de9a5aa619f29a83f&codigo={codigo_rastreio}",
+                        headers={"Accept": "application/json"}
+                    )
+                    if response.status_code == 200:
+                        data = response.json()
+                        eventos = []
+                        for evento in data.get('eventos', []):
+                            eventos.append({
+                                "data": evento.get('data', ''),
+                                "hora": evento.get('hora', ''),
+                                "local": evento.get('local', ''),
+                                "status": evento.get('status', ''),
+                                "subStatus": evento.get('subStatus', [])
+                            })
+                        item['rastreio_eventos'] = eventos
+            except Exception:
+                item['rastreio_eventos'] = []
+            
+            item_found = True
+            break
+    
+    if not item_found:
+        raise HTTPException(status_code=404, detail="Item não encontrado")
+    
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    return {"message": "Código de rastreio definido com sucesso", "status": "em_transito"}
+
+@api_router.post("/purchase-orders/{po_id}/items/{codigo_item}/atualizar-rastreio")
+async def atualizar_rastreio(
+    po_id: str,
+    codigo_item: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Atualizar eventos de rastreio de um item"""
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not po:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    item_found = False
+    for item in po['items']:
+        if item['codigo_item'] == codigo_item:
+            codigo_rastreio = item.get('codigo_rastreio')
+            if not codigo_rastreio:
+                raise HTTPException(status_code=400, detail="Item não possui código de rastreio")
+            
+            # Buscar rastreio atualizado
+            try:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    response = await client.get(
+                        f"https://api.linketrack.com/track/json?user=teste&token=1abcd00b2731640e886fb41a8a9671ad1434c599dbaa0a0de9a5aa619f29a83f&codigo={codigo_rastreio}",
+                        headers={"Accept": "application/json"}
+                    )
+                    if response.status_code == 200:
+                        data = response.json()
+                        eventos = []
+                        entregue = False
+                        for evento in data.get('eventos', []):
+                            eventos.append({
+                                "data": evento.get('data', ''),
+                                "hora": evento.get('hora', ''),
+                                "local": evento.get('local', ''),
+                                "status": evento.get('status', ''),
+                                "subStatus": evento.get('subStatus', [])
+                            })
+                            # Verificar se foi entregue
+                            status_lower = evento.get('status', '').lower()
+                            if 'entregue' in status_lower or 'entrega realizada' in status_lower:
+                                entregue = True
+                        
+                        item['rastreio_eventos'] = eventos
+                        
+                        # Se foi entregue, atualizar status
+                        if entregue:
+                            item['status'] = ItemStatus.ENTREGUE.value
+                            item['data_entrega'] = datetime.now(timezone.utc).isoformat()
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Erro ao buscar rastreio: {str(e)}")
+            
+            item_found = True
+            break
+    
+    if not item_found:
+        raise HTTPException(status_code=404, detail="Item não encontrado")
+    
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    return {"message": "Rastreio atualizado com sucesso"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
