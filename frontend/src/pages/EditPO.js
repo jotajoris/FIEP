@@ -69,25 +69,19 @@ const EditPO = () => {
   const saveItem = async () => {
     setSaving(true);
     try {
-      // Primeiro atualizar campos básicos via endpoint de item
-      const updateData = {
-        status: editForm.status,
-        preco_venda: editForm.preco_venda ? parseFloat(editForm.preco_venda) : null
-      };
-
-      await apiPatch(`${API}/purchase-orders/${id}/items/${editForm.codigo_item}`, updateData);
-
-      // Atualizar outros campos via endpoint de edição completa
+      // Usar o novo endpoint que aceita índice
       const fullUpdate = {
         descricao: editForm.descricao,
         quantidade: parseInt(editForm.quantidade) || 1,
         unidade: editForm.unidade,
         responsavel: editForm.responsavel,
         lote: editForm.lote,
-        marca_modelo: editForm.marca_modelo
+        marca_modelo: editForm.marca_modelo,
+        status: editForm.status,
+        preco_venda: editForm.preco_venda ? parseFloat(editForm.preco_venda) : null
       };
 
-      await apiPatch(`${API}/purchase-orders/${id}/items/${editForm.codigo_item}/full`, fullUpdate);
+      await apiPatch(`${API}/purchase-orders/${id}/items/by-index/${editForm.itemIndex}/full`, fullUpdate);
 
       alert('Item atualizado com sucesso!');
       setEditingItem(null);
