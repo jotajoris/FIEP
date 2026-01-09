@@ -181,6 +181,29 @@ const Dashboard = () => {
     return <div className="loading" data-testid="loading-dashboard">Carregando...</div>;
   }
 
+  if (error) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        minHeight: '50vh',
+        gap: '1rem'
+      }}>
+        <div style={{ fontSize: '3rem' }}>⚠️</div>
+        <p style={{ color: '#e53e3e', fontSize: '1.1rem' }}>{error}</p>
+        <button 
+          onClick={loadData} 
+          className="btn btn-primary"
+          style={{ padding: '0.75rem 2rem' }}
+        >
+          🔄 Tentar Novamente
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div data-testid="dashboard-page">
       <div className="page-header">
