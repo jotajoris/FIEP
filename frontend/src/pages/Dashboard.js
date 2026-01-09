@@ -40,11 +40,10 @@ const Dashboard = () => {
         if (!temItem) return false;
       }
       
-      // Filtro por responsável
+      // Filtro por responsável (comparação exata)
       if (searchResponsavel) {
-        const termo = searchResponsavel.toLowerCase();
         const temResponsavel = order.items.some(item => 
-          item.responsavel && item.responsavel.toLowerCase().includes(termo)
+          item.responsavel === searchResponsavel
         );
         if (!temResponsavel) return false;
       }
