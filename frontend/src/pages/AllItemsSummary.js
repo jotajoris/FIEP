@@ -178,21 +178,21 @@ const AllItemsSummary = () => {
                       ) : '-'}
                     </td>
                     <td>
-                      {item.preco_venda ? `R$ ${(item.preco_venda * item.quantidade).toFixed(2)}` : '-'}
+                      {item.preco_venda ? formatBRL(item.preco_venda * item.quantidade) : '-'}
                     </td>
                     <td>
-                      {item.preco_compra ? `R$ ${(item.preco_compra * item.quantidade).toFixed(2)}` : '-'}
+                      {item.preco_compra ? formatBRL(item.preco_compra * item.quantidade) : '-'}
                     </td>
                     <td>
-                      {item.frete_compra ? `R$ ${item.frete_compra.toFixed(2)}` : '-'}
+                      {item.frete_compra ? formatBRL(item.frete_compra) : '-'}
                     </td>
                     <td>
-                      {item.frete_envio ? `R$ ${item.frete_envio.toFixed(2)}` : '-'}
+                      {item.frete_envio ? formatBRL(item.frete_envio) : '-'}
                     </td>
                     <td>
                       {item.lucro_liquido !== undefined && item.lucro_liquido !== null ? (
                         <strong style={{ color: item.lucro_liquido > 0 ? '#10b981' : '#ef4444' }}>
-                          R$ {item.lucro_liquido.toFixed(2)}
+                          {formatBRL(item.lucro_liquido)}
                         </strong>
                       ) : '-'}
                     </td>
