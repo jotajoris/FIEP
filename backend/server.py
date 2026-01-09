@@ -1429,6 +1429,47 @@ async def get_duplicate_items(current_user: dict = Depends(get_current_user)):
         "duplicados": duplicates
     }
 
+@api_router.post("/purchase-orders/fix-responsaveis")
+async def fix_responsaveis(current_user: dict = Depends(require_admin)):
+    """Corrigir responsáveis faltantes nas OCs existentes (ADMIN ONLY)"""
+    import random
+    
+    pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(1000)
+    total_fixed = 0
+    
+    for po in pos:
+        updated = False
+        for item in po['items']:
+            if not item.get('responsavel'):
+                # Buscar responsável do banco de referência
+                ref_items = await db.reference_items.find(
+                    {"codigo_item": item["codigo_item"]},
+                    {"_id": 0}
+                ).to_list(100)
+                
+                if ref_items:
+                    # Preferir não-admins
+                    non_admin_items = [ri for ri in ref_items if ri.get('responsavel') in ['Maria', 'Mylena', 'Fabio']]
+                    
+                    if non_admin_items:
+                        selected_ref = random.choice(non_admin_items)
+                    else:
+                        selected_ref = ref_items[0]
+                    
+                    item['responsavel'] = selected_ref.get('responsavel', '')
+                    item['lote'] = selected_ref.get('lote', '')
+                    item['lot_number'] = selected_ref.get('lot_number', 0)
+                    total_fixed += 1
+                    updated = True
+        
+        if updated:
+            await db.purchase_orders.update_one(
+                {"id": po['id']},
+                {"$set": {"items": po['items']}}
+            )
+    
+    return {"message": f"{total_fixed} itens corrigidos com sucesso"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
