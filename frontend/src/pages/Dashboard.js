@@ -241,7 +241,7 @@ const Dashboard = () => {
       )}
 
       <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}>Ordens de Compra</h2>
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             {isAdmin() && selectedOrders.size > 0 && (
@@ -267,6 +267,85 @@ const Dashboard = () => {
             )}
           </div>
         </div>
+
+        {/* Filtros e Pesquisa */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '1rem', 
+          marginBottom: '1.5rem', 
+          flexWrap: 'wrap',
+          padding: '1rem',
+          background: '#f7fafc',
+          borderRadius: '8px',
+          border: '1px solid #e2e8f0'
+        }}>
+          {/* Pesquisa por número da OC */}
+          <div style={{ flex: '1', minWidth: '200px' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
+              🔍 Pesquisar OC
+            </label>
+            <input
+              type="text"
+              placeholder="Digite o número da OC..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="form-input"
+              style={{ width: '100%' }}
+              data-testid="search-oc-input"
+            />
+          </div>
+          
+          {/* Filtro por data inicial */}
+          <div style={{ minWidth: '150px' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
+              📅 Data Inicial
+            </label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="form-input"
+              style={{ width: '100%' }}
+              data-testid="date-from-input"
+            />
+          </div>
+          
+          {/* Filtro por data final */}
+          <div style={{ minWidth: '150px' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
+              📅 Data Final
+            </label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="form-input"
+              style={{ width: '100%' }}
+              data-testid="date-to-input"
+            />
+          </div>
+          
+          {/* Botão Limpar Filtros */}
+          {(searchTerm || dateFrom || dateTo) && (
+            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button
+                onClick={clearFilters}
+                className="btn btn-secondary"
+                style={{ padding: '0.75rem 1rem', fontSize: '0.85rem' }}
+                data-testid="clear-filters-btn"
+              >
+                ✕ Limpar
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Contador de resultados */}
+        {(searchTerm || dateFrom || dateTo) && (
+          <div style={{ marginBottom: '1rem', color: '#718096', fontSize: '0.9rem' }}>
+            Mostrando {filteredOrders.length} de {orders.length} OCs
+          </div>
+        )}
         
         {orders.length === 0 ? (
           <p style={{ textAlign: 'center', color: '#718096', padding: '2rem' }} data-testid="no-orders-message">
