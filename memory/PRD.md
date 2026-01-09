@@ -139,6 +139,12 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
   - 🏪 Dropdown para filtrar por **Fornecedor** (apenas admin)
   - Botão "✕ Limpar Filtros" quando filtros estão ativos
   - Contador de itens encontrados com filtros aplicados
+- [09/01/2026] ✅ **Novo Status "Em Separação"**: Adicionado status intermediário entre "Comprados" e "Em Trânsito" para itens que chegaram e estão sendo embalados para envio
+- [09/01/2026] ✅ **Filtros Avançados no Dashboard**: Seção "Ordens de Compra" agora tem:
+  - Pesquisa por número da OC
+  - Pesquisa por código do item
+  - Pesquisa por responsável
+  - Filtros por data inicial e final
 
 ## Próximas Tarefas (Backlog)
 
