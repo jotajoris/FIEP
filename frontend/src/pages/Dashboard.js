@@ -413,7 +413,7 @@ const Dashboard = () => {
         </div>
 
         {/* Contador de resultados */}
-        {(searchTerm || dateFrom || dateTo) && (
+        {(searchTerm || searchCodigoItem || searchResponsavel || dateFrom || dateTo) && (
           <div style={{ marginBottom: '1rem', color: '#718096', fontSize: '0.9rem' }}>
             Mostrando {filteredOrders.length} de {orders.length} OCs
           </div>
