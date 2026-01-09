@@ -25,6 +25,7 @@ const ItemsByStatus = () => {
     'pendente': 'Pendentes',
     'cotado': 'Cotados',
     'comprado': 'Comprados',
+    'em_separacao': 'Em Separação',
     'em_transito': 'Em Trânsito',
     'entregue': 'Entregues'
   };
