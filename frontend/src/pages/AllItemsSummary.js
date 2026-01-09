@@ -50,11 +50,22 @@ const AllItemsSummary = () => {
   const responsaveis = ['Maria', 'Mateus', 'João', 'Mylena', 'Fabio'];
 
   // Calcular totais
-  const totalLucro = filteredItems.reduce((sum, item) => sum + (item.lucro_liquido || 0), 0);
+  const totalLucroPrevisto = filteredItems.reduce((sum, item) => sum + (item.lucro_liquido || 0), 0);
   const totalVenda = filteredItems.reduce((sum, item) => sum + ((item.preco_venda || 0) * item.quantidade), 0);
   const totalCompra = filteredItems.reduce((sum, item) => sum + ((item.preco_compra || 0) * item.quantidade), 0);
   const totalFreteCompra = filteredItems.reduce((sum, item) => sum + (item.frete_compra || 0), 0);
   const totalFreteEnvio = filteredItems.reduce((sum, item) => sum + (item.frete_envio || 0), 0);
+  
+  // Imposto previsto (11% do valor de venda de todos os itens)
+  const totalImpostoPrevisto = filteredItems.reduce((sum, item) => {
+    const valorVenda = (item.preco_venda || 0) * item.quantidade;
+    return sum + (valorVenda * 0.11);
+  }, 0);
+  
+  // Lucro realizado (soma do lucro dos itens em trânsito + entregues)
+  const totalLucroRealizado = filteredItems
+    .filter(item => item.status === 'em_transito' || item.status === 'entregue')
+    .reduce((sum, item) => sum + (item.lucro_liquido || 0), 0);
 
   if (loading) {
     return <div className="loading" data-testid="loading-summary">Carregando...</div>;
