@@ -213,7 +213,8 @@ const EditPO = () => {
                         type="text"
                         className="form-input"
                         value={editForm.descricao}
-                        onChange={(e) => setEditForm({ ...editForm, descricao: e.target.value })}
+                        onChange={(e) => setEditForm({ ...editForm, descricao: normalizeText(e.target.value) })}
+                        style={{ textTransform: 'uppercase' }}
                         data-testid="edit-descricao"
                       />
                     </div>
