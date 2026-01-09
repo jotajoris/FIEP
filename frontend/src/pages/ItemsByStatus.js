@@ -639,7 +639,7 @@ const ItemsByStatus = () => {
                         )}
                         {item.preco_venda && (
                           <span>
-                            <strong>Valor Total Venda:</strong> <strong style={{ color: '#3b82f6' }}>{formatBRL(item.preco_venda * item.quantidade)}</strong>
+                            <strong>Valor Total Venda:</strong> <strong style={{ color: '#3b82f6' }}>{formatBRL((item.preco_venda || 0) * (item.quantidade || 0))}</strong>
                           </span>
                         )}
                         {item.preco_compra && (
