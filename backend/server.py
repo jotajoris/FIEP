@@ -144,6 +144,17 @@ class FonteCompra(BaseModel):
     link: str = ""
     fornecedor: str = ""
 
+class Notificacao(BaseModel):
+    """Notificação de evento do sistema"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tipo: str  # "entrega", "novo_item", etc
+    titulo: str
+    numero_oc: str
+    codigo_item: str
+    descricao_item: str
+    lida: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 class POItem(BaseModel):
     codigo_item: str
     descricao: str = ""
