@@ -148,6 +148,24 @@ const PODetails = () => {
     return <span className={`status-badge status-${status}`} data-testid={`status-${status}`}>{status}</span>;
   };
 
+  // Calcular valor total da OC
+  const calcularValorTotal = () => {
+    if (!po) return 0;
+    return po.items.reduce((total, item) => {
+      const precoVenda = item.preco_venda || 0;
+      const quantidade = item.quantidade || 0;
+      return total + (precoVenda * quantidade);
+    }, 0);
+  };
+
+  // Formatar moeda
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
   if (loading) {
     return <div className="loading" data-testid="loading-po">Carregando...</div>;
   }
@@ -155,6 +173,8 @@ const PODetails = () => {
   if (!po) {
     return null;
   }
+
+  const valorTotal = calcularValorTotal();
 
   return (
     <div data-testid="po-details-page">
@@ -188,20 +208,40 @@ const PODetails = () => {
 
       <div className="card" style={{ marginBottom: '2rem' }}>
         <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem' }}>Informações da OC</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
           <div>
             <div className="stat-label">Número OC</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#2d3748' }}>{po.numero_oc}</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#2d3748' }}>{po.numero_oc}</div>
           </div>
           <div>
             <div className="stat-label">Cliente</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#2d3748' }}>{po.cliente}</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#2d3748' }}>{po.cliente}</div>
           </div>
           <div>
             <div className="stat-label">Total de Itens</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#667eea' }}>{po.items.length}</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#667eea' }}>
+              <span style={{ 
+                background: '#e0e7ff', 
+                padding: '0.25rem 0.75rem', 
+                borderRadius: '12px' 
+              }}>
+                {po.items.length} {po.items.length === 1 ? 'item' : 'itens'}
+              </span>
+            </div>
+          </div>
+          <div>
+            <div className="stat-label">Valor Total (Venda)</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: '700', color: valorTotal > 0 ? '#059669' : '#718096' }}>
+              {valorTotal > 0 ? formatCurrency(valorTotal) : 'Não informado'}
+            </div>
           </div>
         </div>
+        {po.endereco_entrega && (
+          <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
+            <div className="stat-label">Endereço de Entrega</div>
+            <div style={{ color: '#4a5568', marginTop: '0.25rem' }}>{po.endereco_entrega}</div>
+          </div>
+        )}
       </div>
 
       <div className="card">
