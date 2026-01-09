@@ -143,8 +143,10 @@ const OwnerPanel = () => {
                   <th>Nº OC</th>
                   <th>Código</th>
                   <th>Descrição</th>
+                  <th>Marca/Modelo</th>
                   <th>Lote</th>
-                  <th>Quantidade</th>
+                  <th>Qtd</th>
+                  <th>Preço Venda</th>
                   <th>Status</th>
                   <th>Ações</th>
                 </tr>
@@ -154,9 +156,11 @@ const OwnerPanel = () => {
                   <tr key={index} data-testid={`owner-item-${item.codigo_item}`}>
                     <td><strong>{item.numero_oc}</strong></td>
                     <td>{item.codigo_item}</td>
-                    <td style={{ maxWidth: '300px' }}>{item.descricao}</td>
+                    <td style={{ maxWidth: '250px' }}>{item.descricao}</td>
+                    <td>{item.marca_modelo || '-'}</td>
                     <td>{item.lote}</td>
                     <td>{item.quantidade} {item.unidade}</td>
+                    <td>{item.preco_venda ? formatBRL(item.preco_venda) : '-'}</td>
                     <td><span className={`status-badge status-${item.status}`}>{item.status}</span></td>
                     <td>
                       <Link to={`/po/${item.po_id}`} className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} data-testid={`view-po-${item.codigo_item}`}>
