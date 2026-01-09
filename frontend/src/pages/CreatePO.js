@@ -572,7 +572,7 @@ const CreatePO = () => {
                         </td>
                         <td style={{ padding: '0.75rem' }}>{item.lote || '-'}</td>
                         <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                          {item.preco_venda ? `R$ ${item.preco_venda.toFixed(2)}` : '-'}
+                          {item.preco_venda ? formatBRL(item.preco_venda) : '-'}
                         </td>
                         <td style={{ padding: '0.75rem', textAlign: 'center' }}>
                           <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
