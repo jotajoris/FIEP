@@ -158,14 +158,6 @@ const PODetails = () => {
     }, 0);
   };
 
-  // Formatar moeda
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
-
   if (loading) {
     return <div className="loading" data-testid="loading-po">Carregando...</div>;
   }
