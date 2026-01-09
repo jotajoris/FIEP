@@ -113,14 +113,6 @@ const Dashboard = () => {
     }
   };
 
-  // Formatar valor em BRL
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
-
   if (loading) {
     return <div className="loading" data-testid="loading-dashboard">Carregando...</div>;
   }
