@@ -75,24 +75,24 @@ const AllItemsSummary = () => {
         </div>
         <div className="stat-card" style={{ borderColor: '#3b82f6' }}>
           <div className="stat-label">Valor Total Venda</div>
-          <div className="stat-value" style={{ color: '#3b82f6', fontSize: '1.8rem' }}>R$ {totalVenda.toFixed(2)}</div>
+          <div className="stat-value" style={{ color: '#3b82f6', fontSize: '1.8rem' }}>{formatBRL(totalVenda)}</div>
         </div>
         <div className="stat-card" style={{ borderColor: '#f59e0b' }}>
           <div className="stat-label">Valor Total Compra</div>
-          <div className="stat-value" style={{ color: '#f59e0b', fontSize: '1.8rem' }}>R$ {totalCompra.toFixed(2)}</div>
+          <div className="stat-value" style={{ color: '#f59e0b', fontSize: '1.8rem' }}>{formatBRL(totalCompra)}</div>
         </div>
         <div className="stat-card" style={{ borderColor: '#6366f1' }}>
           <div className="stat-label">Total Frete Compra</div>
-          <div className="stat-value" style={{ color: '#6366f1', fontSize: '1.8rem' }}>R$ {totalFreteCompra.toFixed(2)}</div>
+          <div className="stat-value" style={{ color: '#6366f1', fontSize: '1.8rem' }}>{formatBRL(totalFreteCompra)}</div>
         </div>
         <div className="stat-card" style={{ borderColor: '#ec4899' }}>
           <div className="stat-label">Total Frete Envio</div>
-          <div className="stat-value" style={{ color: '#ec4899', fontSize: '1.8rem' }}>R$ {totalFreteEnvio.toFixed(2)}</div>
+          <div className="stat-value" style={{ color: '#ec4899', fontSize: '1.8rem' }}>{formatBRL(totalFreteEnvio)}</div>
         </div>
         <div className="stat-card" style={{ borderColor: totalLucro > 0 ? '#10b981' : '#ef4444' }}>
           <div className="stat-label">Lucro Total</div>
           <div className="stat-value" style={{ color: totalLucro > 0 ? '#10b981' : '#ef4444', fontSize: '1.8rem' }}>
-            R$ {totalLucro.toFixed(2)}
+            {formatBRL(totalLucro)}
           </div>
         </div>
       </div>
