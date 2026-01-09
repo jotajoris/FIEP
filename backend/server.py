@@ -1697,6 +1697,42 @@ async def fix_marca_modelo(current_user: dict = Depends(require_admin)):
     
     return {"message": f"{total_fixed} itens corrigidos com marca/modelo"}
 
+@api_router.post("/purchase-orders/normalize-fornecedores")
+async def normalize_fornecedores(current_user: dict = Depends(require_admin)):
+    """Normalizar fornecedores (maiúsculas, sem acentos) e unificar duplicados (ADMIN ONLY)"""
+    import unicodedata
+    
+    def normalize_text(text):
+        if not text:
+            return ''
+        # Remove acentos e converte para maiúsculas
+        normalized = unicodedata.normalize('NFD', text)
+        without_accents = ''.join(c for c in normalized if unicodedata.category(c) != 'Mn')
+        return without_accents.upper().strip()
+    
+    pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(1000)
+    total_normalized = 0
+    
+    for po in pos:
+        updated = False
+        for item in po['items']:
+            fontes = item.get('fontes_compra', [])
+            for fonte in fontes:
+                fornecedor_original = fonte.get('fornecedor', '')
+                fornecedor_normalizado = normalize_text(fornecedor_original)
+                if fornecedor_original != fornecedor_normalizado:
+                    fonte['fornecedor'] = fornecedor_normalizado
+                    total_normalized += 1
+                    updated = True
+        
+        if updated:
+            await db.purchase_orders.update_one(
+                {"id": po['id']},
+                {"$set": {"items": po['items']}}
+            )
+    
+    return {"message": f"{total_normalized} fornecedores normalizados com sucesso"}
+
 # ================== RASTREAMENTO CORREIOS ==================
 
 import httpx
