@@ -356,15 +356,20 @@ const Dashboard = () => {
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
               👤 Responsável
             </label>
-            <input
-              type="text"
-              placeholder="Nome do responsável..."
+            <select
               value={searchResponsavel}
               onChange={(e) => setSearchResponsavel(e.target.value)}
               className="form-input"
               style={{ width: '100%' }}
               data-testid="search-responsavel-input"
-            />
+            >
+              <option value="">Todos</option>
+              <option value="Maria">Maria</option>
+              <option value="Mateus">Mateus</option>
+              <option value="João">João</option>
+              <option value="Mylena">Mylena</option>
+              <option value="Fabio">Fabio</option>
+            </select>
           </div>
           
           {/* Filtro por data inicial */}
