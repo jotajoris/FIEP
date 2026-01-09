@@ -114,6 +114,7 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 - [09/01/2026] ✅ **Upload Múltiplo de PDFs**: Permite selecionar vários PDFs e criar todas as OCs automaticamente em lote.
 - [09/01/2026] ✅ **Esqueci Minha Senha (P1)**: Link na tela de login, página de recuperação de senha com envio de email via Resend.
 - [09/01/2026] ✅ **Edição de Perfil (P2)**: Página de perfil do usuário com edição de nome de exibição, alteração de senha, e logout. Nome exibido na navbar.
+- [09/01/2026] ✅ **Painel do Responsável (OwnerPanel)**: Corrigido e testado. Ao clicar no nome de um responsável no Dashboard, exibe corretamente todos os itens atribuídos a essa pessoa com colunas detalhadas (Marca/Modelo, Preço formatado em R$, Lote, Status) e filtros por status.
 
 ## Próximas Tarefas (Backlog)
 
