@@ -452,8 +452,8 @@ const ItemsByStatus = () => {
                                   {qtdRestante > 0 && <span style={{ color: '#f59e0b' }}> (faltam {qtdRestante})</span>}
                                   {qtdRestante < 0 && <span style={{ color: '#ef4444' }}> (excedeu {Math.abs(qtdRestante)})</span>}
                                 </span>
-                                <span><strong>Custo Total:</strong> R$ {totalCusto.toFixed(2)}</span>
-                                <span><strong>Frete Total:</strong> R$ {totalFrete.toFixed(2)}</span>
+                                <span><strong>Custo Total:</strong> {formatBRL(totalCusto)}</span>
+                                <span><strong>Frete Total:</strong> {formatBRL(totalFrete)}</span>
                               </>
                             );
                           })()}
@@ -490,8 +490,8 @@ const ItemsByStatus = () => {
                             flexWrap: 'wrap'
                           }}>
                             <span><strong>Qtd:</strong> {fc.quantidade}</span>
-                            <span><strong>Preço:</strong> R$ {fc.preco_unitario?.toFixed(2)}</span>
-                            <span><strong>Frete:</strong> R$ {(fc.frete || 0).toFixed(2)}</span>
+                            <span><strong>Preço:</strong> {formatBRL(fc.preco_unitario)}</span>
+                            <span><strong>Frete:</strong> {formatBRL(fc.frete || 0)}</span>
                             {fc.fornecedor && <span><strong>Fornecedor:</strong> {fc.fornecedor}</span>}
                             {fc.link && (
                               <a href={fc.link} target="_blank" rel="noopener noreferrer" style={{ color: '#667eea' }}>
@@ -507,34 +507,34 @@ const ItemsByStatus = () => {
                       <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.9rem', flexWrap: 'wrap' }}>
                         {item.preco_venda && (
                           <span>
-                            <strong>Preço Venda Unit.:</strong> R$ {item.preco_venda.toFixed(2)}
+                            <strong>Preço Venda Unit.:</strong> {formatBRL(item.preco_venda)}
                           </span>
                         )}
                         {item.preco_venda && (
                           <span>
-                            <strong>Valor Total Venda:</strong> <strong style={{ color: '#3b82f6' }}>R$ {(item.preco_venda * item.quantidade).toFixed(2)}</strong>
+                            <strong>Valor Total Venda:</strong> <strong style={{ color: '#3b82f6' }}>{formatBRL(item.preco_venda * item.quantidade)}</strong>
                           </span>
                         )}
                         {item.preco_compra && (
                           <span>
-                            <strong>Preço Compra Médio:</strong> R$ {item.preco_compra.toFixed(2)}
+                            <strong>Preço Compra Médio:</strong> {formatBRL(item.preco_compra)}
                           </span>
                         )}
                         {item.frete_compra && (
                           <span>
-                            <strong>Frete Compra:</strong> R$ {item.frete_compra.toFixed(2)}
+                            <strong>Frete Compra:</strong> {formatBRL(item.frete_compra)}
                           </span>
                         )}
                         {isAdmin() && item.frete_envio && (
                           <span>
-                            <strong>Frete Envio:</strong> R$ {item.frete_envio.toFixed(2)}
+                            <strong>Frete Envio:</strong> {formatBRL(item.frete_envio)}
                           </span>
                         )}
                         {isAdmin() && item.lucro_liquido !== undefined && item.lucro_liquido !== null && (
                           <span>
                             <strong>Lucro Líquido:</strong>{' '}
                             <span style={{ color: item.lucro_liquido > 0 ? '#10b981' : '#ef4444', fontWeight: '700' }}>
-                              R$ {item.lucro_liquido.toFixed(2)}
+                              {formatBRL(item.lucro_liquido)}
                             </span>
                           </span>
                         )}
