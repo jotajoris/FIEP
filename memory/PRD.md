@@ -118,13 +118,12 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 ## Próximas Tarefas (Backlog)
 
-### P1 - Alta Prioridade
-- [ ] **Esqueci a Senha** - Botão na tela de login com envio de email
-- [ ] **Edição de Perfil** - Usuário editar nome, exibir no header
+### P3 - Baixa Prioridade (Adiadas pelo usuário)
+- [ ] **Refatoração do Backend** - Dividir server.py em módulos menores (usuário concordou em adiar)
+- [ ] **Verificação de Domínio Resend** - Para emails funcionarem externamente (adiado pelo usuário)
 
-### P2 - Média Prioridade
-- [ ] **Refatoração do Backend** - Dividir server.py em módulos menores
-- [ ] **Extrair lógica de atribuição** - Função reutilizável
+### Notas de Limitações Conhecidas
+- **Funcionalidade "Esqueci Minha Senha"**: Emails só são enviados para o endereço cadastrado na conta Resend do usuário (falta verificação de domínio próprio)
 
 ## Credenciais de Teste
 ```
