@@ -293,7 +293,7 @@ const Dashboard = () => {
                         </span>
                       </td>
                       <td style={{ textAlign: 'right', fontWeight: '600', color: valorTotal > 0 ? '#059669' : '#718096' }}>
-                        {valorTotal > 0 ? formatCurrency(valorTotal) : '-'}
+                        {valorTotal > 0 ? formatBRL(valorTotal) : '-'}
                       </td>
                       <td>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
