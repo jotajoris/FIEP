@@ -263,8 +263,8 @@ const ItemsByStatus = () => {
 
                 {editingItem === `${item.po_id}-${item.codigo_item}` ? (
                   <div style={{ marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: '8px' }}>
-                    {/* Status e Preço de Venda */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                    {/* Status e Informações de Venda (somente leitura) */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
                       <div className="form-group">
                         <label className="form-label">Status</label>
                         <select
@@ -280,64 +280,76 @@ const ItemsByStatus = () => {
                         </select>
                       </div>
                       
-                      {/* Preço de Venda - Editável para admin, somente leitura para usuário */}
-                      {isAdmin() ? (
+                      {/* Preço de Venda - Somente leitura para todos */}
+                      {item.preco_venda && (
                         <div className="form-group">
-                          <label className="form-label">Preço Venda Unit. (R$)</label>
+                          <label className="form-label">Preço Venda Unit.</label>
+                          <div 
+                            style={{ 
+                              padding: '0.75rem', 
+                              background: '#f0f4f8', 
+                              borderRadius: '8px', 
+                              fontWeight: '600',
+                              color: '#3b82f6'
+                            }}
+                            data-testid={`display-preco-venda-${item.codigo_item}`}
+                          >
+                            {formatBRL(item.preco_venda)}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Valor Total de Venda - Calculado */}
+                      {item.preco_venda && (
+                        <div className="form-group">
+                          <label className="form-label">Valor Total Venda</label>
+                          <div 
+                            style={{ 
+                              padding: '0.75rem', 
+                              background: '#e8f4fd', 
+                              borderRadius: '8px', 
+                              fontWeight: '700',
+                              color: '#2563eb'
+                            }}
+                            data-testid={`display-valor-total-${item.codigo_item}`}
+                          >
+                            {formatBRL(item.preco_venda * item.quantidade)}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Imposto - Calculado automaticamente (11% do valor total) - Somente leitura */}
+                      {item.preco_venda && (
+                        <div className="form-group">
+                          <label className="form-label">Imposto (11%)</label>
+                          <div 
+                            style={{ 
+                              padding: '0.75rem', 
+                              background: '#fef3c7', 
+                              borderRadius: '8px', 
+                              fontWeight: '600',
+                              color: '#b45309'
+                            }}
+                            data-testid={`display-imposto-${item.codigo_item}`}
+                          >
+                            {formatBRL((item.preco_venda * item.quantidade) * 0.11)}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Frete Envio - Editável apenas para admin */}
+                      {isAdmin() && (
+                        <div className="form-group">
+                          <label className="form-label">Frete Envio/Embalagem (R$)</label>
                           <input
                             type="number"
                             step="0.01"
                             className="form-input"
-                            value={formData.preco_venda}
-                            onChange={(e) => setFormData({ ...formData, preco_venda: e.target.value })}
-                            data-testid={`input-preco-venda-${item.codigo_item}`}
+                            value={formData.frete_envio}
+                            onChange={(e) => setFormData({ ...formData, frete_envio: e.target.value })}
+                            data-testid={`input-frete-envio-${item.codigo_item}`}
                           />
                         </div>
-                      ) : (
-                        item.preco_venda && (
-                          <div className="form-group">
-                            <label className="form-label">Preço Venda Unit.</label>
-                            <div 
-                              style={{ 
-                                padding: '0.75rem', 
-                                background: '#f0f4f8', 
-                                borderRadius: '8px', 
-                                fontWeight: '600',
-                                color: '#3b82f6'
-                              }}
-                              data-testid={`display-preco-venda-${item.codigo_item}`}
-                            >
-                              {formatBRL(item.preco_venda)}
-                            </div>
-                          </div>
-                        )
-                      )}
-                      
-                      {isAdmin() && (
-                        <>
-                          <div className="form-group">
-                            <label className="form-label">Imposto (R$)</label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              className="form-input"
-                              value={formData.imposto}
-                              onChange={(e) => setFormData({ ...formData, imposto: e.target.value })}
-                              data-testid={`input-imposto-${item.codigo_item}`}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label className="form-label">Frete Envio/Embalagem (R$)</label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              className="form-input"
-                              value={formData.frete_envio}
-                              onChange={(e) => setFormData({ ...formData, frete_envio: e.target.value })}
-                              data-testid={`input-frete-envio-${item.codigo_item}`}
-                            />
-                          </div>
-                        </>
                       )}
                     </div>
 
