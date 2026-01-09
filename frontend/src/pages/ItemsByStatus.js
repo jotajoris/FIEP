@@ -13,6 +13,7 @@ const ItemsByStatus = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({});
   const [showOnlyMine, setShowOnlyMine] = useState(false);
+  const [filterFornecedor, setFilterFornecedor] = useState('todos');
 
   const statusLabels = {
     'pendente': 'Pendentes',
@@ -50,13 +51,40 @@ const ItemsByStatus = () => {
     }
   };
 
+  // Extrair lista única de fornecedores dos itens
+  const fornecedoresDisponiveis = useMemo(() => {
+    const fornecedores = new Set();
+    items.forEach(item => {
+      if (item.fontes_compra && item.fontes_compra.length > 0) {
+        item.fontes_compra.forEach(fc => {
+          if (fc.fornecedor && fc.fornecedor.trim()) {
+            fornecedores.add(fc.fornecedor.trim());
+          }
+        });
+      }
+    });
+    return Array.from(fornecedores).sort();
+  }, [items]);
+
   // Usar useMemo para garantir o recálculo correto quando o filtro mudar
   const displayItems = useMemo(() => {
+    let filtered = items;
+    
+    // Filtro por "Meus Itens"
     if (showOnlyMine && user?.owner_name) {
-      return items.filter(item => item.responsavel === user.owner_name);
+      filtered = filtered.filter(item => item.responsavel === user.owner_name);
     }
-    return items;
-  }, [items, showOnlyMine, user?.owner_name]);
+    
+    // Filtro por fornecedor (apenas se não for "todos")
+    if (filterFornecedor !== 'todos') {
+      filtered = filtered.filter(item => {
+        if (!item.fontes_compra || item.fontes_compra.length === 0) return false;
+        return item.fontes_compra.some(fc => fc.fornecedor === filterFornecedor);
+      });
+    }
+    
+    return filtered;
+  }, [items, showOnlyMine, user?.owner_name, filterFornecedor]);
   
   const myItemsCount = useMemo(() => {
     if (!user?.owner_name) return 0;
