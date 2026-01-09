@@ -126,6 +126,12 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
   - Histórico de rastreio expandível com eventos dos Correios
   - Botão "🔄 Atualizar" para buscar novas informações
   - Atualização automática para "Entregue" quando rastreio indica entrega
+- [09/01/2026] ✅ **Sistema de Notificações**: Sininho 🔔 no header com:
+  - Contador vermelho de notificações não lidas
+  - Dropdown com lista de notificações
+  - Cada notificação mostra: OC, código do item, descrição (máx 30 chars)
+  - "Marcar todas como lidas" para limpar
+  - Notificação automática quando item é entregue
 
 ## Próximas Tarefas (Backlog)
 
