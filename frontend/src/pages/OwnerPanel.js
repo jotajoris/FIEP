@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import { apiGet, API, formatBRL } from '../utils/api';
 
 const OwnerPanel = () => {
   const { name } = useParams();
@@ -17,18 +14,19 @@ const OwnerPanel = () => {
 
   const loadItems = async () => {
     try {
-      const response = await axios.get(`${API}/purchase-orders`, {
-        params: { responsavel: name }
-      });
+      const response = await apiGet(`${API}/purchase-orders`);
       
       const allItems = [];
       response.data.forEach(po => {
         po.items.forEach(item => {
-          allItems.push({
-            ...item,
-            numero_oc: po.numero_oc,
-            po_id: po.id
-          });
+          // Filtrar pelo responsável
+          if (item.responsavel === name) {
+            allItems.push({
+              ...item,
+              numero_oc: po.numero_oc,
+              po_id: po.id
+            });
+          }
         });
       });
       
