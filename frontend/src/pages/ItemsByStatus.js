@@ -218,17 +218,25 @@ const ItemsByStatus = () => {
   };
 
   const salvarCodigoRastreio = async (item) => {
-    if (!codigoRastreio.trim()) {
+    const itemKey = `${item.po_id}-${item.codigo_item}`;
+    const codigo = codigosRastreio[itemKey] || '';
+    
+    if (!codigo.trim()) {
       alert('Digite o código de rastreio');
       return;
     }
     
-    setSalvandoRastreio(`${item.po_id}-${item.codigo_item}`);
+    setSalvandoRastreio(itemKey);
     try {
       await apiPost(`${API}/purchase-orders/${item.po_id}/items/${item.codigo_item}/rastreio`, {
-        codigo_rastreio: codigoRastreio.trim()
+        codigo_rastreio: codigo.trim()
       });
-      setCodigoRastreio('');
+      // Limpar apenas o código desse item
+      setCodigosRastreio(prev => {
+        const newState = { ...prev };
+        delete newState[itemKey];
+        return newState;
+      });
       alert('Código de rastreio salvo! Item movido para "Em Trânsito".');
       loadItems();
     } catch (error) {
@@ -237,6 +245,14 @@ const ItemsByStatus = () => {
     } finally {
       setSalvandoRastreio(null);
     }
+  };
+
+  const handleCodigoRastreioChange = (item, value) => {
+    const itemKey = `${item.po_id}-${item.codigo_item}`;
+    setCodigosRastreio(prev => ({
+      ...prev,
+      [itemKey]: value.toUpperCase()
+    }));
   };
 
   const atualizarRastreio = async (item) => {
