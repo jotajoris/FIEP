@@ -248,6 +248,62 @@ const ItemsByStatus = () => {
         </div>
       </div>
 
+      {/* Filtro por Fornecedor - apenas admin */}
+      {isAdmin() && fornecedoresDisponiveis.length > 0 && (
+        <div style={{ 
+          marginBottom: '1.5rem', 
+          padding: '1rem', 
+          background: '#f7fafc', 
+          borderRadius: '8px',
+          border: '1px solid #e2e8f0',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+          flexWrap: 'wrap'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <label style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.9rem' }}>
+              🏪 Filtrar por Fornecedor:
+            </label>
+            <select
+              value={filterFornecedor}
+              onChange={(e) => setFilterFornecedor(e.target.value)}
+              className="form-input"
+              style={{ minWidth: '200px', padding: '0.5rem 1rem' }}
+              data-testid="filter-fornecedor"
+            >
+              <option value="todos">Todos os fornecedores</option>
+              {fornecedoresDisponiveis.map(fornecedor => (
+                <option key={fornecedor} value={fornecedor}>{fornecedor}</option>
+              ))}
+            </select>
+          </div>
+          
+          {filterFornecedor !== 'todos' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <span style={{ 
+                background: '#667eea', 
+                color: 'white', 
+                padding: '0.25rem 0.75rem', 
+                borderRadius: '12px',
+                fontSize: '0.85rem',
+                fontWeight: '600'
+              }}>
+                {displayItems.length} {displayItems.length === 1 ? 'item' : 'itens'} do fornecedor "{filterFornecedor}"
+              </span>
+              <button
+                onClick={() => setFilterFornecedor('todos')}
+                className="btn btn-secondary"
+                style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                data-testid="clear-fornecedor-filter"
+              >
+                ✕ Limpar
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="card">
         {displayItems.length === 0 ? (
           <p style={{ textAlign: 'center', color: '#718096', padding: '2rem' }} data-testid="no-items-message">
