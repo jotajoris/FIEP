@@ -1337,8 +1337,14 @@ async def update_item_status(po_id: str, codigo_item: str, update: ItemStatusUpd
                 item['data_cotacao'] = now
             elif update.status == ItemStatus.COMPRADO:
                 item['data_compra'] = now
+            elif update.status == ItemStatus.EM_TRANSITO:
+                item['data_envio'] = now
             elif update.status == ItemStatus.ENTREGUE:
                 item['data_entrega'] = now
+            
+            # Atualizar código de rastreio se fornecido
+            if update.codigo_rastreio is not None:
+                item['codigo_rastreio'] = update.codigo_rastreio.strip().upper() if update.codigo_rastreio else None
             
             item_updated = True
             break
