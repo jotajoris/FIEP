@@ -8,6 +8,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [seeded, setSeeded] = useState(false);
   const [selectedOrders, setSelectedOrders] = useState(new Set());
   const [deleting, setDeleting] = useState(false);
