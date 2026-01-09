@@ -111,6 +111,9 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 - [08/01/2026] ✅ **Correção Upload PDF**: Corrigido erro "body stream already read" no frontend ao fazer upload de PDFs.
 - [08/01/2026] ✅ **Drag and Drop**: Área de upload de PDF agora aceita arrastar e soltar arquivos.
 - [08/01/2026] ✅ **Validação OC Duplicada**: Popup de aviso quando tenta criar uma OC que já existe no sistema, com opção de ver a OC existente.
+- [09/01/2026] ✅ **Upload Múltiplo de PDFs**: Permite selecionar vários PDFs e criar todas as OCs automaticamente em lote.
+- [09/01/2026] ✅ **Esqueci Minha Senha (P1)**: Link na tela de login, página de recuperação de senha com envio de email via Resend.
+- [09/01/2026] ✅ **Edição de Perfil (P2)**: Página de perfil do usuário com edição de nome de exibição, alteração de senha, e logout. Nome exibido na navbar.
 
 ## Próximas Tarefas (Backlog)
 
