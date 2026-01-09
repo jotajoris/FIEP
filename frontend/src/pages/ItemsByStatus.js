@@ -101,8 +101,29 @@ const ItemsByStatus = () => {
       });
     }
     
+    // Filtro por responsável (apenas se não for "todos")
+    if (filterResponsavel !== 'todos') {
+      filtered = filtered.filter(item => item.responsavel === filterResponsavel);
+    }
+    
+    // Pesquisa por código do item
+    if (searchCodigo.trim()) {
+      const termo = searchCodigo.trim().toLowerCase();
+      filtered = filtered.filter(item => 
+        item.codigo_item && item.codigo_item.toLowerCase().includes(termo)
+      );
+    }
+    
+    // Pesquisa por OC
+    if (searchOC.trim()) {
+      const termo = searchOC.trim().toLowerCase();
+      filtered = filtered.filter(item => 
+        item.numero_oc && item.numero_oc.toLowerCase().includes(termo)
+      );
+    }
+    
     return filtered;
-  }, [items, showOnlyMine, user?.owner_name, filterFornecedor]);
+  }, [items, showOnlyMine, user?.owner_name, filterFornecedor, filterResponsavel, searchCodigo, searchOC]);
   
   const myItemsCount = useMemo(() => {
     if (!user?.owner_name) return 0;
