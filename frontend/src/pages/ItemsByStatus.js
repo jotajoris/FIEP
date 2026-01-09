@@ -326,6 +326,36 @@ const ItemsByStatus = () => {
     return <div className="loading" data-testid="loading-items">Carregando...</div>;
   }
 
+  if (error) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        minHeight: '50vh',
+        gap: '1rem'
+      }}>
+        <div style={{ fontSize: '3rem' }}>⚠️</div>
+        <p style={{ color: '#e53e3e', fontSize: '1.1rem' }}>{error}</p>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button 
+            onClick={() => navigate('/')} 
+            className="btn btn-secondary"
+          >
+            ← Voltar ao Dashboard
+          </button>
+          <button 
+            onClick={loadItems} 
+            className="btn btn-primary"
+          >
+            🔄 Tentar Novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div data-testid="items-by-status-page">
       <div className="page-header">
