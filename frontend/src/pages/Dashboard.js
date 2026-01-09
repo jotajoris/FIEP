@@ -320,13 +320,13 @@ const Dashboard = () => {
           border: '1px solid #e2e8f0'
         }}>
           {/* Pesquisa por número da OC */}
-          <div style={{ flex: '1', minWidth: '200px' }}>
+          <div style={{ flex: '1', minWidth: '180px' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
-              🔍 Pesquisar OC
+              📋 Pesquisar OC
             </label>
             <input
               type="text"
-              placeholder="Digite o número da OC..."
+              placeholder="Número da OC..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="form-input"
@@ -335,8 +335,40 @@ const Dashboard = () => {
             />
           </div>
           
+          {/* Pesquisa por código do item */}
+          <div style={{ flex: '1', minWidth: '180px' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
+              🔍 Código do Item
+            </label>
+            <input
+              type="text"
+              placeholder="Código do item..."
+              value={searchCodigoItem}
+              onChange={(e) => setSearchCodigoItem(e.target.value)}
+              className="form-input"
+              style={{ width: '100%' }}
+              data-testid="search-codigo-item-input"
+            />
+          </div>
+          
+          {/* Pesquisa por responsável */}
+          <div style={{ flex: '1', minWidth: '180px' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
+              👤 Responsável
+            </label>
+            <input
+              type="text"
+              placeholder="Nome do responsável..."
+              value={searchResponsavel}
+              onChange={(e) => setSearchResponsavel(e.target.value)}
+              className="form-input"
+              style={{ width: '100%' }}
+              data-testid="search-responsavel-input"
+            />
+          </div>
+          
           {/* Filtro por data inicial */}
-          <div style={{ minWidth: '150px' }}>
+          <div style={{ minWidth: '140px' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
               📅 Data Inicial
             </label>
@@ -351,7 +383,7 @@ const Dashboard = () => {
           </div>
           
           {/* Filtro por data final */}
-          <div style={{ minWidth: '150px' }}>
+          <div style={{ minWidth: '140px' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
               📅 Data Final
             </label>
@@ -366,7 +398,7 @@ const Dashboard = () => {
           </div>
           
           {/* Botão Limpar Filtros */}
-          {(searchTerm || dateFrom || dateTo) && (
+          {(searchTerm || searchCodigoItem || searchResponsavel || dateFrom || dateTo) && (
             <div style={{ display: 'flex', alignItems: 'flex-end' }}>
               <button
                 onClick={clearFilters}
