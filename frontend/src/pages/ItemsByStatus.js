@@ -204,6 +204,52 @@ const ItemsByStatus = () => {
     }
   };
 
+  // Funções de Rastreio
+  const toggleRastreio = (itemKey) => {
+    setExpandedRastreio(prev => ({
+      ...prev,
+      [itemKey]: !prev[itemKey]
+    }));
+  };
+
+  const copiarCodigo = (codigo) => {
+    navigator.clipboard.writeText(codigo);
+    alert('Código copiado!');
+  };
+
+  const salvarCodigoRastreio = async (item) => {
+    if (!codigoRastreio.trim()) {
+      alert('Digite o código de rastreio');
+      return;
+    }
+    
+    setSalvandoRastreio(`${item.po_id}-${item.codigo_item}`);
+    try {
+      await apiPost(`${API}/purchase-orders/${item.po_id}/items/${item.codigo_item}/rastreio`, {
+        codigo_rastreio: codigoRastreio.trim()
+      });
+      setCodigoRastreio('');
+      alert('Código de rastreio salvo! Item movido para "Em Trânsito".');
+      loadItems();
+    } catch (error) {
+      console.error('Erro ao salvar código de rastreio:', error);
+      alert('Erro ao salvar código de rastreio');
+    } finally {
+      setSalvandoRastreio(null);
+    }
+  };
+
+  const atualizarRastreio = async (item) => {
+    try {
+      await apiPost(`${API}/purchase-orders/${item.po_id}/items/${item.codigo_item}/atualizar-rastreio`, {});
+      alert('Rastreio atualizado!');
+      loadItems();
+    } catch (error) {
+      console.error('Erro ao atualizar rastreio:', error);
+      alert('Erro ao atualizar rastreio');
+    }
+  };
+
   if (loading) {
     return <div className="loading" data-testid="loading-items">Carregando...</div>;
   }
