@@ -1816,10 +1816,10 @@ async def atualizar_rastreio(
 async def get_notificacoes(current_user: dict = Depends(get_current_user)):
     """Obter notificações do usuário"""
     # Buscar últimas 20 notificações
-    notificacoes = await db.notificacoes.find(
-        {},
-        {"_id": 0}
-    ).sort("created_at", -1).limit(20).to_list(20)
+    cursor = db.notificacoes.find({}, {"_id": 0}).sort("created_at", -1).limit(20)
+    notificacoes = []
+    async for doc in cursor:
+        notificacoes.append(doc)
     
     return notificacoes
 
