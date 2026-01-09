@@ -166,7 +166,10 @@ class POItem(BaseModel):
     fontes_compra: List[FonteCompra] = []  # Lista de fontes/locais de compra
     data_cotacao: Optional[datetime] = None
     data_compra: Optional[datetime] = None
+    data_envio: Optional[datetime] = None  # Data de envio (quando entrou em trânsito)
     data_entrega: Optional[datetime] = None
+    codigo_rastreio: Optional[str] = None  # Código de rastreio dos Correios
+    rastreio_eventos: List[dict] = []  # Histórico de eventos do rastreio
 
 class PurchaseOrder(BaseModel):
     model_config = ConfigDict(extra="ignore")
