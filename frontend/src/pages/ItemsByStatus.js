@@ -73,6 +73,17 @@ const ItemsByStatus = () => {
     return Array.from(fornecedores).sort();
   }, [items]);
 
+  // Extrair lista única de responsáveis dos itens
+  const responsaveisDisponiveis = useMemo(() => {
+    const responsaveis = new Set();
+    items.forEach(item => {
+      if (item.responsavel && item.responsavel.trim()) {
+        responsaveis.add(item.responsavel.trim());
+      }
+    });
+    return Array.from(responsaveis).sort();
+  }, [items]);
+
   // Usar useMemo para garantir o recálculo correto quando o filtro mudar
   const displayItems = useMemo(() => {
     let filtered = items;
