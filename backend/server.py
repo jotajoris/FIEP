@@ -1347,6 +1347,73 @@ async def update_item_status(po_id: str, codigo_item: str, update: ItemStatusUpd
     
     return {"message": "Item atualizado com sucesso"}
 
+@api_router.patch("/purchase-orders/{po_id}/items/{codigo_item}/full")
+async def update_item_full(
+    po_id: str, 
+    codigo_item: str, 
+    update: ItemFullUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Atualização completa do item - apenas admin"""
+    if current_user['role'] != 'admin':
+        raise HTTPException(status_code=403, detail="Apenas administradores podem fazer edição completa")
+    
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not po:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    item_updated = False
+    for item in po['items']:
+        if item['codigo_item'] == codigo_item:
+            # Atualizar campos se fornecidos
+            if update.descricao is not None:
+                item['descricao'] = update.descricao
+            if update.quantidade is not None:
+                item['quantidade'] = update.quantidade
+            if update.unidade is not None:
+                item['unidade'] = update.unidade
+            if update.responsavel is not None:
+                item['responsavel'] = update.responsavel
+            if update.lote is not None:
+                item['lote'] = update.lote
+            if update.marca_modelo is not None:
+                item['marca_modelo'] = update.marca_modelo
+            
+            # Recalcular imposto e lucro se tiver preço de venda
+            preco_venda = item.get('preco_venda')
+            quantidade = item.get('quantidade', 0)
+            
+            if preco_venda is not None:
+                receita_total = preco_venda * quantidade
+                impostos = receita_total * 0.11
+                item['imposto'] = round(impostos, 2)
+                
+                # Recalcular lucro se tiver fontes de compra ou preço de compra
+                fontes = item.get('fontes_compra', [])
+                if fontes and len(fontes) > 0:
+                    total_custo_compra = sum(fc['quantidade'] * fc['preco_unitario'] for fc in fontes)
+                    total_frete_compra = sum(fc.get('frete', 0) for fc in fontes)
+                    frete_envio = item.get('frete_envio', 0) or 0
+                    item['lucro_liquido'] = round(receita_total - total_custo_compra - total_frete_compra - impostos - frete_envio, 2)
+                elif item.get('preco_compra') is not None:
+                    custo_total = item['preco_compra'] * quantidade
+                    frete_compra = item.get('frete_compra', 0) or 0
+                    frete_envio = item.get('frete_envio', 0) or 0
+                    item['lucro_liquido'] = round(receita_total - custo_total - impostos - frete_compra - frete_envio, 2)
+            
+            item_updated = True
+            break
+    
+    if not item_updated:
+        raise HTTPException(status_code=404, detail="Item não encontrado")
+    
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    return {"message": "Item atualizado com sucesso"}
+
 @api_router.get("/dashboard", response_model=DashboardStats)
 async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     """Estatísticas do dashboard"""
