@@ -192,6 +192,15 @@ class ItemStatusUpdate(BaseModel):
     frete_envio: Optional[float] = None
     fontes_compra: Optional[List[FonteCompra]] = None
 
+class ItemFullUpdate(BaseModel):
+    """Atualização completa do item - apenas admin"""
+    descricao: Optional[str] = None
+    quantidade: Optional[int] = None
+    unidade: Optional[str] = None
+    responsavel: Optional[str] = None
+    lote: Optional[str] = None
+    marca_modelo: Optional[str] = None
+
 class DashboardStats(BaseModel):
     total_ocs: int
     total_items: int
