@@ -20,9 +20,8 @@ const Layout = ({ children }) => {
     <div className="layout-container">
       <nav className="navbar" data-testid="main-navbar">
         <div className="nav-content">
-          <Link to="/" className="nav-brand" data-testid="nav-brand" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <img src="/logo-on.png" alt="ON Logo" style={{ height: '36px', width: 'auto' }} />
-            ON Licitações
+          <Link to="/" className="nav-brand" data-testid="nav-brand">
+            FIEP | Gestão OC
           </Link>
           <ul className="nav-links">
             <li>
