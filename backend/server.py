@@ -2028,4 +2028,7 @@ logger = logging.getLogger(__name__)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    global rastreio_task
+    if rastreio_task:
+        rastreio_task.cancel()
     client.close()
