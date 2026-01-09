@@ -15,7 +15,7 @@ const ItemsByStatus = () => {
   const [showOnlyMine, setShowOnlyMine] = useState(false);
   const [filterFornecedor, setFilterFornecedor] = useState('todos');
   const [expandedRastreio, setExpandedRastreio] = useState({});
-  const [codigoRastreio, setCodigoRastreio] = useState('');
+  const [codigosRastreio, setCodigosRastreio] = useState({});  // Objeto com código por item
   const [salvandoRastreio, setSalvandoRastreio] = useState(null);
 
   const statusLabels = {
