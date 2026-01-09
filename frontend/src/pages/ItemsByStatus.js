@@ -406,7 +406,7 @@ const ItemsByStatus = () => {
                             }}
                             data-testid={`display-valor-total-${item.codigo_item}`}
                           >
-                            {formatBRL(item.preco_venda * item.quantidade)}
+                            {formatBRL((item.preco_venda || 0) * (item.quantidade || 0))}
                           </div>
                         </div>
                       )}
@@ -425,7 +425,7 @@ const ItemsByStatus = () => {
                             }}
                             data-testid={`display-imposto-${item.codigo_item}`}
                           >
-                            {formatBRL((item.preco_venda * item.quantidade) * 0.11)}
+                            {formatBRL(((item.preco_venda || 0) * (item.quantidade || 0)) * 0.11)}
                           </div>
                         </div>
                       )}
