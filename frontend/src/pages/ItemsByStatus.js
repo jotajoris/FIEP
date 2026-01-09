@@ -465,7 +465,7 @@ const ItemsByStatus = () => {
 
                       {formData.fontes_compra?.map((fonte, idx) => (
                         <div 
-                          key={fonte.id} 
+                          key={fonte.id || `fonte-${idx}`} 
                           style={{ 
                             background: '#f0f4f8', 
                             padding: '1rem', 
