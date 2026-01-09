@@ -63,6 +63,12 @@ EMAIL_TO_OWNER = {
     'fabioonsolucoes@gmail.com': 'Fabio'
 }
 
+# Health check endpoint (for Kubernetes)
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Kubernetes deployment"""
+    return {"status": "healthy", "service": "fiep-oc-backend"}
+
 class UserRole(str, Enum):
     ADMIN = "admin"
     USER = "user"
