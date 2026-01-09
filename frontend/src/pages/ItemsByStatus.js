@@ -765,8 +765,8 @@ const ItemsByStatus = () => {
                             <input
                               type="text"
                               placeholder="Ex: AA123456789BR"
-                              value={codigoRastreio}
-                              onChange={(e) => setCodigoRastreio(e.target.value.toUpperCase())}
+                              value={codigosRastreio[`${item.po_id}-${item.codigo_item}`] || ''}
+                              onChange={(e) => handleCodigoRastreioChange(item, e.target.value)}
                               className="form-input"
                               style={{ 
                                 flex: 1, 
