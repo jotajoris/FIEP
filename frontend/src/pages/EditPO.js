@@ -45,8 +45,8 @@ const EditPO = () => {
     }
   };
 
-  const startEditItem = (item) => {
-    setEditingItem(item.codigo_item);
+  const startEditItem = (item, index) => {
+    setEditingItem(index); // Usar índice em vez de codigo_item
     setEditForm({
       codigo_item: item.codigo_item,
       descricao: item.descricao || '',
@@ -56,7 +56,8 @@ const EditPO = () => {
       lote: item.lote || '',
       marca_modelo: item.marca_modelo || '',
       preco_venda: item.preco_venda || '',
-      status: item.status || 'pendente'
+      status: item.status || 'pendente',
+      itemIndex: index // Guardar o índice para o save
     });
   };
 
