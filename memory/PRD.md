@@ -132,6 +132,13 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
   - Cada notificação mostra: OC, código do item, descrição (máx 30 chars)
   - "Marcar todas como lidas" para limpar
   - Notificação automática quando item é entregue
+- [09/01/2026] ✅ **Filtros Avançados em Páginas de Status**: Todas as páginas de itens (Pendentes, Cotados, Comprados, Em Trânsito, Entregues) agora possuem:
+  - 🔍 Campo de pesquisa por **Código do Item**
+  - 📋 Campo de pesquisa por **Número da OC**
+  - 👤 Dropdown para filtrar por **Responsável**
+  - 🏪 Dropdown para filtrar por **Fornecedor** (apenas admin)
+  - Botão "✕ Limpar Filtros" quando filtros estão ativos
+  - Contador de itens encontrados com filtros aplicados
 
 ## Próximas Tarefas (Backlog)
 
