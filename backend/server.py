@@ -1632,27 +1632,36 @@ async def buscar_rastreio_api(codigo: str) -> dict:
     """Tenta buscar rastreio em múltiplas APIs"""
     eventos = []
     
-    # Tentar API do Seu Rastreio primeiro
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(
-                f"https://seurastreio.com.br/api/public/rastreio/{codigo}",
-                headers={"Accept": "application/json"}
-            )
-            if response.status_code == 200:
-                data = response.json()
-                if data.get('success') and data.get('eventos'):
-                    for evento in data.get('eventos', []):
-                        eventos.append({
-                            "data": evento.get('data', ''),
-                            "hora": evento.get('hora', ''),
-                            "local": evento.get('local', ''),
-                            "status": evento.get('descricao', evento.get('status', '')),
-                            "subStatus": []
-                        })
-                    return {"success": True, "eventos": eventos}
-    except Exception:
-        pass
+    # Tentar API do Seu Rastreio primeiro (com retry)
+    for tentativa in range(3):
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                response = await client.get(
+                    f"https://seurastreio.com.br/api/public/rastreio/{codigo}",
+                    headers={
+                        "Accept": "application/json",
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                    }
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('success') and data.get('eventos'):
+                        for evento in data.get('eventos', []):
+                            eventos.append({
+                                "data": evento.get('data', ''),
+                                "hora": evento.get('hora', ''),
+                                "local": evento.get('local', evento.get('cidade', '')),
+                                "status": evento.get('descricao', evento.get('status', '')),
+                                "subStatus": evento.get('subStatus', [])
+                            })
+                        return {"success": True, "eventos": eventos}
+                    elif data.get('status') == 'service_error':
+                        # API temporariamente indisponível, aguardar e tentar novamente
+                        await asyncio.sleep(2)
+                        continue
+        except Exception as e:
+            logging.getLogger(__name__).warning(f"Erro ao consultar SeuRastreio (tentativa {tentativa+1}): {str(e)}")
+            await asyncio.sleep(1)
     
     # Fallback: tentar LinkTrack
     try:
@@ -1671,7 +1680,8 @@ async def buscar_rastreio_api(codigo: str) -> dict:
                         "status": evento.get('status', ''),
                         "subStatus": evento.get('subStatus', [])
                     })
-                return {"success": True, "eventos": eventos}
+                if eventos:
+                    return {"success": True, "eventos": eventos}
     except Exception:
         pass
     
