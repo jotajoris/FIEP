@@ -78,6 +78,8 @@ const Dashboard = () => {
   };
 
   const loadData = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const [statsRes, ordersRes] = await Promise.all([
         apiGet(`${API}/dashboard`),
@@ -85,9 +87,10 @@ const Dashboard = () => {
       ]);
       setStats(statsRes.data);
       setOrders(ordersRes.data);
-      setSelectedOrders(new Set()); // Limpar seleção ao recarregar
+      setSelectedOrders(new Set());
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
+      setError('Erro ao carregar dados. Clique para tentar novamente.');
     } finally {
       setLoading(false);
     }
