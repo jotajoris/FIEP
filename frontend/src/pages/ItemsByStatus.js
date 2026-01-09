@@ -246,7 +246,22 @@ const ItemsByStatus = () => {
       loadItems();
     } catch (error) {
       console.error('Erro ao atualizar rastreio:', error);
-      alert('Erro ao atualizar rastreio');
+      alert('Não foi possível atualizar o rastreio. As APIs de rastreamento podem estar temporariamente indisponíveis.');
+    }
+  };
+
+  const marcarComoEntregue = async (item) => {
+    if (!window.confirm('Tem certeza que deseja marcar este item como entregue?')) {
+      return;
+    }
+    
+    try {
+      await apiPost(`${API}/purchase-orders/${item.po_id}/items/${item.codigo_item}/marcar-entregue`, {});
+      alert('Item marcado como entregue!');
+      loadItems();
+    } catch (error) {
+      console.error('Erro ao marcar como entregue:', error);
+      alert('Erro ao marcar como entregue');
     }
   };
 
