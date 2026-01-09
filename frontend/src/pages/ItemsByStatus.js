@@ -11,6 +11,7 @@ const ItemsByStatus = () => {
   const { isAdmin, user } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({});
   const [showOnlyMine, setShowOnlyMine] = useState(false);
