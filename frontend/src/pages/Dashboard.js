@@ -71,6 +71,8 @@ const Dashboard = () => {
 
   const clearFilters = () => {
     setSearchTerm('');
+    setSearchCodigoItem('');
+    setSearchResponsavel('');
     setDateFrom('');
     setDateTo('');
   };
