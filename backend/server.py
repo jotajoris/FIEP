@@ -1625,54 +1625,63 @@ async def fix_marca_modelo(current_user: dict = Depends(require_admin)):
 
 import httpx
 
-@api_router.get("/rastreio/{codigo}")
-async def buscar_rastreio(codigo: str, current_user: dict = Depends(get_current_user)):
-    """Buscar rastreamento de um código dos Correios"""
+async def buscar_rastreio_api(codigo: str) -> dict:
+    """Tenta buscar rastreio em múltiplas APIs"""
+    eventos = []
+    
+    # Tentar API do Seu Rastreio primeiro
     try:
-        # Usar API pública de rastreamento
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            # Tentar API do Seu Rastreio primeiro
-            try:
-                response = await client.get(
-                    f"https://api.seurastreio.com.br/api/public/rastreio/{codigo}",
-                    headers={"Accept": "application/json"}
-                )
-                if response.status_code == 200:
-                    data = response.json()
-                    return data
-            except Exception:
-                pass
-            
-            # Fallback: usar outra API pública de rastreamento
-            try:
-                response = await client.get(
-                    f"https://api.linketrack.com/track/json?user=teste&token=1abcd00b2731640e886fb41a8a9671ad1434c599dbaa0a0de9a5aa619f29a83f&codigo={codigo}",
-                    headers={"Accept": "application/json"}
-                )
-                if response.status_code == 200:
-                    data = response.json()
-                    # Converter para formato padronizado
-                    eventos = []
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                f"https://seurastreio.com.br/api/public/rastreio/{codigo}",
+                headers={"Accept": "application/json"}
+            )
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success') and data.get('eventos'):
                     for evento in data.get('eventos', []):
                         eventos.append({
                             "data": evento.get('data', ''),
                             "hora": evento.get('hora', ''),
                             "local": evento.get('local', ''),
-                            "status": evento.get('status', ''),
-                            "subStatus": evento.get('subStatus', [])
+                            "status": evento.get('descricao', evento.get('status', '')),
+                            "subStatus": []
                         })
-                    return {
-                        "codigo": codigo,
-                        "success": True,
-                        "eventos": eventos,
-                        "quantidade": len(eventos)
-                    }
-            except Exception:
-                pass
-        
-        return {"codigo": codigo, "success": False, "message": "Não foi possível rastrear o objeto"}
-    except Exception as e:
-        return {"codigo": codigo, "success": False, "message": str(e)}
+                    return {"success": True, "eventos": eventos}
+    except Exception:
+        pass
+    
+    # Fallback: tentar LinkTrack
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                f"https://api.linketrack.com/track/json?user=teste&token=1abcd00b2731640e886fb41a8a9671ad1434c599dbaa0a0de9a5aa619f29a83f&codigo={codigo}",
+                headers={"Accept": "application/json"}
+            )
+            if response.status_code == 200:
+                data = response.json()
+                for evento in data.get('eventos', []):
+                    eventos.append({
+                        "data": evento.get('data', ''),
+                        "hora": evento.get('hora', ''),
+                        "local": evento.get('local', ''),
+                        "status": evento.get('status', ''),
+                        "subStatus": evento.get('subStatus', [])
+                    })
+                return {"success": True, "eventos": eventos}
+    except Exception:
+        pass
+    
+    return {"success": False, "eventos": [], "message": "Não foi possível consultar o rastreio. APIs indisponíveis."}
+
+@api_router.get("/rastreio/{codigo}")
+async def buscar_rastreio(codigo: str, current_user: dict = Depends(get_current_user)):
+    """Buscar rastreamento de um código dos Correios"""
+    result = await buscar_rastreio_api(codigo)
+    return {
+        "codigo": codigo,
+        **result
+    }
 
 @api_router.post("/purchase-orders/{po_id}/items/{codigo_item}/rastreio")
 async def definir_codigo_rastreio(
