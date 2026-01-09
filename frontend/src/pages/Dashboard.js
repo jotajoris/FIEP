@@ -31,6 +31,24 @@ const Dashboard = () => {
         return false;
       }
       
+      // Filtro por código do item
+      if (searchCodigoItem) {
+        const termo = searchCodigoItem.toLowerCase();
+        const temItem = order.items.some(item => 
+          item.codigo_item && item.codigo_item.toLowerCase().includes(termo)
+        );
+        if (!temItem) return false;
+      }
+      
+      // Filtro por responsável
+      if (searchResponsavel) {
+        const termo = searchResponsavel.toLowerCase();
+        const temResponsavel = order.items.some(item => 
+          item.responsavel && item.responsavel.toLowerCase().includes(termo)
+        );
+        if (!temResponsavel) return false;
+      }
+      
       // Filtro por data
       const orderDate = new Date(order.created_at);
       orderDate.setHours(0, 0, 0, 0);
@@ -49,7 +67,7 @@ const Dashboard = () => {
       
       return true;
     });
-  }, [orders, searchTerm, dateFrom, dateTo]);
+  }, [orders, searchTerm, searchCodigoItem, searchResponsavel, dateFrom, dateTo]);
 
   const clearFilters = () => {
     setSearchTerm('');
