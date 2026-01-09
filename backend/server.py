@@ -1477,6 +1477,42 @@ async def fix_responsaveis(current_user: dict = Depends(require_admin)):
     
     return {"message": f"{total_fixed} itens corrigidos com sucesso"}
 
+@api_router.post("/purchase-orders/fix-marca-modelo")
+async def fix_marca_modelo(current_user: dict = Depends(require_admin)):
+    """Corrigir marca/modelo faltantes nas OCs existentes (ADMIN ONLY)"""
+    import random
+    
+    pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(1000)
+    total_fixed = 0
+    
+    for po in pos:
+        updated = False
+        for item in po['items']:
+            if not item.get('marca_modelo'):
+                # Buscar marca_modelo do banco de referência
+                ref_items = await db.reference_items.find(
+                    {"codigo_item": item["codigo_item"]},
+                    {"_id": 0}
+                ).to_list(100)
+                
+                if ref_items:
+                    # Procurar uma referência com marca_modelo preenchido
+                    for ref in ref_items:
+                        marca = ref.get('marca_modelo', '')
+                        if marca and marca != '#N/A':
+                            item['marca_modelo'] = marca
+                            total_fixed += 1
+                            updated = True
+                            break
+        
+        if updated:
+            await db.purchase_orders.update_one(
+                {"id": po['id']},
+                {"$set": {"items": po['items']}}
+            )
+    
+    return {"message": f"{total_fixed} itens corrigidos com marca/modelo"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
