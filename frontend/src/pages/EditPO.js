@@ -164,15 +164,15 @@ const EditPO = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {order.items.map((item, index) => (
             <div 
-              key={item.codigo_item}
+              key={`item-${index}`}
               className="card"
               style={{ 
-                background: editingItem === item.codigo_item ? '#fffbeb' : '#f7fafc',
-                border: editingItem === item.codigo_item ? '2px solid #f59e0b' : '1px solid #e2e8f0'
+                background: editingItem === index ? '#fffbeb' : '#f7fafc',
+                border: editingItem === index ? '2px solid #f59e0b' : '1px solid #e2e8f0'
               }}
-              data-testid={`edit-item-card-${item.codigo_item}`}
+              data-testid={`edit-item-card-${index}`}
             >
-              {editingItem === item.codigo_item ? (
+              {editingItem === index ? (
                 /* Modo de Edição */
                 <div>
                   <div style={{ 
