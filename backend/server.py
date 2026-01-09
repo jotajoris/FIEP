@@ -1777,10 +1777,23 @@ async def atualizar_rastreio(
                         
                         item['rastreio_eventos'] = eventos
                         
-                        # Se foi entregue, atualizar status
+                        # Se foi entregue, atualizar status e criar notificação
                         if entregue:
                             item['status'] = ItemStatus.ENTREGUE.value
                             item['data_entrega'] = datetime.now(timezone.utc).isoformat()
+                            
+                            # Criar notificação de entrega
+                            notificacao = {
+                                "id": str(uuid.uuid4()),
+                                "tipo": "entrega",
+                                "titulo": "Item Entregue",
+                                "numero_oc": po.get('numero_oc', ''),
+                                "codigo_item": codigo_item,
+                                "descricao_item": item.get('descricao', '')[:30] + ('...' if len(item.get('descricao', '')) > 30 else ''),
+                                "lida": False,
+                                "created_at": datetime.now(timezone.utc).isoformat()
+                            }
+                            await db.notificacoes.insert_one(notificacao)
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Erro ao buscar rastreio: {str(e)}")
             
