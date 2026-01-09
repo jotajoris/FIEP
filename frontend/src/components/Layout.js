@@ -1,11 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { apiGet, apiPost, API } from '../utils/api';
 
 const Layout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, isAdmin } = useAuth();
+  const [notificacoes, setNotificacoes] = useState([]);
+  const [notificacoesCount, setNotificacoesCount] = useState(0);
+  const [showNotificacoes, setShowNotificacoes] = useState(false);
+  const notificacoesRef = useRef(null);
   
   const isActive = (path) => {
     return location.pathname === path ? 'active' : '';
@@ -15,6 +20,74 @@ const Layout = ({ children }) => {
     logout();
     navigate('/login');
   };
+
+  // Carregar contagem de notificações
+  useEffect(() => {
+    const loadNotificacoesCount = async () => {
+      try {
+        const response = await apiGet(`${API}/notificacoes/nao-lidas/count`);
+        setNotificacoesCount(response.data.count);
+      } catch (error) {
+        console.error('Erro ao carregar notificações:', error);
+      }
+    };
+
+    if (user) {
+      loadNotificacoesCount();
+      // Atualizar a cada 30 segundos
+      const interval = setInterval(loadNotificacoesCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  // Carregar notificações quando abrir o dropdown
+  const loadNotificacoes = async () => {
+    try {
+      const response = await apiGet(`${API}/notificacoes`);
+      setNotificacoes(response.data);
+    } catch (error) {
+      console.error('Erro ao carregar notificações:', error);
+    }
+  };
+
+  const toggleNotificacoes = () => {
+    if (!showNotificacoes) {
+      loadNotificacoes();
+    }
+    setShowNotificacoes(!showNotificacoes);
+  };
+
+  const marcarComoLida = async (id) => {
+    try {
+      await apiPost(`${API}/notificacoes/${id}/marcar-lida`, {});
+      setNotificacoes(prev => prev.map(n => n.id === id ? { ...n, lida: true } : n));
+      setNotificacoesCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Erro ao marcar notificação como lida:', error);
+    }
+  };
+
+  const marcarTodasComoLidas = async () => {
+    try {
+      await apiPost(`${API}/notificacoes/marcar-todas-lidas`, {});
+      setNotificacoes(prev => prev.map(n => ({ ...n, lida: true })));
+      setNotificacoesCount(0);
+    } catch (error) {
+      console.error('Erro ao marcar todas como lidas:', error);
+    }
+  };
+
+  // Fechar dropdown ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notificacoesRef.current && !notificacoesRef.current.contains(event.target)) {
+        setShowNotificacoes(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   
   return (
     <div className="layout-container">
@@ -57,6 +130,165 @@ const Layout = ({ children }) => {
             )}
             <li>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                {/* Sininho de Notificações */}
+                <div ref={notificacoesRef} style={{ position: 'relative' }}>
+                  <button
+                    onClick={toggleNotificacoes}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '0.5rem',
+                      position: 'relative',
+                      fontSize: '1.25rem'
+                    }}
+                    data-testid="notifications-bell"
+                    title="Notificações"
+                  >
+                    🔔
+                    {notificacoesCount > 0 && (
+                      <span style={{
+                        position: 'absolute',
+                        top: '0',
+                        right: '0',
+                        background: '#ef4444',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '18px',
+                        height: '18px',
+                        fontSize: '0.7rem',
+                        fontWeight: '700',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        {notificacoesCount > 9 ? '9+' : notificacoesCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Dropdown de Notificações */}
+                  {showNotificacoes && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      right: '0',
+                      width: '360px',
+                      maxHeight: '400px',
+                      overflowY: 'auto',
+                      background: 'white',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                      zIndex: 1000,
+                      border: '1px solid #e2e8f0'
+                    }} data-testid="notifications-dropdown">
+                      {/* Header */}
+                      <div style={{
+                        padding: '0.75rem 1rem',
+                        borderBottom: '1px solid #e2e8f0',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: '#f7fafc'
+                      }}>
+                        <span style={{ fontWeight: '600', color: '#2d3748' }}>
+                          Notificações
+                        </span>
+                        {notificacoesCount > 0 && (
+                          <button
+                            onClick={marcarTodasComoLidas}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#667eea',
+                              cursor: 'pointer',
+                              fontSize: '0.8rem',
+                              fontWeight: '500'
+                            }}
+                            data-testid="mark-all-read"
+                          >
+                            Marcar todas como lidas
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Lista de Notificações */}
+                      {notificacoes.length === 0 ? (
+                        <div style={{
+                          padding: '2rem 1rem',
+                          textAlign: 'center',
+                          color: '#718096'
+                        }}>
+                          Nenhuma notificação
+                        </div>
+                      ) : (
+                        <div>
+                          {notificacoes.map((notif) => (
+                            <div
+                              key={notif.id}
+                              onClick={() => !notif.lida && marcarComoLida(notif.id)}
+                              style={{
+                                padding: '0.75rem 1rem',
+                                borderBottom: '1px solid #f0f0f0',
+                                cursor: notif.lida ? 'default' : 'pointer',
+                                background: notif.lida ? 'white' : '#f0f7ff',
+                                transition: 'background 0.2s'
+                              }}
+                              data-testid={`notification-${notif.id}`}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                                <span style={{ fontSize: '1.25rem' }}>
+                                  {notif.tipo === 'entrega' ? '📦' : '🔔'}
+                                </span>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{
+                                    fontWeight: notif.lida ? '400' : '600',
+                                    color: '#2d3748',
+                                    fontSize: '0.9rem',
+                                    marginBottom: '0.25rem'
+                                  }}>
+                                    {notif.titulo}
+                                  </div>
+                                  <div style={{
+                                    fontSize: '0.85rem',
+                                    color: '#4a5568',
+                                    marginBottom: '0.25rem'
+                                  }}>
+                                    <strong>OC:</strong> {notif.numero_oc} | <strong>Item:</strong> {notif.codigo_item}
+                                  </div>
+                                  <div style={{
+                                    fontSize: '0.8rem',
+                                    color: '#718096'
+                                  }}>
+                                    {notif.descricao_item}
+                                  </div>
+                                  <div style={{
+                                    fontSize: '0.75rem',
+                                    color: '#a0aec0',
+                                    marginTop: '0.25rem'
+                                  }}>
+                                    {new Date(notif.created_at).toLocaleString('pt-BR')}
+                                  </div>
+                                </div>
+                                {!notif.lida && (
+                                  <span style={{
+                                    width: '8px',
+                                    height: '8px',
+                                    borderRadius: '50%',
+                                    background: '#667eea',
+                                    flexShrink: 0,
+                                    marginTop: '6px'
+                                  }} />
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 <Link 
                   to="/profile" 
                   style={{ 
