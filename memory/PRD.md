@@ -115,6 +115,10 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 - [09/01/2026] ✅ **Esqueci Minha Senha (P1)**: Link na tela de login, página de recuperação de senha com envio de email via Resend.
 - [09/01/2026] ✅ **Edição de Perfil (P2)**: Página de perfil do usuário com edição de nome de exibição, alteração de senha, e logout. Nome exibido na navbar.
 - [09/01/2026] ✅ **Painel do Responsável (OwnerPanel)**: Corrigido e testado. Ao clicar no nome de um responsável no Dashboard, exibe corretamente todos os itens atribuídos a essa pessoa com colunas detalhadas (Marca/Modelo, Preço formatado em R$, Lote, Status) e filtros por status.
+- [09/01/2026] ✅ **Preço de Venda no Modo de Edição**: Agora o preço de venda, valor total e imposto (11%) aparecem em modo somente leitura durante a edição de itens.
+- [09/01/2026] ✅ **Correção do Cálculo de Frete e Imposto**: Frete agora é tratado como valor total da compra (não por unidade). Imposto calculado automaticamente como 11% do valor total de venda.
+- [09/01/2026] ✅ **Pesquisa e Filtro de OCs**: Dashboard agora tem campo de pesquisa por número de OC e filtros por data (inicial/final).
+- [09/01/2026] ✅ **Edição Completa de OC (Admin)**: Nova página `/edit-po/:id` permite admin editar qualquer campo de item: descrição, quantidade, unidade, responsável, lote, marca/modelo, preço de venda e status.
 
 ## Próximas Tarefas (Backlog)
 
