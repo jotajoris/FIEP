@@ -263,7 +263,7 @@ const ItemsByStatus = () => {
 
                 {editingItem === `${item.po_id}-${item.codigo_item}` ? (
                   <div style={{ marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: '8px' }}>
-                    {/* Status */}
+                    {/* Status e Preço de Venda */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
                       <div className="form-group">
                         <label className="form-label">Status</label>
@@ -280,19 +280,41 @@ const ItemsByStatus = () => {
                         </select>
                       </div>
                       
+                      {/* Preço de Venda - Editável para admin, somente leitura para usuário */}
+                      {isAdmin() ? (
+                        <div className="form-group">
+                          <label className="form-label">Preço Venda Unit. (R$)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            className="form-input"
+                            value={formData.preco_venda}
+                            onChange={(e) => setFormData({ ...formData, preco_venda: e.target.value })}
+                            data-testid={`input-preco-venda-${item.codigo_item}`}
+                          />
+                        </div>
+                      ) : (
+                        item.preco_venda && (
+                          <div className="form-group">
+                            <label className="form-label">Preço Venda Unit.</label>
+                            <div 
+                              style={{ 
+                                padding: '0.75rem', 
+                                background: '#f0f4f8', 
+                                borderRadius: '8px', 
+                                fontWeight: '600',
+                                color: '#3b82f6'
+                              }}
+                              data-testid={`display-preco-venda-${item.codigo_item}`}
+                            >
+                              {formatBRL(item.preco_venda)}
+                            </div>
+                          </div>
+                        )
+                      )}
+                      
                       {isAdmin() && (
                         <>
-                          <div className="form-group">
-                            <label className="form-label">Preço Venda Unit. (R$)</label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              className="form-input"
-                              value={formData.preco_venda}
-                              onChange={(e) => setFormData({ ...formData, preco_venda: e.target.value })}
-                              data-testid={`input-preco-venda-${item.codigo_item}`}
-                            />
-                          </div>
                           <div className="form-group">
                             <label className="form-label">Imposto (R$)</label>
                             <input
