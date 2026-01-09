@@ -155,6 +155,7 @@ const AllItemsSummary = () => {
               <option value="pendente">Pendente</option>
               <option value="cotado">Cotado</option>
               <option value="comprado">Comprado</option>
+              <option value="em_transito">Em Trânsito</option>
               <option value="entregue">Entregue</option>
             </select>
           </div>
