@@ -1467,6 +1467,7 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     items_pendentes = sum(1 for item in all_items if item['status'] == ItemStatus.PENDENTE)
     items_cotados = sum(1 for item in all_items if item['status'] == ItemStatus.COTADO)
     items_comprados = sum(1 for item in all_items if item['status'] == ItemStatus.COMPRADO)
+    items_em_separacao = sum(1 for item in all_items if item['status'] == ItemStatus.EM_SEPARACAO)
     items_em_transito = sum(1 for item in all_items if item['status'] == ItemStatus.EM_TRANSITO)
     items_entregues = sum(1 for item in all_items if item['status'] == ItemStatus.ENTREGUE)
     
