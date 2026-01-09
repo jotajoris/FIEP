@@ -811,7 +811,7 @@ const ItemsByStatus = () => {
                                 📋
                               </button>
                             </div>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                               <button
                                 onClick={() => atualizarRastreio(item)}
                                 className="btn btn-secondary"
@@ -828,6 +828,21 @@ const ItemsByStatus = () => {
                               >
                                 {expandedRastreio[`${item.po_id}-${item.codigo_item}`] ? '▲ Ocultar' : '▼ Ver Histórico'}
                               </button>
+                              {isAdmin() && status === 'em_transito' && (
+                                <button
+                                  onClick={() => marcarComoEntregue(item)}
+                                  className="btn"
+                                  style={{ 
+                                    padding: '0.4rem 0.8rem', 
+                                    fontSize: '0.8rem',
+                                    background: '#22c55e',
+                                    color: 'white'
+                                  }}
+                                  data-testid={`btn-marcar-entregue-${item.codigo_item}`}
+                                >
+                                  ✓ Marcar Entregue
+                                </button>
+                              )}
                             </div>
                           </div>
                           
