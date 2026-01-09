@@ -9,6 +9,8 @@ const Dashboard = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [seeded, setSeeded] = useState(false);
+  const [selectedOrders, setSelectedOrders] = useState(new Set());
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -22,6 +24,7 @@ const Dashboard = () => {
       ]);
       setStats(statsRes.data);
       setOrders(ordersRes.data);
+      setSelectedOrders(new Set()); // Limpar seleção ao recarregar
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     } finally {
@@ -40,6 +43,61 @@ const Dashboard = () => {
     }
   };
 
+  // Calcular valor total de uma OC
+  const calcularValorTotalOC = (order) => {
+    return order.items.reduce((total, item) => {
+      const precoVenda = item.preco_venda || 0;
+      const quantidade = item.quantidade || 0;
+      return total + (precoVenda * quantidade);
+    }, 0);
+  };
+
+  // Toggle seleção de uma OC
+  const toggleSelectOrder = (orderId) => {
+    const newSelected = new Set(selectedOrders);
+    if (newSelected.has(orderId)) {
+      newSelected.delete(orderId);
+    } else {
+      newSelected.add(orderId);
+    }
+    setSelectedOrders(newSelected);
+  };
+
+  // Selecionar/deselecionar todas
+  const toggleSelectAll = () => {
+    if (selectedOrders.size === orders.length) {
+      setSelectedOrders(new Set());
+    } else {
+      setSelectedOrders(new Set(orders.map(o => o.id)));
+    }
+  };
+
+  // Deletar OCs selecionadas
+  const handleDeleteSelected = async () => {
+    if (selectedOrders.size === 0) return;
+    
+    const count = selectedOrders.size;
+    if (!window.confirm(`Tem certeza que deseja deletar ${count} OC(s) selecionada(s)?`)) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const deletePromises = Array.from(selectedOrders).map(orderId => 
+        apiDelete(`${API}/purchase-orders/${orderId}`)
+      );
+      await Promise.all(deletePromises);
+      alert(`${count} OC(s) deletada(s) com sucesso!`);
+      loadData();
+    } catch (error) {
+      console.error('Erro ao deletar OCs:', error);
+      alert('Erro ao deletar algumas OCs. Recarregue a página.');
+      loadData();
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const handleDeleteOrder = async (orderId, numeroOC) => {
     if (!window.confirm(`Tem certeza que deseja deletar a OC ${numeroOC}?`)) {
       return;
@@ -48,11 +106,19 @@ const Dashboard = () => {
     try {
       await apiDelete(`${API}/purchase-orders/${orderId}`);
       alert('OC deletada com sucesso!');
-      loadData(); // Recarregar dados
+      loadData();
     } catch (error) {
       console.error('Erro ao deletar OC:', error);
       alert('Erro ao deletar OC');
     }
+  };
+
+  // Formatar valor em BRL
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
   };
 
   if (loading) {
