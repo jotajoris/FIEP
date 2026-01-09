@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { apiGet, apiPatch, apiPost, API, formatBRL } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { v4 as uuidv4 } from 'uuid';
+import { normalizeText } from '../utils/textUtils';
 
 const ItemsByStatus = () => {
   const { status } = useParams();
