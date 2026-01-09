@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Dashboard from './pages/Dashboard';
 import CreatePO from './pages/CreatePO';
 import PODetails from './pages/PODetails';
+import EditPO from './pages/EditPO';
 import AdminPanel from './pages/AdminPanel';
 import AllItemsSummary from './pages/AllItemsSummary';
 import ItemsByStatus from './pages/ItemsByStatus';
