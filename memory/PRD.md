@@ -119,6 +119,13 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 - [09/01/2026] ✅ **Correção do Cálculo de Frete e Imposto**: Frete agora é tratado como valor total da compra (não por unidade). Imposto calculado automaticamente como 11% do valor total de venda.
 - [09/01/2026] ✅ **Pesquisa e Filtro de OCs**: Dashboard agora tem campo de pesquisa por número de OC e filtros por data (inicial/final).
 - [09/01/2026] ✅ **Edição Completa de OC (Admin)**: Nova página `/edit-po/:id` permite admin editar qualquer campo de item: descrição, quantidade, unidade, responsável, lote, marca/modelo, preço de venda e status.
+- [09/01/2026] ✅ **Rastreamento Correios**: Novo status "Em Trânsito" com campo para código de rastreio. Funcionalidades:
+  - Campo para inserir código de rastreio em itens "Comprados"
+  - Botão "🚚 Enviar" que salva código e move item para "Em Trânsito"
+  - Página "Em Trânsito" com código clicável para copiar
+  - Histórico de rastreio expandível com eventos dos Correios
+  - Botão "🔄 Atualizar" para buscar novas informações
+  - Atualização automática para "Entregue" quando rastreio indica entrega
 
 ## Próximas Tarefas (Backlog)
 
