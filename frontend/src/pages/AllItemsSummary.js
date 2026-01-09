@@ -62,9 +62,9 @@ const AllItemsSummary = () => {
     return sum + (valorVenda * 0.11);
   }, 0);
   
-  // Lucro realizado (soma do lucro dos itens em trânsito + entregues)
+  // Lucro realizado (soma do lucro dos itens em separação + em trânsito + entregues)
   const totalLucroRealizado = filteredItems
-    .filter(item => item.status === 'em_transito' || item.status === 'entregue')
+    .filter(item => item.status === 'em_separacao' || item.status === 'em_transito' || item.status === 'entregue')
     .reduce((sum, item) => sum + (item.lucro_liquido || 0), 0);
 
   if (loading) {
