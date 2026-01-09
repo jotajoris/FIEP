@@ -275,7 +275,8 @@ const EditPO = () => {
                         type="text"
                         className="form-input"
                         value={editForm.lote}
-                        onChange={(e) => setEditForm({ ...editForm, lote: e.target.value })}
+                        onChange={(e) => setEditForm({ ...editForm, lote: normalizeText(e.target.value) })}
+                        style={{ textTransform: 'uppercase' }}
                         data-testid="edit-lote"
                       />
                     </div>
@@ -287,7 +288,8 @@ const EditPO = () => {
                         type="text"
                         className="form-input"
                         value={editForm.marca_modelo}
-                        onChange={(e) => setEditForm({ ...editForm, marca_modelo: e.target.value })}
+                        onChange={(e) => setEditForm({ ...editForm, marca_modelo: normalizeText(e.target.value) })}
+                        style={{ textTransform: 'uppercase' }}
                         data-testid="edit-marca-modelo"
                       />
                     </div>
