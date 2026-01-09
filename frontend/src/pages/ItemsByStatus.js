@@ -37,6 +37,8 @@ const ItemsByStatus = () => {
   }, [status]);
 
   const loadItems = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const response = await apiGet(`${API}/purchase-orders`);
       
@@ -56,6 +58,7 @@ const ItemsByStatus = () => {
       setItems(allItems);
     } catch (error) {
       console.error('Erro ao carregar itens:', error);
+      setError('Erro ao carregar itens. Clique para tentar novamente.');
     } finally {
       setLoading(false);
     }
