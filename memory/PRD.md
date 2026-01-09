@@ -145,6 +145,9 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
   - Pesquisa por código do item
   - Pesquisa por responsável
   - Filtros por data inicial e final
+- [09/01/2026] ✅ **Inputs em Maiúsculas sem Acentos**: Todos os campos de texto são automaticamente convertidos para MAIÚSCULAS e acentos são removidos
+- [09/01/2026] ✅ **Normalização de Fornecedores**: Endpoint criado para unificar fornecedores duplicados (ex: "mercado livre" e "MERCADO LIVRE" → "MERCADO LIVRE")
+- [09/01/2026] ✅ **Correção Bug Edição Dupla (EditPO)**: Corrigido bug onde clicar para editar um item abria todos os itens com mesmo código. Agora usa índice ao invés de codigo_item como chave
 
 ## Próximas Tarefas (Backlog)
 
