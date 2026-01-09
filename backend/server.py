@@ -308,9 +308,21 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                                         # Verificar se próxima linha é unidade
                                         if j+1 < len(lines):
                                             unit_line = lines[j+1].strip().upper()
-                                            if unit_line in ['UN', 'UND', 'UNID', 'KG', 'PC', 'M', 'L', 'CX', 'PAR', 'PCT', 'KIT']:
+                                            # Lista expandida de unidades aceitas
+                                            valid_units = ['UN', 'UND', 'UNID', 'KG', 'PC', 'PÇA', 'PÇ', 'PCA', 'M', 'L', 'CX', 'PAR', 'PCT', 'KIT', 'JG', 'JOGO', 'RL', 'ROLO', 'MT', 'METRO']
+                                            if unit_line in valid_units:
                                                 quantidade = qty
-                                                unidade = 'UN' if unit_line in ['UND', 'UNID'] else unit_line
+                                                # Normalizar unidades
+                                                if unit_line in ['UND', 'UNID', 'PÇA', 'PÇ', 'PCA', 'PC']:
+                                                    unidade = 'UN'
+                                                elif unit_line in ['MT', 'METRO']:
+                                                    unidade = 'M'
+                                                elif unit_line in ['JOGO']:
+                                                    unidade = 'JG'
+                                                elif unit_line in ['ROLO']:
+                                                    unidade = 'RL'
+                                                else:
+                                                    unidade = unit_line
                                                 
                                                 # EXTRAIR PREÇO: Após a unidade vem o preço unitário (formato: 518,95)
                                                 # Estrutura: QTD -> UN -> PREÇO_UNITARIO -> TOTAL
