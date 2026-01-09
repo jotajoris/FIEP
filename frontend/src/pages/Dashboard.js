@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { apiGet, apiPost, apiDelete, API } from '../utils/api';
+import { apiGet, apiPost, apiDelete, API, formatBRL } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 
 const Dashboard = () => {
