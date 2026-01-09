@@ -373,7 +373,7 @@ const EditPO = () => {
                       <p style={{ color: '#4a5568', marginBottom: '0.5rem' }}>{item.descricao}</p>
                     </div>
                     <button
-                      onClick={() => startEditItem(item)}
+                      onClick={() => startEditItem(item, index)}
                       className="btn"
                       style={{ 
                         background: '#f59e0b', 
@@ -381,7 +381,7 @@ const EditPO = () => {
                         padding: '0.5rem 1rem',
                         fontSize: '0.85rem'
                       }}
-                      data-testid={`start-edit-${item.codigo_item}`}
+                      data-testid={`start-edit-${index}`}
                     >
                       ✏️ Editar
                     </button>
