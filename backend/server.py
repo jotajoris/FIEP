@@ -80,6 +80,7 @@ class ItemStatus(str, Enum):
     PENDENTE = "pendente"
     COTADO = "cotado"
     COMPRADO = "comprado"
+    EM_SEPARACAO = "em_separacao"
     EM_TRANSITO = "em_transito"
     ENTREGUE = "entregue"
 
