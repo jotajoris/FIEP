@@ -23,3 +23,14 @@ export const apiPatch = (url, data) => {
 export const apiDelete = (url) => {
   return axios.delete(url, { headers: getAuthHeaders() });
 };
+
+// Formatar valor monetário no padrão brasileiro: R$ 1.234,56
+export const formatBRL = (value) => {
+  if (value === null || value === undefined || isNaN(value)) return 'R$ 0,00';
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value);
+};
