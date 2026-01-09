@@ -717,10 +717,168 @@ const ItemsByStatus = () => {
                           </span>
                         )}
                       </div>
+                      
+                      {/* Seção de Rastreio para itens Comprados */}
+                      {status === 'comprado' && isAdmin() && !item.codigo_rastreio && (
+                        <div style={{ 
+                          marginTop: '1rem', 
+                          padding: '1rem', 
+                          background: '#f0fdf4', 
+                          borderRadius: '8px',
+                          border: '1px solid #86efac'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                            <label style={{ fontWeight: '600', color: '#166534', fontSize: '0.9rem' }}>
+                              📦 Código de Rastreio:
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Ex: AA123456789BR"
+                              value={codigoRastreio}
+                              onChange={(e) => setCodigoRastreio(e.target.value.toUpperCase())}
+                              className="form-input"
+                              style={{ 
+                                flex: 1, 
+                                minWidth: '180px', 
+                                padding: '0.5rem',
+                                textTransform: 'uppercase'
+                              }}
+                              data-testid={`input-rastreio-${item.codigo_item}`}
+                            />
+                            <button
+                              onClick={() => salvarCodigoRastreio(item)}
+                              disabled={salvandoRastreio === `${item.po_id}-${item.codigo_item}`}
+                              className="btn btn-primary"
+                              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                              data-testid={`btn-salvar-rastreio-${item.codigo_item}`}
+                            >
+                              {salvandoRastreio === `${item.po_id}-${item.codigo_item}` ? 'Salvando...' : '🚚 Enviar'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Exibir Rastreio para itens Em Trânsito */}
+                      {(status === 'em_transito' || item.codigo_rastreio) && item.codigo_rastreio && (
+                        <div style={{ 
+                          marginTop: '1rem', 
+                          padding: '1rem', 
+                          background: '#f5f3ff', 
+                          borderRadius: '8px',
+                          border: '1px solid #c4b5fd'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                              <span style={{ fontWeight: '600', color: '#5b21b6', fontSize: '0.9rem' }}>
+                                📦 Rastreio:
+                              </span>
+                              <code style={{ 
+                                background: '#ede9fe', 
+                                padding: '0.25rem 0.75rem', 
+                                borderRadius: '4px',
+                                fontWeight: '700',
+                                color: '#6d28d9',
+                                fontSize: '0.95rem'
+                              }}>
+                                {item.codigo_rastreio}
+                              </code>
+                              <button
+                                onClick={() => copiarCodigo(item.codigo_rastreio)}
+                                style={{ 
+                                  background: 'none', 
+                                  border: 'none', 
+                                  cursor: 'pointer',
+                                  fontSize: '1rem'
+                                }}
+                                title="Copiar código"
+                                data-testid={`btn-copiar-${item.codigo_item}`}
+                              >
+                                📋
+                              </button>
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <button
+                                onClick={() => atualizarRastreio(item)}
+                                className="btn btn-secondary"
+                                style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                                data-testid={`btn-atualizar-rastreio-${item.codigo_item}`}
+                              >
+                                🔄 Atualizar
+                              </button>
+                              <button
+                                onClick={() => toggleRastreio(`${item.po_id}-${item.codigo_item}`)}
+                                className="btn btn-secondary"
+                                style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                                data-testid={`btn-toggle-rastreio-${item.codigo_item}`}
+                              >
+                                {expandedRastreio[`${item.po_id}-${item.codigo_item}`] ? '▲ Ocultar' : '▼ Ver Histórico'}
+                              </button>
+                            </div>
+                          </div>
+                          
+                          {item.data_envio && (
+                            <div style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+                              <strong>Enviado em:</strong> {new Date(item.data_envio).toLocaleString('pt-BR')}
+                            </div>
+                          )}
+                          
+                          {/* Histórico de Rastreio Expandível */}
+                          {expandedRastreio[`${item.po_id}-${item.codigo_item}`] && (
+                            <div style={{ 
+                              marginTop: '0.75rem', 
+                              padding: '0.75rem', 
+                              background: 'white', 
+                              borderRadius: '6px',
+                              maxHeight: '300px',
+                              overflowY: 'auto'
+                            }}>
+                              {item.rastreio_eventos && item.rastreio_eventos.length > 0 ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                  {item.rastreio_eventos.map((evento, idx) => (
+                                    <div 
+                                      key={idx} 
+                                      style={{ 
+                                        padding: '0.75rem', 
+                                        background: idx === 0 ? '#f0fdf4' : '#f9fafb',
+                                        borderRadius: '4px',
+                                        borderLeft: idx === 0 ? '3px solid #22c55e' : '3px solid #d1d5db'
+                                      }}
+                                    >
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                                        <strong style={{ color: idx === 0 ? '#166534' : '#374151', fontSize: '0.85rem' }}>
+                                          {evento.status}
+                                        </strong>
+                                        <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                                          {evento.data} {evento.hora}
+                                        </span>
+                                      </div>
+                                      <div style={{ fontSize: '0.8rem', color: '#4b5563' }}>
+                                        📍 {evento.local}
+                                      </div>
+                                      {evento.subStatus && evento.subStatus.length > 0 && (
+                                        <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                                          {evento.subStatus.join(' • ')}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div style={{ textAlign: 'center', color: '#6b7280', padding: '1rem' }}>
+                                  Nenhum evento de rastreio disponível ainda.
+                                  <br />
+                                  <small>Clique em "Atualizar" para buscar informações.</small>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <button 
                         onClick={() => startEdit(item)} 
                         className="btn btn-secondary" 
-                        style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} 
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', marginTop: '1rem' }} 
                         data-testid={`edit-item-${item.codigo_item}`}
                       >
                         Editar
