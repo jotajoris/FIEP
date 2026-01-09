@@ -1819,6 +1819,65 @@ async def atualizar_rastreio(
     
     return {"message": "Rastreio atualizado com sucesso"}
 
+@api_router.post("/purchase-orders/{po_id}/items/{codigo_item}/marcar-entregue")
+async def marcar_item_entregue(
+    po_id: str,
+    codigo_item: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Marcar um item como entregue manualmente"""
+    if current_user['role'] != 'admin':
+        raise HTTPException(status_code=403, detail="Apenas administradores podem marcar como entregue")
+    
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not po:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    item_found = False
+    for item in po['items']:
+        if item['codigo_item'] == codigo_item:
+            now = datetime.now(timezone.utc)
+            item['status'] = ItemStatus.ENTREGUE.value
+            item['data_entrega'] = now.isoformat()
+            
+            # Adicionar evento de entrega manual ao histórico
+            if 'rastreio_eventos' not in item or not item['rastreio_eventos']:
+                item['rastreio_eventos'] = []
+            
+            item['rastreio_eventos'].insert(0, {
+                "data": now.strftime("%d/%m/%Y"),
+                "hora": now.strftime("%H:%M"),
+                "local": "Marcado manualmente",
+                "status": "Objeto entregue ao destinatário",
+                "subStatus": ["Entrega confirmada pelo sistema"]
+            })
+            
+            # Criar notificação
+            notificacao = {
+                "id": str(uuid.uuid4()),
+                "tipo": "entrega",
+                "titulo": "Item Entregue",
+                "numero_oc": po.get('numero_oc', ''),
+                "codigo_item": codigo_item,
+                "descricao_item": item.get('descricao', '')[:30] + ('...' if len(item.get('descricao', '')) > 30 else ''),
+                "lida": False,
+                "created_at": now.isoformat()
+            }
+            await db.notificacoes.insert_one(notificacao)
+            
+            item_found = True
+            break
+    
+    if not item_found:
+        raise HTTPException(status_code=404, detail="Item não encontrado")
+    
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    return {"message": "Item marcado como entregue com sucesso"}
+
 # ================== NOTIFICAÇÕES ==================
 
 @api_router.get("/notificacoes")
