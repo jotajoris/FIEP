@@ -212,11 +212,29 @@ const Dashboard = () => {
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}>Ordens de Compra</h2>
-          {isAdmin() && (
-            <Link to="/create-po" className="btn btn-primary" data-testid="create-po-btn">
-              + Nova OC
-            </Link>
-          )}
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            {isAdmin() && selectedOrders.size > 0 && (
+              <button 
+                onClick={handleDeleteSelected}
+                disabled={deleting}
+                className="btn"
+                style={{ 
+                  background: '#ef4444',
+                  color: 'white',
+                  padding: '0.5rem 1rem',
+                  fontSize: '0.9rem'
+                }}
+                data-testid="delete-selected-btn"
+              >
+                {deleting ? 'Deletando...' : `🗑️ Deletar ${selectedOrders.size} selecionada(s)`}
+              </button>
+            )}
+            {isAdmin() && (
+              <Link to="/create-po" className="btn btn-primary" data-testid="create-po-btn">
+                + Nova OC
+              </Link>
+            )}
+          </div>
         </div>
         
         {orders.length === 0 ? (
@@ -228,42 +246,88 @@ const Dashboard = () => {
             <table data-testid="orders-table">
               <thead>
                 <tr>
+                  {isAdmin() && (
+                    <th style={{ width: '40px', textAlign: 'center' }}>
+                      <input 
+                        type="checkbox"
+                        checked={selectedOrders.size === orders.length && orders.length > 0}
+                        onChange={toggleSelectAll}
+                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                        title="Selecionar todas"
+                        data-testid="select-all-checkbox"
+                      />
+                    </th>
+                  )}
                   <th>Número OC</th>
                   <th>Data Criação</th>
-                  <th>Total Itens</th>
+                  <th style={{ textAlign: 'center' }}>Qtd Itens</th>
+                  <th style={{ textAlign: 'right' }}>Valor Total</th>
                   <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {orders.map((order) => (
-                  <tr key={order.id} data-testid={`order-row-${order.numero_oc}`}>
-                    <td><strong>{order.numero_oc}</strong></td>
-                    <td>{new Date(order.created_at).toLocaleDateString('pt-BR')}</td>
-                    <td>{order.items.length}</td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <Link to={`/po/${order.id}`} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} data-testid={`view-po-${order.numero_oc}`}>
-                          Ver Detalhes
-                        </Link>
-                        {isAdmin() && (
-                          <button 
-                            onClick={() => handleDeleteOrder(order.id, order.numero_oc)}
-                            className="btn"
-                            style={{ 
-                              padding: '0.5rem 1rem', 
-                              fontSize: '0.85rem',
-                              background: '#ef4444',
-                              color: 'white'
-                            }}
-                            data-testid={`delete-po-${order.numero_oc}`}
-                          >
-                            Deletar
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {orders.map((order) => {
+                  const valorTotal = calcularValorTotalOC(order);
+                  return (
+                    <tr 
+                      key={order.id} 
+                      data-testid={`order-row-${order.numero_oc}`}
+                      style={{ 
+                        background: selectedOrders.has(order.id) ? '#e8f4fd' : 'transparent'
+                      }}
+                    >
+                      {isAdmin() && (
+                        <td style={{ textAlign: 'center' }}>
+                          <input 
+                            type="checkbox"
+                            checked={selectedOrders.has(order.id)}
+                            onChange={() => toggleSelectOrder(order.id)}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                            data-testid={`select-order-${order.numero_oc}`}
+                          />
+                        </td>
+                      )}
+                      <td><strong>{order.numero_oc}</strong></td>
+                      <td>{new Date(order.created_at).toLocaleDateString('pt-BR')}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span style={{ 
+                          background: '#e2e8f0', 
+                          padding: '0.25rem 0.75rem', 
+                          borderRadius: '12px',
+                          fontWeight: '600',
+                          fontSize: '0.9rem'
+                        }}>
+                          {order.items.length}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'right', fontWeight: '600', color: valorTotal > 0 ? '#059669' : '#718096' }}>
+                        {valorTotal > 0 ? formatCurrency(valorTotal) : '-'}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <Link to={`/po/${order.id}`} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} data-testid={`view-po-${order.numero_oc}`}>
+                            Ver Detalhes
+                          </Link>
+                          {isAdmin() && (
+                            <button 
+                              onClick={() => handleDeleteOrder(order.id, order.numero_oc)}
+                              className="btn"
+                              style={{ 
+                                padding: '0.5rem 1rem', 
+                                fontSize: '0.85rem',
+                                background: '#ef4444',
+                                color: 'white'
+                              }}
+                              data-testid={`delete-po-${order.numero_oc}`}
+                            >
+                              Deletar
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
