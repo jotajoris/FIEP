@@ -205,6 +205,11 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.form-input::placeholder {
+  text-transform: none;
 }
 
 .form-input:focus {
