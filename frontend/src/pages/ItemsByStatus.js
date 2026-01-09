@@ -743,7 +743,7 @@ const ItemsByStatus = () => {
                                 type="text"
                                 className="form-input"
                                 value={fonte.fornecedor}
-                                onChange={(e) => updateFonteCompra(idx, 'fornecedor', e.target.value)}
+                                onChange={(e) => updateFonteCompra(idx, 'fornecedor', normalizeText(e.target.value))}
                                 placeholder="Nome do fornecedor"
                                 style={{ padding: '0.5rem' }}
                               />
