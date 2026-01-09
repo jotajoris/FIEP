@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { apiGet, API } from '../utils/api';
+import { apiGet, API, formatBRL } from '../utils/api';
 
 const AllItemsSummary = () => {
   const [allItems, setAllItems] = useState([]);
