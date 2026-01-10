@@ -385,11 +385,12 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                                     key = f"{linha_num}-{codigo}"
                                     if key not in seen_items:
                                         seen_items.add(key)
-                                        descricao = ' '.join(descricao_parts[:6]) if descricao_parts else f"Item {codigo}"
+                                        # Pegar descrição completa (sem limite de partes)
+                                        descricao = ' '.join(descricao_parts) if descricao_parts else f"Item {codigo}"
                                         item_data = {
                                             "codigo_item": codigo,
                                             "quantidade": quantidade,
-                                            "descricao": descricao[:250],
+                                            "descricao": descricao,  # Descrição completa sem truncar
                                             "unidade": unidade,
                                             "endereco_entrega": endereco_entrega,
                                             "regiao": regiao
