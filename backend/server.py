@@ -2391,6 +2391,361 @@ async def verificar_rastreios_em_transito():
         # Aguardar 30 minutos antes da próxima verificação
         await asyncio.sleep(1800)
 
+# ============== FUNÇÕES DE NOTAS FISCAIS ==============
+
+def extract_ncm_from_xml(xml_content: str) -> Optional[str]:
+    """Extrair NCM de um XML de Nota Fiscal Eletrônica (NFe)"""
+    import xml.etree.ElementTree as ET
+    try:
+        # Remover BOM se existir
+        if xml_content.startswith('\ufeff'):
+            xml_content = xml_content[1:]
+        
+        root = ET.fromstring(xml_content)
+        
+        # Namespace padrão da NFe
+        namespaces = {
+            'nfe': 'http://www.portalfiscal.inf.br/nfe'
+        }
+        
+        # Tentar encontrar NCM com namespace
+        ncm_elements = root.findall('.//nfe:NCM', namespaces)
+        if ncm_elements:
+            return ncm_elements[0].text
+        
+        # Tentar sem namespace
+        ncm_elements = root.findall('.//NCM')
+        if ncm_elements:
+            return ncm_elements[0].text
+        
+        # Tentar padrão alternativo
+        for elem in root.iter():
+            if elem.tag.endswith('NCM') and elem.text:
+                return elem.text
+        
+        return None
+    except Exception as e:
+        logging.error(f"Erro ao extrair NCM do XML: {str(e)}")
+        return None
+
+def extract_ncm_from_pdf(pdf_bytes: bytes) -> Optional[str]:
+    """Tentar extrair NCM de um PDF de Nota Fiscal"""
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        full_text = ""
+        
+        for page in doc:
+            full_text += page.get_text()
+        
+        doc.close()
+        
+        # Padrões comuns de NCM em NFs
+        # NCM tem 8 dígitos no formato: XXXX.XX.XX ou XXXXXXXX
+        patterns = [
+            r'NCM[:\s]*(\d{4}[\.\s]?\d{2}[\.\s]?\d{2})',
+            r'NCM[:\s]*(\d{8})',
+            r'Classifica[çc][ãa]o Fiscal[:\s]*(\d{4}[\.\s]?\d{2}[\.\s]?\d{2})',
+            r'Classifica[çc][ãa]o Fiscal[:\s]*(\d{8})',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, full_text, re.IGNORECASE)
+            if match:
+                ncm = match.group(1)
+                # Remover pontos e espaços
+                ncm = re.sub(r'[\.\s]', '', ncm)
+                return ncm
+        
+        return None
+    except Exception as e:
+        logging.error(f"Erro ao extrair NCM do PDF: {str(e)}")
+        return None
+
+import base64
+
+class NFUploadRequest(BaseModel):
+    """Request para upload de nota fiscal"""
+    filename: str
+    content_type: str
+    file_data: str  # Base64
+    ncm_manual: Optional[str] = None
+    tipo: str  # "fornecedor" ou "revenda"
+
+class NFUpdateNCMRequest(BaseModel):
+    """Request para atualizar NCM manualmente"""
+    ncm: str
+
+class NFEmitidaRequest(BaseModel):
+    """Request para marcar NF como emitida/pronto para despacho"""
+    nf_emitida_pronto_despacho: bool
+
+@api_router.post("/purchase-orders/{po_id}/items/by-index/{item_index}/notas-fiscais")
+async def upload_nota_fiscal(
+    po_id: str,
+    item_index: int,
+    request: NFUploadRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload de nota fiscal para um item"""
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    if item_index < 0 or item_index >= len(po['items']):
+        raise HTTPException(status_code=404, detail="Índice de item inválido")
+    
+    item = po['items'][item_index]
+    
+    # Tentar extrair NCM
+    ncm = request.ncm_manual
+    if not ncm:
+        try:
+            file_bytes = base64.b64decode(request.file_data)
+            
+            if request.content_type == 'text/xml' or request.filename.endswith('.xml'):
+                xml_content = file_bytes.decode('utf-8')
+                ncm = extract_ncm_from_xml(xml_content)
+            elif request.content_type == 'application/pdf' or request.filename.endswith('.pdf'):
+                ncm = extract_ncm_from_pdf(file_bytes)
+        except Exception as e:
+            logging.error(f"Erro ao processar arquivo: {str(e)}")
+    
+    # Criar documento da NF
+    nf_doc = {
+        "id": str(uuid.uuid4()),
+        "filename": request.filename,
+        "content_type": request.content_type,
+        "file_data": request.file_data,
+        "ncm": ncm,
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "uploaded_by": current_user.get('sub')
+    }
+    
+    if request.tipo == "fornecedor":
+        # Adicionar às NFs de fornecedor (múltiplas)
+        if 'notas_fiscais_fornecedor' not in item:
+            item['notas_fiscais_fornecedor'] = []
+        item['notas_fiscais_fornecedor'].append(nf_doc)
+    elif request.tipo == "revenda":
+        # Substituir NF de revenda (única)
+        item['nota_fiscal_revenda'] = nf_doc
+    else:
+        raise HTTPException(status_code=400, detail="Tipo deve ser 'fornecedor' ou 'revenda'")
+    
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    return {
+        "success": True,
+        "message": "Nota fiscal adicionada com sucesso",
+        "nf_id": nf_doc["id"],
+        "ncm": ncm or "NCM NAO ENCONTRADO"
+    }
+
+@api_router.get("/purchase-orders/{po_id}/items/by-index/{item_index}/notas-fiscais/{nf_id}/download")
+async def download_nota_fiscal(
+    po_id: str,
+    item_index: int,
+    nf_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Download de uma nota fiscal específica"""
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    if item_index < 0 or item_index >= len(po['items']):
+        raise HTTPException(status_code=404, detail="Índice de item inválido")
+    
+    item = po['items'][item_index]
+    
+    # Procurar NF de fornecedor
+    for nf in item.get('notas_fiscais_fornecedor', []):
+        if nf['id'] == nf_id:
+            return {
+                "filename": nf['filename'],
+                "content_type": nf['content_type'],
+                "file_data": nf['file_data']
+            }
+    
+    # Procurar NF de revenda
+    nf_revenda = item.get('nota_fiscal_revenda')
+    if nf_revenda and nf_revenda['id'] == nf_id:
+        return {
+            "filename": nf_revenda['filename'],
+            "content_type": nf_revenda['content_type'],
+            "file_data": nf_revenda['file_data']
+        }
+    
+    raise HTTPException(status_code=404, detail="Nota fiscal não encontrada")
+
+@api_router.delete("/purchase-orders/{po_id}/items/by-index/{item_index}/notas-fiscais/{nf_id}")
+async def delete_nota_fiscal(
+    po_id: str,
+    item_index: int,
+    nf_id: str,
+    tipo: str,  # Query param: "fornecedor" ou "revenda"
+    current_user: dict = Depends(get_current_user)
+):
+    """Deletar uma nota fiscal específica"""
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    if item_index < 0 or item_index >= len(po['items']):
+        raise HTTPException(status_code=404, detail="Índice de item inválido")
+    
+    item = po['items'][item_index]
+    
+    if tipo == "fornecedor":
+        # Remover das NFs de fornecedor
+        if 'notas_fiscais_fornecedor' in item:
+            item['notas_fiscais_fornecedor'] = [
+                nf for nf in item['notas_fiscais_fornecedor'] if nf['id'] != nf_id
+            ]
+    elif tipo == "revenda":
+        # Remover NF de revenda
+        if item.get('nota_fiscal_revenda') and item['nota_fiscal_revenda']['id'] == nf_id:
+            item['nota_fiscal_revenda'] = None
+    else:
+        raise HTTPException(status_code=400, detail="Tipo deve ser 'fornecedor' ou 'revenda'")
+    
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    return {"success": True, "message": "Nota fiscal removida com sucesso"}
+
+@api_router.patch("/purchase-orders/{po_id}/items/by-index/{item_index}/notas-fiscais/{nf_id}/ncm")
+async def update_nf_ncm(
+    po_id: str,
+    item_index: int,
+    nf_id: str,
+    request: NFUpdateNCMRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Atualizar NCM de uma nota fiscal manualmente"""
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    if item_index < 0 or item_index >= len(po['items']):
+        raise HTTPException(status_code=404, detail="Índice de item inválido")
+    
+    item = po['items'][item_index]
+    updated = False
+    
+    # Procurar e atualizar NF de fornecedor
+    for nf in item.get('notas_fiscais_fornecedor', []):
+        if nf['id'] == nf_id:
+            nf['ncm'] = request.ncm.upper()
+            updated = True
+            break
+    
+    # Procurar e atualizar NF de revenda
+    nf_revenda = item.get('nota_fiscal_revenda')
+    if not updated and nf_revenda and nf_revenda['id'] == nf_id:
+        nf_revenda['ncm'] = request.ncm.upper()
+        updated = True
+    
+    if not updated:
+        raise HTTPException(status_code=404, detail="Nota fiscal não encontrada")
+    
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    return {"success": True, "message": "NCM atualizado com sucesso"}
+
+@api_router.patch("/purchase-orders/{po_id}/items/by-index/{item_index}/nf-emitida")
+async def update_nf_emitida_status(
+    po_id: str,
+    item_index: int,
+    request: NFEmitidaRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Atualizar status de NF emitida/pronto para despacho"""
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    if item_index < 0 or item_index >= len(po['items']):
+        raise HTTPException(status_code=404, detail="Índice de item inválido")
+    
+    item = po['items'][item_index]
+    item['nf_emitida_pronto_despacho'] = request.nf_emitida_pronto_despacho
+    
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    return {"success": True, "message": "Status atualizado com sucesso"}
+
+@api_router.patch("/purchase-orders/{po_id}/items/by-index/{item_index}/endereco-entrega")
+async def update_endereco_entrega(
+    po_id: str,
+    item_index: int,
+    endereco: str = "",
+    current_user: dict = Depends(get_current_user)
+):
+    """Atualizar endereço de entrega de um item manualmente"""
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    if item_index < 0 or item_index >= len(po['items']):
+        raise HTTPException(status_code=404, detail="Índice de item inválido")
+    
+    item = po['items'][item_index]
+    item['endereco_entrega'] = endereco.upper()
+    
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    return {"success": True, "message": "Endereço atualizado com sucesso"}
+
+class EnderecoRequest(BaseModel):
+    endereco: str
+
+@api_router.patch("/purchase-orders/{po_id}/items/by-index/{item_index}/endereco")
+async def update_endereco_entrega_v2(
+    po_id: str,
+    item_index: int,
+    request: EnderecoRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Atualizar endereço de entrega de um item manualmente (v2 com body)"""
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    if item_index < 0 or item_index >= len(po['items']):
+        raise HTTPException(status_code=404, detail="Índice de item inválido")
+    
+    item = po['items'][item_index]
+    item['endereco_entrega'] = request.endereco.upper()
+    
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    return {"success": True, "message": "Endereço atualizado com sucesso"}
+
 @app.on_event("startup")
 async def startup_event():
     """Iniciar job de verificação de rastreios ao iniciar o servidor"""
