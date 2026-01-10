@@ -2954,6 +2954,7 @@ async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
                     'filename': nf.get('filename'),
                     'content_type': nf.get('content_type'),
                     'ncm': nf.get('ncm'),
+                    'numero_nf': nf.get('numero_nf'),  # Número da NF
                     'uploaded_at': nf.get('uploaded_at'),
                     'numero_oc': po.get('numero_oc'),
                     'codigo_item': item.get('codigo_item'),
@@ -2970,6 +2971,7 @@ async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
                     'filename': nf_revenda.get('filename'),
                     'content_type': nf_revenda.get('content_type'),
                     'ncm': nf_revenda.get('ncm'),
+                    'numero_nf': nf_revenda.get('numero_nf'),  # Número da NF
                     'uploaded_at': nf_revenda.get('uploaded_at'),
                     'numero_oc': po.get('numero_oc'),
                     'codigo_item': item.get('codigo_item'),
