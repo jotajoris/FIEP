@@ -2938,6 +2938,23 @@ class ComissaoUpdate(BaseModel):
 async def get_comissoes(current_user: dict = Depends(require_admin)):
     """Obter dados de comissões por responsável (apenas usuários não-admin)"""
     
+    # Obter todos os usuários admin para excluí-los das comissões
+    usuarios_admin = await db.users.find({"role": "admin"}, {"_id": 0}).to_list(length=100)
+    
+    # Criar conjunto de nomes de admins normalizados para filtrar
+    def normalizar_nome(nome):
+        if not nome:
+            return ''
+        nome = nome.upper().strip()
+        nome = nome.replace('ONSOLUCOES', '').replace('.ONSOLUCOES', '')
+        nome = nome.replace('.', '').strip()
+        return nome
+    
+    nomes_admin = set()
+    for admin in usuarios_admin:
+        nome_admin = admin.get('display_name') or admin.get('owner_name') or admin.get('email', '').split('@')[0]
+        nomes_admin.add(normalizar_nome(nome_admin))
+    
     # Obter todos os usuários não-admin
     usuarios = await db.users.find({"role": {"$ne": "admin"}}, {"_id": 0}).to_list(length=100)
     
@@ -2948,23 +2965,15 @@ async def get_comissoes(current_user: dict = Depends(require_admin)):
     # Obter todas as OCs para calcular lucro
     pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(length=1000)
     
-    # Calcular lucro por responsável (apenas itens entregues)
+    # Calcular lucro por responsável (apenas itens entregues, excluindo admins)
     lucro_por_responsavel = {}
-    # Função para normalizar nome do responsável
-    def normalizar_nome(nome):
-        if not nome:
-            return ''
-        # Remover sufixos comuns de email e domínios
-        nome = nome.upper().strip()
-        nome = nome.replace('ONSOLUCOES', '').replace('.ONSOLUCOES', '')
-        nome = nome.replace('.', '').strip()
-        return nome
     
     for po in pos:
         for item in po.get('items', []):
             responsavel_raw = item.get('responsavel', '').upper().strip()
             responsavel = normalizar_nome(responsavel_raw)
-            if responsavel and item.get('status') == 'entregue':
+            # Excluir admins da lista de comissões
+            if responsavel and responsavel not in nomes_admin and item.get('status') == 'entregue':
                 lucro = item.get('lucro_liquido', 0) or 0
                 if responsavel not in lucro_por_responsavel:
                     lucro_por_responsavel[responsavel] = 0
@@ -2974,7 +2983,7 @@ async def get_comissoes(current_user: dict = Depends(require_admin)):
     resultado = []
     responsaveis_processados = set()
     
-    # Processar responsáveis que têm lucro nos itens
+    # Processar responsáveis que têm lucro nos itens (já filtrados, sem admins)
     for responsavel, lucro in lucro_por_responsavel.items():
         if responsavel and responsavel != 'NÃO ATRIBUÍDO' and responsavel not in responsaveis_processados:
             responsaveis_processados.add(responsavel)
@@ -2990,9 +2999,9 @@ async def get_comissoes(current_user: dict = Depends(require_admin)):
     
     # Adicionar usuários não-admin que não têm itens ainda (para poder definir % antecipadamente)
     for user in usuarios:
-        nome = user.get('display_name') or user.get('email', '').split('@')[0]
+        nome = user.get('display_name') or user.get('owner_name') or user.get('email', '').split('@')[0]
         nome_normalizado = normalizar_nome(nome)
-        if nome_normalizado and nome_normalizado not in responsaveis_processados:
+        if nome_normalizado and nome_normalizado not in responsaveis_processados and nome_normalizado not in nomes_admin:
             responsaveis_processados.add(nome_normalizado)
             comissao = comissoes_dict.get(nome_normalizado, {})
             resultado.append({
