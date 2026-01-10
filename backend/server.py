@@ -1173,18 +1173,31 @@ async def create_purchase_order(po_create: PurchaseOrderCreate, current_user: di
     processed_items = []
     items_not_found = []
     
+    # OTIMIZAÇÃO: Batch query - buscar todas as referências de uma vez
+    all_codigo_items = [item.codigo_item for item in po_create.items]
+    all_ref_items = await db.reference_items.find(
+        {"codigo_item": {"$in": all_codigo_items}},
+        {"_id": 0}
+    ).to_list(5000)
+    
+    # Criar lookup dictionary
+    ref_lookup = {}
+    for ref in all_ref_items:
+        codigo = ref["codigo_item"]
+        if codigo not in ref_lookup:
+            ref_lookup[codigo] = []
+        ref_lookup[codigo].append(ref)
+    
+    import random
+    
     for item in po_create.items:
-        # Buscar TODAS as ocorrências deste código (em todos os lotes)
-        ref_items = await db.reference_items.find(
-            {"codigo_item": item.codigo_item},
-            {"_id": 0}
-        ).to_list(100)
+        # Buscar do lookup
+        ref_items = ref_lookup.get(item.codigo_item, [])
         
         if ref_items:
             # Se existem múltiplas ocorrências (item em vários lotes)
             if len(ref_items) > 1:
                 # Pegar apenas responsáveis não-admin
-                import random
                 non_admin_items = [ri for ri in ref_items if ri['responsavel'] in ['Maria', 'Mylena', 'Fabio']]
                 
                 if non_admin_items:
