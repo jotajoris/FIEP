@@ -906,8 +906,8 @@ async def upload_pdf_purchase_order(file: UploadFile = File(...), current_user: 
             item["lote"] = selected_ref['lote']
             item["lot_number"] = selected_ref['lot_number']
             item["regiao"] = selected_ref['regiao']
-            if not item.get("descricao") or len(item["descricao"]) < 10:
-                item["descricao"] = selected_ref['descricao']
+            # SEMPRE usar a descrição do Excel (mais completa)
+            item["descricao"] = selected_ref['descricao']
             if not item.get("marca_modelo"):
                 item["marca_modelo"] = selected_ref.get('marca_modelo', '')
             
