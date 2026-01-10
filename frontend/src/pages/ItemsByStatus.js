@@ -556,12 +556,12 @@ const ItemsByStatus = () => {
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {displayItems.map((item, index) => (
+            {displayItems.map((item) => (
               <div 
-                key={`${item.po_id}-${item.codigo_item}-${index}`} 
+                key={item._uniqueId} 
                 className="card" 
                 style={{ background: '#f7fafc', border: '1px solid #e2e8f0' }} 
-                data-testid={`item-card-${item.codigo_item}`}
+                data-testid={`item-card-${item._uniqueId}`}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
                   <div style={{ flex: 1 }}>
