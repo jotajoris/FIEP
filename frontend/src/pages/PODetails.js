@@ -518,7 +518,7 @@ const PODetails = () => {
                       {isAdmin() && item.frete_envio && <span><strong>Frete Envio:</strong> {formatBRL(item.frete_envio)}</span>}
                       {isAdmin() && item.lucro_liquido !== undefined && item.lucro_liquido !== null && <span><strong>Lucro:</strong> <span style={{ color: item.lucro_liquido > 0 ? '#10b981' : '#ef4444', fontWeight: '700' }}>{formatBRL(item.lucro_liquido)}</span></span>}
                     </div>
-                    <button onClick={() => startEdit(item)} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} data-testid={`edit-item-${item.codigo_item}`}>
+                    <button onClick={() => startEdit(item, index)} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} data-testid={`edit-item-${index}`}>
                       Editar
                     </button>
                   </div>
