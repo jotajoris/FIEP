@@ -1087,7 +1087,7 @@ async def upload_multiple_pdfs(files: List[UploadFile] = File(...), current_user
             # Criar OC
             po = PurchaseOrder(
                 numero_oc=oc_data["numero_oc"],
-                endereco_entrega=oc_data.get("endereco_entrega", ""),
+                cnpj_requisitante=oc_data.get("cnpj_requisitante", ""),
                 items=processed_items,
                 created_by=current_user.get('sub')
             )
