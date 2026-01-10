@@ -1804,15 +1804,32 @@ async def fix_responsaveis(current_user: dict = Depends(require_admin)):
     pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(1000)
     total_fixed = 0
     
+    # OTIMIZAÇÃO: Coletar todos os codigos primeiro
+    all_codigos = set()
+    for po in pos:
+        for item in po['items']:
+            if not item.get('responsavel'):
+                all_codigos.add(item["codigo_item"])
+    
+    # Buscar todas as referências de uma vez
+    all_ref_items = await db.reference_items.find(
+        {"codigo_item": {"$in": list(all_codigos)}},
+        {"_id": 0}
+    ).to_list(10000)
+    
+    # Criar lookup
+    ref_lookup = {}
+    for ref in all_ref_items:
+        codigo = ref["codigo_item"]
+        if codigo not in ref_lookup:
+            ref_lookup[codigo] = []
+        ref_lookup[codigo].append(ref)
+    
     for po in pos:
         updated = False
         for item in po['items']:
             if not item.get('responsavel'):
-                # Buscar responsável do banco de referência
-                ref_items = await db.reference_items.find(
-                    {"codigo_item": item["codigo_item"]},
-                    {"_id": 0}
-                ).to_list(100)
+                ref_items = ref_lookup.get(item["codigo_item"], [])
                 
                 if ref_items:
                     # Preferir não-admins
@@ -1845,15 +1862,32 @@ async def fix_marca_modelo(current_user: dict = Depends(require_admin)):
     pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(1000)
     total_fixed = 0
     
+    # OTIMIZAÇÃO: Coletar todos os codigos primeiro
+    all_codigos = set()
+    for po in pos:
+        for item in po['items']:
+            if not item.get('marca_modelo'):
+                all_codigos.add(item["codigo_item"])
+    
+    # Buscar todas as referências de uma vez
+    all_ref_items = await db.reference_items.find(
+        {"codigo_item": {"$in": list(all_codigos)}},
+        {"_id": 0}
+    ).to_list(10000)
+    
+    # Criar lookup
+    ref_lookup = {}
+    for ref in all_ref_items:
+        codigo = ref["codigo_item"]
+        if codigo not in ref_lookup:
+            ref_lookup[codigo] = []
+        ref_lookup[codigo].append(ref)
+    
     for po in pos:
         updated = False
         for item in po['items']:
             if not item.get('marca_modelo'):
-                # Buscar marca_modelo do banco de referência
-                ref_items = await db.reference_items.find(
-                    {"codigo_item": item["codigo_item"]},
-                    {"_id": 0}
-                ).to_list(100)
+                ref_items = ref_lookup.get(item["codigo_item"], [])
                 
                 if ref_items:
                     # Procurar uma referência com marca_modelo preenchido
