@@ -442,10 +442,6 @@ const Dashboard = () => {
               </div>
             </div>
           )}
-                </button>
-              </div>
-            </div>
-          )}
         </>
       )}
 
