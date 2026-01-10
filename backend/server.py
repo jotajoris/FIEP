@@ -2415,7 +2415,7 @@ async def verificar_rastreios_em_transito():
 # ============== FUNÇÕES DE NOTAS FISCAIS ==============
 
 def extract_ncm_from_xml(xml_content: str) -> Optional[str]:
-    """Extrair NCM de um XML de Nota Fiscal Eletrônica (NFe)"""
+    """Extrair TODOS os NCMs de um XML de Nota Fiscal Eletrônica (NFe)"""
     import xml.etree.ElementTree as ET
     try:
         # Remover BOM se existir
@@ -2429,20 +2429,29 @@ def extract_ncm_from_xml(xml_content: str) -> Optional[str]:
             'nfe': 'http://www.portalfiscal.inf.br/nfe'
         }
         
+        ncm_list = set()  # Usar set para evitar duplicatas
+        
         # Tentar encontrar NCM com namespace
         ncm_elements = root.findall('.//nfe:NCM', namespaces)
-        if ncm_elements:
-            return ncm_elements[0].text
+        for elem in ncm_elements:
+            if elem.text:
+                ncm_list.add(elem.text.strip())
         
         # Tentar sem namespace
-        ncm_elements = root.findall('.//NCM')
-        if ncm_elements:
-            return ncm_elements[0].text
+        if not ncm_list:
+            ncm_elements = root.findall('.//NCM')
+            for elem in ncm_elements:
+                if elem.text:
+                    ncm_list.add(elem.text.strip())
         
         # Tentar padrão alternativo
-        for elem in root.iter():
-            if elem.tag.endswith('NCM') and elem.text:
-                return elem.text
+        if not ncm_list:
+            for elem in root.iter():
+                if elem.tag.endswith('NCM') and elem.text:
+                    ncm_list.add(elem.text.strip())
+        
+        if ncm_list:
+            return ', '.join(sorted(ncm_list))
         
         return None
     except Exception as e:
@@ -2450,7 +2459,7 @@ def extract_ncm_from_xml(xml_content: str) -> Optional[str]:
         return None
 
 def extract_ncm_from_pdf(pdf_bytes: bytes) -> Optional[str]:
-    """Tentar extrair NCM de um PDF de Nota Fiscal"""
+    """Tentar extrair TODOS os NCMs de um PDF de Nota Fiscal"""
     try:
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         full_text = ""
@@ -2460,6 +2469,8 @@ def extract_ncm_from_pdf(pdf_bytes: bytes) -> Optional[str]:
         
         doc.close()
         
+        ncm_list = set()  # Usar set para evitar duplicatas
+        
         # Padrões comuns de NCM em NFs
         # NCM tem 8 dígitos no formato: XXXX.XX.XX ou XXXXXXXX
         patterns = [
@@ -2467,7 +2478,24 @@ def extract_ncm_from_pdf(pdf_bytes: bytes) -> Optional[str]:
             r'NCM[:\s]*(\d{8})',
             r'Classifica[çc][ãa]o Fiscal[:\s]*(\d{4}[\.\s]?\d{2}[\.\s]?\d{2})',
             r'Classifica[çc][ãa]o Fiscal[:\s]*(\d{8})',
+            r'(\d{4}\.\d{2}\.\d{2})',  # Padrão com pontos
         ]
+        
+        for pattern in patterns:
+            matches = re.findall(pattern, full_text, re.IGNORECASE)
+            for match in matches:
+                # Remover pontos e espaços e normalizar
+                ncm = re.sub(r'[\.\s]', '', match)
+                if len(ncm) == 8 and ncm.isdigit():
+                    ncm_list.add(ncm)
+        
+        if ncm_list:
+            return ', '.join(sorted(ncm_list))
+        
+        return None
+    except Exception as e:
+        logging.error(f"Erro ao extrair NCM do PDF: {str(e)}")
+        return None
         
         for pattern in patterns:
             match = re.search(pattern, full_text, re.IGNORECASE)
