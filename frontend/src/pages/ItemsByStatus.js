@@ -152,6 +152,46 @@ const ItemsByStatus = () => {
     return items.filter(item => item.responsavel === user.owner_name).length;
   }, [items, user?.owner_name]);
 
+  // Agrupar itens por OC para a visualização "Em Separação"
+  const itemsGroupedByOC = useMemo(() => {
+    if (status !== 'em_separacao') return [];
+    
+    const grouped = {};
+    displayItems.forEach(item => {
+      const ocId = item.po_id;
+      if (!grouped[ocId]) {
+        grouped[ocId] = {
+          po_id: ocId,
+          numero_oc: item.numero_oc,
+          cnpj_requisitante: item.cnpj_requisitante,
+          items: []
+        };
+      }
+      grouped[ocId].items.push(item);
+    });
+    
+    // Converter para array e calcular estatísticas
+    return Object.values(grouped).map(oc => {
+      const totalItens = oc.items.length;
+      const itensComNFEmitida = oc.items.filter(i => i.nf_emitida_pronto_despacho).length;
+      const todosComNF = totalItens > 0 && itensComNFEmitida === totalItens;
+      
+      return {
+        ...oc,
+        totalItens,
+        itensComNFEmitida,
+        todosComNF,
+        prontoParaDespacho: todosComNF
+      };
+    }).sort((a, b) => {
+      // Ordenar: prontos para despacho primeiro, depois por número de itens
+      if (a.prontoParaDespacho !== b.prontoParaDespacho) {
+        return a.prontoParaDespacho ? -1 : 1;
+      }
+      return b.totalItens - a.totalItens;
+    });
+  }, [status, displayItems]);
+
   const startEdit = (item) => {
     // Usar ID único do item para evitar conflito
     setEditingItem(item._uniqueId);
