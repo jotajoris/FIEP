@@ -3007,6 +3007,17 @@ async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
 async def get_itens_responsavel(responsavel: str, current_user: dict = Depends(require_admin)):
     """Obter todos os itens entregues de um responsável para seleção de pagamento"""
     
+    # Função para normalizar nome do responsável
+    def normalizar_nome(nome):
+        if not nome:
+            return ''
+        nome = nome.upper().strip()
+        nome = nome.replace('ONSOLUCOES', '').replace('.ONSOLUCOES', '')
+        nome = nome.replace('.', '').strip()
+        return nome
+    
+    responsavel_normalizado = normalizar_nome(responsavel)
+    
     pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(length=1000)
     
     # Obter IDs de itens já pagos
@@ -3019,8 +3030,9 @@ async def get_itens_responsavel(responsavel: str, current_user: dict = Depends(r
     itens = []
     for po in pos:
         for idx, item in enumerate(po.get('items', [])):
-            resp = item.get('responsavel', '').upper().strip()
-            if resp == responsavel.upper() and item.get('status') == 'entregue':
+            resp_raw = item.get('responsavel', '').upper().strip()
+            resp = normalizar_nome(resp_raw)
+            if resp == responsavel_normalizado and item.get('status') == 'entregue':
                 item_id = f"{po.get('id')}_{idx}"
                 itens.append({
                     'id': item_id,
