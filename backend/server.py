@@ -1772,29 +1772,52 @@ async def export_backup(current_user: dict = Depends(require_admin)):
     """Exportar backup completo do sistema (ADMIN ONLY)"""
     from datetime import datetime
     
-    # Buscar todos os dados
+    # Buscar todos os dados COMPLETOS
     pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(10000)
-    users = await db.users.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)  # Excluir senhas
+    users = await db.users.find({}, {"_id": 0}).to_list(1000)  # Incluir tudo para restauração
     reference_items = await db.reference_items.find({}, {"_id": 0}).to_list(10000)
     notifications = await db.notifications.find({}, {"_id": 0}).to_list(10000)
     
-    # Calcular estatísticas
-    total_items = sum(len(po.get('items', [])) for po in pos)
+    # Calcular estatísticas detalhadas
+    total_items = 0
     status_counts = {}
+    items_com_cotacao = 0
+    items_com_link = 0
+    total_valor_venda = 0
+    
     for po in pos:
         for item in po.get('items', []):
+            total_items += 1
             status = item.get('status', 'pendente')
             status_counts[status] = status_counts.get(status, 0) + 1
+            
+            # Contar cotações
+            fontes = item.get('fontes_compra', [])
+            if fontes and len(fontes) > 0:
+                items_com_cotacao += 1
+                for f in fontes:
+                    if f.get('link'):
+                        items_com_link += 1
+            
+            # Somar valor de venda
+            preco_venda = item.get('preco_venda', 0) or 0
+            quantidade = item.get('quantidade', 0) or 0
+            total_valor_venda += preco_venda * quantidade
     
     backup = {
         "backup_info": {
             "data_export": datetime.now().isoformat(),
-            "versao": "1.0",
+            "versao": "2.0",
+            "sistema": "FIEP - Sistema de Gestão de OCs",
             "estatisticas": {
                 "total_ocs": len(pos),
                 "total_itens": total_items,
                 "total_usuarios": len(users),
                 "total_itens_referencia": len(reference_items),
+                "total_notificacoes": len(notifications),
+                "items_com_cotacao": items_com_cotacao,
+                "items_com_link": items_com_link,
+                "valor_total_venda": round(total_valor_venda, 2),
                 "status_itens": status_counts
             }
         },
@@ -1805,6 +1828,64 @@ async def export_backup(current_user: dict = Depends(require_admin)):
     }
     
     return backup
+
+@api_router.post("/backup/restore")
+async def restore_backup(current_user: dict = Depends(require_admin)):
+    """Restaurar backup do sistema - CUIDADO: substitui todos os dados! (ADMIN ONLY)"""
+    # Este endpoint espera o JSON do backup no body
+    # Será chamado via upload de arquivo no frontend
+    pass
+
+@api_router.post("/backup/restore-data")
+async def restore_backup_data(backup_data: dict, current_user: dict = Depends(require_admin)):
+    """Restaurar dados do backup (ADMIN ONLY) - SUBSTITUI TODOS OS DADOS!"""
+    from datetime import datetime
+    
+    try:
+        # Verificar se é um backup válido
+        if "backup_info" not in backup_data or "purchase_orders" not in backup_data:
+            raise HTTPException(status_code=400, detail="Arquivo de backup inválido")
+        
+        # Estatísticas antes
+        ocs_antes = await db.purchase_orders.count_documents({})
+        
+        # Restaurar Purchase Orders
+        if backup_data.get("purchase_orders"):
+            # Limpar coleção existente
+            await db.purchase_orders.delete_many({})
+            # Inserir dados do backup
+            if len(backup_data["purchase_orders"]) > 0:
+                await db.purchase_orders.insert_many(backup_data["purchase_orders"])
+        
+        # Restaurar Reference Items (se existir no backup)
+        if backup_data.get("reference_items") and len(backup_data["reference_items"]) > 0:
+            await db.reference_items.delete_many({})
+            await db.reference_items.insert_many(backup_data["reference_items"])
+        
+        # Restaurar Notifications (se existir no backup)
+        if backup_data.get("notifications") and len(backup_data["notifications"]) > 0:
+            await db.notifications.delete_many({})
+            await db.notifications.insert_many(backup_data["notifications"])
+        
+        # NÃO restaurar usuários automaticamente (segurança)
+        # Os usuários devem ser restaurados manualmente se necessário
+        
+        # Estatísticas depois
+        ocs_depois = await db.purchase_orders.count_documents({})
+        refs_depois = await db.reference_items.count_documents({})
+        
+        return {
+            "success": True,
+            "message": "Backup restaurado com sucesso!",
+            "detalhes": {
+                "data_backup": backup_data.get("backup_info", {}).get("data_export", "N/A"),
+                "ocs_antes": ocs_antes,
+                "ocs_restauradas": ocs_depois,
+                "itens_referencia": refs_depois
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao restaurar backup: {str(e)}")
 
 # ================== RASTREAMENTO CORREIOS ==================
 
