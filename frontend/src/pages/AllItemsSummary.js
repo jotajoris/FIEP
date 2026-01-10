@@ -89,6 +89,7 @@ const AllItemsSummary = () => {
   // Calcular total de comissões a pagar (baseado nos lotes, itens entregue/em_transito)
   const totalComissoes = filteredItems
     .filter(item => item.status === 'entregue' || item.status === 'em_transito')
+    .filter(item => !OCS_EXCLUIDAS_COMISSAO.includes(item.numero_oc)) // Excluir OCs do João
     .reduce((sum, item) => {
       const numeroLote = extrairNumeroLote(item.lote);
       if (!numeroLote) return sum;
