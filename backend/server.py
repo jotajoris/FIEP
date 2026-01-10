@@ -206,6 +206,7 @@ class PurchaseOrder(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     numero_oc: str
     cliente: str = "FIEP"
+    cnpj_requisitante: str = ""  # CNPJ do cliente/requisitante extraído do PDF
     items: List[POItem]
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     created_by: Optional[str] = None
