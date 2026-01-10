@@ -159,6 +159,16 @@ class Notificacao(BaseModel):
     lida: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class NotaFiscalDoc(BaseModel):
+    """Documento de Nota Fiscal (PDF ou XML)"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    filename: str
+    content_type: str  # application/pdf ou text/xml
+    file_data: str  # Base64 encoded
+    ncm: Optional[str] = None  # NCM extraído ou manual
+    uploaded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    uploaded_by: Optional[str] = None
+
 class POItem(BaseModel):
     codigo_item: str
     descricao: str = ""
@@ -185,6 +195,10 @@ class POItem(BaseModel):
     data_entrega: Optional[datetime] = None
     codigo_rastreio: Optional[str] = None  # Código de rastreio dos Correios
     rastreio_eventos: List[dict] = []  # Histórico de eventos do rastreio
+    # Campos para Notas Fiscais
+    notas_fiscais_fornecedor: List[NotaFiscalDoc] = []  # Múltiplas NFs de fornecedores
+    nota_fiscal_revenda: Optional[NotaFiscalDoc] = None  # NF de revenda (única)
+    nf_emitida_pronto_despacho: bool = False  # Checkbox de NF emitida/pronto para despacho
 
 class PurchaseOrder(BaseModel):
     model_config = ConfigDict(extra="ignore")
