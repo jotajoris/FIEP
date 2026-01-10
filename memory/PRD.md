@@ -148,6 +148,15 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 - [09/01/2026] ✅ **Inputs em Maiúsculas sem Acentos**: Todos os campos de texto são automaticamente convertidos para MAIÚSCULAS e acentos são removidos
 - [09/01/2026] ✅ **Normalização de Fornecedores**: Endpoint criado para unificar fornecedores duplicados (ex: "mercado livre" e "MERCADO LIVRE" → "MERCADO LIVRE")
 - [09/01/2026] ✅ **Correção Bug Edição Dupla (EditPO)**: Corrigido bug onde clicar para editar um item abria todos os itens com mesmo código. Agora usa índice ao invés de codigo_item como chave
+- [10/01/2026] ✅ **Gestão de Notas Fiscais na página "Em Separação"**: Nova funcionalidade completa para gerenciar NFs:
+  - 📍 **Endereço de Entrega**: Exibe endereço da OC com opção de editar manualmente
+  - 🏭 **NFs de Fornecedor (múltiplas)**: Upload de PDF ou XML com extração automática de NCM
+  - 🏢 **NF de Revenda (única)**: Upload separado para a NF que a empresa emite para revenda
+  - 📄 **Extração de NCM**: Automática do XML (usa namespace NFe) e tentativa em PDF via regex
+  - ✏️ **NCM Manual**: Campo para inserir NCM manualmente se não encontrado
+  - ⬇️ **Download**: Botão para baixar cada NF anexada
+  - 🗑️ **Remover**: Botão para excluir NFs
+  - ✅ **Checkbox "NF Emitida / Pronto para Despacho"**: Marca quando a NF de revenda foi emitida e o item está pronto para envio
 
 ## Próximas Tarefas (Backlog)
 
