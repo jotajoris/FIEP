@@ -2953,6 +2953,10 @@ async def get_comissoes(current_user: dict = Depends(require_admin)):
         'FABIO': [32,33,34,35,36,37,38,39,40,41,42],
     }
     
+    # OCs que foram cotadas por ADMIN (João/Mateus) e não devem gerar comissão
+    # mesmo que o lote esteja na lista de alguém
+    OCS_EXCLUIDAS_COMISSAO = ['OC-2.118938', 'OC-2.118941']
+    
     # Comissão fixa de 1.5%
     PERCENTUAL_COMISSAO = 1.5
     
@@ -2972,6 +2976,12 @@ async def get_comissoes(current_user: dict = Depends(require_admin)):
     itens_por_pessoa = {nome: [] for nome in LOTES_POR_PESSOA.keys()}
     
     for po in pos:
+        numero_oc = po.get('numero_oc', '')
+        
+        # Pular OCs que foram cotadas por admin
+        if numero_oc in OCS_EXCLUIDAS_COMISSAO:
+            continue
+            
         for item in po.get('items', []):
             item_status = item.get('status', '')
             # Apenas itens "entregue" ou "em_transito" geram comissão
@@ -2992,7 +3002,7 @@ async def get_comissoes(current_user: dict = Depends(require_admin)):
                     
                     valor_venda_por_pessoa[pessoa] += valor_total_venda
                     itens_por_pessoa[pessoa].append({
-                        'numero_oc': po.get('numero_oc'),
+                        'numero_oc': numero_oc,
                         'codigo_item': item.get('codigo_item'),
                         'lote': item.get('lote'),
                         'valor_venda': valor_total_venda,
