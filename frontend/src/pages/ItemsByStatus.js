@@ -476,6 +476,32 @@ const ItemsByStatus = () => {
     }
   };
 
+  // Função para gerar texto dos Dados Adicionais da NF
+  const gerarDadosAdicionaisNF = (item) => {
+    // Extrair apenas o número da OC (ex: "OC-2.118938" -> "2.118938")
+    const numeroOC = item.numero_oc ? item.numero_oc.replace(/^OC-/i, '') : '';
+    const endereco = item.endereco_entrega || 'ENDEREÇO NÃO INFORMADO';
+    
+    return `EMPRESA OPTANTE PELO SIMPLES NACIONAL
+Endereço da entrega: ${endereco}
+NF referente à OC - ${numeroOC}
+DADOS BANCÁRIOS
+Banco: 341 - Itaú Unibanco
+Conta: 98814-9
+Agência: 3978
+Chave PIX: 46.663.556/0001-69`;
+  };
+
+  const copiarDadosAdicionais = (item) => {
+    const texto = gerarDadosAdicionaisNF(item);
+    navigator.clipboard.writeText(texto).then(() => {
+      alert('Dados Adicionais copiados para a área de transferência!');
+    }).catch(err => {
+      console.error('Erro ao copiar:', err);
+      alert('Erro ao copiar. Selecione o texto manualmente.');
+    });
+  };
+
   const startEditEndereco = (item) => {
     setEditingEndereco(item._uniqueId);
     setEnderecoTemp(item.endereco_entrega || '');
