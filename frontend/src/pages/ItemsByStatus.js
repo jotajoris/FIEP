@@ -30,6 +30,9 @@ const ItemsByStatus = () => {
   const [enderecoTemp, setEnderecoTemp] = useState('');
   const [ncmManual, setNcmManual] = useState({});
   const fileInputRef = useRef({});
+  
+  // Estados para visualização por OC (em_separacao)
+  const [expandedOC, setExpandedOC] = useState(null);  // OC expandida para ver itens
 
   const statusLabels = {
     'pendente': 'Pendentes',
