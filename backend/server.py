@@ -315,6 +315,25 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
         if regiao_match:
             regiao = regiao_match.group(1).strip()
         
+        # Extrair CNPJ do requisitante/cliente (FIEP/SESI)
+        # CNPJ padrão: XX.XXX.XXX/XXXX-XX
+        cnpj_requisitante = ""
+        cnpj_patterns = [
+            r'CNPJ[:\s]*(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})',
+            r'(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})'
+        ]
+        
+        for pattern in cnpj_patterns:
+            cnpj_matches = re.findall(pattern, full_text)
+            if cnpj_matches:
+                # O primeiro CNPJ geralmente é do cliente/requisitante
+                # O CNPJ da ON (fornecedor) é 46.663.556/0001-69, então pegamos outro
+                for cnpj in cnpj_matches:
+                    if cnpj != "46.663.556/0001-69":  # Ignorar CNPJ do fornecedor (ON)
+                        cnpj_requisitante = cnpj
+                        break
+                break
+        
         # ========== PARSER MELHORADO PARA PDFS FIEP ==========
         items = []
         seen_items = set()
