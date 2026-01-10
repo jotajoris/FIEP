@@ -263,7 +263,7 @@ const PODetails = () => {
                 </div>
               </div>
 
-              {editingItem === item.codigo_item ? (
+              {editingItem === index ? (
                 <div style={{ marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: '8px' }}>
                   {/* Status e campos admin */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
