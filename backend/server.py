@@ -1734,6 +1734,39 @@ async def normalize_fornecedores(current_user: dict = Depends(require_admin)):
     
     return {"message": f"{total_normalized} fornecedores normalizados com sucesso"}
 
+@api_router.post("/purchase-orders/update-descriptions")
+async def update_all_descriptions(current_user: dict = Depends(require_admin)):
+    """Atualizar descrições de todos os itens com as descrições completas do Excel (ADMIN ONLY)"""
+    pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(1000)
+    total_updated = 0
+    
+    for po in pos:
+        updated = False
+        for item in po['items']:
+            codigo_item = item.get('codigo_item')
+            if codigo_item:
+                # Buscar descrição completa no Excel
+                ref_item = await db.reference_items.find_one(
+                    {"codigo_item": codigo_item},
+                    {"_id": 0, "descricao": 1}
+                )
+                if ref_item and ref_item.get('descricao'):
+                    old_desc = item.get('descricao', '')
+                    new_desc = ref_item['descricao']
+                    # Atualizar se a descrição do Excel for diferente/mais completa
+                    if old_desc != new_desc:
+                        item['descricao'] = new_desc
+                        total_updated += 1
+                        updated = True
+        
+        if updated:
+            await db.purchase_orders.update_one(
+                {"id": po['id']},
+                {"$set": {"items": po['items']}}
+            )
+    
+    return {"message": f"{total_updated} descrições atualizadas com sucesso"}
+
 # ================== RASTREAMENTO CORREIOS ==================
 
 import httpx
