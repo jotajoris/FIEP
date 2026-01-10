@@ -829,8 +829,8 @@ async def preview_pdf_purchase_order(file: UploadFile = File(...), current_user:
             preview_item["responsavel"] = selected_ref['responsavel']
             preview_item["lote"] = selected_ref['lote']
             preview_item["marca_modelo"] = selected_ref.get('marca_modelo', '')
-            if not preview_item["descricao"] or len(preview_item["descricao"]) < 10:
-                preview_item["descricao"] = selected_ref['descricao']
+            # SEMPRE usar a descrição do Excel (mais completa)
+            preview_item["descricao"] = selected_ref['descricao']
             
             # Só usa preço da planilha se não tiver preço do PDF
             if not preview_item.get("preco_venda") and selected_ref.get('preco_venda_unitario'):
