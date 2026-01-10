@@ -140,9 +140,9 @@ const ItemsByStatus = () => {
     return items.filter(item => item.responsavel === user.owner_name).length;
   }, [items, user?.owner_name]);
 
-  const startEdit = (item, itemIndex) => {
-    // Usar índice único para evitar conflito com itens de mesmo código
-    setEditingItem(itemIndex);
+  const startEdit = (item) => {
+    // Usar ID único do item para evitar conflito
+    setEditingItem(item._uniqueId);
     
     // Se já tem fontes de compra, usar elas; senão criar uma vazia
     // Garantir que cada fonte tenha um ID
@@ -171,11 +171,7 @@ const ItemsByStatus = () => {
         link: item.link_compra || '',
         fornecedor: ''
       }],
-      quantidade_total: item.quantidade || 1,
-      // Guardar referência do item para o save
-      _po_id: item.po_id,
-      _codigo_item: item.codigo_item,
-      _item_index: itemIndex
+      quantidade_total: item.quantidade || 1
     });
   };
 
