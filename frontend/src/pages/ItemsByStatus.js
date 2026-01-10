@@ -1341,6 +1341,61 @@ Chave PIX: 46.663.556/0001-69`;
                             )}
                           </div>
 
+                          {/* Dados Adicionais da NF */}
+                          <div style={{ 
+                            padding: '1rem', 
+                            background: '#fef9c3', 
+                            borderRadius: '8px',
+                            border: '1px solid #fcd34d',
+                            marginBottom: '1rem'
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                              <div style={{ fontWeight: '600', color: '#854d0e', fontSize: '0.9rem' }}>
+                                📋 Dados Adicionais da NF (para copiar)
+                              </div>
+                              <button
+                                onClick={() => copiarDadosAdicionais(item)}
+                                className="btn"
+                                style={{ 
+                                  padding: '0.5rem 1rem', 
+                                  fontSize: '0.85rem',
+                                  background: '#16a34a',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer',
+                                  fontWeight: '600',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem'
+                                }}
+                                data-testid={`copy-dados-nf-${item._uniqueId}`}
+                              >
+                                📋 Copiar Texto
+                              </button>
+                            </div>
+                            <div style={{ 
+                              padding: '1rem', 
+                              background: 'white', 
+                              borderRadius: '6px',
+                              fontSize: '0.85rem',
+                              fontFamily: 'monospace',
+                              whiteSpace: 'pre-wrap',
+                              lineHeight: '1.6',
+                              color: '#1f2937',
+                              border: '1px solid #e5e7eb'
+                            }}>
+                              <div>EMPRESA OPTANTE PELO SIMPLES NACIONAL</div>
+                              <div><strong>Endereço da entrega: {item.endereco_entrega || 'ENDEREÇO NÃO INFORMADO'}</strong></div>
+                              <div>NF referente à OC - {item.numero_oc ? item.numero_oc.replace(/^OC-/i, '') : ''}</div>
+                              <div style={{ marginTop: '0.5rem' }}>DADOS BANCÁRIOS</div>
+                              <div>Banco: 341 - Itaú Unibanco</div>
+                              <div>Conta: 98814-9</div>
+                              <div>Agência: 3978</div>
+                              <div>Chave PIX: 46.663.556/0001-69</div>
+                            </div>
+                          </div>
+
                           {/* Botão para expandir seção de NFs */}
                           <button
                             onClick={() => toggleNFSection(item._uniqueId)}
