@@ -2,6 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { apiGet, API, formatBRL } from '../utils/api';
 
+// Mapeamento de lotes por pessoa para cálculo de comissões
+const LOTES_POR_PESSOA = {
+  'MARIA': [1,2,3,4,5,6,7,8,9,10,11,12,43,44,45,46,47,48,49,50,51,52,53],
+  'MYLENA': [80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97],
+  'FABIO': [32,33,34,35,36,37,38,39,40,41,42],
+};
+const PERCENTUAL_COMISSAO = 1.5;
+
+// Função para extrair número do lote
+const extrairNumeroLote = (loteStr) => {
+  if (!loteStr) return null;
+  const match = String(loteStr).match(/(\d+)/);
+  return match ? parseInt(match[1]) : null;
+};
+
 const AllItemsSummary = () => {
   const [allItems, setAllItems] = useState([]);
   const [loading, setLoading] = useState(true);
