@@ -70,6 +70,7 @@ const AllItemsSummary = () => {
   const totalCompra = filteredItems.reduce((sum, item) => sum + ((item.preco_compra || 0) * item.quantidade), 0);
   const totalFreteCompra = filteredItems.reduce((sum, item) => sum + (item.frete_compra || 0), 0);
   const totalFreteEnvio = filteredItems.reduce((sum, item) => sum + (item.frete_envio || 0), 0);
+  const totalFretes = totalFreteCompra + totalFreteEnvio;
   
   // Imposto previsto (11% do valor de venda de todos os itens)
   const totalImpostoPrevisto = filteredItems.reduce((sum, item) => {
@@ -81,6 +82,23 @@ const AllItemsSummary = () => {
   const totalLucroRealizado = filteredItems
     .filter(item => item.status === 'em_separacao' || item.status === 'em_transito' || item.status === 'entregue')
     .reduce((sum, item) => sum + (item.lucro_liquido || 0), 0);
+
+  // Calcular total de comissões a pagar (baseado nos lotes, itens entregue/em_transito)
+  const totalComissoes = filteredItems
+    .filter(item => item.status === 'entregue' || item.status === 'em_transito')
+    .reduce((sum, item) => {
+      const numeroLote = extrairNumeroLote(item.lote);
+      if (!numeroLote) return sum;
+      
+      // Verificar se o lote pertence a algum cotador elegível para comissão
+      for (const [pessoa, lotes] of Object.entries(LOTES_POR_PESSOA)) {
+        if (lotes.includes(numeroLote)) {
+          const valorVenda = (item.preco_venda || 0) * (item.quantidade || 1);
+          return sum + (valorVenda * (PERCENTUAL_COMISSAO / 100));
+        }
+      }
+      return sum;
+    }, 0);
 
   if (loading) {
     return <div className="loading" data-testid="loading-summary">Carregando...</div>;
