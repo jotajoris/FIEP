@@ -121,17 +121,77 @@ const Dashboard = () => {
       const link = document.createElement('a');
       link.href = url;
       const dataAtual = new Date().toISOString().split('T')[0];
-      link.download = `backup_fiep_${dataAtual}.json`;
+      const horaAtual = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
+      link.download = `backup_fiep_${dataAtual}_${horaAtual}.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      alert(`✅ Backup exportado com sucesso!\n\n📊 Estatísticas:\n- ${backup.backup_info.estatisticas.total_ocs} OCs\n- ${backup.backup_info.estatisticas.total_itens} Itens\n- ${backup.backup_info.estatisticas.total_usuarios} Usuários`);
+      const stats = backup.backup_info.estatisticas;
+      alert(`✅ Backup exportado com sucesso!\n\n📊 Estatísticas:\n- ${stats.total_ocs} OCs\n- ${stats.total_itens} Itens\n- ${stats.items_com_cotacao || 0} com cotação\n- ${stats.items_com_link || 0} com link\n- R$ ${(stats.valor_total_venda || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})} valor total`);
     } catch (error) {
       console.error('Erro ao exportar backup:', error);
       alert('❌ Erro ao exportar backup');
     }
+  };
+
+  const handleRestoreBackup = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Confirmar antes de restaurar
+    const confirma = window.confirm(
+      `⚠️ ATENÇÃO!\n\nVocê está prestes a RESTAURAR o backup "${file.name}".\n\nIsso irá SUBSTITUIR todos os dados atuais do sistema!\n\nTem certeza que deseja continuar?`
+    );
+    
+    if (!confirma) {
+      event.target.value = '';
+      return;
+    }
+    
+    // Segunda confirmação
+    const confirma2 = window.confirm(
+      `🚨 CONFIRMAÇÃO FINAL\n\nTodos os dados atuais serão PERDIDOS e substituídos pelo backup.\n\nDigite "RESTAURAR" no próximo prompt para confirmar.`
+    );
+    
+    if (!confirma2) {
+      event.target.value = '';
+      return;
+    }
+    
+    const digitou = window.prompt('Digite "RESTAURAR" para confirmar:');
+    if (digitou !== 'RESTAURAR') {
+      alert('Restauração cancelada.');
+      event.target.value = '';
+      return;
+    }
+    
+    try {
+      const fileContent = await file.text();
+      const backupData = JSON.parse(fileContent);
+      
+      // Verificar se é um backup válido
+      if (!backupData.backup_info || !backupData.purchase_orders) {
+        alert('❌ Arquivo de backup inválido!');
+        event.target.value = '';
+        return;
+      }
+      
+      const response = await apiPost(`${API}/backup/restore-data`, backupData);
+      
+      if (response.data.success) {
+        alert(`✅ Backup restaurado com sucesso!\n\n📊 Detalhes:\n- Data do backup: ${response.data.detalhes.data_backup}\n- OCs restauradas: ${response.data.detalhes.ocs_restauradas}\n- Itens de referência: ${response.data.detalhes.itens_referencia}\n\nA página será recarregada.`);
+        window.location.reload();
+      } else {
+        alert('❌ Erro ao restaurar backup');
+      }
+    } catch (error) {
+      console.error('Erro ao restaurar backup:', error);
+      alert(`❌ Erro ao restaurar backup: ${error.message}`);
+    }
+    
+    event.target.value = '';
   };
 
   // Calcular valor total de uma OC
