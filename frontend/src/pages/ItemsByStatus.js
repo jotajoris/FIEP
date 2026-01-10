@@ -139,6 +139,7 @@ const ItemsByStatus = () => {
 
   const startEdit = (item, itemIndex) => {
     // Usar índice único para evitar conflito com itens de mesmo código
+    console.log('startEdit called with itemIndex:', itemIndex, 'item:', item.codigo_item);
     setEditingItem(itemIndex);
     
     // Se já tem fontes de compra, usar elas; senão criar uma vazia
