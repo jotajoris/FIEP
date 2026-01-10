@@ -2936,84 +2936,85 @@ class ComissaoUpdate(BaseModel):
 
 @api_router.get("/admin/comissoes")
 async def get_comissoes(current_user: dict = Depends(require_admin)):
-    """Obter dados de comissões por responsável (apenas usuários não-admin)"""
+    """Obter dados de comissões por responsável baseado em lotes específicos
     
-    # Obter todos os usuários admin para excluí-los das comissões
-    usuarios_admin = await db.users.find({"role": "admin"}, {"_id": 0}).to_list(length=100)
+    Sistema de Comissões:
+    - Comissão fixa de 1.5% sobre o VALOR TOTAL DA VENDA
+    - Apenas para itens com status "entregue" ou "em_transito"
+    - Baseado em LOTES específicos atribuídos a cada pessoa
+    - Apenas usuários não-admin (Maria, Mylena, Fabio)
+    """
     
-    # Criar conjunto de nomes de admins normalizados para filtrar
-    def normalizar_nome(nome):
-        if not nome:
-            return ''
-        nome = nome.upper().strip()
-        nome = nome.replace('ONSOLUCOES', '').replace('.ONSOLUCOES', '')
-        nome = nome.replace('.', '').strip()
-        return nome
+    # Mapeamento fixo de LOTES por pessoa (baseado na cotação original)
+    # Formato: "Lote XX" onde XX é o número
+    LOTES_POR_PESSOA = {
+        'MARIA': [1,2,3,4,5,6,7,8,9,10,11,12,43,44,45,46,47,48,49,50,51,52,53],
+        'MYLENA': [80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97],
+        'FABIO': [32,33,34,35,36,37,38,39,40,41,42],
+    }
     
-    nomes_admin = set()
-    for admin in usuarios_admin:
-        nome_admin = admin.get('display_name') or admin.get('owner_name') or admin.get('email', '').split('@')[0]
-        nomes_admin.add(normalizar_nome(nome_admin))
+    # Comissão fixa de 1.5%
+    PERCENTUAL_COMISSAO = 1.5
     
-    # Obter todos os usuários não-admin
-    usuarios = await db.users.find({"role": {"$ne": "admin"}}, {"_id": 0}).to_list(length=100)
+    def extrair_numero_lote(lote_str):
+        """Extrai o número do lote de strings como 'Lote 36' ou '36'"""
+        if not lote_str:
+            return None
+        import re
+        match = re.search(r'(\d+)', str(lote_str))
+        return int(match.group(1)) if match else None
     
-    # Obter comissões salvas
-    comissoes_salvas = await db.comissoes.find({}, {"_id": 0}).to_list(length=100)
-    comissoes_dict = {c['responsavel']: c for c in comissoes_salvas}
-    
-    # Obter todas as OCs para calcular lucro
+    # Obter todas as OCs
     pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(length=1000)
     
-    # Calcular lucro por responsável (apenas itens entregues, excluindo admins)
-    lucro_por_responsavel = {}
+    # Calcular valor de venda por pessoa baseado nos lotes
+    valor_venda_por_pessoa = {nome: 0 for nome in LOTES_POR_PESSOA.keys()}
+    itens_por_pessoa = {nome: [] for nome in LOTES_POR_PESSOA.keys()}
     
     for po in pos:
         for item in po.get('items', []):
-            responsavel_raw = item.get('responsavel', '').upper().strip()
-            responsavel = normalizar_nome(responsavel_raw)
-            # Excluir admins da lista de comissões
-            if responsavel and responsavel not in nomes_admin and item.get('status') == 'entregue':
-                lucro = item.get('lucro_liquido', 0) or 0
-                if responsavel not in lucro_por_responsavel:
-                    lucro_por_responsavel[responsavel] = 0
-                lucro_por_responsavel[responsavel] += lucro
+            item_status = item.get('status', '')
+            # Apenas itens "entregue" ou "em_transito" geram comissão
+            if item_status not in ['entregue', 'em_transito']:
+                continue
+                
+            numero_lote = extrair_numero_lote(item.get('lote', ''))
+            if numero_lote is None:
+                continue
+            
+            # Verificar a qual pessoa pertence este lote
+            for pessoa, lotes in LOTES_POR_PESSOA.items():
+                if numero_lote in lotes:
+                    # Calcular valor total de venda do item
+                    preco_venda = item.get('preco_venda', 0) or 0
+                    quantidade = item.get('quantidade', 1) or 1
+                    valor_total_venda = preco_venda * quantidade
+                    
+                    valor_venda_por_pessoa[pessoa] += valor_total_venda
+                    itens_por_pessoa[pessoa].append({
+                        'numero_oc': po.get('numero_oc'),
+                        'codigo_item': item.get('codigo_item'),
+                        'lote': item.get('lote'),
+                        'valor_venda': valor_total_venda,
+                        'status': item_status
+                    })
+                    break  # Cada lote pertence a apenas uma pessoa
     
-    # Montar resposta - apenas responsáveis com itens (sem duplicar usuários)
+    # Montar resposta
     resultado = []
-    responsaveis_processados = set()
+    for pessoa, valor_venda in valor_venda_por_pessoa.items():
+        valor_comissao = valor_venda * (PERCENTUAL_COMISSAO / 100)
+        resultado.append({
+            'responsavel': pessoa,
+            'email': None,
+            'valor_venda_total': valor_venda,
+            'percentual_comissao': PERCENTUAL_COMISSAO,
+            'valor_comissao': valor_comissao,
+            'lotes_atribuidos': LOTES_POR_PESSOA[pessoa],
+            'qtd_itens': len(itens_por_pessoa[pessoa])
+        })
     
-    # Processar responsáveis que têm lucro nos itens (já filtrados, sem admins)
-    for responsavel, lucro in lucro_por_responsavel.items():
-        if responsavel and responsavel != 'NÃO ATRIBUÍDO' and responsavel not in responsaveis_processados:
-            responsaveis_processados.add(responsavel)
-            comissao = comissoes_dict.get(responsavel, {})
-            resultado.append({
-                'responsavel': responsavel,
-                'email': None,
-                'lucro_entregue': lucro,
-                'percentual_comissao': comissao.get('percentual', 0),
-                'valor_comissao': lucro * (comissao.get('percentual', 0) / 100),
-                'pago': comissao.get('pago', False)
-            })
-    
-    # Adicionar usuários não-admin que não têm itens ainda (para poder definir % antecipadamente)
-    for user in usuarios:
-        nome = user.get('display_name') or user.get('owner_name') or user.get('email', '').split('@')[0]
-        nome_normalizado = normalizar_nome(nome)
-        if nome_normalizado and nome_normalizado not in responsaveis_processados and nome_normalizado not in nomes_admin:
-            responsaveis_processados.add(nome_normalizado)
-            comissao = comissoes_dict.get(nome_normalizado, {})
-            resultado.append({
-                'responsavel': nome_normalizado,
-                'email': user.get('email'),
-                'lucro_entregue': 0,
-                'percentual_comissao': comissao.get('percentual', 0),
-                'valor_comissao': 0,
-                'pago': comissao.get('pago', False)
-            })
-    
-    return sorted(resultado, key=lambda x: x['lucro_entregue'], reverse=True)
+    return sorted(resultado, key=lambda x: x['valor_venda_total'], reverse=True)
 
 @api_router.patch("/admin/comissoes/{responsavel}")
 async def update_comissao(
