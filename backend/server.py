@@ -2287,7 +2287,7 @@ app.include_router(api_router)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=["*", "https://onlicitacoes.com", "https://pedidos-fiep.emergent.host", "https://pedidos-fiep.preview.emergentagent.com"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
