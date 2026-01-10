@@ -46,11 +46,14 @@ const ItemsByStatus = () => {
       response.data.forEach(po => {
         po.items.forEach((item, itemIndexInPO) => {
           if (item.status === status) {
+            // Criar ID único para cada item (combina po_id + índice dentro da OC)
+            const uniqueId = `${po.id}_${itemIndexInPO}`;
             allItems.push({
               ...item,
               numero_oc: po.numero_oc,
               po_id: po.id,
-              _itemIndexInPO: itemIndexInPO  // Guardar índice original dentro da OC
+              _itemIndexInPO: itemIndexInPO,
+              _uniqueId: uniqueId  // ID único para este item
             });
           }
         });
