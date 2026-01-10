@@ -1,0 +1,74 @@
+{
+  "summary": "Completed comprehensive testing of 'Em Separação' page functionality including NF (Nota Fiscal) upload/download/delete, NCM extraction, address editing, and NF Emitida checkbox. All 22 backend tests passed. Frontend UI tests confirmed all features working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_em_separacao_nf.py",
+    "/app/test_reports/pytest/pytest_results_em_separacao.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/tests/test_em_separacao_nf.py"
+  ],
+  "success_rate": {
+    "backend": "100% (22/22 tests passed)",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "admin": {"email": "projetos.onsolucoes@gmail.com", "password": "on123456"}
+  },
+  "seed_data_creation": "Used existing PO: ID=c885f4bb-fc52-44f4-b064-1503707b994a, numero_oc=OC-2.118938, Item codigo=114641 with status 'em_separacao'",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Em Separação page functionality is complete and working. Backend tests in /app/tests/test_em_separacao_nf.py cover: NF upload (fornecedor/revenda), NCM extraction from XML, manual NCM input, NF download, NF delete, endereco editing, NF emitida checkbox toggle, and error handling. Test data: PO ID=c885f4bb-fc52-44f4-b064-1503707b994a, item_index=0.",
+  "test_results": {
+    "backend_tests": {
+      "total": 22,
+      "passed": 22,
+      "failed": 0,
+      "test_classes": [
+        "TestEmSeparacaoPageLoad - 2 tests (page load, item with em_separacao status)",
+        "TestEnderecoEntrega - 2 tests (update address, restore original)",
+        "TestNotasFiscaisFornecedor - 4 tests (upload XML, download, update NCM, delete)",
+        "TestNotaFiscalRevenda - 5 tests (upload, verify stored, download, delete, verify deleted)",
+        "TestNFEmitidaCheckbox - 3 tests (toggle on, toggle off, restore state)",
+        "TestNCMExtraction - 2 tests (XML with namespace, manual NCM override)",
+        "TestErrorHandling - 4 tests (invalid PO, invalid index, invalid tipo, nonexistent NF)"
+      ]
+    },
+    "frontend_tests": {
+      "em_separacao_page_load": "PASSED - Page loads correctly with title 'Itens Em Separação'",
+      "endereco_entrega_display": "PASSED - Address displayed correctly from OC",
+      "endereco_edit_button": "PASSED - Edit button opens textarea for editing",
+      "endereco_save": "PASSED - Address saves and updates correctly",
+      "notas_fiscais_section_expand": "PASSED - Section expands/collapses correctly",
+      "nf_fornecedor_display": "PASSED - Shows existing NF with filename and NCM",
+      "nf_fornecedor_download_button": "PASSED - Download button visible",
+      "nf_fornecedor_delete_button": "PASSED - Delete button visible",
+      "nf_fornecedor_add_button": "PASSED - '+ Adicionar NF Fornecedor (PDF/XML)' button visible",
+      "nf_revenda_section": "PASSED - 'Nossa Nota Fiscal de Revenda (única)' section visible",
+      "nf_revenda_add_button": "PASSED - '+ Adicionar Nossa NF (PDF/XML)' button visible",
+      "ncm_manual_input": "PASSED - NCM manual input field visible",
+      "nf_emitida_checkbox": "PASSED - Checkbox toggles correctly between checked/unchecked states"
+    }
+  },
+  "features_verified": {
+    "page_access": "All users (admin and regular) can access Em Separação page",
+    "endereco_entrega": "Delivery address from OC is displayed and editable",
+    "nf_fornecedor_upload": "Multiple NF fornecedor uploads supported (PDF/XML)",
+    "nf_revenda_upload": "Single NF revenda upload supported (PDF/XML)",
+    "ncm_extraction": "NCM automatically extracted from XML using NFe namespace",
+    "ncm_manual_input": "Manual NCM input available and overrides automatic extraction",
+    "nf_emitida_checkbox": "Checkbox 'NF Emitida / Pronto para Despacho' toggles state correctly",
+    "nf_download": "Download button works for both fornecedor and revenda NFs",
+    "nf_delete": "Delete button works for both fornecedor and revenda NFs"
+  }
+}
