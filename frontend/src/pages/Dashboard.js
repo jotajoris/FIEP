@@ -330,6 +330,38 @@ const Dashboard = () => {
               </div>
             </div>
           )}
+
+          {/* Área Admin - Backup */}
+          {isAdmin() && (
+            <div className="card" style={{ 
+              marginBottom: '2rem', 
+              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', 
+              color: 'white' 
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <h3 style={{ marginBottom: '0.5rem', fontSize: '1.2rem' }}>🔐 Backup do Sistema</h3>
+                  <p style={{ fontSize: '0.9rem', opacity: 0.9 }}>
+                    Exporte todos os dados (OCs, itens, cotações, usuários) em um arquivo JSON.
+                  </p>
+                </div>
+                <button 
+                  onClick={exportBackup} 
+                  className="btn"
+                  style={{ 
+                    background: 'white', 
+                    color: '#059669',
+                    padding: '0.75rem 1.5rem',
+                    fontWeight: '600',
+                    fontSize: '1rem'
+                  }}
+                  data-testid="export-backup-btn"
+                >
+                  📥 Exportar Backup
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
 
