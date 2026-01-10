@@ -44,12 +44,13 @@ const ItemsByStatus = () => {
       
       const allItems = [];
       response.data.forEach(po => {
-        po.items.forEach(item => {
+        po.items.forEach((item, itemIndexInPO) => {
           if (item.status === status) {
             allItems.push({
               ...item,
               numero_oc: po.numero_oc,
-              po_id: po.id
+              po_id: po.id,
+              _itemIndexInPO: itemIndexInPO  // Guardar índice original dentro da OC
             });
           }
         });
