@@ -87,9 +87,10 @@ const AdminPanel = () => {
   };
 
   const calcularTotalSelecionado = () => {
+    // Agora calcula o valor total de VENDA (não lucro)
     return itensResponsavel
       .filter(item => selectedItens.includes(item.id))
-      .reduce((sum, item) => sum + (item.lucro_liquido || 0), 0);
+      .reduce((sum, item) => sum + (item.valor_venda || 0), 0);
   };
 
   const registrarPagamento = async (responsavel) => {
@@ -98,16 +99,13 @@ const AdminPanel = () => {
       return;
     }
     
-    const percentual = comissaoPercentual[responsavel] || 0;
-    if (percentual <= 0) {
-      alert('Defina a % de comissão');
-      return;
-    }
+    // Comissão fixa de 1.5%
+    const percentual = 1.5;
 
-    const totalLucro = calcularTotalSelecionado();
-    const valorComissao = totalLucro * (percentual / 100);
+    const totalVenda = calcularTotalSelecionado();
+    const valorComissao = totalVenda * (percentual / 100);
     
-    if (!window.confirm(`Confirmar pagamento de ${formatBRL(valorComissao)} (${percentual}% de ${formatBRL(totalLucro)}) para ${getNome(responsavel)}?`)) {
+    if (!window.confirm(`Confirmar pagamento de ${formatBRL(valorComissao)} (${percentual}% de ${formatBRL(totalVenda)}) para ${getNome(responsavel)}?`)) {
       return;
     }
 
@@ -120,7 +118,7 @@ const AdminPanel = () => {
           itens_ids: selectedItens,
           percentual,
           valor_comissao: valorComissao,
-          total_lucro: totalLucro
+          total_venda: totalVenda
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
