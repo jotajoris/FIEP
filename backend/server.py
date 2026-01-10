@@ -1143,8 +1143,8 @@ async def create_purchase_order(po_create: PurchaseOrderCreate, current_user: di
             item.lote = selected_ref['lote']
             item.lot_number = selected_ref['lot_number']
             item.regiao = selected_ref.get('regiao', item.regiao or '')
-            if not item.descricao or len(item.descricao) < 10:
-                item.descricao = selected_ref['descricao']
+            # SEMPRE usar a descrição do Excel (mais completa)
+            item.descricao = selected_ref['descricao']
             if not item.marca_modelo:
                 item.marca_modelo = selected_ref.get('marca_modelo', '')
             
