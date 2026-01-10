@@ -2499,6 +2499,68 @@ def extract_ncm_from_pdf(pdf_bytes: bytes) -> Optional[str]:
 
 import base64
 
+def extract_numero_nf_from_xml(xml_content: str) -> Optional[str]:
+    """Extrair número da Nota Fiscal do XML"""
+    import xml.etree.ElementTree as ET
+    try:
+        if xml_content.startswith('\ufeff'):
+            xml_content = xml_content[1:]
+        
+        root = ET.fromstring(xml_content)
+        
+        namespaces = {'nfe': 'http://www.portalfiscal.inf.br/nfe'}
+        
+        # Tentar encontrar número da NF com namespace
+        # nNF = número da nota fiscal
+        for tag in ['nNF', 'nf', 'numero']:
+            elements = root.findall(f'.//nfe:{tag}', namespaces)
+            if elements and elements[0].text:
+                return elements[0].text.strip()
+            elements = root.findall(f'.//{tag}')
+            if elements and elements[0].text:
+                return elements[0].text.strip()
+        
+        # Tentar encontrar no texto
+        for elem in root.iter():
+            if elem.tag.endswith('nNF') and elem.text:
+                return elem.text.strip()
+        
+        return None
+    except Exception as e:
+        logging.error(f"Erro ao extrair número da NF do XML: {str(e)}")
+        return None
+
+def extract_numero_nf_from_pdf(pdf_bytes: bytes) -> Optional[str]:
+    """Tentar extrair número da NF de um PDF"""
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        full_text = ""
+        
+        for page in doc:
+            full_text += page.get_text()
+        
+        doc.close()
+        
+        # Padrões comuns para número de NF
+        patterns = [
+            r'N[°º]?\s*(?:da\s*)?(?:NF|Nota|Nota Fiscal)[:\s]*(\d{6,9})',
+            r'(?:NF|Nota Fiscal)\s*N[°º]?\s*(\d{6,9})',
+            r'N[úu]mero[:\s]*(\d{6,9})',
+            r'(\d{9})',  # Número de 9 dígitos solto
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, full_text, re.IGNORECASE)
+            if match:
+                num = match.group(1)
+                if len(num) >= 6:
+                    return num
+        
+        return None
+    except Exception as e:
+        logging.error(f"Erro ao extrair número da NF do PDF: {str(e)}")
+        return None
+
 class NFUploadRequest(BaseModel):
     """Request para upload de nota fiscal"""
     filename: str
