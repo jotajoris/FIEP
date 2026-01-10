@@ -16,52 +16,348 @@ The user requested a web platform to manage purchase orders (OCs) from their cli
 - Format all monetary values in the Brazilian standard (e.g., R$ 1.234,56).
 - Force all text inputs to uppercase and remove accents to prevent data duplication.
 - Provide a backup and restore functionality for administrators.
+- **New (This session):** On the Em Separação page, add functionality to manage supplier and sales invoices (Notas Fiscais), including file uploads (PDF/XML), NCM extraction, and tracking the resale invoice status.
+- **New (This session):** Revamp the Admin Panel to include a Commissions tab for tracking and paying non-admin user commissions and a Notas Fiscais tab to view all uploaded invoices.
 
 **User's preferred language**:
 The user's primary language is **Portuguese (Brazil)**. The next agent MUST respond in Portuguese.
 
 **what currently exists?**
-A full-stack application (FastAPI, React, MongoDB) for managing purchase orders. It includes user authentication, PDF parsing, manual/batch OC creation, and status tracking. The session introduced several key features:
-- A new Em Separação status was added to the item lifecycle.
-- Advanced search filters (by OC, item code, responsible user) were added to the main Dashboard and the item status pages.
-- A global  style was applied to all inputs, and a utility function was created to remove accents, ensuring data consistency.
-- A backend endpoint was created and used to normalize existing duplicate supplier names.
-- The PDF parser logic was updated to always prioritize the complete item description from the reference data (Excel) over the potentially truncated description from the PDF. An endpoint was also created and run to update all existing items.
-- A backup (export to JSON) and restore (upload from JSON) feature was added for administrators on the Dashboard.
-- A critical, recurring bug related to editing items with duplicate codes within the same OC was addressed across three different files (, , and ).
-- Improved API error handling to show a user-friendly error message and a retry button instead of an infinite loading screen.
+A full-stack application (FastAPI, React, MongoDB) for managing purchase orders. The current session focused on two major feature implementations:
+
+1.  **Invoice Management on Em Separação Page:**
+    - Users can now upload/download/delete multiple supplier invoices and a single resale invoice (PDF/XML) for each item in the Em Separação status.
+    - The system attempts to extract NCM and invoice numbers from the uploaded files, with a manual override option.
+    - A checkbox tracks if the resale invoice has been issued.
+    - A new Dados Adicionais da NF section generates boilerplate text (company info, delivery address, bank details) with a copy to clipboard button to streamline invoice creation.
+    - The item's delivery address and the client's CNPJ are displayed.
+    - The layout was redesigned into a two-column grid based on user feedback.
+
+2.  **Revamped Admin Panel:**
+    - The old panel was replaced with two tabs: Comissões and Notas Fiscais.
+    - **Comissões:** Lists non-admin users, their total profit generated from delivered items, and allows admins to register commission payments. It includes a payment history with edit/delete functionality.
+    - **Notas Fiscais:** Provides a centralized view of all uploaded supplier and resale invoices, with download links.
+
+Backend performance was also improved by fixing several N+1 query issues identified by the deployment agent.
 
 **Last working item**:
--   **Last item agent was working:** The user reported that a bug, which was thought to be fixed, still persists in production after deployment. The bug occurs when an OC contains multiple items with the same item code. Clicking Edit on one of them opens all of them simultaneously, and saving changes only works for the first item. The agent identified that this issue was present on both the  page and the  page. The final fix involved modifying  to use the item's unique array index for managing the editing state, similar to the fix previously applied to .
--   **Status:** USER VERIFICATION PENDING
--   **Agent Testing Done:** Y (The agent tested the fix in the preview environment using screenshots and confirmed that only one item opens for editing at a time.)
--   **Which testing method agent to use?** Frontend testing agent. The test should specifically target OC-3.100035, which contains items with code 114604 duplicated. The test must verify that on both the Items por Status page and the Detalhes da OC page, clicking Editar on one of the duplicate items opens *only that item* for editing and that it can be saved successfully.
--   **User Testing Done:** N (User reported the bug still exists in production after the latest deployment.)
+-   **Last item agent was working:** The user reported that the Comissões tab in the Admin Panel was incorrectly showing admins (João and Mateus), who should not be eligible for commissions. The agent identified that the backend logic was pulling all users instead of filtering for non-admins and was about to implement the fix.
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** Backend testing agent. The agent should first use  or  to verify that the  endpoint in  correctly filters out users with the  role. After confirming the API response is correct, use the  to visually confirm that only non-admin users (Maria, Mylena, Fabio) appear on the Admin Panel's Comissões tab.
+-   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: (P0)** Editing duplicate items opens all of them.
--   **Issue 2: (P1)** Data Discrepancy/Loss of Cotado items.
--   **Issue 3: (P2)** Unreliable automatic package tracking.
+-   **Issue 1: (P0)** Admins are appearing in the Commissions list.
+-   **Issue 2: (P1)** Editing duplicate items opens all of them (Recurring from the previous fork).
+-   **Issue 3: (P2)** Data Discrepancy/Loss of Cotado items.
+-   **Issue 4: (P3)** Unreliable automatic package tracking.
 
 **Issues Detail:**
--   **Issue 1:**
-    -   **Attempted fixes:** The agent implemented fixes across three files (, , ) to use a unique key (the item's index within the OC's item array) to manage the editing state, instead of the non-unique . The user has deployed these changes but reports the issue persists, suggesting a caching issue or an oversight in the fix.
+-   **Issue 1:** Admins in Commissions List
+    -   **Attempted fixes:** None yet. The agent identified the cause is the backend logic in  in  which combines users from the  collection and  field from items without filtering for roles.
     -   **Next debug checklist:**
-        1.  Instruct the user to perform a hard refresh ( or ) or test in an incognito window to rule out browser caching.
-        2.  If the issue persists, re-examine the state management logic in  and .
-        3.  Verify that the  prop in the React  function is unique for each rendered item.
-        4.  Confirm the  function is calling the correct backend endpoint () and passing the correct .
-    -   **Why fix this issue and what will be achieved with the fix?** This is a critical usability bug that prevents users from editing their data correctly, undermining the core functionality of the app.
+        1.  Modify the  endpoint in .
+        2.  Inside the  function, ensure that when fetching the list of all users, only those without the  role are included.
+        3.  Ensure the name normalization logic () is consistently applied to prevent duplicates.
+    -   **Why fix this issue and what will be achieved with the fix?** To ensure the commissions feature works as intended, showing only commission-eligible employees and preventing incorrect data presentation to admins.
     -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Both
+    -   **Blocked on other issue:** None
+
+-   **Issue 2:** Editing duplicate items opens all of them.
+    -   **Attempted fixes:** In the previous session, the agent applied fixes to  and  to use a unique item index for state management instead of the non-unique item code.
+    -   **Next debug checklist:** This issue's fix was never verified by the user in this session.
+        1.  **CRITICAL:** Ask the user to re-test the fix from the previous session. Instruct them to perform a hard refresh () and test on an OC with duplicate item codes (e.g., OC-3.100035).
+        2.  If it still fails, re-examine the state management logic in  and  to confirm the unique key ( or index) is being used correctly for all state related to editing.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a critical usability bug that prevents users from editing data correctly.
+    -   **Status:** USER VERIFICATION PENDING
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** Frontend
     -   **Blocked on other issue:** None
 
--   **Issue 2:**
-    -   **Attempted fixes:** The user reported that ~50 cotado items disappeared. The agent investigated the database and found only 4 items had  (quotes) and only 1 had a link, concluding the data was likely never saved correctly due to a previous bug. The agent created a backup/restore feature to mitigate future data loss anxiety but did not recover the lost data.
+-   **Issue 3:** Data Discrepancy/Loss of Cotado items.
+    -   **Attempted fixes:** None in this session. Previously, the agent concluded the data was likely never saved correctly.
     -   **Next debug checklist:**
-        1.  Acknowledge the user's frustration.
-        2.  Propose to investigate the  function logic prior to the current session's changes (commit d38a867c260365d75159a2f5de6e0198d38cdcd0
+        1.  Acknowledge user frustration.
+        2.  Propose investigating commit a1662a1186c55bd352f4c04c093a100cb08548b0
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 05:43:24 2026 +0000
+
+    Auto-generated changes
+
+commit 04f6bac052919021cee1d8e504b35d3723f6922d
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 05:30:38 2026 +0000
+
+    Auto-commit before changes
+
+commit e7d311ce17229c844f84dce76d5772fa3d1f0559
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 05:30:09 2026 +0000
+
+    auto-commit for 17a32ab4-c31a-4b86-a628-b6586d79be49
+
+commit c7b05acf924714bde69146fe7b60a53c4fffc93e
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 05:29:50 2026 +0000
+
+    auto-commit for 8b0c7b84-a2d5-43a0-8dd2-e400f2d2480f
+
+commit 7166f53f79d2821759dc660ab4e1aaf9b7a60bc9
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 05:29:18 2026 +0000
+
+    auto-commit for 4e894ef9-90ae-4b23-b36b-fa97269df796
+
+commit 3c9c226b1d2cdf8e25ac637d792059fc8d934bee
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 05:28:54 2026 +0000
+
+    auto-commit for 2b43ea1b-acc1-44ec-85da-8fb671106d50
+
+commit e5d8cdf1b274581741a43f98012719b12fed89e2
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 05:28:32 2026 +0000
+
+    auto-commit for 2514de65-3ed1-482f-a2c4-4e3d17944f4b
+
+commit 6c5564dd89b964b01063721c05dbd1be20d604ce
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 05:25:14 2026 +0000
+
+    Auto-commit before changes
+
+commit 3b6a83f052f221ad8defb2ed548ad47a74e25a4a
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 05:25:00 2026 +0000
+
+    auto-commit for dcb2a076-9afb-4d2b-af75-da5ba1f10f1b
+
+commit fa420d589a68fc3aa096d07181471db663790fb2
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 05:22:04 2026 +0000
+
+    Auto-commit before changes
+
+commit 808ecaf570fe5f7a2a7a1b4c0766b6bf14d2ff11
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 05:12:21 2026 +0000
+
+    Auto-generated changes
+
+commit c6d45d45a1760342da7c4cee1ef38403b7ba27fa
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 05:04:44 2026 +0000
+
+    Auto-generated changes
+
+commit a15a19d2ecb3a79d7223be6e2f39b9d9ae00c234
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:58:21 2026 +0000
+
+    Auto-generated changes
+
+commit 05c401a8f4972046a6a6e7005a20047170bbf692
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:55:43 2026 +0000
+
+    auto-commit for e43274d6-1899-4283-94fd-ad47232a7c54
+
+commit 59bf67d78b0db5f5b15364e58f7745e6654dde13
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:55:22 2026 +0000
+
+    auto-commit for 0c931f7d-d02f-4f33-af3d-0a4e277c04df
+
+commit ade5ade383e882b3f1050d44e00d396af0a4a95f
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:51:14 2026 +0000
+
+    auto-commit for 63ea8eec-8eb2-4217-9680-34083227ed3a
+
+commit 11383545a991b35edf42a035bdd6561e512304b0
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:49:43 2026 +0000
+
+    auto-commit for 35ed86a4-530e-4591-bb00-4ade353a176f
+
+commit 29809a8aa567dd86907fd8cd110bf393a4ca5c65
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:49:24 2026 +0000
+
+    auto-commit for b32359f1-e48b-4c56-9241-677b4d7827c9
+
+commit f76f2e5e8f9fb4a08b474eaee14920a98846bdc4
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:48:58 2026 +0000
+
+    auto-commit for 49b8edde-a740-4e4a-9f40-aad86ee2cae5
+
+commit aab043a8d514dcfdfe9245f8fd8b0279bfeba597
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:48:38 2026 +0000
+
+    auto-commit for 226d16a1-9bac-48d5-8a05-e2eead8f7039
+
+commit 8da6944e99ec48a247eef9b68ebb7a120cd26632
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:42:39 2026 +0000
+
+    auto-commit for 0b584bcd-5eaa-414b-8ced-c8c205c51640
+
+commit f07af96e6629f4d68370ec7fbb8396e3180114d1
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:42:14 2026 +0000
+
+    auto-commit for e7434702-7399-41b6-9d1a-a70db912a10d
+
+commit 34a31d35d95b2316020fcf1c8122303ad2863881
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:34:44 2026 +0000
+
+    auto-commit for 9e28867a-12e7-46be-b818-34b16873fefc
+
+commit 2bb0152ab7025aaf9cb56cb2acea8c568568ea6e
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:33:47 2026 +0000
+
+    auto-commit for 61614cc0-31cd-4299-a693-30a1fd2b2594
+
+commit f52210b1243b4574c240cf46aa29c301599e0650
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:27:42 2026 +0000
+
+    auto-commit for f0eab070-2fea-42cb-9c0b-285863e74694
+
+commit 28be5269951897620ba7f794edc2e9d0717ba3c3
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:27:25 2026 +0000
+
+    auto-commit for 97d873b3-94d9-4f1c-aebc-c0f08c07ecfa
+
+commit b1cb0148394b5e16032eb7a34109070d2cbb45a5
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:26:59 2026 +0000
+
+    auto-commit for 4637b3b0-d1c3-4d74-b323-46a60e95a6da
+
+commit b5fed8fb957d9a0d978f6098b6a656053f757926
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:17:06 2026 +0000
+
+    auto-commit for e4a9d4cf-0296-478a-b534-d86b31be9db1
+
+commit 89efecc8b9b6cedc1775d4df8fb58096ed5dc023
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:16:24 2026 +0000
+
+    auto-commit for 0bf338ae-c2be-4e93-b8d8-a2a157e29b29
+
+commit e908b65695e763491ec43b4f22a4d83f8a8c10ab
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:13:54 2026 +0000
+
+    auto-commit for 3b2fa370-46e1-485d-acc4-3ec359215061
+
+commit 7786f58d562f6ad7f9b30ee892886da3e68dcbd3
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:13:43 2026 +0000
+
+    auto-commit for 966b8f06-d874-4099-b926-f38d1c59246b
+
+commit af4378614f95411e9ee13dd2398df5f26fdb5eea
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:13:25 2026 +0000
+
+    auto-commit for 7b6ee547-90f9-42a8-bd75-7af96256ac08
+
+commit 7b688b33c5f4bd1a860e1df7458300efe61da512
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 04:12:59 2026 +0000
+
+    auto-commit for ebff60b9-98fc-4a7d-bfbe-fea73f66fe4a
+
+commit 05ed3e86e2e004dbff3ef4d62ff4f020b1e0b3a5
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 03:58:18 2026 +0000
+
+    auto-commit for 2bede314-7aac-4fc3-9dea-87fb08f6a6ff
+
+commit 73416514781b7c4e8ce19c1dad1de8925e81193e
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 03:56:57 2026 +0000
+
+    auto-commit for 941bd5bc-3943-4b51-8073-0947fc0aac65
+
+commit 87e409c6337f1fc915d0f51ef380d1c8793af564
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 03:46:29 2026 +0000
+
+    auto-commit for 1420dca9-9d50-455f-aaaa-89a9c85f7191
+
+commit 55c049196ad36c972d50744150310355aaea83d6
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 03:45:31 2026 +0000
+
+    auto-commit for 5026b127-56d7-402b-92bf-0ecab81d58b4
+
+commit 1c6ac4bfa05c45b91d46a9adf2bd946c8206a15a
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 03:42:19 2026 +0000
+
+    auto-commit for c0eb095b-7ecc-4e60-b7f3-566deafda604
+
+commit 58845e1b96d3814a07e865a8c971030398e554fb
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 03:42:09 2026 +0000
+
+    auto-commit for 8a3672e7-4473-4523-9ff6-d983a50dd721
+
+commit c6384874033c0e33f3a73224ad9f95b785322331
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 03:40:34 2026 +0000
+
+    Auto-commit before changes
+
+commit 4ca1424e47181e71a1d1121b0e426aa5ce449221
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 03:36:06 2026 +0000
+
+    auto-commit for c6faa7e4-5a82-4681-bef9-b577f7892895
+
+commit 49fd86b1e4b1d91fa7f1f8571aff7f8760fd5f8d
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 03:34:42 2026 +0000
+
+    auto-commit for ac65feeb-7a67-439a-96f3-69673ca811f2
+
+commit 01a757a1b199ebb26c9ea5513894909f9fb5e490
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 03:34:05 2026 +0000
+
+    auto-commit for b75f941d-fa35-4f89-9356-2e4a85a932ff
+
+commit f336b14c67dc0dd3f6e1b6a17f669f9c3a0b3a76
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 03:33:37 2026 +0000
+
+    auto-commit for cb4fe411-b995-4214-995b-89ff197a5a87
+
+commit fd0ca01b7c4b7923758cf8bd7e6befce1307260f
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 03:32:40 2026 +0000
+
+    auto-commit for 9c5803cf-f202-4ceb-ba6b-18fc4005ccb3
+
+commit fc05a81e55ca3b0a6b1546caf1b8bab8c1398238
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 03:32:00 2026 +0000
+
+    auto-commit for dade4df0-f7aa-43d3-b7bc-8aa926bfcf97
+
+commit d38a867c260365d75159a2f5de6e0198d38cdcd0
 Author: emergent-agent-e1 <github@emergent.sh>
 Date:   Sat Jan 10 02:51:10 2026 +0000
 
@@ -2207,113 +2503,123 @@ commit 367918ae2e7f811fd7c35f0dbc40a5c27e4d6ae3
 Author: emergent-agent-e1 <github@emergent.sh>
 Date:   Wed Jan 7 13:13:22 2026 +0000
 
-    Initial commit) to identify if there was a bug that prevented  from being saved.
-        3.  Suggest creating a script to change the status of all items with a  to cotado as a partial data recovery step, as previously offered.
-    -   **Why fix this issue and what will be achieved with the fix?** The user has lost significant work and is frustrated. Addressing this is crucial for user trust, even if full data recovery is impossible.
+    Initial commit to find a past version of the  function that may have caused data loss.
+        3.  Offer to create a one-time script to recover some data (e.g., mark items with a sale price as cotado).
+    -   **Why fix this issue and what will be achieved with the fix?** Rebuilding user trust after significant data loss.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Backend (for script) / Frontend (for save logic).
-    -   **Blocked on other issue:** Blocked by the more critical P0 editing bug.
+    -   **Should Test frontend/backend/both after fix?** Backend (for script)
+    -   **Blocked on other issue:** P0 and P1 issues.
 
--   **Issue 3:**
-    -   **Attempted fixes:** Free, unreliable tracking APIs were tried. A background job to retry and a manual Mark as Delivered button were implemented as workarounds.
-    -   **Next debug checklist:** Investigate more stable (potentially paid) Correios tracking APIs to suggest to the user. Monitor background job logs.
-    -   **Why fix this issue and what will be achieved with the fix?** Fulfills a core user requirement for automatic package status updates.
-    -   **Status:** IN PROGRESS
+-   **Issue 4:** Unreliable automatic package tracking.
+    -   **Attempted fixes:** None in this session. Workarounds (retry job, manual button) exist from a previous session.
+    -   **Next debug checklist:** Research and propose a stable, paid Correios tracking API to the user.
+    -   **Why fix this issue and what will be achieved with the fix?** Fulfills a core user requirement for reliable, automatic status updates.
+    -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** backend
+    -   **Should Test frontend/backend/both after fix?** Backend
     -   **Blocked on other issue:** None
 
 **In progress Task List**:
--   None. The current focus is entirely on bug fixes.
+-   None.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P2) Add Não Atribuído to dropdown filters:** In message 241, the agent suggested adding an option to filter for items with no responsible user assigned. This has not been implemented yet.
-    -   **(P3) Hostinger Deployment Guidance:** The user asked about moving files for Hostinger deployment. The agent needs to explain the correct process (serving the  directory) to prevent the user from breaking their production app.
+    -   **(P2) Add Não Atribuído to dropdown filters:** In  and , add an option to the Responsável filter to find items with no assigned user.
 -   **Future Tasks:**
-    -   **(P3) Refactor Backend:** The  file is over 2300 lines and needs to be modularized.
+    -   **(P1) Refactor Backend:** The  file is now over 3000 lines and critically needs to be modularized into a proper directory structure (e.g., , , ).
+    -   **(P3) Hostinger Deployment Guidance:** The user previously asked how to deploy to Hostinger. The agent should provide a clear explanation of building the React app and serving the static  folder.
     -   **(P3) Resend Domain Verification:** The password reset functionality is limited until the user verifies their domain with Resend.
 
 **Completed work in this session**
--   **Advanced Filtering:** Added filters for Responsável, Código do Item, and OC to the  page.
--   **New Em Separação Status:** Integrated the new status into the backend and frontend (Dashboard, item pages).
--   **Dashboard Search:** Added search fields for Código do Item and Responsável to the main  page.
--   **Input Normalization:** Forced all inputs to uppercase via CSS and created a utility to remove accents, preventing duplicate entries.
--   **Supplier Unification:** Created and ran a backend script to merge duplicate supplier names (e.g., mercado livre and MERCADO LIVRE).
--   **Item Description Fix:** Modified the backend to always use full item descriptions from reference data, fixing truncation issues from the PDF parser. Ran a script to update all existing items.
--   **Backup & Restore Feature:** Implemented Export Backup (to JSON) and Restore Backup (from JSON) functionality for admins on the Dashboard.
--   **UI/UX Improvements:** Replaced the Responsável text input on the Dashboard with a dropdown menu. Added error handling with a retry button for API calls to prevent infinite loading screens.
--   **Critical Bug Fix (Duplicate Items):** Addressed the bug where editing items with duplicate codes caused conflicts. The fix was applied across , , and  by using a unique index for state management.
--   **Deployment Readiness:** Cleaned up the  file to resolve deployment blockers.
+-   **Feature: Invoice Management on Em Separação Page:**
+    -   Implemented file upload/download/delete for supplier and resale invoices (, ).
+    -   Added NCM/NF number extraction from XML/PDF ().
+    -   Created a copy to clipboard section for generating invoice data ().
+    -   Redesigned the entire section into a two-column layout based on user sketches.
+-   **Feature: Admin Panel Revamp:**
+    -   Replaced the existing  with a new two-tab interface for Comissões and Notas Fiscais.
+    -   **Commissions Tab:** Created backend logic and frontend UI to calculate, display, and manage commission payments for non-admin users, including payment history with edit/delete (, ).
+    -   **Notas Fiscais Tab:** Created backend logic and frontend UI to list all uploaded invoices for easy access and download (, ).
+-   **Bug Fix:** Resolved an issue where duplicate user names (e.g., maria and maria.onsolucoes) appeared in the commissions list ().
+-   **Backend Performance:** Refactored multiple endpoints (, , etc.) in  to use batch queries, resolving N+1 performance issues.
+-   **Deployment Readiness:** Cleaned up  to resolve deployment blockers. Explained the Replace Deployment feature to the user.
 
 **Earlier issues found/mentioned but not fixed**
--   **Data loss of cotado items:** The user reported losing about 50 quoted items. The agent's investigation concluded the data was likely never saved correctly, but the issue was not resolved, and the user remains concerned. This is now a high-priority pending issue.
+-   **Data loss of cotado items:** The user reported losing about 50 quoted items. The agent's investigation concluded the data was likely never saved correctly, but the issue was not resolved. This is tracked as a P2 pending issue.
+-   **Unreliable package tracking:** The existing free API is unstable. Tracked as a P3 pending issue.
 
 **Known issue recurrence from previous fork**
--   N/A
+-   The Editing duplicate items opens all of them bug was reported by the user as still existing in production after the last fork's fix was deployed. This session did not re-verify the fix with the user, so it remains a potential recurrence.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend:** FastAPI, Pydantic, Motor (async MongoDB), python-jose (JWT), PyMuPDF, .
--   **Frontend:** React (Hooks, Context), React Router, Axios, TailwindCSS. The agent used unique client-side IDs (based on index) to manage state for lists with non-unique data.
--   **Architecture:** SPA with a RESTful API.
+-   **Backend:** FastAPI, Pydantic, Motor (async MongoDB), python-jose (JWT), PyMuPDF, ,  (for XML parsing).
+-   **Frontend:** React (Hooks, Context), React Router, Axios, TailwindCSS.
+-   **Architecture:** SPA with a RESTful API. The backend is a single monolithic file.
 
 **key DB schema**
--   ****: { : List[] }
--   ****: {  (now includes 'em_separacao'), , : List[] }
--   ****: {uid=0(root) gid=0(root) groups=0(root), , , , , , }
+-   ****:
+    -   : Optional[str]
+    -   : List[]
+        -   : { ... : List[], : Optional[], : Optional[List[str]], : bool }
+-   **** (subdocument): { uid=0(root) gid=0(root) groups=0(root), , , , ,  }
+-   **** (new collection): { uid=0(root) gid=0(root) groups=0(root), , , , , ,  }
 
 **changes in tech stack**
 -   None.
 
 **All files of reference**
--   : Critical file for the main bug. Has been modified multiple times to handle editing of duplicate items.
--   : Also critical for the main bug, as the same logic needed to be fixed here.
--   : Added new filters and the backup/restore feature.
--   : Heavily modified. Added new status, new endpoints for backup/restore, description/supplier updates, and item updates by index. PDF parser logic was also changed.
--   : New file created for text normalization functions.
--   : Modified to add a global timeout to API calls.
+-   : Heavily modified with numerous new endpoints and logic for invoices and commissions. Now critically large.
+-   : Completely rewritten from scratch to implement the new Comissões and Notas Fiscais tabs.
+-   : Heavily modified to add the invoice management section and new two-column layout.
+-   : Not touched in this session, but relevant for the pending duplicate item edit bug.
 
 **Areas that need refactoring**:
--    is critically large (over 2300 lines) and should be broken into modules (, , ).
--    and  are large and handle complex state. They could be refactored into smaller components.
+-   : **CRITICAL.** Now over 3000 lines, making it extremely difficult to maintain. It must be broken down into a modular structure (e.g., , , ).
+-   : Very large and handles complex state for two distinct features. Could be broken into smaller components (e.g., , ).
+-   : Also large and complex; the Em Separação section could be its own component.
 
 **key api endpoints**
 -   
 -   
 -   
 -   
--    (For updating item quotes)
--    (For full item updates)
+-   
+-   
+-   
+-   
+-    (for updating NCM)
 
 **Critical Info for New Agent**
--   The absolute priority (P0) is the recurring bug where editing duplicate items fails in production. The user has deployed the agent's fixes but reports it's still broken. Your first step must be to guide the user through clearing their browser cache () as this is the most likely culprit. The agent's own tests in the preview environment confirm the fix works there.
--   The user is extremely anxious about data loss after ~50 cotado (quoted) items disappeared. The agent concluded the data was never saved correctly but didn't resolve the user's frustration. This is a P1 issue. Acknowledge their frustration and be prepared to investigate the historical save logic or perform a data cleanup script.
--   The production environment experienced a  and CORS errors that self-resolved. This could indicate deployment instability. Be cautious and advise the user to use the newly created backup feature before any new deployment.
--   Explain the Hostinger deployment process for a Create-React-App project (serving the  folder) when the user is ready to address it. Do not let the user move files from .
+-   **Priority 1:** Your immediate task is to fix the bug where admins appear in the Comissões list. The fix is in  in the  endpoint.
+-   **Priority 2:** After fixing the commission bug, you **must** address the unresolved critical bug from the previous session: Editing duplicate items opens all of them. Do not start new features until you have explicitly asked the user to test the existing fix (with a cache clear) and confirmed it is resolved.
+-   The user is highly engaged and provides detailed visual feedback. Pay close attention to their drawings and requests for layout changes.
+-   The backend  file is a major liability. After resolving the immediate bugs, you should strongly propose a refactoring task to the user to make the application maintainable.
 
 **documents and test reports created in this job**
+-   
 -    (Updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Reports the duplicate item editing bug persists in production after deploying the agent's fix.
-2.  **Agent:** Assures the user the fix is in the code and suggests it's a caching issue, recommending a hard refresh.
-3.  **User:** Frustrated, insists the fix is not working.
-4.  **Agent:** Acknowledges the issue and begins a deeper investigation, creating a unique client-side ID for each item in .
-5.  **User:** Asks the agent to test the fix by navigating from the Dashboard to the OC details page.
-6.  **Agent:** Runs the test and discovers the bug also exists in  and fixes it there as well.
-7.  **Agent:** Confirms via screenshots that the fix now works on both pages in the preview environment and asks the user to deploy again.
-8.  **User:** Reports the production environment has a  error and CORS issues.
-9.  **Agent:** Investigates CORS settings and finds no code errors, suggests the issue is with the deployment itself.
-10. **User:** Reports the production site came back to normal on its own.
+1.  **User:** Asks for adjustments to the Commissions tab (show only name) and Fiscal Notes tab (two-column layout).
+2.  **Agent:** Implements the layout changes.
+3.  **User:** Requests more changes for Commissions (edit/delete payment history) and Fiscal Notes (add NF number).
+4.  **Agent:** Implements the changes.
+5.  **User:** Reports a new bug: duplicate Maria in the commissions list. Confirms the commission calculation for multiple items should be automatic.
+6.  **Agent:** Investigates and finds the cause (un-normalized names from two different data sources).
+7.  **Agent:** Fixes the duplicate name issue.
+8.  **User:** Asks agent to call the deployment agent and run a health check.
+9.  **Agent:** Runs health checks, finds and fixes issues with  and N+1 queries, and confirms the system is ready for deployment.
+10. **User:** Reports the final bug: Admins (João and Mateus) are showing up in the commission list, but they shouldn't.
 
 **Project Health Check:**
--   **Broken:** The user reports the critical bug with editing duplicate-coded items still exists in production. The production environment also showed temporary instability (, CORS errors) after a recent deploy.
--   **Mocked:** Forgot Password email functionality is limited because the user's Resend domain is not verified.
--   **Unreliable:** The automatic package tracking feature relies on unstable free APIs.
+-   **Broken:** The Comissões feature is showing incorrect data (admins in the list).
+-   **Unknown:** The status of the critical duplicate item editing bug is unknown, as it was not verified by the user in this session.
+-   **Mocked:** Forgot Password email functionality is limited (Resend domain not verified).
+-   **Technical Debt:** The backend  is over 3000 lines and urgently needs refactoring.
 
 **3rd Party Integrations**
 -   **Resend:** For emails (functionality limited).
@@ -2322,10 +2628,10 @@ Date:   Wed Jan 7 13:13:22 2026 +0000
 -   **APScheduler:** For running background jobs in the backend.
 
 **Testing status**
--   **Testing agent used after significant changes:** NO
+-   **Testing agent used after significant changes:** YES, once after the initial invoice feature implementation.
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** []
--   **Known regressions:** The user reported a loss of data for ~50 cotado items. While likely a pre-existing bug, it's a regression from the user's perspective that was discovered during this session and is unresolved.
+-   **Known regressions:** The duplicate item editing bug from the previous fork may still be a regression in production.
 
 **Credentials to test flow:**
 -   **Admin Login (João):**
@@ -2336,6 +2642,5 @@ Date:   Wed Jan 7 13:13:22 2026 +0000
     -   **Password:** 
 
 **What agent forgot to execute**
--   The agent did not resolve the user's data loss issue concerning cotado items. After concluding the data was likely never saved correctly, the agent moved on, leaving the user frustrated.
--   The agent did not follow up on their own suggestion to add a Não Atribuído filter option.
--   The agent did not resolve the user's question about how to deploy to Hostinger, which was a pending item from the previous handoff.</analysis>
+-   The agent did not get user verification for the critical duplicate item editing bug fix from the previous session.
+-   The agent did not address several pending tasks from the previous handoff: the data loss of cotado items issue, the unreliable package tracking issue, adding a Não Atribuído filter, and providing Hostinger deployment guidance.</analysis>

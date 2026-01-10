@@ -25,10 +25,10 @@
   "test_credentials": {
     "admin": {"email": "projetos.onsolucoes@gmail.com", "password": "on123456"}
   },
-  "seed_data_creation": "Used existing PO: ID=c885f4bb-fc52-44f4-b064-1503707b994a, numero_oc=OC-2.118938, Item codigo=114641 with status 'em_separacao'",
+  "seed_data_creation": "Used existing PO: ID=fiep-orders, numero_oc=OC-2.118938, Item codigo=114641 with status 'em_separacao'",
   "retest_needed": false,
   "should_main_agent_self_test": false,
-  "context_for_next_testing_agent": "Em Separação page functionality is complete and working. Backend tests in /app/tests/test_em_separacao_nf.py cover: NF upload (fornecedor/revenda), NCM extraction from XML, manual NCM input, NF download, NF delete, endereco editing, NF emitida checkbox toggle, and error handling. Test data: PO ID=c885f4bb-fc52-44f4-b064-1503707b994a, item_index=0.",
+  "context_for_next_testing_agent": "Em Separação page functionality is complete and working. Backend tests in /app/tests/test_em_separacao_nf.py cover: NF upload (fornecedor/revenda), NCM extraction from XML, manual NCM input, NF download, NF delete, endereco editing, NF emitida checkbox toggle, and error handling. Test data: PO ID=fiep-orders, item_index=0.",
   "test_results": {
     "backend_tests": {
       "total": 22,
