@@ -126,12 +126,14 @@ const AllItemsSummary = () => {
           <div className="stat-value" style={{ color: '#f59e0b', fontSize: '1.8rem' }}>{formatBRL(totalCompra)}</div>
         </div>
         <div className="stat-card" style={{ borderColor: '#6366f1' }}>
-          <div className="stat-label">Total Frete Compra</div>
-          <div className="stat-value" style={{ color: '#6366f1', fontSize: '1.8rem' }}>{formatBRL(totalFreteCompra)}</div>
-        </div>
-        <div className="stat-card" style={{ borderColor: '#ec4899' }}>
-          <div className="stat-label">Total Frete Envio</div>
-          <div className="stat-value" style={{ color: '#ec4899', fontSize: '1.8rem' }}>{formatBRL(totalFreteEnvio)}</div>
+          <div className="stat-label">Total de Fretes</div>
+          <div className="stat-value" style={{ color: '#6366f1', fontSize: '1.8rem' }}>{formatBRL(totalFretes)}</div>
+          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+            {formatBRL(totalFreteCompra)} + {formatBRL(totalFreteEnvio)}
+          </div>
+          <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>
+            (Compra + Envio)
+          </div>
         </div>
         <div className="stat-card" style={{ borderColor: totalLucroPrevisto > 0 ? '#10b981' : '#ef4444' }}>
           <div className="stat-label">Lucro Previsto</div>
@@ -152,6 +154,15 @@ const AllItemsSummary = () => {
           </div>
           <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
             (Em trânsito + Entregues)
+          </div>
+        </div>
+        <div className="stat-card" style={{ borderColor: '#7c3aed', background: '#faf5ff' }}>
+          <div className="stat-label">Total Comissões a Pagar</div>
+          <div className="stat-value" style={{ color: '#7c3aed', fontSize: '1.8rem', fontWeight: '800' }}>
+            {formatBRL(totalComissoes)}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+            (1,5% do valor vendido)
           </div>
         </div>
       </div>
