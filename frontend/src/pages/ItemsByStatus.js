@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { apiGet, apiPatch, apiPost, API, formatBRL } from '../utils/api';
+import { apiGet, apiPatch, apiPost, apiDelete, API, formatBRL } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { v4 as uuidv4 } from 'uuid';
 import { normalizeText } from '../utils/textUtils';
@@ -22,6 +22,14 @@ const ItemsByStatus = () => {
   const [expandedRastreio, setExpandedRastreio] = useState({});
   const [codigosRastreio, setCodigosRastreio] = useState({});  // Objeto com código por item
   const [salvandoRastreio, setSalvandoRastreio] = useState(null);
+  
+  // Estados para Notas Fiscais (página Em Separação)
+  const [expandedNF, setExpandedNF] = useState({});
+  const [uploadingNF, setUploadingNF] = useState(null);
+  const [editingEndereco, setEditingEndereco] = useState(null);
+  const [enderecoTemp, setEnderecoTemp] = useState('');
+  const [ncmManual, setNcmManual] = useState({});
+  const fileInputRef = useRef({});
 
   const statusLabels = {
     'pendente': 'Pendentes',
