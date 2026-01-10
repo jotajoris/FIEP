@@ -1247,6 +1247,438 @@ const ItemsByStatus = () => {
                         </div>
                       )}
 
+                      {/* ============== SEÇÃO EM SEPARAÇÃO - ENDEREÇO E NOTAS FISCAIS ============== */}
+                      {status === 'em_separacao' && (
+                        <div style={{ width: '100%', marginTop: '1rem' }}>
+                          {/* Endereço de Entrega */}
+                          <div style={{ 
+                            padding: '1rem', 
+                            background: '#f0f9ff', 
+                            borderRadius: '8px',
+                            border: '1px solid #bae6fd',
+                            marginBottom: '1rem'
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                              <div style={{ fontWeight: '600', color: '#0369a1', fontSize: '0.9rem' }}>
+                                📍 Endereço de Entrega (OC: {item.numero_oc})
+                              </div>
+                              {editingEndereco !== item._uniqueId && (
+                                <button
+                                  onClick={() => startEditEndereco(item)}
+                                  className="btn btn-secondary"
+                                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                                  data-testid={`edit-endereco-${item._uniqueId}`}
+                                >
+                                  ✏️ Editar
+                                </button>
+                              )}
+                            </div>
+                            
+                            {editingEndereco === item._uniqueId ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <textarea
+                                  value={enderecoTemp}
+                                  onChange={(e) => setEnderecoTemp(e.target.value)}
+                                  className="form-input"
+                                  rows={3}
+                                  style={{ width: '100%', textTransform: 'uppercase' }}
+                                  placeholder="Digite o endereço completo com CEP..."
+                                  data-testid={`input-endereco-${item._uniqueId}`}
+                                />
+                                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                  <button
+                                    onClick={cancelEditEndereco}
+                                    className="btn btn-secondary"
+                                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                                  >
+                                    Cancelar
+                                  </button>
+                                  <button
+                                    onClick={() => saveEndereco(item)}
+                                    className="btn btn-primary"
+                                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                                  >
+                                    Salvar
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div style={{ 
+                                padding: '0.75rem', 
+                                background: 'white', 
+                                borderRadius: '6px',
+                                fontSize: '0.9rem',
+                                color: item.endereco_entrega ? '#1e3a5f' : '#9ca3af'
+                              }}>
+                                {item.endereco_entrega || 'Endereço não informado - Clique em Editar para adicionar'}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Botão para expandir seção de NFs */}
+                          <button
+                            onClick={() => toggleNFSection(item._uniqueId)}
+                            className="btn"
+                            style={{ 
+                              width: '100%', 
+                              padding: '0.75rem', 
+                              background: expandedNF[item._uniqueId] ? '#4f46e5' : '#e0e7ff',
+                              color: expandedNF[item._uniqueId] ? 'white' : '#4338ca',
+                              border: 'none',
+                              borderRadius: '8px',
+                              fontWeight: '600',
+                              fontSize: '0.9rem',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between'
+                            }}
+                            data-testid={`toggle-nf-${item._uniqueId}`}
+                          >
+                            <span>
+                              📄 Notas Fiscais 
+                              {(item.notas_fiscais_fornecedor?.length > 0 || item.nota_fiscal_revenda) && (
+                                <span style={{ 
+                                  marginLeft: '0.5rem',
+                                  background: expandedNF[item._uniqueId] ? 'white' : '#4338ca',
+                                  color: expandedNF[item._uniqueId] ? '#4338ca' : 'white',
+                                  padding: '0.1rem 0.5rem',
+                                  borderRadius: '10px',
+                                  fontSize: '0.75rem'
+                                }}>
+                                  {(item.notas_fiscais_fornecedor?.length || 0) + (item.nota_fiscal_revenda ? 1 : 0)}
+                                </span>
+                              )}
+                            </span>
+                            <span>{expandedNF[item._uniqueId] ? '▲' : '▼'}</span>
+                          </button>
+
+                          {/* Checkbox NF Emitida / Pronto para Despacho */}
+                          <div style={{ 
+                            marginTop: '1rem',
+                            padding: '0.75rem',
+                            background: item.nf_emitida_pronto_despacho ? '#dcfce7' : '#fef3c7',
+                            borderRadius: '8px',
+                            border: `1px solid ${item.nf_emitida_pronto_despacho ? '#86efac' : '#fcd34d'}`
+                          }}>
+                            <label style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '0.75rem',
+                              cursor: 'pointer',
+                              fontWeight: '600',
+                              color: item.nf_emitida_pronto_despacho ? '#166534' : '#92400e'
+                            }}>
+                              <input
+                                type="checkbox"
+                                checked={item.nf_emitida_pronto_despacho || false}
+                                onChange={() => toggleNFEmitida(item)}
+                                style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                                data-testid={`checkbox-nf-emitida-${item._uniqueId}`}
+                              />
+                              {item.nf_emitida_pronto_despacho 
+                                ? '✅ NF Emitida / Pronto para Despacho' 
+                                : '⏳ NF Emitida / Pronto para Despacho'}
+                            </label>
+                          </div>
+
+                          {/* Seção expandida de NFs */}
+                          {expandedNF[item._uniqueId] && (
+                            <div style={{ 
+                              marginTop: '1rem',
+                              padding: '1rem',
+                              background: '#f5f3ff',
+                              borderRadius: '8px',
+                              border: '1px solid #c4b5fd'
+                            }}>
+                              {/* NFs de Fornecedor */}
+                              <div style={{ marginBottom: '1.5rem' }}>
+                                <div style={{ 
+                                  fontWeight: '700', 
+                                  color: '#5b21b6', 
+                                  marginBottom: '0.75rem',
+                                  fontSize: '0.95rem',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem'
+                                }}>
+                                  🏭 Notas Fiscais do Fornecedor (múltiplas)
+                                </div>
+                                
+                                {/* Lista de NFs existentes */}
+                                {item.notas_fiscais_fornecedor && item.notas_fiscais_fornecedor.length > 0 ? (
+                                  <div style={{ marginBottom: '1rem' }}>
+                                    {item.notas_fiscais_fornecedor.map((nf, nfIdx) => (
+                                      <div key={nf.id} style={{ 
+                                        padding: '0.75rem',
+                                        background: 'white',
+                                        borderRadius: '6px',
+                                        marginBottom: '0.5rem',
+                                        border: '1px solid #ddd6fe'
+                                      }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                            <span style={{ fontWeight: '600', color: '#374151' }}>
+                                              {nf.filename.endsWith('.xml') ? '📑' : '📄'} {nf.filename}
+                                            </span>
+                                            <span style={{ 
+                                              padding: '0.2rem 0.5rem',
+                                              background: nf.ncm ? '#dcfce7' : '#fee2e2',
+                                              color: nf.ncm ? '#166534' : '#991b1b',
+                                              borderRadius: '4px',
+                                              fontSize: '0.8rem',
+                                              fontWeight: '600'
+                                            }}>
+                                              NCM: {nf.ncm || 'NÃO ENCONTRADO'}
+                                            </span>
+                                          </div>
+                                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                            <button
+                                              onClick={() => downloadNF(item, nf.id, nf.filename)}
+                                              className="btn btn-secondary"
+                                              style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}
+                                              title="Baixar"
+                                            >
+                                              ⬇️
+                                            </button>
+                                            <button
+                                              onClick={() => deleteNF(item, nf.id, 'fornecedor')}
+                                              className="btn"
+                                              style={{ 
+                                                padding: '0.3rem 0.6rem', 
+                                                fontSize: '0.75rem',
+                                                background: '#fee2e2',
+                                                color: '#991b1b',
+                                                border: 'none'
+                                              }}
+                                              title="Remover"
+                                            >
+                                              🗑️
+                                            </button>
+                                          </div>
+                                        </div>
+                                        {/* Campo para editar NCM se não encontrado */}
+                                        {!nf.ncm && (
+                                          <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                            <input
+                                              type="text"
+                                              placeholder="Digite o NCM manualmente"
+                                              className="form-input"
+                                              style={{ flex: 1, padding: '0.4rem', fontSize: '0.85rem', textTransform: 'uppercase' }}
+                                              onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                  updateNCM(item, nf.id, e.target.value);
+                                                }
+                                              }}
+                                            />
+                                            <button
+                                              onClick={(e) => {
+                                                const input = e.target.previousSibling;
+                                                if (input && input.value) {
+                                                  updateNCM(item, nf.id, input.value);
+                                                }
+                                              }}
+                                              className="btn btn-primary"
+                                              style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                                            >
+                                              Salvar NCM
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div style={{ 
+                                    padding: '1rem', 
+                                    background: 'white', 
+                                    borderRadius: '6px',
+                                    color: '#6b7280',
+                                    textAlign: 'center',
+                                    marginBottom: '1rem'
+                                  }}>
+                                    Nenhuma NF de fornecedor adicionada
+                                  </div>
+                                )}
+
+                                {/* Upload de NF de Fornecedor */}
+                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                  <input
+                                    type="text"
+                                    placeholder="NCM manual (opcional)"
+                                    value={ncmManual[`${item._uniqueId}-fornecedor`] || ''}
+                                    onChange={(e) => setNcmManual(prev => ({ ...prev, [`${item._uniqueId}-fornecedor`]: e.target.value.toUpperCase() }))}
+                                    className="form-input"
+                                    style={{ width: '150px', padding: '0.5rem', fontSize: '0.85rem', textTransform: 'uppercase' }}
+                                  />
+                                  <label 
+                                    className="btn btn-primary"
+                                    style={{ 
+                                      padding: '0.5rem 1rem',
+                                      cursor: uploadingNF === `${item._uniqueId}-fornecedor` ? 'not-allowed' : 'pointer',
+                                      opacity: uploadingNF === `${item._uniqueId}-fornecedor` ? 0.7 : 1
+                                    }}
+                                  >
+                                    {uploadingNF === `${item._uniqueId}-fornecedor` ? 'Enviando...' : '+ Adicionar NF Fornecedor (PDF/XML)'}
+                                    <input
+                                      type="file"
+                                      accept=".pdf,.xml"
+                                      style={{ display: 'none' }}
+                                      onChange={(e) => handleFileUpload(item, 'fornecedor', e)}
+                                      disabled={uploadingNF === `${item._uniqueId}-fornecedor`}
+                                    />
+                                  </label>
+                                </div>
+                              </div>
+
+                              {/* Divisor */}
+                              <div style={{ height: '1px', background: '#c4b5fd', margin: '1.5rem 0' }} />
+
+                              {/* NF de Revenda */}
+                              <div>
+                                <div style={{ 
+                                  fontWeight: '700', 
+                                  color: '#0891b2', 
+                                  marginBottom: '0.75rem',
+                                  fontSize: '0.95rem',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem'
+                                }}>
+                                  🏢 Nossa Nota Fiscal de Revenda (única)
+                                </div>
+                                
+                                {item.nota_fiscal_revenda ? (
+                                  <div style={{ 
+                                    padding: '0.75rem',
+                                    background: '#ecfeff',
+                                    borderRadius: '6px',
+                                    border: '1px solid #a5f3fc',
+                                    marginBottom: '1rem'
+                                  }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                        <span style={{ fontWeight: '600', color: '#374151' }}>
+                                          {item.nota_fiscal_revenda.filename.endsWith('.xml') ? '📑' : '📄'} {item.nota_fiscal_revenda.filename}
+                                        </span>
+                                        <span style={{ 
+                                          padding: '0.2rem 0.5rem',
+                                          background: item.nota_fiscal_revenda.ncm ? '#dcfce7' : '#fee2e2',
+                                          color: item.nota_fiscal_revenda.ncm ? '#166534' : '#991b1b',
+                                          borderRadius: '4px',
+                                          fontSize: '0.8rem',
+                                          fontWeight: '600'
+                                        }}>
+                                          NCM: {item.nota_fiscal_revenda.ncm || 'NÃO ENCONTRADO'}
+                                        </span>
+                                      </div>
+                                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button
+                                          onClick={() => downloadNF(item, item.nota_fiscal_revenda.id, item.nota_fiscal_revenda.filename)}
+                                          className="btn btn-secondary"
+                                          style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}
+                                          title="Baixar"
+                                        >
+                                          ⬇️
+                                        </button>
+                                        <button
+                                          onClick={() => deleteNF(item, item.nota_fiscal_revenda.id, 'revenda')}
+                                          className="btn"
+                                          style={{ 
+                                            padding: '0.3rem 0.6rem', 
+                                            fontSize: '0.75rem',
+                                            background: '#fee2e2',
+                                            color: '#991b1b',
+                                            border: 'none'
+                                          }}
+                                          title="Remover"
+                                        >
+                                          🗑️
+                                        </button>
+                                      </div>
+                                    </div>
+                                    {/* Campo para editar NCM se não encontrado */}
+                                    {!item.nota_fiscal_revenda.ncm && (
+                                      <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                        <input
+                                          type="text"
+                                          placeholder="Digite o NCM manualmente"
+                                          className="form-input"
+                                          style={{ flex: 1, padding: '0.4rem', fontSize: '0.85rem', textTransform: 'uppercase' }}
+                                          onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                              updateNCM(item, item.nota_fiscal_revenda.id, e.target.value);
+                                            }
+                                          }}
+                                        />
+                                        <button
+                                          onClick={(e) => {
+                                            const input = e.target.previousSibling;
+                                            if (input && input.value) {
+                                              updateNCM(item, item.nota_fiscal_revenda.id, input.value);
+                                            }
+                                          }}
+                                          className="btn btn-primary"
+                                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                                        >
+                                          Salvar NCM
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div style={{ 
+                                    padding: '1rem', 
+                                    background: '#ecfeff', 
+                                    borderRadius: '6px',
+                                    color: '#6b7280',
+                                    textAlign: 'center',
+                                    marginBottom: '1rem'
+                                  }}>
+                                    Nenhuma NF de revenda adicionada
+                                  </div>
+                                )}
+
+                                {/* Upload de NF de Revenda (só aparece se não tiver) */}
+                                {!item.nota_fiscal_revenda && (
+                                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <input
+                                      type="text"
+                                      placeholder="NCM manual (opcional)"
+                                      value={ncmManual[`${item._uniqueId}-revenda`] || ''}
+                                      onChange={(e) => setNcmManual(prev => ({ ...prev, [`${item._uniqueId}-revenda`]: e.target.value.toUpperCase() }))}
+                                      className="form-input"
+                                      style={{ width: '150px', padding: '0.5rem', fontSize: '0.85rem', textTransform: 'uppercase' }}
+                                    />
+                                    <label 
+                                      className="btn"
+                                      style={{ 
+                                        padding: '0.5rem 1rem',
+                                        background: '#06b6d4',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '6px',
+                                        cursor: uploadingNF === `${item._uniqueId}-revenda` ? 'not-allowed' : 'pointer',
+                                        opacity: uploadingNF === `${item._uniqueId}-revenda` ? 0.7 : 1
+                                      }}
+                                    >
+                                      {uploadingNF === `${item._uniqueId}-revenda` ? 'Enviando...' : '+ Adicionar Nossa NF (PDF/XML)'}
+                                      <input
+                                        type="file"
+                                        accept=".pdf,.xml"
+                                        style={{ display: 'none' }}
+                                        onChange={(e) => handleFileUpload(item, 'revenda', e)}
+                                        disabled={uploadingNF === `${item._uniqueId}-revenda`}
+                                      />
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <button 
                         onClick={() => startEdit(item)} 
                         className="btn btn-secondary" 
