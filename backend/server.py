@@ -3115,6 +3115,9 @@ async def get_itens_responsavel(responsavel: str, current_user: dict = Depends(r
         'FABIO': [32,33,34,35,36,37,38,39,40,41,42],
     }
     
+    # OCs que foram cotadas por ADMIN (João/Mateus) e não devem gerar comissão
+    OCS_EXCLUIDAS_COMISSAO = ['OC-2.118938', 'OC-2.118941']
+    
     # Comissão fixa de 1.5%
     PERCENTUAL_COMISSAO = 1.5
     
@@ -3145,6 +3148,12 @@ async def get_itens_responsavel(responsavel: str, current_user: dict = Depends(r
     
     itens = []
     for po in pos:
+        numero_oc = po.get('numero_oc', '')
+        
+        # Pular OCs que foram cotadas por admin
+        if numero_oc in OCS_EXCLUIDAS_COMISSAO:
+            continue
+            
         for idx, item in enumerate(po.get('items', [])):
             item_status = item.get('status', '')
             # Apenas itens "entregue" ou "em_transito" geram comissão
@@ -3166,7 +3175,7 @@ async def get_itens_responsavel(responsavel: str, current_user: dict = Depends(r
                 'id': item_id,
                 'po_id': po.get('id'),
                 'item_index': idx,
-                'numero_oc': po.get('numero_oc'),
+                'numero_oc': numero_oc,
                 'codigo_item': item.get('codigo_item'),
                 'descricao': (item.get('descricao', '') or '')[:30],
                 'lote': item.get('lote'),
