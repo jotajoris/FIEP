@@ -571,6 +571,397 @@ Chave PIX: 46.663.556/0001-69`;
     }
   };
 
+  // Função para renderizar o conteúdo completo de um item (edição, NF, etc)
+  // Usada tanto na visualização normal quanto na agrupada por OC
+  const renderItemContent = (item) => {
+    return (
+      <>
+        {editingItem === item._uniqueId ? (
+          renderEditForm(item)
+        ) : (
+          renderItemDetails(item)
+        )}
+      </>
+    );
+  };
+
+  // Renderiza detalhes do item quando NÃO está em modo de edição
+  const renderItemDetails = (item) => {
+    return (
+      <>
+        {/* Fontes de Compra */}
+        {item.fontes_compra && item.fontes_compra.length > 0 && (
+          <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+            <div style={{ fontWeight: '600', color: '#166534', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+              🛒 Locais de Compra ({item.fontes_compra.length})
+            </div>
+            {item.fontes_compra.map((fc, idx) => (
+              <div key={fc.id || idx} style={{ fontSize: '0.85rem', color: '#4a5568', marginBottom: '0.25rem' }}>
+                <span><strong>Qtd:</strong> {fc.quantidade}</span>
+                <span style={{ marginLeft: '1rem' }}><strong>Preço:</strong> {formatBRL(fc.preco_unitario)}</span>
+                <span style={{ marginLeft: '1rem' }}><strong>Frete:</strong> {formatBRL(fc.frete)}</span>
+                {fc.fornecedor && <span style={{ marginLeft: '1rem' }}><strong>Fornecedor:</strong> {fc.fornecedor}</span>}
+                {fc.link && (
+                  <a href={fc.link} target="_blank" rel="noopener noreferrer" style={{ marginLeft: '1rem', color: '#667eea' }}>
+                    Ver link
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Seção de NFs para Em Separação */}
+        {status === 'em_separacao' && renderNFSection(item)}
+
+        {/* Seção de Rastreio para Em Trânsito */}
+        {status === 'em_transito' && renderRastreioSection(item)}
+
+        {/* Botão Editar */}
+        <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            onClick={() => startEdit(item)}
+            className="btn btn-primary"
+            style={{ padding: '0.5rem 1rem' }}
+            data-testid={`edit-btn-${item.codigo_item}`}
+          >
+            ✏️ Editar
+          </button>
+        </div>
+      </>
+    );
+  };
+
+  // Renderiza a seção de Notas Fiscais (para Em Separação)
+  const renderNFSection = (item) => {
+    const isExpanded = expandedNF[item._uniqueId];
+    
+    return (
+      <div style={{ marginTop: '1rem' }}>
+        {/* Grid de duas colunas para NFs e Dados */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+          gap: '1rem',
+          marginTop: '1rem'
+        }}>
+          {/* Coluna Esquerda: CNPJ e NFs */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* CNPJ do Requisitante */}
+            {item.cnpj_requisitante && (
+              <div style={{ 
+                padding: '0.75rem', 
+                background: '#fef3c7', 
+                borderRadius: '8px',
+                border: '1px solid #fcd34d'
+              }}>
+                <div style={{ fontSize: '0.75rem', color: '#92400e', fontWeight: '600', marginBottom: '0.25rem' }}>
+                  CNPJ DO REQUISITANTE
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontWeight: '600', color: '#78350f' }}>{item.cnpj_requisitante}</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(item.cnpj_requisitante);
+                      alert('CNPJ copiado!');
+                    }}
+                    style={{ 
+                      padding: '0.25rem 0.5rem', 
+                      fontSize: '0.75rem', 
+                      background: '#f59e0b', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    📋 Copiar
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* NFs de Compra (Fornecedor) */}
+            <div style={{ 
+              padding: '0.75rem', 
+              background: '#f3e8ff', 
+              borderRadius: '8px',
+              border: '1px solid #c4b5fd'
+            }}>
+              <div style={{ fontSize: '0.85rem', color: '#6b21a8', fontWeight: '600', marginBottom: '0.5rem' }}>
+                📄 NFs de Compra (Fornecedor)
+              </div>
+              {item.notas_fiscais_fornecedor && item.notas_fiscais_fornecedor.length > 0 ? (
+                item.notas_fiscais_fornecedor.map((nf, idx) => (
+                  <div key={nf.id || idx} style={{ 
+                    padding: '0.5rem', 
+                    background: 'white', 
+                    borderRadius: '4px', 
+                    marginBottom: '0.25rem',
+                    fontSize: '0.8rem'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>{nf.filename}</span>
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        <button
+                          onClick={() => downloadNF(item, nf.id, nf.filename)}
+                          style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem', background: '#667eea', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                        >
+                          ⬇️
+                        </button>
+                        <button
+                          onClick={() => deleteNF(item, nf.id, 'fornecedor')}
+                          style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div style={{ color: '#9ca3af', fontSize: '0.8rem' }}>Nenhuma NF de compra adicionada</div>
+              )}
+              <button
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = '.pdf,.xml';
+                  input.onchange = (e) => uploadNF(item, e.target.files[0], 'fornecedor');
+                  input.click();
+                }}
+                disabled={uploadingNF === item._uniqueId}
+                style={{ 
+                  marginTop: '0.5rem',
+                  padding: '0.4rem 0.8rem', 
+                  fontSize: '0.8rem', 
+                  background: '#7c3aed', 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  width: '100%'
+                }}
+              >
+                {uploadingNF === item._uniqueId ? 'Enviando...' : '+ Adicionar NF Compra'}
+              </button>
+            </div>
+
+            {/* NF de Venda (ON) */}
+            <div style={{ 
+              padding: '0.75rem', 
+              background: '#ecfdf5', 
+              borderRadius: '8px',
+              border: '1px solid #86efac'
+            }}>
+              <div style={{ fontSize: '0.85rem', color: '#166534', fontWeight: '600', marginBottom: '0.5rem' }}>
+                📄 NF de Venda (ON)
+              </div>
+              {item.nota_fiscal_revenda ? (
+                <div style={{ 
+                  padding: '0.5rem', 
+                  background: 'white', 
+                  borderRadius: '4px',
+                  fontSize: '0.8rem'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>{item.nota_fiscal_revenda.filename}</span>
+                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                      <button
+                        onClick={() => downloadNF(item, item.nota_fiscal_revenda.id, item.nota_fiscal_revenda.filename)}
+                        style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem', background: '#667eea', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                      >
+                        ⬇️
+                      </button>
+                      <button
+                        onClick={() => deleteNF(item, item.nota_fiscal_revenda.id, 'revenda')}
+                        style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.pdf,.xml';
+                    input.onchange = (e) => uploadNF(item, e.target.files[0], 'revenda');
+                    input.click();
+                  }}
+                  disabled={uploadingNF === item._uniqueId}
+                  style={{ 
+                    padding: '0.4rem 0.8rem', 
+                    fontSize: '0.8rem', 
+                    background: '#22c55e', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    width: '100%'
+                  }}
+                >
+                  {uploadingNF === item._uniqueId ? 'Enviando...' : '+ Adicionar NF Venda'}
+                </button>
+              )}
+            </div>
+
+            {/* Checkbox NF Emitida */}
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem',
+              padding: '0.5rem',
+              background: item.nf_emitida_pronto_despacho ? '#dcfce7' : '#fef2f2',
+              borderRadius: '6px'
+            }}>
+              <input
+                type="checkbox"
+                checked={item.nf_emitida_pronto_despacho || false}
+                onChange={() => toggleNFEmitida(item)}
+                style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+              />
+              <span style={{ 
+                fontSize: '0.9rem', 
+                fontWeight: '600', 
+                color: item.nf_emitida_pronto_despacho ? '#16a34a' : '#dc2626' 
+              }}>
+                {item.nf_emitida_pronto_despacho ? '✓ NF Emitida / Pronto para Despacho' : '✗ NF Emitida / Pronto para Despacho'}
+              </span>
+            </div>
+          </div>
+
+          {/* Coluna Direita: Endereço e Dados Adicionais */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Endereço de Entrega */}
+            <div style={{ 
+              padding: '0.75rem', 
+              background: '#dbeafe', 
+              borderRadius: '8px',
+              border: '1px solid #93c5fd'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <div style={{ fontSize: '0.85rem', color: '#1e40af', fontWeight: '600' }}>
+                  📍 ENDEREÇO DE ENTREGA
+                </div>
+                {editingEndereco !== item._uniqueId && (
+                  <button
+                    onClick={() => startEditEndereco(item)}
+                    style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                  >
+                    ✏️ Editar
+                  </button>
+                )}
+              </div>
+              {editingEndereco === item._uniqueId ? (
+                <div>
+                  <textarea
+                    value={enderecoTemp}
+                    onChange={(e) => setEnderecoTemp(e.target.value)}
+                    className="form-input"
+                    style={{ width: '100%', minHeight: '60px', marginBottom: '0.5rem' }}
+                  />
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button onClick={() => saveEndereco(item)} style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', background: '#22c55e', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                      Salvar
+                    </button>
+                    <button onClick={cancelEditEndereco} style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', background: '#9ca3af', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ color: '#1e3a5f', fontSize: '0.9rem', fontWeight: '500' }}>
+                  {item.endereco_entrega || 'Não informado'}
+                </div>
+              )}
+            </div>
+
+            {/* Dados Adicionais da NF */}
+            <div style={{ 
+              padding: '0.75rem', 
+              background: '#fef9c3', 
+              borderRadius: '8px',
+              border: '1px solid #fde047'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <div style={{ fontSize: '0.85rem', color: '#854d0e', fontWeight: '600' }}>
+                  📝 DADOS ADICIONAIS DA NF
+                </div>
+                <button
+                  onClick={() => copiarDadosAdicionais(item)}
+                  style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', background: '#eab308', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                >
+                  📋 Copiar
+                </button>
+              </div>
+              <pre style={{ 
+                whiteSpace: 'pre-wrap', 
+                fontSize: '0.75rem', 
+                color: '#713f12',
+                background: 'white',
+                padding: '0.5rem',
+                borderRadius: '4px',
+                margin: 0
+              }}>
+                {gerarDadosAdicionaisNF(item)}
+              </pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Renderiza a seção de Rastreio (para Em Trânsito)
+  const renderRastreioSection = (item) => {
+    const hasRastreio = item.codigo_rastreio && item.codigo_rastreio.trim();
+    
+    return (
+      <div style={{ marginTop: '1rem', padding: '0.75rem', background: '#fef3c7', borderRadius: '8px', border: '1px solid #fcd34d' }}>
+        <div style={{ fontWeight: '600', color: '#92400e', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+          📦 Rastreamento
+        </div>
+        {hasRastreio ? (
+          <div style={{ fontSize: '0.85rem' }}>
+            <span><strong>Código:</strong> {item.codigo_rastreio}</span>
+            {item.status_rastreio && (
+              <span style={{ marginLeft: '1rem' }}><strong>Status:</strong> {item.status_rastreio}</span>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <input
+              type="text"
+              placeholder="Código de rastreio"
+              value={codigosRastreio[item._uniqueId] || ''}
+              onChange={(e) => setCodigosRastreio({...codigosRastreio, [item._uniqueId]: e.target.value.toUpperCase()})}
+              className="form-input"
+              style={{ flex: 1, padding: '0.4rem' }}
+            />
+            <button
+              onClick={() => salvarCodigoRastreio(item)}
+              disabled={salvandoRastreio === item._uniqueId}
+              className="btn btn-primary"
+              style={{ padding: '0.4rem 0.8rem' }}
+            >
+              {salvandoRastreio === item._uniqueId ? 'Salvando...' : 'Salvar'}
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Renderiza o formulário de edição do item
+  const renderEditForm = (item) => {
+    // Isso vai ser substituído pela renderização existente do formulário
+    // Por enquanto, retorna null e usaremos o código inline existente
+    return null;
+  };
+
   if (loading) {
     return <div className="loading" data-testid="loading-items">Carregando...</div>;
   }
