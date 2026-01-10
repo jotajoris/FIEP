@@ -3178,7 +3178,7 @@ class PagamentoCreate(BaseModel):
     itens_ids: List[str]
     percentual: float
     valor_comissao: float
-    total_lucro: float
+    total_venda: float  # Valor total de venda (1.5% sobre este valor)
 
 @api_router.get("/admin/pagamentos")
 async def get_pagamentos(current_user: dict = Depends(require_admin)):
@@ -3198,7 +3198,7 @@ async def create_pagamento(request: PagamentoCreate, current_user: dict = Depend
         "itens_ids": request.itens_ids,
         "percentual": request.percentual,
         "valor_comissao": request.valor_comissao,
-        "total_lucro": request.total_lucro,
+        "total_venda": request.total_venda,
         "qtd_itens": len(request.itens_ids),
         "data": datetime.now(timezone.utc).isoformat(),
         "pago_por": current_user.get('sub')
