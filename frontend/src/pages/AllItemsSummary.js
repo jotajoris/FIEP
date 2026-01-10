@@ -10,6 +10,9 @@ const LOTES_POR_PESSOA = {
 };
 const PERCENTUAL_COMISSAO = 1.5;
 
+// OCs cotadas por admin (João) - não geram comissão
+const OCS_EXCLUIDAS_COMISSAO = ['OC-2.118938', 'OC-2.118941'];
+
 // Função para extrair número do lote
 const extrairNumeroLote = (loteStr) => {
   if (!loteStr) return null;
