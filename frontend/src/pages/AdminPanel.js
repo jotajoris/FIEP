@@ -231,7 +231,7 @@ const AdminPanel = () => {
     return <div className="loading" data-testid="loading-admin">Carregando...</div>;
   }
 
-  const totalLucroEntregue = comissoes.reduce((sum, c) => sum + (c.lucro_entregue || 0), 0);
+  const totalVendaEntregue = comissoes.reduce((sum, c) => sum + (c.valor_venda_total || 0), 0);
 
   return (
     <div data-testid="admin-panel-page">
