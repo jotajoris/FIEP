@@ -240,7 +240,8 @@ const ItemsByStatus = () => {
         })).filter(fc => fc.quantidade > 0)
       };
       
-      await apiPatch(`${API}/purchase-orders/${item.po_id}/items/${item.codigo_item}`, payload);
+      // Usar endpoint com índice para evitar problema com itens duplicados
+      await apiPatch(`${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}`, payload);
       
       setEditingItem(null);
       setFormData({});
