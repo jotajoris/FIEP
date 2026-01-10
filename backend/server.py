@@ -2922,6 +2922,78 @@ async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
         'total_venda': len(nfs_venda)
     }
 
+@api_router.get("/admin/itens-responsavel/{responsavel}")
+async def get_itens_responsavel(responsavel: str, current_user: dict = Depends(require_admin)):
+    """Obter todos os itens entregues de um responsável para seleção de pagamento"""
+    
+    pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(length=1000)
+    
+    # Obter IDs de itens já pagos
+    pagamentos = await db.pagamentos.find({}, {"_id": 0}).to_list(length=1000)
+    itens_pagos = set()
+    for pag in pagamentos:
+        for item_id in pag.get('itens_ids', []):
+            itens_pagos.add(item_id)
+    
+    itens = []
+    for po in pos:
+        for idx, item in enumerate(po.get('items', [])):
+            resp = item.get('responsavel', '').upper().strip()
+            if resp == responsavel.upper() and item.get('status') == 'entregue':
+                item_id = f"{po.get('id')}_{idx}"
+                itens.append({
+                    'id': item_id,
+                    'po_id': po.get('id'),
+                    'item_index': idx,
+                    'numero_oc': po.get('numero_oc'),
+                    'codigo_item': item.get('codigo_item'),
+                    'descricao': item.get('descricao', '')[:30],
+                    'lucro_liquido': item.get('lucro_liquido', 0) or 0,
+                    'data_entrega': item.get('data_entrega'),
+                    'pago': item_id in itens_pagos
+                })
+    
+    # Ordenar por data de entrega (mais recente primeiro)
+    itens.sort(key=lambda x: x.get('data_entrega', '') or '', reverse=True)
+    
+    return itens
+
+class PagamentoCreate(BaseModel):
+    """Criar pagamento de comissão"""
+    responsavel: str
+    itens_ids: List[str]
+    percentual: float
+    valor_comissao: float
+    total_lucro: float
+
+@api_router.get("/admin/pagamentos")
+async def get_pagamentos(current_user: dict = Depends(require_admin)):
+    """Obter histórico de pagamentos"""
+    pagamentos = await db.pagamentos.find({}, {"_id": 0}).to_list(length=1000)
+    # Ordenar por data (mais recente primeiro)
+    pagamentos.sort(key=lambda x: x.get('data', ''), reverse=True)
+    return pagamentos
+
+@api_router.post("/admin/pagamentos")
+async def create_pagamento(request: PagamentoCreate, current_user: dict = Depends(require_admin)):
+    """Registrar pagamento de comissão"""
+    
+    pagamento = {
+        "id": str(uuid.uuid4()),
+        "responsavel": request.responsavel.upper(),
+        "itens_ids": request.itens_ids,
+        "percentual": request.percentual,
+        "valor_comissao": request.valor_comissao,
+        "total_lucro": request.total_lucro,
+        "qtd_itens": len(request.itens_ids),
+        "data": datetime.now(timezone.utc).isoformat(),
+        "pago_por": current_user.get('sub')
+    }
+    
+    await db.pagamentos.insert_one(pagamento)
+    
+    return {"success": True, "message": "Pagamento registrado com sucesso", "pagamento_id": pagamento["id"]}
+
 @app.on_event("startup")
 async def startup_event():
     """Iniciar job de verificação de rastreios ao iniciar o servidor"""
