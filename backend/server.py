@@ -3093,18 +3093,36 @@ async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
 
 @api_router.get("/admin/itens-responsavel/{responsavel}")
 async def get_itens_responsavel(responsavel: str, current_user: dict = Depends(require_admin)):
-    """Obter todos os itens entregues de um responsável para seleção de pagamento"""
+    """Obter todos os itens entregues/em_transito de uma pessoa baseado nos LOTES atribuídos
     
-    # Função para normalizar nome do responsável
-    def normalizar_nome(nome):
-        if not nome:
-            return ''
-        nome = nome.upper().strip()
-        nome = nome.replace('ONSOLUCOES', '').replace('.ONSOLUCOES', '')
-        nome = nome.replace('.', '').strip()
-        return nome
+    Sistema de Comissões baseado em LOTES específicos.
+    """
     
-    responsavel_normalizado = normalizar_nome(responsavel)
+    # Mapeamento fixo de LOTES por pessoa (baseado na cotação original)
+    LOTES_POR_PESSOA = {
+        'MARIA': [1,2,3,4,5,6,7,8,9,10,11,12,43,44,45,46,47,48,49,50,51,52,53],
+        'MYLENA': [80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97],
+        'FABIO': [32,33,34,35,36,37,38,39,40,41,42],
+    }
+    
+    # Comissão fixa de 1.5%
+    PERCENTUAL_COMISSAO = 1.5
+    
+    def extrair_numero_lote(lote_str):
+        """Extrai o número do lote de strings como 'Lote 36' ou '36'"""
+        if not lote_str:
+            return None
+        import re
+        match = re.search(r'(\d+)', str(lote_str))
+        return int(match.group(1)) if match else None
+    
+    responsavel_upper = responsavel.upper().strip()
+    
+    # Verificar se o responsável existe no mapeamento
+    if responsavel_upper not in LOTES_POR_PESSOA:
+        return []
+    
+    lotes_do_responsavel = LOTES_POR_PESSOA[responsavel_upper]
     
     pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(length=1000)
     
@@ -3118,21 +3136,36 @@ async def get_itens_responsavel(responsavel: str, current_user: dict = Depends(r
     itens = []
     for po in pos:
         for idx, item in enumerate(po.get('items', [])):
-            resp_raw = item.get('responsavel', '').upper().strip()
-            resp = normalizar_nome(resp_raw)
-            if resp == responsavel_normalizado and item.get('status') == 'entregue':
-                item_id = f"{po.get('id')}_{idx}"
-                itens.append({
-                    'id': item_id,
-                    'po_id': po.get('id'),
-                    'item_index': idx,
-                    'numero_oc': po.get('numero_oc'),
-                    'codigo_item': item.get('codigo_item'),
-                    'descricao': item.get('descricao', '')[:30],
-                    'lucro_liquido': item.get('lucro_liquido', 0) or 0,
-                    'data_entrega': item.get('data_entrega'),
-                    'pago': item_id in itens_pagos
-                })
+            item_status = item.get('status', '')
+            # Apenas itens "entregue" ou "em_transito" geram comissão
+            if item_status not in ['entregue', 'em_transito']:
+                continue
+            
+            numero_lote = extrair_numero_lote(item.get('lote', ''))
+            if numero_lote is None or numero_lote not in lotes_do_responsavel:
+                continue
+            
+            # Calcular valor total de venda
+            preco_venda = item.get('preco_venda', 0) or 0
+            quantidade = item.get('quantidade', 1) or 1
+            valor_total_venda = preco_venda * quantidade
+            valor_comissao = valor_total_venda * (PERCENTUAL_COMISSAO / 100)
+            
+            item_id = f"{po.get('id')}_{idx}"
+            itens.append({
+                'id': item_id,
+                'po_id': po.get('id'),
+                'item_index': idx,
+                'numero_oc': po.get('numero_oc'),
+                'codigo_item': item.get('codigo_item'),
+                'descricao': (item.get('descricao', '') or '')[:30],
+                'lote': item.get('lote'),
+                'valor_venda': valor_total_venda,
+                'valor_comissao': valor_comissao,
+                'status': item_status,
+                'data_entrega': item.get('data_entrega'),
+                'pago': item_id in itens_pagos
+            })
     
     # Ordenar por data de entrega (mais recente primeiro)
     itens.sort(key=lambda x: x.get('data_entrega', '') or '', reverse=True)
