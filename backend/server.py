@@ -1307,13 +1307,20 @@ async def update_purchase_order(po_id: str, po_update: PurchaseOrderCreate, curr
     if not po:
         raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
     
+    # OTIMIZAÇÃO: Batch query - buscar todas as referências de uma vez
+    all_codigo_items = [item.codigo_item for item in po_update.items]
+    all_ref_items = await db.reference_items.find(
+        {"codigo_item": {"$in": all_codigo_items}},
+        {"_id": 0}
+    ).to_list(5000)
+    
+    # Criar lookup dictionary
+    ref_lookup = {ref["codigo_item"]: ref for ref in all_ref_items}
+    
     # Processar itens
     processed_items = []
     for item in po_update.items:
-        ref_item = await db.reference_items.find_one(
-            {"codigo_item": item.codigo_item},
-            {"_id": 0}
-        )
+        ref_item = ref_lookup.get(item.codigo_item)
         
         if ref_item:
             item.responsavel = ref_item['responsavel']
