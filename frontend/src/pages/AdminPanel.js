@@ -16,6 +16,8 @@ const AdminPanel = () => {
   const [comissaoPercentual, setComissaoPercentual] = useState({});
   const [pagamentos, setPagamentos] = useState([]);
   const [downloadingNF, setDownloadingNF] = useState(null);
+  const [editingPagamento, setEditingPagamento] = useState(null);
+  const [editPagamentoForm, setEditPagamentoForm] = useState({ valor_comissao: 0 });
 
   useEffect(() => {
     loadData();
@@ -76,10 +78,11 @@ const AdminPanel = () => {
   };
 
   const selectAllItens = () => {
-    if (selectedItens.length === itensResponsavel.length) {
+    const naosPagos = itensResponsavel.filter(item => !item.pago);
+    if (selectedItens.length === naosPagos.length) {
       setSelectedItens([]);
     } else {
-      setSelectedItens(itensResponsavel.map(item => item.id));
+      setSelectedItens(naosPagos.map(item => item.id));
     }
   };
 
@@ -104,7 +107,7 @@ const AdminPanel = () => {
     const totalLucro = calcularTotalSelecionado();
     const valorComissao = totalLucro * (percentual / 100);
     
-    if (!window.confirm(`Confirmar pagamento de ${formatBRL(valorComissao)} (${percentual}% de ${formatBRL(totalLucro)}) para ${responsavel}?`)) {
+    if (!window.confirm(`Confirmar pagamento de ${formatBRL(valorComissao)} (${percentual}% de ${formatBRL(totalLucro)}) para ${getNome(responsavel)}?`)) {
       return;
     }
 
@@ -128,6 +131,55 @@ const AdminPanel = () => {
     } catch (error) {
       console.error('Erro ao registrar pagamento:', error);
       alert('Erro ao registrar pagamento');
+    }
+  };
+
+  const startEditPagamento = (pag) => {
+    setEditingPagamento(pag.id);
+    setEditPagamentoForm({ valor_comissao: pag.valor_comissao });
+  };
+
+  const cancelEditPagamento = () => {
+    setEditingPagamento(null);
+    setEditPagamentoForm({ valor_comissao: 0 });
+  };
+
+  const savePagamento = async (pagamentoId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(
+        `${API}/admin/pagamentos/${pagamentoId}`,
+        { valor_comissao: editPagamentoForm.valor_comissao },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert('Pagamento atualizado!');
+      setEditingPagamento(null);
+      loadData();
+    } catch (error) {
+      console.error('Erro ao atualizar pagamento:', error);
+      alert('Erro ao atualizar pagamento');
+    }
+  };
+
+  const deletePagamento = async (pagamentoId, responsavel) => {
+    if (!window.confirm('Tem certeza que deseja deletar este pagamento? Os itens voltarão a ficar como não pagos.')) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(
+        `${API}/admin/pagamentos/${pagamentoId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert('Pagamento deletado!');
+      loadData();
+      if (expandedResponsavel === responsavel) {
+        loadItensResponsavel(responsavel);
+      }
+    } catch (error) {
+      console.error('Erro ao deletar pagamento:', error);
+      alert('Erro ao deletar pagamento');
     }
   };
 
@@ -166,11 +218,13 @@ const AdminPanel = () => {
     }
   };
 
-  // Extrair nome do responsável (sem email/domínio)
+  // Extrair nome limpo do responsável
   const getNome = (responsavel) => {
     if (!responsavel) return '';
+    // Remover sufixos comuns de email
+    let nome = responsavel.replace(/onsolucoes/gi, '').replace(/\.$/g, '').trim();
     // Se tiver ponto, pegar só a primeira parte
-    const nome = responsavel.split('.')[0];
+    nome = nome.split('.')[0];
     // Capitalizar primeira letra
     return nome.charAt(0).toUpperCase() + nome.slice(1).toLowerCase();
   };
@@ -232,6 +286,7 @@ const AdminPanel = () => {
                 {comissoes.map((item, index) => {
                   const nome = getNome(item.responsavel);
                   const isExpanded = expandedResponsavel === item.responsavel;
+                  const pagamentosDoResponsavel = pagamentos.filter(p => p.responsavel === item.responsavel);
                   
                   return (
                     <div 
@@ -293,10 +348,10 @@ const AdminPanel = () => {
                                 className="btn btn-secondary"
                                 style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
                               >
-                                {selectedItens.length === itensResponsavel.length ? '✗ Desmarcar Todos' : '✓ Selecionar Todos'}
+                                {selectedItens.length === itensResponsavel.filter(i => !i.pago).length ? '✗ Desmarcar Todos' : '✓ Selecionar Todos'}
                               </button>
                               <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>
-                                {selectedItens.length} de {itensResponsavel.length} selecionados
+                                {selectedItens.length} de {itensResponsavel.filter(i => !i.pago).length} selecionados
                               </span>
                             </div>
                             
@@ -331,37 +386,37 @@ const AdminPanel = () => {
                                     <th style={{ padding: '0.5rem', textAlign: 'left' }}>OC</th>
                                     <th style={{ padding: '0.5rem', textAlign: 'left' }}>Item</th>
                                     <th style={{ padding: '0.5rem', textAlign: 'right' }}>Lucro</th>
-                                    <th style={{ padding: '0.5rem', textAlign: 'center' }}>Pago</th>
+                                    <th style={{ padding: '0.5rem', textAlign: 'center' }}>Status</th>
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {itensResponsavel.map((item, idx) => (
+                                  {itensResponsavel.map((itemResp, idx) => (
                                     <tr 
                                       key={idx} 
                                       style={{ 
-                                        background: item.pago ? '#f0fdf4' : (selectedItens.includes(item.id) ? '#fef3c7' : 'white'),
-                                        opacity: item.pago ? 0.7 : 1
+                                        background: itemResp.pago ? '#f0fdf4' : (selectedItens.includes(itemResp.id) ? '#fef3c7' : 'white'),
+                                        opacity: itemResp.pago ? 0.7 : 1
                                       }}
                                     >
                                       <td style={{ padding: '0.5rem' }}>
                                         <input
                                           type="checkbox"
-                                          checked={selectedItens.includes(item.id)}
-                                          onChange={() => toggleSelectItem(item.id)}
-                                          disabled={item.pago}
-                                          style={{ width: '18px', height: '18px', cursor: item.pago ? 'not-allowed' : 'pointer' }}
+                                          checked={selectedItens.includes(itemResp.id)}
+                                          onChange={() => toggleSelectItem(itemResp.id)}
+                                          disabled={itemResp.pago}
+                                          style={{ width: '18px', height: '18px', cursor: itemResp.pago ? 'not-allowed' : 'pointer' }}
                                         />
                                       </td>
-                                      <td style={{ padding: '0.5rem' }}>{item.numero_oc}</td>
-                                      <td style={{ padding: '0.5rem' }}>{item.codigo_item}</td>
+                                      <td style={{ padding: '0.5rem' }}>{itemResp.numero_oc}</td>
+                                      <td style={{ padding: '0.5rem' }}>{itemResp.codigo_item}</td>
                                       <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: '600', color: '#047857' }}>
-                                        {formatBRL(item.lucro_liquido || 0)}
+                                        {formatBRL(itemResp.lucro_liquido || 0)}
                                       </td>
                                       <td style={{ padding: '0.5rem', textAlign: 'center' }}>
-                                        {item.pago ? (
+                                        {itemResp.pago ? (
                                           <span style={{ color: '#22c55e', fontWeight: '600' }}>✓ PAGO</span>
                                         ) : (
-                                          <span style={{ color: '#9ca3af' }}>-</span>
+                                          <span style={{ color: '#f59e0b', fontWeight: '600' }}>PENDENTE</span>
                                         )}
                                       </td>
                                     </tr>
@@ -405,24 +460,73 @@ const AdminPanel = () => {
                           )}
 
                           {/* Histórico de pagamentos */}
-                          {pagamentos.filter(p => p.responsavel === item.responsavel).length > 0 && (
+                          {pagamentosDoResponsavel.length > 0 && (
                             <div style={{ marginTop: '1rem', padding: '1rem', background: '#f0fdf4', borderRadius: '8px' }}>
-                              <div style={{ fontWeight: '700', color: '#166534', marginBottom: '0.5rem' }}>
+                              <div style={{ fontWeight: '700', color: '#166534', marginBottom: '0.75rem' }}>
                                 📋 Histórico de Pagamentos
                               </div>
-                              {pagamentos.filter(p => p.responsavel === item.responsavel).map((pag, idx) => (
+                              {pagamentosDoResponsavel.map((pag, idx) => (
                                 <div key={idx} style={{ 
-                                  padding: '0.5rem', 
+                                  padding: '0.75rem', 
                                   background: 'white', 
-                                  borderRadius: '4px',
+                                  borderRadius: '6px',
                                   marginBottom: '0.5rem',
-                                  fontSize: '0.85rem',
-                                  display: 'flex',
-                                  justifyContent: 'space-between'
+                                  border: '1px solid #bbf7d0'
                                 }}>
-                                  <span>{new Date(pag.data).toLocaleDateString('pt-BR')}</span>
-                                  <span>{pag.qtd_itens} itens</span>
-                                  <span style={{ color: '#047857', fontWeight: '600' }}>{formatBRL(pag.valor_comissao)}</span>
+                                  {editingPagamento === pag.id ? (
+                                    // Modo edição
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                                      <span>{new Date(pag.data).toLocaleDateString('pt-BR')}</span>
+                                      <span>{pag.qtd_itens} itens</span>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <span>R$</span>
+                                        <input
+                                          type="number"
+                                          value={editPagamentoForm.valor_comissao}
+                                          onChange={(e) => setEditPagamentoForm({ valor_comissao: parseFloat(e.target.value) || 0 })}
+                                          className="form-input"
+                                          style={{ width: '100px', padding: '0.3rem' }}
+                                          step="0.01"
+                                        />
+                                      </div>
+                                      <button
+                                        onClick={() => savePagamento(pag.id)}
+                                        style={{ padding: '0.3rem 0.6rem', background: '#22c55e', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
+                                      >
+                                        ✓ Salvar
+                                      </button>
+                                      <button
+                                        onClick={cancelEditPagamento}
+                                        style={{ padding: '0.3rem 0.6rem', background: '#9ca3af', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
+                                      >
+                                        ✗ Cancelar
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    // Modo visualização
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                                        <span style={{ color: '#6b7280' }}>{new Date(pag.data).toLocaleDateString('pt-BR')}</span>
+                                        <span>{pag.qtd_itens} itens</span>
+                                        <span style={{ color: '#047857', fontWeight: '700' }}>{formatBRL(pag.valor_comissao)}</span>
+                                        <span style={{ color: '#6b7280', fontSize: '0.8rem' }}>({pag.percentual}%)</span>
+                                      </div>
+                                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button
+                                          onClick={() => startEditPagamento(pag)}
+                                          style={{ padding: '0.3rem 0.6rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
+                                        >
+                                          ✏️ Editar
+                                        </button>
+                                        <button
+                                          onClick={() => deletePagamento(pag.id, item.responsavel)}
+                                          style={{ padding: '0.3rem 0.6rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
+                                        >
+                                          🗑️ Deletar
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                             </div>
@@ -488,12 +592,12 @@ const AdminPanel = () => {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          gap: '1rem'
+                          gap: '0.75rem'
                         }}
                       >
                         <div style={{ 
-                          width: '30px', 
-                          height: '30px', 
+                          width: '28px', 
+                          height: '28px', 
                           borderRadius: '50%', 
                           background: '#7c3aed',
                           color: 'white',
@@ -501,16 +605,16 @@ const AdminPanel = () => {
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontWeight: '700',
-                          fontSize: '0.85rem',
+                          fontSize: '0.8rem',
                           flexShrink: 0
                         }}>
                           {index + 1}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: '600', fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {nf.filename?.endsWith('.xml') ? '📑' : '📄'} {nf.filename}
+                          <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#1f2937' }}>
+                            NF: {nf.numero_nf || '-'}
                           </div>
-                          <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                          <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                             OC: {nf.numero_oc}
                           </div>
                         </div>
@@ -579,12 +683,12 @@ const AdminPanel = () => {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          gap: '1rem'
+                          gap: '0.75rem'
                         }}
                       >
                         <div style={{ 
-                          width: '30px', 
-                          height: '30px', 
+                          width: '28px', 
+                          height: '28px', 
                           borderRadius: '50%', 
                           background: '#06b6d4',
                           color: 'white',
@@ -592,16 +696,16 @@ const AdminPanel = () => {
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontWeight: '700',
-                          fontSize: '0.85rem',
+                          fontSize: '0.8rem',
                           flexShrink: 0
                         }}>
                           {index + 1}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: '600', fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {nf.filename?.endsWith('.xml') ? '📑' : '📄'} {nf.filename}
+                          <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#1f2937' }}>
+                            NF: {nf.numero_nf || '-'}
                           </div>
-                          <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                          <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                             OC: {nf.numero_oc}
                           </div>
                         </div>
