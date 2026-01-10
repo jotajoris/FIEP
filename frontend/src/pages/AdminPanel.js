@@ -262,6 +262,9 @@ const AdminPanel = () => {
         {view === 'comissoes' && (
           <>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem' }}>Comissões por Responsável</h2>
+            <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '1rem' }}>
+              Sistema de comissões baseado nos <strong>LOTES</strong> atribuídos originalmente. Comissão fixa de <strong>1,5%</strong> sobre o valor total de venda.
+            </p>
             
             {/* Resumo */}
             <div style={{ 
@@ -271,8 +274,11 @@ const AdminPanel = () => {
               border: '1px solid #86efac',
               marginBottom: '1.5rem'
             }}>
-              <div style={{ fontSize: '0.85rem', color: '#047857', fontWeight: '600' }}>TOTAL LUCRO ENTREGUE</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#065f46' }}>{formatBRL(totalLucroEntregue)}</div>
+              <div style={{ fontSize: '0.85rem', color: '#047857', fontWeight: '600' }}>TOTAL VALOR VENDIDO (Entregue/Em Trânsito)</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#065f46' }}>{formatBRL(totalVendaEntregue)}</div>
+              <div style={{ fontSize: '0.9rem', color: '#047857', marginTop: '0.25rem' }}>
+                Comissão Total (1,5%): <strong>{formatBRL(totalVendaEntregue * 0.015)}</strong>
+              </div>
             </div>
 
             {comissoes.length === 0 ? (
