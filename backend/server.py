@@ -2595,19 +2595,23 @@ async def upload_nota_fiscal(
     
     item = po['items'][item_index]
     
-    # Tentar extrair NCM
+    # Tentar extrair NCM e número da NF
     ncm = request.ncm_manual
-    if not ncm:
-        try:
-            file_bytes = base64.b64decode(request.file_data)
-            
-            if request.content_type == 'text/xml' or request.filename.endswith('.xml'):
-                xml_content = file_bytes.decode('utf-8')
+    numero_nf = None
+    try:
+        file_bytes = base64.b64decode(request.file_data)
+        
+        if request.content_type == 'text/xml' or request.filename.endswith('.xml'):
+            xml_content = file_bytes.decode('utf-8')
+            if not ncm:
                 ncm = extract_ncm_from_xml(xml_content)
-            elif request.content_type == 'application/pdf' or request.filename.endswith('.pdf'):
+            numero_nf = extract_numero_nf_from_xml(xml_content)
+        elif request.content_type == 'application/pdf' or request.filename.endswith('.pdf'):
+            if not ncm:
                 ncm = extract_ncm_from_pdf(file_bytes)
-        except Exception as e:
-            logging.error(f"Erro ao processar arquivo: {str(e)}")
+            numero_nf = extract_numero_nf_from_pdf(file_bytes)
+    except Exception as e:
+        logging.error(f"Erro ao processar arquivo: {str(e)}")
     
     # Criar documento da NF
     nf_doc = {
@@ -2616,6 +2620,7 @@ async def upload_nota_fiscal(
         "content_type": request.content_type,
         "file_data": request.file_data,
         "ncm": ncm,
+        "numero_nf": numero_nf,  # Número da NF extraído
         "uploaded_at": datetime.now(timezone.utc).isoformat(),
         "uploaded_by": current_user.get('sub')
     }
