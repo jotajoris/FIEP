@@ -363,27 +363,15 @@ const AdminPanel = () => {
                               </span>
                             </div>
                             
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <label style={{ fontSize: '0.9rem', fontWeight: '600' }}>% Comissão:</label>
-                              <input
-                                type="number"
-                                value={comissaoPercentual[item.responsavel] || ''}
-                                onChange={(e) => setComissaoPercentual({...comissaoPercentual, [item.responsavel]: parseFloat(e.target.value) || 0})}
-                                className="form-input"
-                                style={{ width: '70px', padding: '0.4rem', textAlign: 'center' }}
-                                min="0"
-                                max="100"
-                                step="0.1"
-                                placeholder="0"
-                              />
-                              <span>%</span>
+                            <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#7c3aed' }}>
+                              Comissão fixa: 1,5%
                             </div>
                           </div>
 
                           {/* Lista de itens */}
                           {itensResponsavel.length === 0 ? (
                             <p style={{ textAlign: 'center', color: '#9ca3af', padding: '1rem' }}>
-                              Nenhum item entregue encontrado
+                              Nenhum item entregue/em trânsito encontrado para os lotes atribuídos
                             </p>
                           ) : (
                             <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '1rem' }}>
@@ -393,7 +381,9 @@ const AdminPanel = () => {
                                     <th style={{ padding: '0.5rem', textAlign: 'left' }}>✓</th>
                                     <th style={{ padding: '0.5rem', textAlign: 'left' }}>OC</th>
                                     <th style={{ padding: '0.5rem', textAlign: 'left' }}>Item</th>
-                                    <th style={{ padding: '0.5rem', textAlign: 'right' }}>Lucro</th>
+                                    <th style={{ padding: '0.5rem', textAlign: 'left' }}>Lote</th>
+                                    <th style={{ padding: '0.5rem', textAlign: 'right' }}>Valor Venda</th>
+                                    <th style={{ padding: '0.5rem', textAlign: 'right' }}>Comissão</th>
                                     <th style={{ padding: '0.5rem', textAlign: 'center' }}>Status</th>
                                   </tr>
                                 </thead>
@@ -417,8 +407,12 @@ const AdminPanel = () => {
                                       </td>
                                       <td style={{ padding: '0.5rem' }}>{itemResp.numero_oc}</td>
                                       <td style={{ padding: '0.5rem' }}>{itemResp.codigo_item}</td>
+                                      <td style={{ padding: '0.5rem', fontWeight: '600', color: '#7c3aed' }}>{itemResp.lote}</td>
                                       <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: '600', color: '#047857' }}>
-                                        {formatBRL(itemResp.lucro_liquido || 0)}
+                                        {formatBRL(itemResp.valor_venda || 0)}
+                                      </td>
+                                      <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: '600', color: '#7c3aed' }}>
+                                        {formatBRL(itemResp.valor_comissao || 0)}
                                       </td>
                                       <td style={{ padding: '0.5rem', textAlign: 'center' }}>
                                         {itemResp.pago ? (
