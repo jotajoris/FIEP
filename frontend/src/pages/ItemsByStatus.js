@@ -1345,22 +1345,64 @@ Chave PIX: 46.663.556/0001-69`;
                                         border: '1px solid #ddd6fe',
                                         fontSize: '0.85rem'
                                       }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                                           <span style={{ fontWeight: '600', color: '#374151', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                             {nf.filename.endsWith('.xml') ? '📑' : '📄'} {nf.filename}
                                           </span>
-                                          <span style={{ 
-                                            padding: '0.15rem 0.4rem',
-                                            background: nf.ncm ? '#dcfce7' : '#fee2e2',
-                                            color: nf.ncm ? '#166534' : '#991b1b',
-                                            borderRadius: '4px',
-                                            fontSize: '0.7rem',
-                                            fontWeight: '600'
-                                          }}>
-                                            NCM: {nf.ncm || 'N/A'}
-                                          </span>
                                           <button onClick={() => downloadNF(item, nf.id, nf.filename)} style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem', background: '#e5e7eb', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>⬇️</button>
                                           <button onClick={() => deleteNF(item, nf.id, 'fornecedor')} style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem', background: '#fee2e2', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>🗑️</button>
+                                        </div>
+                                        {/* NCMs encontrados */}
+                                        <div style={{ marginTop: '0.5rem' }}>
+                                          {nf.ncm ? (
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                                              {nf.ncm.split(',').map((ncmItem, ncmIdx) => (
+                                                <span key={ncmIdx} style={{ 
+                                                  padding: '0.15rem 0.4rem',
+                                                  background: '#dcfce7',
+                                                  color: '#166534',
+                                                  borderRadius: '4px',
+                                                  fontSize: '0.7rem',
+                                                  fontWeight: '600'
+                                                }}>
+                                                  NCM: {ncmItem.trim()}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          ) : (
+                                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                              <span style={{ 
+                                                padding: '0.15rem 0.4rem',
+                                                background: '#fee2e2',
+                                                color: '#991b1b',
+                                                borderRadius: '4px',
+                                                fontSize: '0.7rem',
+                                                fontWeight: '600'
+                                              }}>
+                                                NCM: NÃO ENCONTRADO
+                                              </span>
+                                              <input
+                                                type="text"
+                                                placeholder="Digite NCM"
+                                                className="form-input"
+                                                style={{ flex: 1, padding: '0.25rem', fontSize: '0.75rem', textTransform: 'uppercase', maxWidth: '120px' }}
+                                                onKeyDown={(e) => {
+                                                  if (e.key === 'Enter' && e.target.value) {
+                                                    updateNCM(item, nf.id, e.target.value);
+                                                  }
+                                                }}
+                                              />
+                                              <button
+                                                onClick={(e) => {
+                                                  const input = e.target.previousSibling;
+                                                  if (input && input.value) updateNCM(item, nf.id, input.value);
+                                                }}
+                                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                              >
+                                                Salvar
+                                              </button>
+                                            </div>
+                                          )}
                                         </div>
                                       </div>
                                     ))}
@@ -1386,36 +1428,6 @@ Chave PIX: 46.663.556/0001-69`;
                                   {uploadingNF === `${item._uniqueId}-fornecedor` ? 'Enviando...' : '+ Adicionar NF Compra'}
                                   <input type="file" accept=".pdf,.xml" style={{ display: 'none' }} onChange={(e) => handleFileUpload(item, 'fornecedor', e)} />
                                 </label>
-                              </div>
-
-                              {/* Preço Venda Unit */}
-                              <div style={{ 
-                                padding: '0.75rem', 
-                                background: '#ecfdf5', 
-                                borderRadius: '8px',
-                                border: '1px solid #a7f3d0'
-                              }}>
-                                <div style={{ fontWeight: '600', color: '#047857', fontSize: '0.8rem', marginBottom: '0.25rem' }}>
-                                  PREÇO VENDA UNIT
-                                </div>
-                                <div style={{ fontWeight: '700', color: '#065f46', fontSize: '1.1rem' }}>
-                                  {formatBRL(item.preco_venda || 0)}
-                                </div>
-                              </div>
-
-                              {/* Valor Total Venda */}
-                              <div style={{ 
-                                padding: '0.75rem', 
-                                background: '#dcfce7', 
-                                borderRadius: '8px',
-                                border: '1px solid #86efac'
-                              }}>
-                                <div style={{ fontWeight: '600', color: '#166534', fontSize: '0.8rem', marginBottom: '0.25rem' }}>
-                                  VALOR TOTAL VENDA
-                                </div>
-                                <div style={{ fontWeight: '700', color: '#14532d', fontSize: '1.2rem' }}>
-                                  {formatBRL((item.preco_venda || 0) * (item.quantidade || 1))}
-                                </div>
                               </div>
 
                               {/* NF de Venda (ON) - Nossa NF */}
