@@ -45,8 +45,9 @@ const PODetails = () => {
     }
   };
 
-  const startEdit = (item) => {
-    setEditingItem(item.codigo_item);
+  const startEdit = (item, itemIndex) => {
+    // Usar índice para evitar conflito com itens de mesmo código
+    setEditingItem(itemIndex);
     
     const fontesExistentes = item.fontes_compra && item.fontes_compra.length > 0 
       ? item.fontes_compra 
@@ -65,7 +66,8 @@ const PODetails = () => {
         link: item.link_compra || '',
         fornecedor: ''
       }],
-      quantidade_total: item.quantidade
+      quantidade_total: item.quantidade,
+      _itemIndex: itemIndex  // Guardar índice para o save
     });
   };
 
