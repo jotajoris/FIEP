@@ -60,6 +60,7 @@ const ItemsByStatus = () => {
               ...item,
               numero_oc: po.numero_oc,
               po_id: po.id,
+              cnpj_requisitante: po.cnpj_requisitante || '',  // CNPJ do cliente/requisitante
               _itemIndexInPO: itemIndexInPO,
               _uniqueId: uniqueId  // ID único para este item
             });
