@@ -107,6 +107,33 @@ const Dashboard = () => {
     }
   };
 
+  const exportBackup = async () => {
+    try {
+      const response = await apiGet(`${API}/backup/export`);
+      const backup = response.data;
+      
+      // Criar arquivo JSON para download
+      const dataStr = JSON.stringify(backup, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      
+      // Criar link de download
+      const link = document.createElement('a');
+      link.href = url;
+      const dataAtual = new Date().toISOString().split('T')[0];
+      link.download = `backup_fiep_${dataAtual}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      alert(`✅ Backup exportado com sucesso!\n\n📊 Estatísticas:\n- ${backup.backup_info.estatisticas.total_ocs} OCs\n- ${backup.backup_info.estatisticas.total_itens} Itens\n- ${backup.backup_info.estatisticas.total_usuarios} Usuários`);
+    } catch (error) {
+      console.error('Erro ao exportar backup:', error);
+      alert('❌ Erro ao exportar backup');
+    }
+  };
+
   // Calcular valor total de uma OC
   const calcularValorTotalOC = (order) => {
     return order.items.reduce((total, item) => {
