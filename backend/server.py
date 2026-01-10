@@ -2496,19 +2496,6 @@ def extract_ncm_from_pdf(pdf_bytes: bytes) -> Optional[str]:
     except Exception as e:
         logging.error(f"Erro ao extrair NCM do PDF: {str(e)}")
         return None
-        
-        for pattern in patterns:
-            match = re.search(pattern, full_text, re.IGNORECASE)
-            if match:
-                ncm = match.group(1)
-                # Remover pontos e espaços
-                ncm = re.sub(r'[\.\s]', '', ncm)
-                return ncm
-        
-        return None
-    except Exception as e:
-        logging.error(f"Erro ao extrair NCM do PDF: {str(e)}")
-        return None
 
 import base64
 
