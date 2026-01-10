@@ -797,7 +797,155 @@ Chave PIX: 46.663.556/0001-69`;
               : `Nenhum item com status "${status}" encontrado.`
             }
           </p>
+        ) : status === 'em_separacao' ? (
+          /* ============ VISUALIZAÇÃO POR OC (Em Separação) ============ */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {itemsGroupedByOC.map((oc) => (
+              <div 
+                key={oc.po_id} 
+                className="card" 
+                style={{ 
+                  background: oc.prontoParaDespacho ? '#f0fdf4' : '#f7fafc', 
+                  border: oc.prontoParaDespacho ? '2px solid #22c55e' : '1px solid #e2e8f0',
+                  transition: 'all 0.2s ease'
+                }} 
+                data-testid={`oc-card-${oc.po_id}`}
+              >
+                {/* Header da OC - Clicável para expandir */}
+                <div 
+                  onClick={() => setExpandedOC(expandedOC === oc.po_id ? null : oc.po_id)}
+                  style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    padding: '0.5rem'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    {/* Indicador de status */}
+                    <div style={{ 
+                      width: '50px', 
+                      height: '50px', 
+                      borderRadius: '50%', 
+                      background: oc.prontoParaDespacho ? '#22c55e' : '#f59e0b',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: '700',
+                      fontSize: '0.75rem',
+                      textAlign: 'center',
+                      lineHeight: '1.1'
+                    }}>
+                      {oc.prontoParaDespacho ? '✓' : `${oc.itensComNFEmitida}/${oc.totalItens}`}
+                    </div>
+                    
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: '700', margin: 0, color: '#1f2937' }}>
+                          {oc.numero_oc}
+                        </h3>
+                        {oc.prontoParaDespacho && (
+                          <span style={{ 
+                            background: '#22c55e', 
+                            color: 'white', 
+                            padding: '0.2rem 0.6rem', 
+                            borderRadius: '12px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600'
+                          }}>
+                            PRONTO PARA DESPACHO
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '0.9rem', color: '#6b7280' }}>
+                        <strong style={{ color: oc.prontoParaDespacho ? '#16a34a' : '#d97706' }}>
+                          {oc.itensComNFEmitida} de {oc.totalItens} itens com NF emitida
+                        </strong>
+                        {!oc.prontoParaDespacho && (
+                          <span style={{ marginLeft: '0.5rem', color: '#9ca3af' }}>
+                            (faltam {oc.totalItens - oc.itensComNFEmitida})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <Link 
+                      to={`/po/${oc.po_id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ 
+                        fontSize: '0.85rem', 
+                        color: '#667eea', 
+                        textDecoration: 'underline'
+                      }}
+                    >
+                      Ver OC Completa
+                    </Link>
+                    <div style={{ fontSize: '1.5rem', color: '#6b7280' }}>
+                      {expandedOC === oc.po_id ? '▲' : '▼'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Área expandida - Itens da OC */}
+                {expandedOC === oc.po_id && (
+                  <div style={{ marginTop: '1rem', borderTop: '1px solid #e5e7eb', paddingTop: '1rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {oc.items.map((item) => (
+                        <div 
+                          key={item._uniqueId} 
+                          className="card" 
+                          style={{ 
+                            background: item.nf_emitida_pronto_despacho ? '#f0fdf4' : 'white', 
+                            border: item.nf_emitida_pronto_despacho ? '1px solid #86efac' : '1px solid #e2e8f0'
+                          }} 
+                          data-testid={`item-card-${item._uniqueId}`}
+                        >
+                          {/* Renderização normal do item (reutiliza a estrutura existente) */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0 }}>
+                                  Código: {item.codigo_item}
+                                </h3>
+                                {item.nf_emitida_pronto_despacho && (
+                                  <span style={{ 
+                                    background: '#22c55e', 
+                                    color: 'white', 
+                                    padding: '0.15rem 0.5rem', 
+                                    borderRadius: '8px',
+                                    fontSize: '0.7rem',
+                                    fontWeight: '600'
+                                  }}>
+                                    NF OK
+                                  </span>
+                                )}
+                              </div>
+                              <p style={{ color: '#4a5568', marginBottom: '0.5rem' }}>{item.descricao}</p>
+                              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.9rem', color: '#718096' }}>
+                                <span><strong>Responsável:</strong> <strong style={{ color: '#667eea' }}>{item.responsavel}</strong></span>
+                                <span><strong>Quantidade:</strong> {item.quantidade} {item.unidade}</span>
+                                <span><strong>Lote:</strong> {item.lote}</span>
+                                {item.marca_modelo && <span><strong>Marca/Modelo:</strong> {item.marca_modelo}</span>}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Reutiliza a renderização de edição/NF do item original */}
+                          {renderItemContent(item)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         ) : (
+          /* ============ VISUALIZAÇÃO NORMAL (outros status) ============ */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {displayItems.map((item) => (
               <div 
