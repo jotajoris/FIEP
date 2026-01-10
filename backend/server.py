@@ -1767,6 +1767,45 @@ async def update_all_descriptions(current_user: dict = Depends(require_admin)):
     
     return {"message": f"{total_updated} descrições atualizadas com sucesso"}
 
+@api_router.get("/backup/export")
+async def export_backup(current_user: dict = Depends(require_admin)):
+    """Exportar backup completo do sistema (ADMIN ONLY)"""
+    from datetime import datetime
+    
+    # Buscar todos os dados
+    pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(10000)
+    users = await db.users.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)  # Excluir senhas
+    reference_items = await db.reference_items.find({}, {"_id": 0}).to_list(10000)
+    notifications = await db.notifications.find({}, {"_id": 0}).to_list(10000)
+    
+    # Calcular estatísticas
+    total_items = sum(len(po.get('items', [])) for po in pos)
+    status_counts = {}
+    for po in pos:
+        for item in po.get('items', []):
+            status = item.get('status', 'pendente')
+            status_counts[status] = status_counts.get(status, 0) + 1
+    
+    backup = {
+        "backup_info": {
+            "data_export": datetime.now().isoformat(),
+            "versao": "1.0",
+            "estatisticas": {
+                "total_ocs": len(pos),
+                "total_itens": total_items,
+                "total_usuarios": len(users),
+                "total_itens_referencia": len(reference_items),
+                "status_itens": status_counts
+            }
+        },
+        "purchase_orders": pos,
+        "users": users,
+        "reference_items": reference_items,
+        "notifications": notifications
+    }
+    
+    return backup
+
 # ================== RASTREAMENTO CORREIOS ==================
 
 import httpx
