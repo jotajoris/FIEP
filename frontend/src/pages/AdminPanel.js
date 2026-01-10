@@ -283,7 +283,7 @@ const AdminPanel = () => {
 
             {comissoes.length === 0 ? (
               <p style={{ textAlign: 'center', color: '#718096', padding: '2rem' }}>
-                Nenhum responsável com itens entregues ainda.
+                Nenhum responsável com itens entregues/em trânsito ainda.
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -332,7 +332,11 @@ const AdminPanel = () => {
                               {nome}
                             </div>
                             <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
-                              Lucro entregue: <strong style={{ color: '#047857' }}>{formatBRL(item.lucro_entregue)}</strong>
+                              Valor vendido: <strong style={{ color: '#047857' }}>{formatBRL(item.valor_venda_total)}</strong>
+                              {item.qtd_itens > 0 && <span style={{ marginLeft: '0.5rem' }}>({item.qtd_itens} itens)</span>}
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                              Comissão (1,5%): <strong style={{ color: '#7c3aed' }}>{formatBRL(item.valor_comissao)}</strong>
                             </div>
                           </div>
                         </div>
