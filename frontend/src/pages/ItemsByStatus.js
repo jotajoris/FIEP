@@ -589,7 +589,11 @@ const ItemsByStatus = () => {
                   </div>
                 </div>
 
-                {editingItem === index ? (
+                {(() => { 
+                  const isEditing = editingItem === index;
+                  console.log('Item', index, item.codigo_item, 'editingItem:', editingItem, 'isEditing:', isEditing);
+                  return isEditing;
+                })() ? (
                   <div style={{ marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: '8px' }}>
                     {/* Status e Informações de Venda (somente leitura) */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
