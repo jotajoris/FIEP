@@ -9,9 +9,12 @@ const AdminPanel = () => {
   const [comissoes, setComissoes] = useState([]);
   const [notasFiscais, setNotasFiscais] = useState({ notas_compra: [], notas_venda: [] });
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState('comissoes'); // 'comissoes' ou 'notas'
-  const [editingComissao, setEditingComissao] = useState(null);
-  const [comissaoForm, setComissaoForm] = useState({ percentual: 0, pago: false });
+  const [view, setView] = useState('comissoes');
+  const [expandedResponsavel, setExpandedResponsavel] = useState(null);
+  const [itensResponsavel, setItensResponsavel] = useState([]);
+  const [selectedItens, setSelectedItens] = useState([]);
+  const [comissaoPercentual, setComissaoPercentual] = useState({});
+  const [pagamentos, setPagamentos] = useState([]);
   const [downloadingNF, setDownloadingNF] = useState(null);
 
   useEffect(() => {
@@ -23,13 +26,15 @@ const AdminPanel = () => {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       
-      const [comissoesRes, nfsRes] = await Promise.all([
+      const [comissoesRes, nfsRes, pagamentosRes] = await Promise.all([
         axios.get(`${API}/admin/comissoes`, { headers }),
-        axios.get(`${API}/admin/notas-fiscais`, { headers })
+        axios.get(`${API}/admin/notas-fiscais`, { headers }),
+        axios.get(`${API}/admin/pagamentos`, { headers }).catch(() => ({ data: [] }))
       ]);
       
       setComissoes(comissoesRes.data);
       setNotasFiscais(nfsRes.data);
+      setPagamentos(pagamentosRes.data || []);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     } finally {
@@ -37,48 +42,92 @@ const AdminPanel = () => {
     }
   };
 
-  const startEditComissao = (item) => {
-    setEditingComissao(item.responsavel);
-    setComissaoForm({
-      percentual: item.percentual_comissao || 0,
-      pago: item.pago || false
-    });
-  };
-
-  const cancelEditComissao = () => {
-    setEditingComissao(null);
-    setComissaoForm({ percentual: 0, pago: false });
-  };
-
-  const saveComissao = async (responsavel) => {
+  const loadItensResponsavel = async (responsavel) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.patch(
-        `${API}/admin/comissoes/${encodeURIComponent(responsavel)}`,
-        comissaoForm,
+      const response = await axios.get(
+        `${API}/admin/itens-responsavel/${encodeURIComponent(responsavel)}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert('Comissão atualizada com sucesso!');
-      setEditingComissao(null);
-      loadData();
+      setItensResponsavel(response.data);
+      setSelectedItens([]);
     } catch (error) {
-      console.error('Erro ao salvar comissão:', error);
-      alert('Erro ao salvar comissão');
+      console.error('Erro ao carregar itens:', error);
+      setItensResponsavel([]);
     }
   };
 
-  const togglePago = async (item) => {
+  const toggleExpandResponsavel = async (responsavel) => {
+    if (expandedResponsavel === responsavel) {
+      setExpandedResponsavel(null);
+      setItensResponsavel([]);
+    } else {
+      setExpandedResponsavel(responsavel);
+      await loadItensResponsavel(responsavel);
+    }
+  };
+
+  const toggleSelectItem = (itemId) => {
+    setSelectedItens(prev => 
+      prev.includes(itemId) 
+        ? prev.filter(id => id !== itemId)
+        : [...prev, itemId]
+    );
+  };
+
+  const selectAllItens = () => {
+    if (selectedItens.length === itensResponsavel.length) {
+      setSelectedItens([]);
+    } else {
+      setSelectedItens(itensResponsavel.map(item => item.id));
+    }
+  };
+
+  const calcularTotalSelecionado = () => {
+    return itensResponsavel
+      .filter(item => selectedItens.includes(item.id))
+      .reduce((sum, item) => sum + (item.lucro_liquido || 0), 0);
+  };
+
+  const registrarPagamento = async (responsavel) => {
+    if (selectedItens.length === 0) {
+      alert('Selecione pelo menos um item');
+      return;
+    }
+    
+    const percentual = comissaoPercentual[responsavel] || 0;
+    if (percentual <= 0) {
+      alert('Defina a % de comissão');
+      return;
+    }
+
+    const totalLucro = calcularTotalSelecionado();
+    const valorComissao = totalLucro * (percentual / 100);
+    
+    if (!window.confirm(`Confirmar pagamento de ${formatBRL(valorComissao)} (${percentual}% de ${formatBRL(totalLucro)}) para ${responsavel}?`)) {
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
-      await axios.patch(
-        `${API}/admin/comissoes/${encodeURIComponent(item.responsavel)}`,
-        { percentual: item.percentual_comissao, pago: !item.pago },
+      await axios.post(
+        `${API}/admin/pagamentos`,
+        {
+          responsavel,
+          itens_ids: selectedItens,
+          percentual,
+          valor_comissao: valorComissao,
+          total_lucro: totalLucro
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      alert('Pagamento registrado com sucesso!');
+      setSelectedItens([]);
       loadData();
+      loadItensResponsavel(responsavel);
     } catch (error) {
-      console.error('Erro ao atualizar status:', error);
-      alert('Erro ao atualizar status de pagamento');
+      console.error('Erro ao registrar pagamento:', error);
+      alert('Erro ao registrar pagamento');
     }
   };
 
@@ -93,7 +142,6 @@ const AdminPanel = () => {
       
       const { file_data, content_type, filename } = response.data;
       
-      // Criar blob e fazer download
       const byteCharacters = atob(file_data);
       const byteNumbers = new Array(byteCharacters.length);
       for (let i = 0; i < byteCharacters.length; i++) {
@@ -118,12 +166,20 @@ const AdminPanel = () => {
     }
   };
 
+  // Extrair nome do responsável (sem email/domínio)
+  const getNome = (responsavel) => {
+    if (!responsavel) return '';
+    // Se tiver ponto, pegar só a primeira parte
+    const nome = responsavel.split('.')[0];
+    // Capitalizar primeira letra
+    return nome.charAt(0).toUpperCase() + nome.slice(1).toLowerCase();
+  };
+
   if (loading) {
     return <div className="loading" data-testid="loading-admin">Carregando...</div>;
   }
 
   const totalLucroEntregue = comissoes.reduce((sum, c) => sum + (c.lucro_entregue || 0), 0);
-  const totalComissoesPendentes = comissoes.filter(c => !c.pago && c.valor_comissao > 0).reduce((sum, c) => sum + c.valor_comissao, 0);
 
   return (
     <div data-testid="admin-panel-page">
@@ -156,142 +212,226 @@ const AdminPanel = () => {
             <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem' }}>Comissões por Responsável</h2>
             
             {/* Resumo */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-              <div style={{ padding: '1rem', background: '#ecfdf5', borderRadius: '8px', border: '1px solid #86efac' }}>
-                <div style={{ fontSize: '0.85rem', color: '#047857', fontWeight: '600' }}>TOTAL LUCRO ENTREGUE</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#065f46' }}>{formatBRL(totalLucroEntregue)}</div>
-              </div>
-              <div style={{ padding: '1rem', background: '#fef3c7', borderRadius: '8px', border: '1px solid #fcd34d' }}>
-                <div style={{ fontSize: '0.85rem', color: '#92400e', fontWeight: '600' }}>COMISSÕES PENDENTES</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#78350f' }}>{formatBRL(totalComissoesPendentes)}</div>
-              </div>
+            <div style={{ 
+              padding: '1rem', 
+              background: '#ecfdf5', 
+              borderRadius: '8px', 
+              border: '1px solid #86efac',
+              marginBottom: '1.5rem'
+            }}>
+              <div style={{ fontSize: '0.85rem', color: '#047857', fontWeight: '600' }}>TOTAL LUCRO ENTREGUE</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#065f46' }}>{formatBRL(totalLucroEntregue)}</div>
             </div>
 
             {comissoes.length === 0 ? (
-              <p style={{ textAlign: 'center', color: '#718096', padding: '2rem' }} data-testid="no-comissoes-message">
+              <p style={{ textAlign: 'center', color: '#718096', padding: '2rem' }}>
                 Nenhum responsável com itens entregues ainda.
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {comissoes.map((item, index) => (
-                  <div 
-                    key={index} 
-                    className="card" 
-                    style={{ 
-                      background: item.pago ? '#f0fdf4' : (item.valor_comissao > 0 ? '#fefce8' : '#f9fafb'),
-                      border: `1px solid ${item.pago ? '#86efac' : (item.valor_comissao > 0 ? '#fcd34d' : '#e5e7eb')}`
-                    }}
-                    data-testid={`comissao-${index}`}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-                      {/* Info do Responsável */}
-                      <div style={{ flex: 1, minWidth: '200px' }}>
-                        <div style={{ fontSize: '1.2rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.25rem' }}>
-                          {item.responsavel}
-                        </div>
-                        {item.email && (
-                          <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>{item.email}</div>
-                        )}
-                      </div>
-
-                      {/* Lucro Entregue */}
-                      <div style={{ textAlign: 'center', minWidth: '150px' }}>
-                        <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '600' }}>LUCRO ENTREGUE</div>
-                        <div style={{ fontSize: '1.3rem', fontWeight: '700', color: '#047857' }}>
-                          {formatBRL(item.lucro_entregue)}
-                        </div>
-                      </div>
-
-                      {/* % Comissão */}
-                      <div style={{ textAlign: 'center', minWidth: '120px' }}>
-                        <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '600' }}>% COMISSÃO</div>
-                        {editingComissao === item.responsavel ? (
-                          <input
-                            type="number"
-                            value={comissaoForm.percentual}
-                            onChange={(e) => setComissaoForm({ ...comissaoForm, percentual: parseFloat(e.target.value) || 0 })}
-                            className="form-input"
-                            style={{ width: '80px', textAlign: 'center', padding: '0.5rem' }}
-                            min="0"
-                            max="100"
-                            step="0.1"
-                          />
-                        ) : (
-                          <div style={{ fontSize: '1.3rem', fontWeight: '700', color: '#7c3aed' }}>
-                            {item.percentual_comissao}%
+                {comissoes.map((item, index) => {
+                  const nome = getNome(item.responsavel);
+                  const isExpanded = expandedResponsavel === item.responsavel;
+                  
+                  return (
+                    <div 
+                      key={index} 
+                      className="card" 
+                      style={{ 
+                        background: '#f9fafb',
+                        border: '1px solid #e5e7eb'
+                      }}
+                    >
+                      {/* Header do responsável */}
+                      <div 
+                        onClick={() => toggleExpandResponsavel(item.responsavel)}
+                        style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center',
+                          cursor: 'pointer',
+                          padding: '0.5rem'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          <div style={{ 
+                            width: '40px', 
+                            height: '40px', 
+                            borderRadius: '50%', 
+                            background: '#7c3aed',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: '700',
+                            fontSize: '1.2rem'
+                          }}>
+                            {nome.charAt(0)}
                           </div>
-                        )}
-                      </div>
-
-                      {/* Valor Comissão */}
-                      <div style={{ textAlign: 'center', minWidth: '150px' }}>
-                        <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '600' }}>VALOR COMISSÃO</div>
-                        <div style={{ fontSize: '1.3rem', fontWeight: '700', color: item.valor_comissao > 0 ? '#0891b2' : '#9ca3af' }}>
-                          {formatBRL(item.valor_comissao)}
+                          <div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: '700', color: '#1f2937' }}>
+                              {nome}
+                            </div>
+                            <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
+                              Lucro entregue: <strong style={{ color: '#047857' }}>{formatBRL(item.lucro_entregue)}</strong>
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ fontSize: '1.5rem', color: '#6b7280' }}>
+                          {isExpanded ? '▲' : '▼'}
                         </div>
                       </div>
 
-                      {/* Status Pago */}
-                      <div style={{ textAlign: 'center', minWidth: '100px' }}>
-                        <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '600', marginBottom: '0.25rem' }}>PAGO</div>
-                        {editingComissao === item.responsavel ? (
-                          <input
-                            type="checkbox"
-                            checked={comissaoForm.pago}
-                            onChange={(e) => setComissaoForm({ ...comissaoForm, pago: e.target.checked })}
-                            style={{ width: '24px', height: '24px', cursor: 'pointer' }}
-                          />
-                        ) : (
-                          <button
-                            onClick={() => togglePago(item)}
-                            style={{ 
-                              padding: '0.5rem 1rem',
-                              background: item.pago ? '#22c55e' : '#ef4444',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontWeight: '600',
-                              fontSize: '0.85rem'
-                            }}
-                          >
-                            {item.pago ? '✓ SIM' : '✗ NÃO'}
-                          </button>
-                        )}
-                      </div>
+                      {/* Área expandida com itens */}
+                      {isExpanded && (
+                        <div style={{ marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: '8px' }}>
+                          {/* Controles */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                              <button
+                                onClick={selectAllItens}
+                                className="btn btn-secondary"
+                                style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+                              >
+                                {selectedItens.length === itensResponsavel.length ? '✗ Desmarcar Todos' : '✓ Selecionar Todos'}
+                              </button>
+                              <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>
+                                {selectedItens.length} de {itensResponsavel.length} selecionados
+                              </span>
+                            </div>
+                            
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <label style={{ fontSize: '0.9rem', fontWeight: '600' }}>% Comissão:</label>
+                              <input
+                                type="number"
+                                value={comissaoPercentual[item.responsavel] || ''}
+                                onChange={(e) => setComissaoPercentual({...comissaoPercentual, [item.responsavel]: parseFloat(e.target.value) || 0})}
+                                className="form-input"
+                                style={{ width: '70px', padding: '0.4rem', textAlign: 'center' }}
+                                min="0"
+                                max="100"
+                                step="0.1"
+                                placeholder="0"
+                              />
+                              <span>%</span>
+                            </div>
+                          </div>
 
-                      {/* Ações */}
-                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        {editingComissao === item.responsavel ? (
-                          <>
-                            <button
-                              onClick={cancelEditComissao}
-                              className="btn btn-secondary"
-                              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                            >
-                              Cancelar
-                            </button>
-                            <button
-                              onClick={() => saveComissao(item.responsavel)}
-                              className="btn btn-primary"
-                              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                            >
-                              Salvar
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            onClick={() => startEditComissao(item)}
-                            className="btn btn-secondary"
-                            style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                          >
-                            ✏️ Editar %
-                          </button>
-                        )}
-                      </div>
+                          {/* Lista de itens */}
+                          {itensResponsavel.length === 0 ? (
+                            <p style={{ textAlign: 'center', color: '#9ca3af', padding: '1rem' }}>
+                              Nenhum item entregue encontrado
+                            </p>
+                          ) : (
+                            <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '1rem' }}>
+                              <table style={{ width: '100%', fontSize: '0.85rem' }}>
+                                <thead>
+                                  <tr style={{ background: '#f3f4f6' }}>
+                                    <th style={{ padding: '0.5rem', textAlign: 'left' }}>✓</th>
+                                    <th style={{ padding: '0.5rem', textAlign: 'left' }}>OC</th>
+                                    <th style={{ padding: '0.5rem', textAlign: 'left' }}>Item</th>
+                                    <th style={{ padding: '0.5rem', textAlign: 'right' }}>Lucro</th>
+                                    <th style={{ padding: '0.5rem', textAlign: 'center' }}>Pago</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {itensResponsavel.map((item, idx) => (
+                                    <tr 
+                                      key={idx} 
+                                      style={{ 
+                                        background: item.pago ? '#f0fdf4' : (selectedItens.includes(item.id) ? '#fef3c7' : 'white'),
+                                        opacity: item.pago ? 0.7 : 1
+                                      }}
+                                    >
+                                      <td style={{ padding: '0.5rem' }}>
+                                        <input
+                                          type="checkbox"
+                                          checked={selectedItens.includes(item.id)}
+                                          onChange={() => toggleSelectItem(item.id)}
+                                          disabled={item.pago}
+                                          style={{ width: '18px', height: '18px', cursor: item.pago ? 'not-allowed' : 'pointer' }}
+                                        />
+                                      </td>
+                                      <td style={{ padding: '0.5rem' }}>{item.numero_oc}</td>
+                                      <td style={{ padding: '0.5rem' }}>{item.codigo_item}</td>
+                                      <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: '600', color: '#047857' }}>
+                                        {formatBRL(item.lucro_liquido || 0)}
+                                      </td>
+                                      <td style={{ padding: '0.5rem', textAlign: 'center' }}>
+                                        {item.pago ? (
+                                          <span style={{ color: '#22c55e', fontWeight: '600' }}>✓ PAGO</span>
+                                        ) : (
+                                          <span style={{ color: '#9ca3af' }}>-</span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+
+                          {/* Resumo e botão de pagamento */}
+                          {selectedItens.length > 0 && (
+                            <div style={{ 
+                              padding: '1rem', 
+                              background: '#fef9c3', 
+                              borderRadius: '8px',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              flexWrap: 'wrap',
+                              gap: '1rem'
+                            }}>
+                              <div>
+                                <div style={{ fontSize: '0.85rem', color: '#92400e' }}>Total Selecionado:</div>
+                                <div style={{ fontSize: '1.3rem', fontWeight: '700', color: '#78350f' }}>
+                                  {formatBRL(calcularTotalSelecionado())}
+                                </div>
+                                {comissaoPercentual[item.responsavel] > 0 && (
+                                  <div style={{ fontSize: '0.9rem', color: '#92400e' }}>
+                                    Comissão ({comissaoPercentual[item.responsavel]}%): <strong>{formatBRL(calcularTotalSelecionado() * (comissaoPercentual[item.responsavel] / 100))}</strong>
+                                  </div>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => registrarPagamento(item.responsavel)}
+                                className="btn btn-primary"
+                                style={{ padding: '0.75rem 1.5rem', fontSize: '1rem' }}
+                              >
+                                💰 Registrar Pagamento
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Histórico de pagamentos */}
+                          {pagamentos.filter(p => p.responsavel === item.responsavel).length > 0 && (
+                            <div style={{ marginTop: '1rem', padding: '1rem', background: '#f0fdf4', borderRadius: '8px' }}>
+                              <div style={{ fontWeight: '700', color: '#166534', marginBottom: '0.5rem' }}>
+                                📋 Histórico de Pagamentos
+                              </div>
+                              {pagamentos.filter(p => p.responsavel === item.responsavel).map((pag, idx) => (
+                                <div key={idx} style={{ 
+                                  padding: '0.5rem', 
+                                  background: 'white', 
+                                  borderRadius: '4px',
+                                  marginBottom: '0.5rem',
+                                  fontSize: '0.85rem',
+                                  display: 'flex',
+                                  justifyContent: 'space-between'
+                                }}>
+                                  <span>{new Date(pag.data).toLocaleDateString('pt-BR')}</span>
+                                  <span>{pag.qtd_itens} itens</span>
+                                  <span style={{ color: '#047857', fontWeight: '600' }}>{formatBRL(pag.valor_comissao)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </>
@@ -302,190 +442,190 @@ const AdminPanel = () => {
           <>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1.5rem' }}>Todas as Notas Fiscais</h2>
             
-            {/* Notas de Compra (Fornecedor) */}
-            <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ 
-                fontSize: '1.1rem', 
-                fontWeight: '700', 
-                marginBottom: '1rem',
-                padding: '0.75rem',
-                background: '#f5f3ff',
-                borderRadius: '8px',
-                color: '#5b21b6',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                🏭 Notas de Compra (Fornecedor) 
-                <span style={{ 
-                  background: '#7c3aed', 
-                  color: 'white', 
-                  padding: '0.2rem 0.6rem', 
-                  borderRadius: '12px',
-                  fontSize: '0.9rem'
-                }}>
-                  {notasFiscais.total_compra}
-                </span>
-              </h3>
+            {/* Layout em duas colunas */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
               
-              {notasFiscais.notas_compra.length === 0 ? (
-                <p style={{ textAlign: 'center', color: '#718096', padding: '2rem', background: '#f9fafb', borderRadius: '8px' }}>
-                  Nenhuma nota fiscal de compra cadastrada.
-                </p>
-              ) : (
-                <div className="table-container">
-                  <table data-testid="nfs-compra-table">
-                    <thead>
-                      <tr>
-                        <th>Arquivo</th>
-                        <th>OC</th>
-                        <th>Código Item</th>
-                        <th>Descrição</th>
-                        <th>NCM</th>
-                        <th>Ação</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {notasFiscais.notas_compra.map((nf, index) => (
-                        <tr key={index} data-testid={`nf-compra-${index}`}>
-                          <td>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              {nf.filename?.endsWith('.xml') ? '📑' : '📄'}
-                              <span style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {nf.filename}
-                              </span>
-                            </span>
-                          </td>
-                          <td><strong>{nf.numero_oc}</strong></td>
-                          <td>{nf.codigo_item}</td>
-                          <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {nf.descricao}
-                          </td>
-                          <td>
-                            {nf.ncm ? (
-                              <span style={{ 
-                                padding: '0.2rem 0.5rem', 
-                                background: '#dcfce7', 
-                                color: '#166534',
-                                borderRadius: '4px',
-                                fontSize: '0.8rem',
-                                fontWeight: '600'
-                              }}>
-                                {nf.ncm}
-                              </span>
-                            ) : (
-                              <span style={{ color: '#9ca3af' }}>-</span>
-                            )}
-                          </td>
-                          <td>
-                            <button
-                              onClick={() => downloadNF(nf)}
-                              disabled={downloadingNF === nf.id}
-                              className="btn btn-primary"
-                              style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
-                            >
-                              {downloadingNF === nf.id ? '...' : '⬇️ Baixar'}
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+              {/* Coluna Esquerda - Notas de Compra (Fornecedor) */}
+              <div>
+                <h3 style={{ 
+                  fontSize: '1.1rem', 
+                  fontWeight: '700', 
+                  marginBottom: '1rem',
+                  padding: '0.75rem',
+                  background: '#f5f3ff',
+                  borderRadius: '8px',
+                  color: '#5b21b6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  🏭 NFs de Compra (Fornecedor) 
+                  <span style={{ 
+                    background: '#7c3aed', 
+                    color: 'white', 
+                    padding: '0.2rem 0.6rem', 
+                    borderRadius: '12px',
+                    fontSize: '0.9rem'
+                  }}>
+                    {notasFiscais.total_compra}
+                  </span>
+                </h3>
+                
+                {notasFiscais.notas_compra.length === 0 ? (
+                  <p style={{ textAlign: 'center', color: '#718096', padding: '2rem', background: '#f9fafb', borderRadius: '8px' }}>
+                    Nenhuma NF de compra
+                  </p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {notasFiscais.notas_compra.map((nf, index) => (
+                      <div 
+                        key={index} 
+                        style={{ 
+                          padding: '0.75rem',
+                          background: 'white',
+                          borderRadius: '6px',
+                          border: '1px solid #e5e7eb',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '1rem'
+                        }}
+                      >
+                        <div style={{ 
+                          width: '30px', 
+                          height: '30px', 
+                          borderRadius: '50%', 
+                          background: '#7c3aed',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: '700',
+                          fontSize: '0.85rem',
+                          flexShrink: 0
+                        }}>
+                          {index + 1}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: '600', fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {nf.filename?.endsWith('.xml') ? '📑' : '📄'} {nf.filename}
+                          </div>
+                          <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                            OC: {nf.numero_oc}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => downloadNF(nf)}
+                          disabled={downloadingNF === nf.id}
+                          style={{ 
+                            padding: '0.4rem 0.8rem',
+                            background: '#7c3aed',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem',
+                            flexShrink: 0
+                          }}
+                        >
+                          {downloadingNF === nf.id ? '...' : '⬇️'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-            {/* Notas de Venda (ON) */}
-            <div>
-              <h3 style={{ 
-                fontSize: '1.1rem', 
-                fontWeight: '700', 
-                marginBottom: '1rem',
-                padding: '0.75rem',
-                background: '#ecfeff',
-                borderRadius: '8px',
-                color: '#0891b2',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                🏢 Notas de Venda (ON) 
-                <span style={{ 
-                  background: '#06b6d4', 
-                  color: 'white', 
-                  padding: '0.2rem 0.6rem', 
-                  borderRadius: '12px',
-                  fontSize: '0.9rem'
+              {/* Coluna Direita - Notas de Venda (ON) */}
+              <div>
+                <h3 style={{ 
+                  fontSize: '1.1rem', 
+                  fontWeight: '700', 
+                  marginBottom: '1rem',
+                  padding: '0.75rem',
+                  background: '#ecfeff',
+                  borderRadius: '8px',
+                  color: '#0891b2',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
                 }}>
-                  {notasFiscais.total_venda}
-                </span>
-              </h3>
-              
-              {notasFiscais.notas_venda.length === 0 ? (
-                <p style={{ textAlign: 'center', color: '#718096', padding: '2rem', background: '#f9fafb', borderRadius: '8px' }}>
-                  Nenhuma nota fiscal de venda cadastrada.
-                </p>
-              ) : (
-                <div className="table-container">
-                  <table data-testid="nfs-venda-table">
-                    <thead>
-                      <tr>
-                        <th>Arquivo</th>
-                        <th>OC</th>
-                        <th>Código Item</th>
-                        <th>Descrição</th>
-                        <th>NCM</th>
-                        <th>Ação</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {notasFiscais.notas_venda.map((nf, index) => (
-                        <tr key={index} data-testid={`nf-venda-${index}`}>
-                          <td>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              {nf.filename?.endsWith('.xml') ? '📑' : '📄'}
-                              <span style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {nf.filename}
-                              </span>
-                            </span>
-                          </td>
-                          <td><strong>{nf.numero_oc}</strong></td>
-                          <td>{nf.codigo_item}</td>
-                          <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {nf.descricao}
-                          </td>
-                          <td>
-                            {nf.ncm ? (
-                              <span style={{ 
-                                padding: '0.2rem 0.5rem', 
-                                background: '#dcfce7', 
-                                color: '#166534',
-                                borderRadius: '4px',
-                                fontSize: '0.8rem',
-                                fontWeight: '600'
-                              }}>
-                                {nf.ncm}
-                              </span>
-                            ) : (
-                              <span style={{ color: '#9ca3af' }}>-</span>
-                            )}
-                          </td>
-                          <td>
-                            <button
-                              onClick={() => downloadNF(nf)}
-                              disabled={downloadingNF === nf.id}
-                              className="btn btn-primary"
-                              style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
-                            >
-                              {downloadingNF === nf.id ? '...' : '⬇️ Baixar'}
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                  🏢 NFs de Venda (ON) 
+                  <span style={{ 
+                    background: '#06b6d4', 
+                    color: 'white', 
+                    padding: '0.2rem 0.6rem', 
+                    borderRadius: '12px',
+                    fontSize: '0.9rem'
+                  }}>
+                    {notasFiscais.total_venda}
+                  </span>
+                </h3>
+                
+                {notasFiscais.notas_venda.length === 0 ? (
+                  <p style={{ textAlign: 'center', color: '#718096', padding: '2rem', background: '#f9fafb', borderRadius: '8px' }}>
+                    Nenhuma NF de venda
+                  </p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {notasFiscais.notas_venda.map((nf, index) => (
+                      <div 
+                        key={index} 
+                        style={{ 
+                          padding: '0.75rem',
+                          background: 'white',
+                          borderRadius: '6px',
+                          border: '1px solid #e5e7eb',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '1rem'
+                        }}
+                      >
+                        <div style={{ 
+                          width: '30px', 
+                          height: '30px', 
+                          borderRadius: '50%', 
+                          background: '#06b6d4',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: '700',
+                          fontSize: '0.85rem',
+                          flexShrink: 0
+                        }}>
+                          {index + 1}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: '600', fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {nf.filename?.endsWith('.xml') ? '📑' : '📄'} {nf.filename}
+                          </div>
+                          <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                            OC: {nf.numero_oc}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => downloadNF(nf)}
+                          disabled={downloadingNF === nf.id}
+                          style={{ 
+                            padding: '0.4rem 0.8rem',
+                            background: '#06b6d4',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem',
+                            flexShrink: 0
+                          }}
+                        >
+                          {downloadingNF === nf.id ? '...' : '⬇️'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </>
         )}
