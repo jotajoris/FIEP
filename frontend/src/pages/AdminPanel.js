@@ -441,15 +441,13 @@ const AdminPanel = () => {
                               gap: '1rem'
                             }}>
                               <div>
-                                <div style={{ fontSize: '0.85rem', color: '#92400e' }}>Total Selecionado:</div>
+                                <div style={{ fontSize: '0.85rem', color: '#92400e' }}>Valor Total Venda Selecionado:</div>
                                 <div style={{ fontSize: '1.3rem', fontWeight: '700', color: '#78350f' }}>
                                   {formatBRL(calcularTotalSelecionado())}
                                 </div>
-                                {comissaoPercentual[item.responsavel] > 0 && (
-                                  <div style={{ fontSize: '0.9rem', color: '#92400e' }}>
-                                    Comissão ({comissaoPercentual[item.responsavel]}%): <strong>{formatBRL(calcularTotalSelecionado() * (comissaoPercentual[item.responsavel] / 100))}</strong>
-                                  </div>
-                                )}
+                                <div style={{ fontSize: '0.9rem', color: '#92400e' }}>
+                                  Comissão (1,5%): <strong>{formatBRL(calcularTotalSelecionado() * 0.015)}</strong>
+                                </div>
                               </div>
                               <button
                                 onClick={() => registrarPagamento(item.responsavel)}
