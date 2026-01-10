@@ -1074,10 +1074,10 @@ const ItemsByStatus = () => {
                       )}
 
                       <button 
-                        onClick={() => startEdit(item)} 
+                        onClick={() => startEdit(item, index)} 
                         className="btn btn-secondary" 
                         style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', marginTop: '1rem' }} 
-                        data-testid={`edit-item-${item.codigo_item}`}
+                        data-testid={`edit-item-${item.codigo_item}-${index}`}
                       >
                         Editar
                       </button>
