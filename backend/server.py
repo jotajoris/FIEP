@@ -1058,12 +1058,24 @@ async def upload_multiple_pdfs(files: List[UploadFile] = File(...), current_user
             # Processar itens com dados de referência
             processed_items = []
             
+            # OTIMIZAÇÃO: Batch query - buscar todas as referências de uma vez
+            all_codigo_items = [item["codigo_item"] for item in oc_data["items"]]
+            all_ref_items = await db.reference_items.find(
+                {"codigo_item": {"$in": all_codigo_items}},
+                {"_id": 0}
+            ).to_list(5000)
+            
+            # Criar lookup dictionary
+            ref_lookup = {}
+            for ref in all_ref_items:
+                codigo = ref["codigo_item"]
+                if codigo not in ref_lookup:
+                    ref_lookup[codigo] = []
+                ref_lookup[codigo].append(ref)
+            
             for item in oc_data["items"]:
-                # Buscar referência
-                ref_items = await db.reference_items.find(
-                    {"codigo_item": item["codigo_item"]},
-                    {"_id": 0}
-                ).to_list(100)
+                # Buscar do lookup
+                ref_items = ref_lookup.get(item["codigo_item"], [])
                 
                 responsavel = item.get("responsavel", "")
                 lote = item.get("lote", "")
