@@ -136,8 +136,9 @@ const ItemsByStatus = () => {
     return items.filter(item => item.responsavel === user.owner_name).length;
   }, [items, user?.owner_name]);
 
-  const startEdit = (item) => {
-    setEditingItem(`${item.po_id}-${item.codigo_item}`);
+  const startEdit = (item, itemIndex) => {
+    // Usar índice único para evitar conflito com itens de mesmo código
+    setEditingItem(itemIndex);
     
     // Se já tem fontes de compra, usar elas; senão criar uma vazia
     // Garantir que cada fonte tenha um ID
@@ -166,7 +167,11 @@ const ItemsByStatus = () => {
         link: item.link_compra || '',
         fornecedor: ''
       }],
-      quantidade_total: item.quantidade || 1
+      quantidade_total: item.quantidade || 1,
+      // Guardar referência do item para o save
+      _po_id: item.po_id,
+      _codigo_item: item.codigo_item,
+      _item_index: itemIndex
     });
   };
 
