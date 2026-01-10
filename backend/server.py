@@ -484,7 +484,8 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
             "numero_oc": numero_oc,
             "items": items,
             "endereco_entrega": endereco_entrega,
-            "regiao": regiao
+            "regiao": regiao,
+            "cnpj_requisitante": cnpj_requisitante
         }
     
     except Exception as e:
