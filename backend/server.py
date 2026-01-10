@@ -2872,38 +2872,34 @@ async def get_comissoes(current_user: dict = Depends(require_admin)):
     
     # Calcular lucro por responsável (apenas itens entregues)
     lucro_por_responsavel = {}
+    # Função para normalizar nome do responsável
+    def normalizar_nome(nome):
+        if not nome:
+            return ''
+        # Remover sufixos comuns de email e domínios
+        nome = nome.upper().strip()
+        nome = nome.replace('ONSOLUCOES', '').replace('.ONSOLUCOES', '')
+        nome = nome.replace('.', '').strip()
+        return nome
+    
     for po in pos:
         for item in po.get('items', []):
-            responsavel = item.get('responsavel', '').upper().strip()
+            responsavel_raw = item.get('responsavel', '').upper().strip()
+            responsavel = normalizar_nome(responsavel_raw)
             if responsavel and item.get('status') == 'entregue':
                 lucro = item.get('lucro_liquido', 0) or 0
                 if responsavel not in lucro_por_responsavel:
                     lucro_por_responsavel[responsavel] = 0
                 lucro_por_responsavel[responsavel] += lucro
     
-    # Montar resposta
+    # Montar resposta - apenas responsáveis com itens (sem duplicar usuários)
     resultado = []
     responsaveis_processados = set()
     
-    # Primeiro, adicionar usuários do sistema
-    for user in usuarios:
-        nome = user.get('display_name') or user.get('email', '').split('@')[0]
-        nome_upper = nome.upper()
-        responsaveis_processados.add(nome_upper)
-        
-        comissao = comissoes_dict.get(nome_upper, {})
-        resultado.append({
-            'responsavel': nome_upper,
-            'email': user.get('email'),
-            'lucro_entregue': lucro_por_responsavel.get(nome_upper, 0),
-            'percentual_comissao': comissao.get('percentual', 0),
-            'valor_comissao': lucro_por_responsavel.get(nome_upper, 0) * (comissao.get('percentual', 0) / 100),
-            'pago': comissao.get('pago', False)
-        })
-    
-    # Adicionar responsáveis que não são usuários mas têm itens
+    # Processar responsáveis que têm lucro nos itens
     for responsavel, lucro in lucro_por_responsavel.items():
-        if responsavel not in responsaveis_processados and responsavel and responsavel != 'NÃO ATRIBUÍDO':
+        if responsavel and responsavel != 'NÃO ATRIBUÍDO' and responsavel not in responsaveis_processados:
+            responsaveis_processados.add(responsavel)
             comissao = comissoes_dict.get(responsavel, {})
             resultado.append({
                 'responsavel': responsavel,
@@ -2911,6 +2907,22 @@ async def get_comissoes(current_user: dict = Depends(require_admin)):
                 'lucro_entregue': lucro,
                 'percentual_comissao': comissao.get('percentual', 0),
                 'valor_comissao': lucro * (comissao.get('percentual', 0) / 100),
+                'pago': comissao.get('pago', False)
+            })
+    
+    # Adicionar usuários não-admin que não têm itens ainda (para poder definir % antecipadamente)
+    for user in usuarios:
+        nome = user.get('display_name') or user.get('email', '').split('@')[0]
+        nome_normalizado = normalizar_nome(nome)
+        if nome_normalizado and nome_normalizado not in responsaveis_processados:
+            responsaveis_processados.add(nome_normalizado)
+            comissao = comissoes_dict.get(nome_normalizado, {})
+            resultado.append({
+                'responsavel': nome_normalizado,
+                'email': user.get('email'),
+                'lucro_entregue': 0,
+                'percentual_comissao': comissao.get('percentual', 0),
+                'valor_comissao': 0,
                 'pago': comissao.get('pago', False)
             })
     
