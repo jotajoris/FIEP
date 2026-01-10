@@ -398,13 +398,13 @@ const Dashboard = () => {
               background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', 
               color: 'white' 
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                <div>
-                  <h3 style={{ marginBottom: '0.5rem', fontSize: '1.2rem' }}>🔐 Backup do Sistema</h3>
-                  <p style={{ fontSize: '0.9rem', opacity: 0.9 }}>
-                    Exporte todos os dados (OCs, itens, cotações, usuários) em um arquivo JSON.
-                  </p>
-                </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <h3 style={{ marginBottom: '0.5rem', fontSize: '1.2rem' }}>🔐 Backup do Sistema</h3>
+                <p style={{ fontSize: '0.9rem', opacity: 0.9 }}>
+                  Exporte ou restaure todos os dados: OCs, itens, cotações, links, fornecedores, fretes, valores.
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                 <button 
                   onClick={exportBackup} 
                   className="btn"
@@ -418,6 +418,30 @@ const Dashboard = () => {
                   data-testid="export-backup-btn"
                 >
                   📥 Exportar Backup
+                </button>
+                <label 
+                  className="btn"
+                  style={{ 
+                    background: '#fbbf24', 
+                    color: '#78350f',
+                    padding: '0.75rem 1.5rem',
+                    fontWeight: '600',
+                    fontSize: '1rem',
+                    cursor: 'pointer'
+                  }}
+                  data-testid="restore-backup-btn"
+                >
+                  📤 Restaurar Backup
+                  <input 
+                    type="file" 
+                    accept=".json"
+                    onChange={handleRestoreBackup}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+              </div>
+            </div>
+          )}
                 </button>
               </div>
             </div>
