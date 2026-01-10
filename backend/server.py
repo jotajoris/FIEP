@@ -1248,8 +1248,8 @@ async def update_purchase_order(po_id: str, po_update: PurchaseOrderCreate, curr
             item.lote = ref_item['lote']
             item.lot_number = ref_item['lot_number']
             item.regiao = ref_item['regiao']
-            if not item.descricao:
-                item.descricao = ref_item['descricao']
+            # SEMPRE usar a descrição do Excel (mais completa)
+            item.descricao = ref_item['descricao']
             if not item.marca_modelo:
                 item.marca_modelo = ref_item['marca_modelo']
         
