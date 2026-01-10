@@ -118,7 +118,7 @@ const PODetails = () => {
     return { totalQtd, totalCusto, totalFrete };
   };
 
-  const saveEdit = async (item) => {
+  const saveEdit = async (item, itemIndex) => {
     try {
       const payload = {
         status: formData.status,
@@ -135,7 +135,8 @@ const PODetails = () => {
         })).filter(fc => fc.quantidade > 0)
       };
       
-      await apiPatch(`${API}/purchase-orders/${id}/items/${item.codigo_item}`, payload);
+      // Usar endpoint com índice para evitar problema com itens duplicados
+      await apiPatch(`${API}/purchase-orders/${id}/items/by-index/${itemIndex}`, payload);
       
       setEditingItem(null);
       setFormData({});
