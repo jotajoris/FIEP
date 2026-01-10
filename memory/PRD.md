@@ -157,6 +157,23 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
   - ⬇️ **Download**: Botão para baixar cada NF anexada
   - 🗑️ **Remover**: Botão para excluir NFs
   - ✅ **Checkbox "NF Emitida / Pronto para Despacho"**: Marca quando a NF de revenda foi emitida e o item está pronto para envio
+- [10/01/2026] ✅ **Visualização "Em Separação" Agrupada por OC**: Nova interface que:
+  - 📦 **Agrupa itens por OC**: Cada OC aparece como um card colapsável
+  - 📊 **Indicador de Progresso**: Mostra "X de Y itens com NF emitida" (ex: "3 de 5")
+  - ✅ **Status "Pronto para Despacho"**: Card fica verde quando TODOS os itens da OC têm NF emitida
+  - 🔽 **Expandir/Colapsar**: Clique no card para ver detalhes de cada item
+  - 🔗 **Link "Ver OC Completa"**: Acesso rápido à página de detalhes da OC
+- [10/01/2026] ✅ **Sistema de Comissões Baseado em Lotes**: Novo sistema no Painel Admin:
+  - 💰 **Comissão fixa de 1,5%** sobre o valor total de venda (não lucro)
+  - 📋 **Baseado em LOTES específicos**: Cada cotador recebe comissão dos lotes que cotou originalmente
+  - 👥 **Apenas não-admins**: Maria, Mylena e Fabio (João e Mateus são admins e não recebem)
+  - 📊 **Lotes atribuídos**:
+    - MARIA: 1-12, 43-53
+    - MYLENA: 80-97
+    - FABIO: 32-42
+  - ⏳ **Status para comissão**: Apenas itens "entregue" ou "em_transito" geram comissão
+  - 📝 **Registro de Pagamentos**: Admin pode selecionar itens e registrar pagamento de comissão
+  - 📜 **Histórico de Pagamentos**: Visualização, edição e exclusão de pagamentos anteriores
 
 ## Próximas Tarefas (Backlog)
 
