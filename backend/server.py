@@ -2782,6 +2782,146 @@ async def update_endereco_entrega_v2(
     
     return {"success": True, "message": "Endereço atualizado com sucesso"}
 
+# ============== ENDPOINTS ADMIN - COMISSÕES E NOTAS FISCAIS ==============
+
+class ComissaoUpdate(BaseModel):
+    """Atualizar comissão de um responsável"""
+    percentual: float
+    pago: bool = False
+
+@api_router.get("/admin/comissoes")
+async def get_comissoes(current_user: dict = Depends(require_admin)):
+    """Obter dados de comissões por responsável (apenas usuários não-admin)"""
+    
+    # Obter todos os usuários não-admin
+    usuarios = await db.users.find({"role": {"$ne": "admin"}}, {"_id": 0}).to_list(length=100)
+    
+    # Obter comissões salvas
+    comissoes_salvas = await db.comissoes.find({}, {"_id": 0}).to_list(length=100)
+    comissoes_dict = {c['responsavel']: c for c in comissoes_salvas}
+    
+    # Obter todas as OCs para calcular lucro
+    pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(length=1000)
+    
+    # Calcular lucro por responsável (apenas itens entregues)
+    lucro_por_responsavel = {}
+    for po in pos:
+        for item in po.get('items', []):
+            responsavel = item.get('responsavel', '').upper().strip()
+            if responsavel and item.get('status') == 'entregue':
+                lucro = item.get('lucro_liquido', 0) or 0
+                if responsavel not in lucro_por_responsavel:
+                    lucro_por_responsavel[responsavel] = 0
+                lucro_por_responsavel[responsavel] += lucro
+    
+    # Montar resposta
+    resultado = []
+    responsaveis_processados = set()
+    
+    # Primeiro, adicionar usuários do sistema
+    for user in usuarios:
+        nome = user.get('display_name') or user.get('email', '').split('@')[0]
+        nome_upper = nome.upper()
+        responsaveis_processados.add(nome_upper)
+        
+        comissao = comissoes_dict.get(nome_upper, {})
+        resultado.append({
+            'responsavel': nome_upper,
+            'email': user.get('email'),
+            'lucro_entregue': lucro_por_responsavel.get(nome_upper, 0),
+            'percentual_comissao': comissao.get('percentual', 0),
+            'valor_comissao': lucro_por_responsavel.get(nome_upper, 0) * (comissao.get('percentual', 0) / 100),
+            'pago': comissao.get('pago', False)
+        })
+    
+    # Adicionar responsáveis que não são usuários mas têm itens
+    for responsavel, lucro in lucro_por_responsavel.items():
+        if responsavel not in responsaveis_processados and responsavel and responsavel != 'NÃO ATRIBUÍDO':
+            comissao = comissoes_dict.get(responsavel, {})
+            resultado.append({
+                'responsavel': responsavel,
+                'email': None,
+                'lucro_entregue': lucro,
+                'percentual_comissao': comissao.get('percentual', 0),
+                'valor_comissao': lucro * (comissao.get('percentual', 0) / 100),
+                'pago': comissao.get('pago', False)
+            })
+    
+    return sorted(resultado, key=lambda x: x['lucro_entregue'], reverse=True)
+
+@api_router.patch("/admin/comissoes/{responsavel}")
+async def update_comissao(
+    responsavel: str,
+    request: ComissaoUpdate,
+    current_user: dict = Depends(require_admin)
+):
+    """Atualizar comissão de um responsável"""
+    
+    await db.comissoes.update_one(
+        {"responsavel": responsavel.upper()},
+        {"$set": {
+            "responsavel": responsavel.upper(),
+            "percentual": request.percentual,
+            "pago": request.pago
+        }},
+        upsert=True
+    )
+    
+    return {"success": True, "message": "Comissão atualizada com sucesso"}
+
+@api_router.get("/admin/notas-fiscais")
+async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
+    """Obter todas as notas fiscais do sistema (compra e venda)"""
+    
+    pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(length=1000)
+    
+    nfs_compra = []  # NFs de fornecedor
+    nfs_venda = []   # NFs de revenda (ON)
+    
+    for po in pos:
+        for idx, item in enumerate(po.get('items', [])):
+            # NFs de compra (fornecedor)
+            for nf in item.get('notas_fiscais_fornecedor', []):
+                nfs_compra.append({
+                    'id': nf.get('id'),
+                    'filename': nf.get('filename'),
+                    'content_type': nf.get('content_type'),
+                    'ncm': nf.get('ncm'),
+                    'uploaded_at': nf.get('uploaded_at'),
+                    'numero_oc': po.get('numero_oc'),
+                    'codigo_item': item.get('codigo_item'),
+                    'descricao': item.get('descricao', '')[:50],
+                    'po_id': po.get('id'),
+                    'item_index': idx
+                })
+            
+            # NF de venda (revenda)
+            nf_revenda = item.get('nota_fiscal_revenda')
+            if nf_revenda:
+                nfs_venda.append({
+                    'id': nf_revenda.get('id'),
+                    'filename': nf_revenda.get('filename'),
+                    'content_type': nf_revenda.get('content_type'),
+                    'ncm': nf_revenda.get('ncm'),
+                    'uploaded_at': nf_revenda.get('uploaded_at'),
+                    'numero_oc': po.get('numero_oc'),
+                    'codigo_item': item.get('codigo_item'),
+                    'descricao': item.get('descricao', '')[:50],
+                    'po_id': po.get('id'),
+                    'item_index': idx
+                })
+    
+    # Ordenar por data de upload (mais recente primeiro)
+    nfs_compra.sort(key=lambda x: x.get('uploaded_at', ''), reverse=True)
+    nfs_venda.sort(key=lambda x: x.get('uploaded_at', ''), reverse=True)
+    
+    return {
+        'notas_compra': nfs_compra,
+        'notas_venda': nfs_venda,
+        'total_compra': len(nfs_compra),
+        'total_venda': len(nfs_venda)
+    }
+
 @app.on_event("startup")
 async def startup_event():
     """Iniciar job de verificação de rastreios ao iniciar o servidor"""
