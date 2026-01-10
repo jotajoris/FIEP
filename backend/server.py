@@ -3063,6 +3063,52 @@ async def create_pagamento(request: PagamentoCreate, current_user: dict = Depend
     
     return {"success": True, "message": "Pagamento registrado com sucesso", "pagamento_id": pagamento["id"]}
 
+class PagamentoUpdate(BaseModel):
+    """Atualizar pagamento"""
+    valor_comissao: Optional[float] = None
+    percentual: Optional[float] = None
+
+@api_router.patch("/admin/pagamentos/{pagamento_id}")
+async def update_pagamento(
+    pagamento_id: str,
+    request: PagamentoUpdate,
+    current_user: dict = Depends(require_admin)
+):
+    """Editar um pagamento existente"""
+    
+    update_data = {}
+    if request.valor_comissao is not None:
+        update_data["valor_comissao"] = request.valor_comissao
+    if request.percentual is not None:
+        update_data["percentual"] = request.percentual
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Nenhum campo para atualizar")
+    
+    result = await db.pagamentos.update_one(
+        {"id": pagamento_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Pagamento não encontrado")
+    
+    return {"success": True, "message": "Pagamento atualizado com sucesso"}
+
+@api_router.delete("/admin/pagamentos/{pagamento_id}")
+async def delete_pagamento(
+    pagamento_id: str,
+    current_user: dict = Depends(require_admin)
+):
+    """Deletar um pagamento"""
+    
+    result = await db.pagamentos.delete_one({"id": pagamento_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Pagamento não encontrado")
+    
+    return {"success": True, "message": "Pagamento deletado com sucesso"}
+
 @app.on_event("startup")
 async def startup_event():
     """Iniciar job de verificação de rastreios ao iniciar o servidor"""
