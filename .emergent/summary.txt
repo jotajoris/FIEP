@@ -11,77 +11,221 @@ The user requested a web platform to manage purchase orders (OCs) from their cli
 - A page to view all items assigned to a specific person.
 - A dashboard with search, filtering (by date), and bulk actions.
 - An admin-only feature to edit any detail of an existing OC and its items.
-- A system to track package deliveries via Correios tracking codes, including automatic status updates and a notification system for delivered items.
-- A summary page showing key financial metrics like Lucro Previsto, Imposto Previsto, and Lucro Realizado.
-- Format all monetary values in the Brazilian standard (e.g., R$ 1.234,56).
-- Force all text inputs to uppercase and remove accents to prevent data duplication.
-- Provide a backup and restore functionality for administrators.
-- **New (This session):** On the Em Separação page, add functionality to manage supplier and sales invoices (Notas Fiscais), including file uploads (PDF/XML), NCM extraction, and tracking the resale invoice status.
-- **New (This session):** Revamp the Admin Panel to include a Commissions tab for tracking and paying non-admin user commissions and a Notas Fiscais tab to view all uploaded invoices.
+- A system to track package deliveries via Correios tracking codes.
+- A summary page showing key financial metrics.
+- Format all monetary values in Brazilian standard (R$) and force text to uppercase.
+- Provide a backup and restore functionality.
+- On the Em Separação page, manage supplier/sales invoices (Notas Fiscais).
+- Revamp the Admin Panel for Commissions and a central view of all invoices.
+- **New (This session):** The commission system was completely overhauled to be based on pre-defined Lotes for each user, with a fixed 1.5% commission on the sales value for items in entregue or em_transito status. Admins are excluded, and specific OCs can be manually excluded from commission calculations.
+- **New (This session):** The Em Separação page was redesigned to group items by OC, showing a progress bar for invoice issuance and a Pronto para Despacho status when all items in an OC have their resale invoice () uploaded.
+- **New (This session):** The Resumo Completo page was updated to combine freight costs into a single metric and add a new card showing the total amount of commissions to be paid.
 
 **User's preferred language**:
 The user's primary language is **Portuguese (Brazil)**. The next agent MUST respond in Portuguese.
 
 **what currently exists?**
-A full-stack application (FastAPI, React, MongoDB) for managing purchase orders. The current session focused on two major feature implementations:
-
-1.  **Invoice Management on Em Separação Page:**
-    - Users can now upload/download/delete multiple supplier invoices and a single resale invoice (PDF/XML) for each item in the Em Separação status.
-    - The system attempts to extract NCM and invoice numbers from the uploaded files, with a manual override option.
-    - A checkbox tracks if the resale invoice has been issued.
-    - A new Dados Adicionais da NF section generates boilerplate text (company info, delivery address, bank details) with a copy to clipboard button to streamline invoice creation.
-    - The item's delivery address and the client's CNPJ are displayed.
-    - The layout was redesigned into a two-column grid based on user feedback.
-
-2.  **Revamped Admin Panel:**
-    - The old panel was replaced with two tabs: Comissões and Notas Fiscais.
-    - **Comissões:** Lists non-admin users, their total profit generated from delivered items, and allows admins to register commission payments. It includes a payment history with edit/delete functionality.
-    - **Notas Fiscais:** Provides a centralized view of all uploaded supplier and resale invoices, with download links.
-
-Backend performance was also improved by fixing several N+1 query issues identified by the deployment agent.
+A full-stack Purchase Order management application. This session focused on implementing significant user-driven changes. The bug where admins appeared in the commission list was fixed. The entire commission system was then refactored to be based on Lotes (batches of items) assigned to specific users (Maria, Mylena, Fabio), calculating a fixed 1.5% commission on the sales value of delivered/in-transit items, and including hardcoded exceptions for certain OCs. The Em Separação page UI was rebuilt to group items by OC, providing a clearer overview of which orders are ready for dispatch. The main financial summary page was also updated to reflect these changes. Finally, a critical bug reported by the user preventing item updates in the production environment was investigated and a fix was implemented, which now requires deployment by the user.
 
 **Last working item**:
--   **Last item agent was working:** The user reported that the Comissões tab in the Admin Panel was incorrectly showing admins (João and Mateus), who should not be eligible for commissions. The agent identified that the backend logic was pulling all users instead of filtering for non-admins and was about to implement the fix.
--   **Status:** IN PROGRESS
--   **Agent Testing Done:** N
--   **Which testing method agent to use?** Backend testing agent. The agent should first use  or  to verify that the  endpoint in  correctly filters out users with the  role. After confirming the API response is correct, use the  to visually confirm that only non-admin users (Maria, Mylena, Fabio) appear on the Admin Panel's Comissões tab.
+-   **Last item agent was working:** The user reported that a non-admin user (Maria) was unable to update any items in the Pendente status in the production environment. The agent investigated and determined the cause was a case-sensitive comparison between the user's  and the  field on the item in the backend authorization logic. A fix was implemented by making the string comparison case-insensitive and trimming whitespace.
+-   **Status:** USER VERIFICATION PENDING
+-   **Agent Testing Done:** Y (Agent confirmed the logic locally and deduced the production issue, but couldn't reproduce the exact failure as the local database was empty. The fix addresses the identified logical flaw.)
+-   **Which testing method agent to use?** Manual user testing in production. The user needs to deploy the new code. After deployment, the user Maria must test updating an item from her Pendente list again to confirm the fix works.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: (P0)** Admins are appearing in the Commissions list.
--   **Issue 2: (P1)** Editing duplicate items opens all of them (Recurring from the previous fork).
+-   **Issue 1: (P0)** User (Maria) cannot update items in production.
+-   **Issue 2: (P1)** Editing duplicate items opens all of them (Recurring from a previous fork).
 -   **Issue 3: (P2)** Data Discrepancy/Loss of Cotado items.
 -   **Issue 4: (P3)** Unreliable automatic package tracking.
 
 **Issues Detail:**
--   **Issue 1:** Admins in Commissions List
-    -   **Attempted fixes:** None yet. The agent identified the cause is the backend logic in  in  which combines users from the  collection and  field from items without filtering for roles.
-    -   **Next debug checklist:**
-        1.  Modify the  endpoint in .
-        2.  Inside the  function, ensure that when fetching the list of all users, only those without the  role are included.
-        3.  Ensure the name normalization logic () is consistently applied to prevent duplicates.
-    -   **Why fix this issue and what will be achieved with the fix?** To ensure the commissions feature works as intended, showing only commission-eligible employees and preventing incorrect data presentation to admins.
-    -   **Status:** IN PROGRESS
+-   **Issue 1:** User cannot update items in production
+    -   **Attempted fixes:** The agent identified that the authorization check in  and  functions in  was case-sensitive (). The fix was to change this to .
+    -   **Next debug checklist:** The user needs to deploy the latest code to their production environment () and have Maria re-test the functionality. If it still fails, the agent will need to add more detailed logging to the backend endpoints to capture the exact values being compared during the authorization check in the production environment.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a critical bug blocking a core workflow for non-admin users. Fixing it will restore the application's basic functionality for the user Maria.
+    -   **Status:** USER VERIFICATION PENDING
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Both
-    -   **Blocked on other issue:** None
+    -   **Should Test frontend/backend/both after fix?** Backend (fix is already applied, awaiting user verification post-deployment).
+    -   **Blocked on other issue:** None.
 
 -   **Issue 2:** Editing duplicate items opens all of them.
-    -   **Attempted fixes:** In the previous session, the agent applied fixes to  and  to use a unique item index for state management instead of the non-unique item code.
-    -   **Next debug checklist:** This issue's fix was never verified by the user in this session.
-        1.  **CRITICAL:** Ask the user to re-test the fix from the previous session. Instruct them to perform a hard refresh () and test on an OC with duplicate item codes (e.g., OC-3.100035).
-        2.  If it still fails, re-examine the state management logic in  and  to confirm the unique key ( or index) is being used correctly for all state related to editing.
-    -   **Why fix this issue and what will be achieved with the fix?** This is a critical usability bug that prevents users from editing data correctly.
+    -   **Attempted fixes:** A fix was applied in a previous session but was never verified by the user in this or the last session.
+    -   **Next debug checklist:**
+        1.  After the P0 issue is confirmed resolved, ask the user to explicitly test this scenario. Instruct them to perform a hard refresh () and try editing one of several duplicate items within the same OC.
+        2.  If it fails, re-examine the state management in  and  to ensure a truly unique key is used to control the edit state of each item.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a critical usability bug that corrupts the user's workflow when dealing with common order patterns.
     -   **Status:** USER VERIFICATION PENDING
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** Frontend
-    -   **Blocked on other issue:** None
+    -   **Blocked on other issue:** None.
 
 -   **Issue 3:** Data Discrepancy/Loss of Cotado items.
-    -   **Attempted fixes:** None in this session. Previously, the agent concluded the data was likely never saved correctly.
-    -   **Next debug checklist:**
-        1.  Acknowledge user frustration.
-        2.  Propose investigating commit a1662a1186c55bd352f4c04c093a100cb08548b0
+    -   **Attempted fixes:** None.
+    -   **Next debug checklist:** Propose a commit 60ca851e4723b93850f048ad7b261cdf96486980
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Mon Jan 12 13:17:12 2026 +0000
+
+    Auto-generated changes
+
+commit 2a517298bc15855a15a5c6c955ab450192583901
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Mon Jan 12 13:12:26 2026 +0000
+
+    auto-commit for 909e63c0-e98b-4ac5-affa-d9a3d06b9173
+
+commit 606506790ceb0caa311dcef2c9a95de2157b8483
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Mon Jan 12 13:12:02 2026 +0000
+
+    auto-commit for 2cf2240d-7029-4fab-bee6-e08d58cc9633
+
+commit c302ac9ed4504a93cb2ae4654b1302097a92ad89
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 21:30:41 2026 +0000
+
+    auto-commit for df50d83f-d58e-4091-9d31-8a5dca549c56
+
+commit ae24d9cbf55b8a368df8577126b59e710a5c5861
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 21:30:30 2026 +0000
+
+    auto-commit for 30415e75-1527-49e6-96c5-11c912e56a8e
+
+commit 11377c38707f738e9727c50a6603d5c4d1bc65a8
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 21:30:17 2026 +0000
+
+    auto-commit for 9c333618-ba60-4d47-a6e6-e74bf8324720
+
+commit 23d9668f6530744bd263da58b6ee47619c60f763
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 21:29:46 2026 +0000
+
+    auto-commit for 419c9da3-eee0-4483-9027-418688570e76
+
+commit 0edb3210e7f0f12e93dbd4d7c67756bd997677a9
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 21:14:41 2026 +0000
+
+    auto-commit for c4394fbf-039b-4b3a-854c-d7a7ff585344
+
+commit 1fbdb85657cfa3c848a92f353bdecfdbaf1b7973
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 21:09:57 2026 +0000
+
+    auto-commit for 5a39b0eb-fe92-47bb-a396-e860f65aef8a
+
+commit 996c8dfa7d397221c94889217547890753a15fb3
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 21:09:35 2026 +0000
+
+    auto-commit for 76e6d3ff-7b91-46d6-a591-d22a72304f76
+
+commit a19c43f94ed80d9ddaa9a83478dbb67b47fbe033
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 21:09:05 2026 +0000
+
+    auto-commit for 086cb9c8-6f23-4252-88e1-6687cfdf7741
+
+commit 748de9d566872c40eaafc2a0f085a3b0dfe562b5
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 20:59:56 2026 +0000
+
+    auto-commit for 78f75a2b-b4ff-4c5d-8d88-a978a7fd32a3
+
+commit a36c992fd25b5f8d1cfed6f46a639404424d9ac1
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 20:55:50 2026 +0000
+
+    auto-commit for 5d4851c4-9ce1-4f84-ac3e-2f5d225bae07
+
+commit 4b3874a5b4b6fcdd653b0cc09f59db3815e8d772
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 20:54:39 2026 +0000
+
+    auto-commit for 883662ec-c7b1-419d-8796-2eb56152b9d2
+
+commit e72a412f831d4ca7441de91503f5b8ece6b89e36
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 20:53:54 2026 +0000
+
+    auto-commit for 6bb2f5b5-00f1-4c0d-894c-a8d11cccd10e
+
+commit 638391c3ff225ea29e260ef4ade3df72bfc3d2f8
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 20:53:31 2026 +0000
+
+    auto-commit for bded34d9-0160-488c-8620-03152386891c
+
+commit ee6a456b1081ea29cd104903a0018d0275b08679
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 20:52:49 2026 +0000
+
+    auto-commit for f2fbb77f-0ec3-4898-8917-17d529719a9a
+
+commit 07fa8198f083effa5d606e2d43a1b71327e84a9e
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 20:52:35 2026 +0000
+
+    auto-commit for c852b4d6-a1d4-44b3-a26e-d9419de0915e
+
+commit 3af9d993703f0fea1bf59772ce5b27e071ba4a2c
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 20:52:07 2026 +0000
+
+    auto-commit for d58b271e-c196-4762-bc6f-2c98cf10f472
+
+commit b81c3663fef2e3a4becdbe1d7ff3c2d4c084221e
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 20:51:46 2026 +0000
+
+    auto-commit for caa17a26-5865-4bd7-b446-1eae85dd901d
+
+commit aeaf89b2493da0fc8c94f61556e3fe738cf55cf4
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 20:51:34 2026 +0000
+
+    auto-commit for 82d27c8b-b589-4e8a-b727-988c918dbb2f
+
+commit 1517b08fde55dfa18945acaeb039fddc6e53bc77
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 20:51:22 2026 +0000
+
+    auto-commit for 5324fe60-3fa2-49d8-8320-021bc16c1f87
+
+commit 99d5aeff23fd6eeb8738733ba55eaa12c555deef
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 20:50:51 2026 +0000
+
+    auto-commit for cd5d8ed8-648f-48c9-9d81-39053cf8f539
+
+commit 2d887552516f442c5a4c61e3856252d1e4e2d1ea
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 20:50:30 2026 +0000
+
+    auto-commit for d81ed8f8-b90b-4f5e-8aee-9856337d116c
+
+commit 6483232fe2c6ef72d22485e45774172b29ec6f5c
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 20:49:44 2026 +0000
+
+    auto-commit for ce742604-88ba-4a45-8c2f-b12e46ecde45
+
+commit c39e3265bc6754d9051b499dc74f1347dce6ef03
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 05:52:41 2026 +0000
+
+    auto-commit for 333b4a38-91e0-438d-a59d-84e0045768b1
+
+commit 9e512856ce007666d2c36d80b3b08e790ce7d94c
+Author: emergent-agent-e1 <github@emergent.sh>
+Date:   Sat Jan 10 05:52:13 2026 +0000
+
+    auto-commit for a6e9bd3b-2f41-474a-8eae-2f065417d9d8
+
+commit a1662a1186c55bd352f4c04c093a100cb08548b0
 Author: emergent-agent-e1 <github@emergent.sh>
 Date:   Sat Jan 10 05:43:24 2026 +0000
 
@@ -2503,22 +2647,21 @@ commit 367918ae2e7f811fd7c35f0dbc40a5c27e4d6ae3
 Author: emergent-agent-e1 <github@emergent.sh>
 Date:   Wed Jan 7 13:13:22 2026 +0000
 
-    Initial commit to find a past version of the  function that may have caused data loss.
-        3.  Offer to create a one-time script to recover some data (e.g., mark items with a sale price as cotado).
-    -   **Why fix this issue and what will be achieved with the fix?** Rebuilding user trust after significant data loss.
+    Initial commit investigation to find the commit that might have caused data loss. Offer to write a recovery script as a goodwill gesture.
+    -   **Why fix this issue and what will be achieved with the fix?** To rebuild user trust after a significant data loss event.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** Backend (for script)
-    -   **Blocked on other issue:** P0 and P1 issues.
+    -   **Blocked on other issue:** Blocked by P0 and P1 issues.
 
 -   **Issue 4:** Unreliable automatic package tracking.
-    -   **Attempted fixes:** None in this session. Workarounds (retry job, manual button) exist from a previous session.
-    -   **Next debug checklist:** Research and propose a stable, paid Correios tracking API to the user.
+    -   **Attempted fixes:** None.
+    -   **Next debug checklist:** Research and propose a stable, paid Correios tracking API to the user as the current free one is unreliable.
     -   **Why fix this issue and what will be achieved with the fix?** Fulfills a core user requirement for reliable, automatic status updates.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** Backend
-    -   **Blocked on other issue:** None
+    -   **Blocked on other issue:** None.
 
 **In progress Task List**:
 -   None.
@@ -2528,98 +2671,89 @@ Date:   Wed Jan 7 13:13:22 2026 +0000
     -   **(P2) Add Não Atribuído to dropdown filters:** In  and , add an option to the Responsável filter to find items with no assigned user.
 -   **Future Tasks:**
     -   **(P1) Refactor Backend:** The  file is now over 3000 lines and critically needs to be modularized into a proper directory structure (e.g., , , ).
-    -   **(P3) Hostinger Deployment Guidance:** The user previously asked how to deploy to Hostinger. The agent should provide a clear explanation of building the React app and serving the static  folder.
+    -   **(P3) Hostinger Deployment Guidance:** The user previously asked how to deploy to Hostinger. The agent should provide a clear explanation.
     -   **(P3) Resend Domain Verification:** The password reset functionality is limited until the user verifies their domain with Resend.
 
 **Completed work in this session**
--   **Feature: Invoice Management on Em Separação Page:**
-    -   Implemented file upload/download/delete for supplier and resale invoices (, ).
-    -   Added NCM/NF number extraction from XML/PDF ().
-    -   Created a copy to clipboard section for generating invoice data ().
-    -   Redesigned the entire section into a two-column layout based on user sketches.
--   **Feature: Admin Panel Revamp:**
-    -   Replaced the existing  with a new two-tab interface for Comissões and Notas Fiscais.
-    -   **Commissions Tab:** Created backend logic and frontend UI to calculate, display, and manage commission payments for non-admin users, including payment history with edit/delete (, ).
-    -   **Notas Fiscais Tab:** Created backend logic and frontend UI to list all uploaded invoices for easy access and download (, ).
--   **Bug Fix:** Resolved an issue where duplicate user names (e.g., maria and maria.onsolucoes) appeared in the commissions list ().
--   **Backend Performance:** Refactored multiple endpoints (, , etc.) in  to use batch queries, resolving N+1 performance issues.
--   **Deployment Readiness:** Cleaned up  to resolve deployment blockers. Explained the Replace Deployment feature to the user.
+-   **Feature: Overhauled Commission System:**
+    -   Rewrote backend logic in  to calculate commissions based on predefined Lotes (item batches) and a fixed 1.5% of the sales value.
+    -   Added hardcoded exceptions to exclude specific OCs (, ) from commission calculations.
+    -   Updated the UI in  to reflect the new system (sales value instead of profit, fixed percentage).
+-   **Feature: Em Separação Page Redesign:**
+    -   Modified  to group items by Purchase Order.
+    -   Added UI indicators for OC readiness (Pronto para Despacho) based on invoice upload progress.
+-   **Feature: Financial Summary Update:**
+    -   Updated  to add a Total Comissões a Pagar card.
+    -   Consolidated Frete Compra and Frete Envio into a single Total de Fretes card and reordered the layout.
+-   **Bug Fix: Admins in Commission List:**
+    -   Corrected the  endpoint in  to filter out users with the  role.
+-   **Bug Fix: User Unable to Update Items:**
+    -   Fixed a case-sensitivity bug in the authorization logic of item update endpoints in . This fix is pending user deployment and verification.
 
 **Earlier issues found/mentioned but not fixed**
--   **Data loss of cotado items:** The user reported losing about 50 quoted items. The agent's investigation concluded the data was likely never saved correctly, but the issue was not resolved. This is tracked as a P2 pending issue.
--   **Unreliable package tracking:** The existing free API is unstable. Tracked as a P3 pending issue.
+-   Data loss of cotado items. (Tracked as P2 pending issue).
+-   Unreliable package tracking. (Tracked as P3 pending issue).
 
 **Known issue recurrence from previous fork**
--   The Editing duplicate items opens all of them bug was reported by the user as still existing in production after the last fork's fix was deployed. This session did not re-verify the fix with the user, so it remains a potential recurrence.
+-   The Editing duplicate items opens all of them bug is still pending user verification. Its status has not changed.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend:** FastAPI, Pydantic, Motor (async MongoDB), python-jose (JWT), PyMuPDF, ,  (for XML parsing).
+-   **Backend:** FastAPI, Pydantic, Motor (async MongoDB), python-jose (JWT), APScheduler.
 -   **Frontend:** React (Hooks, Context), React Router, Axios, TailwindCSS.
--   **Architecture:** SPA with a RESTful API. The backend is a single monolithic file.
+-   **Architecture:** SPA with a RESTful API. The backend remains a single monolithic file.
 
 **key DB schema**
--   ****:
-    -   : Optional[str]
-    -   : List[]
-        -   : { ... : List[], : Optional[], : Optional[List[str]], : bool }
--   **** (subdocument): { uid=0(root) gid=0(root) groups=0(root), , , , ,  }
--   **** (new collection): { uid=0(root) gid=0(root) groups=0(root), , , , , ,  }
+-   ****: The  subdocument now has its  field used in complex, case-insensitive, lot-based logic for commissions.
+-   ****: Logic changed to be based on  instead of , and a fixed  of 1.5%.
 
 **changes in tech stack**
 -   None.
 
 **All files of reference**
--   : Heavily modified with numerous new endpoints and logic for invoices and commissions. Now critically large.
--   : Completely rewritten from scratch to implement the new Comissões and Notas Fiscais tabs.
--   : Heavily modified to add the invoice management section and new two-column layout.
--   : Not touched in this session, but relevant for the pending duplicate item edit bug.
+-   : Heavily modified for new commission logic (including hardcoded exceptions), and patched for the case-sensitivity authorization bug. Still monolithic and in critical need of refactoring.
+-   : UI updated to reflect the new, simplified commission calculation rules.
+-   : Major rewrite of the rendering logic for status  to implement the group by OC view.
+-   : Modified to add the commissions card, consolidate freight costs, and reorder the stat cards.
 
 **Areas that need refactoring**:
--   : **CRITICAL.** Now over 3000 lines, making it extremely difficult to maintain. It must be broken down into a modular structure (e.g., , , ).
--   : Very large and handles complex state for two distinct features. Could be broken into smaller components (e.g., , ).
--   : Also large and complex; the Em Separação section could be its own component.
+-   : **CRITICAL.** The complexity has increased further with hardcoded commission logic (lotes, OC exceptions). It must be broken down into modules (routes, services, models) to be maintainable.
+-   : This file is extremely large (over 1600 lines) and contains complex logic for rendering different views. The new group by OC logic and the standard item list logic could be separated into distinct components.
 
 **key api endpoints**
--   
--   
--   
--   
--   
--   
--   
--   
--    (for updating NCM)
+-   : Logic completely rewritten to use hardcoded lots and a fixed 1.5% commission rate, excluding admins and specific OCs.
+-   : Authorization logic fixed (made case-insensitive).
+-   : Authorization logic fixed (made case-insensitive).
 
 **Critical Info for New Agent**
--   **Priority 1:** Your immediate task is to fix the bug where admins appear in the Comissões list. The fix is in  in the  endpoint.
--   **Priority 2:** After fixing the commission bug, you **must** address the unresolved critical bug from the previous session: Editing duplicate items opens all of them. Do not start new features until you have explicitly asked the user to test the existing fix (with a cache clear) and confirmed it is resolved.
--   The user is highly engaged and provides detailed visual feedback. Pay close attention to their drawings and requests for layout changes.
--   The backend  file is a major liability. After resolving the immediate bugs, you should strongly propose a refactoring task to the user to make the application maintainable.
+-   **Your first action is to confirm with the user that they will deploy the latest changes to their production environment (). The critical bug fix for Maria depends on this deployment.** Do not proceed with other tasks until the user confirms the fix is working in production.
+-   The new commission logic is complex and **hardcoded** in . This includes which user is assigned to which Lote and which specific OCs are excluded from commission. Be aware of this before making any changes.
+-   After the production bug is resolved, the next priority is to get user verification for the long-standing duplicate item editing bug (Issue #2).
+-   The user is highly visual and provides feedback via screenshots and drawings. Always provide screenshots of your implemented UI changes.
+-   The technical debt in  is severe. Once the critical bugs are resolved, strongly propose the refactoring task to the user.
 
 **documents and test reports created in this job**
--   
--    (Updated)
+-    (Updated with the new commission and Em Separação features).
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Asks for adjustments to the Commissions tab (show only name) and Fiscal Notes tab (two-column layout).
-2.  **Agent:** Implements the layout changes.
-3.  **User:** Requests more changes for Commissions (edit/delete payment history) and Fiscal Notes (add NF number).
-4.  **Agent:** Implements the changes.
-5.  **User:** Reports a new bug: duplicate Maria in the commissions list. Confirms the commission calculation for multiple items should be automatic.
-6.  **Agent:** Investigates and finds the cause (un-normalized names from two different data sources).
-7.  **Agent:** Fixes the duplicate name issue.
-8.  **User:** Asks agent to call the deployment agent and run a health check.
-9.  **Agent:** Runs health checks, finds and fixes issues with  and N+1 queries, and confirms the system is ready for deployment.
-10. **User:** Reports the final bug: Admins (João and Mateus) are showing up in the commission list, but they shouldn't.
+1.  **User:** Requests to change the order of summary cards, placing Comissões before Lucro Realizado.
+2.  **Agent:** Implements the reordering of the cards. (COMPLETED)
+3.  **User:** Reports that two specific OCs were quoted by an admin (João), so the commission should not go to Fabio.
+4.  **Agent:** Adds a hardcoded exception in the backend to exclude those OCs from Fabio's commission calculation. (COMPLETED)
+5.  **User:** Reports a critical bug: Maria cannot update items on her account in production. Provides a screenshot and item details.
+6.  **Agent:** Investigates the bug, realizing the issue is in the production environment due to an empty local DB.
+7.  **User:** Confirms Maria is using the production URL and cannot update any of her pending items.
+8.  **Agent:** Deduces the issue is a case-sensitivity mismatch in the backend authorization check.
+9.  **Agent:** Implements a fix in the backend by making the name comparison case-insensitive. (COMPLETED, PENDING DEPLOYMENT)
+10. **Agent:** Informs the user that the fix is ready but requires a new deployment to take effect in production. (PENDING USER ACTION)
 
 **Project Health Check:**
--   **Broken:** The Comissões feature is showing incorrect data (admins in the list).
--   **Unknown:** The status of the critical duplicate item editing bug is unknown, as it was not verified by the user in this session.
+-   **Broken:** The **production environment** is currently broken for non-admin users trying to update items. The fix is in the codebase but not yet deployed.
+-   **Unknown:** The status of the critical duplicate item editing bug is still unknown, as it has not been verified by the user for two sessions.
 -   **Mocked:** Forgot Password email functionality is limited (Resend domain not verified).
--   **Technical Debt:** The backend  is over 3000 lines and urgently needs refactoring.
+-   **Technical Debt:** The backend  is over 3000 lines, contains hardcoded business logic, and urgently needs refactoring.  is also overly complex and large.
 
 **3rd Party Integrations**
 -   **Resend:** For emails (functionality limited).
@@ -2628,10 +2762,10 @@ Date:   Wed Jan 7 13:13:22 2026 +0000
 -   **APScheduler:** For running background jobs in the backend.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES, once after the initial invoice feature implementation.
+-   **Testing agent used after significant changes:** NO
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** []
--   **Known regressions:** The duplicate item editing bug from the previous fork may still be a regression in production.
+-   **Known regressions:** The duplicate item editing bug might still be present.
 
 **Credentials to test flow:**
 -   **Admin Login (João):**
@@ -2642,5 +2776,5 @@ Date:   Wed Jan 7 13:13:22 2026 +0000
     -   **Password:** 
 
 **What agent forgot to execute**
--   The agent did not get user verification for the critical duplicate item editing bug fix from the previous session.
--   The agent did not address several pending tasks from the previous handoff: the data loss of cotado items issue, the unreliable package tracking issue, adding a Não Atribuído filter, and providing Hostinger deployment guidance.</analysis>
+-   Did not get user verification for the duplicate item editing bug fix from the previous session.
+-   Did not start work on several pending tasks: adding a Não Atribuído filter, providing Hostinger deployment guidance, and guiding the user on Resend domain verification.</analysis>
