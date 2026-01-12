@@ -1,5 +1,5 @@
 """
-Pydantic models for the FIEP OC Management System
+Modelos Pydantic para o sistema FIEP OC
 """
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional, Dict
@@ -22,7 +22,6 @@ class ItemStatus(str, Enum):
     ENTREGUE = "entregue"
 
 
-# ==================== User Models ====================
 class User(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
@@ -73,7 +72,6 @@ class UpdateProfileRequest(BaseModel):
     owner_name: str
 
 
-# ==================== Reference Item Models ====================
 class ReferenceItem(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
@@ -90,9 +88,7 @@ class ReferenceItem(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
-# ==================== Purchase Order Models ====================
 class FonteCompra(BaseModel):
-    """Representa uma fonte/local de compra para um item"""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     quantidade: int
     preco_unitario: float
@@ -102,9 +98,8 @@ class FonteCompra(BaseModel):
 
 
 class Notificacao(BaseModel):
-    """Notificação de evento do sistema"""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    tipo: str  # "entrega", "novo_item", etc
+    tipo: str
     titulo: str
     numero_oc: str
     codigo_item: str
@@ -114,12 +109,11 @@ class Notificacao(BaseModel):
 
 
 class NotaFiscalDoc(BaseModel):
-    """Documento de Nota Fiscal (PDF ou XML)"""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     filename: str
-    content_type: str  # application/pdf ou text/xml
-    file_data: str  # Base64 encoded
-    ncm: Optional[str] = None  # NCM extraído ou manual
+    content_type: str
+    file_data: str
+    ncm: Optional[str] = None
     uploaded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     uploaded_by: Optional[str] = None
 
@@ -173,7 +167,6 @@ class PurchaseOrderCreate(BaseModel):
     created_by: Optional[str] = None
 
 
-# ==================== Update Models ====================
 class ItemStatusUpdate(BaseModel):
     status: ItemStatus
     link_compra: Optional[str] = None
@@ -187,7 +180,6 @@ class ItemStatusUpdate(BaseModel):
 
 
 class ItemFullUpdate(BaseModel):
-    """Atualização completa do item - apenas admin"""
     descricao: Optional[str] = None
     quantidade: Optional[int] = None
     unidade: Optional[str] = None
@@ -198,7 +190,6 @@ class ItemFullUpdate(BaseModel):
     preco_venda: Optional[float] = None
 
 
-# ==================== Dashboard Models ====================
 class DashboardStats(BaseModel):
     total_ocs: int
     total_items: int
@@ -225,7 +216,6 @@ class AdminSummary(BaseModel):
     status: str
 
 
-# ==================== Commission Models ====================
 class CommissionPayment(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     owner_name: str
@@ -250,14 +240,3 @@ class CommissionPaymentCreate(BaseModel):
 class CommissionPaymentUpdate(BaseModel):
     valor_pago: Optional[float] = None
     observacao: Optional[str] = None
-
-
-# ==================== Backup Models ====================
-class BackupData(BaseModel):
-    purchase_orders: List[dict]
-    reference_items: List[dict]
-    users: List[dict]
-    notificacoes: List[dict]
-    commission_payments: List[dict]
-    backup_date: str
-    version: str = "2.0"
