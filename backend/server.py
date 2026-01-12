@@ -1895,9 +1895,10 @@ async def get_duplicate_items(current_user: dict = Depends(get_current_user)):
     for po in pos:
         items_to_check = po['items']
         
-        # Filtrar por responsável se não for admin
+        # Filtrar por responsável se não for admin (case-insensitive)
         if current_user['role'] != 'admin' and current_user.get('owner_name'):
-            items_to_check = [item for item in po['items'] if item.get('responsavel') == current_user['owner_name']]
+            user_name = current_user['owner_name'].strip().upper()
+            items_to_check = [item for item in po['items'] if (item.get('responsavel') or '').strip().upper() == user_name]
         
         for item in items_to_check:
             codigo = item['codigo_item']
