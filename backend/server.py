@@ -1545,6 +1545,10 @@ async def get_purchase_orders(current_user: dict = Depends(get_current_user)):
         if isinstance(po['created_at'], str):
             po['created_at'] = datetime.fromisoformat(po['created_at'])
         
+        # Adicionar índice original a cada item ANTES de filtrar
+        for idx, item in enumerate(po['items']):
+            item['_originalIndex'] = idx
+        
         # Se não for admin, filtrar apenas itens do responsável (case-insensitive)
         if current_user['role'] != 'admin' and current_user.get('owner_name'):
             user_name = current_user['owner_name'].strip().upper()
@@ -1562,6 +1566,10 @@ async def get_purchase_order(po_id: str, current_user: dict = Depends(get_curren
     
     if isinstance(po['created_at'], str):
         po['created_at'] = datetime.fromisoformat(po['created_at'])
+    
+    # Adicionar índice original a cada item ANTES de filtrar
+    for idx, item in enumerate(po['items']):
+        item['_originalIndex'] = idx
     
     # Se não for admin, filtrar apenas itens do responsável (case-insensitive)
     if current_user['role'] != 'admin' and current_user.get('owner_name'):
