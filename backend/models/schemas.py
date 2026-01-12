@@ -1,0 +1,263 @@
+"""
+Pydantic models for the FIEP OC Management System
+"""
+from pydantic import BaseModel, Field, ConfigDict, EmailStr
+from typing import List, Optional, Dict
+from datetime import datetime, timezone
+from enum import Enum
+import uuid
+
+
+class UserRole(str, Enum):
+    ADMIN = "admin"
+    USER = "user"
+
+
+class ItemStatus(str, Enum):
+    PENDENTE = "pendente"
+    COTADO = "cotado"
+    COMPRADO = "comprado"
+    EM_SEPARACAO = "em_separacao"
+    EM_TRANSITO = "em_transito"
+    ENTREGUE = "entregue"
+
+
+# ==================== User Models ====================
+class User(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    email: EmailStr
+    hashed_password: str
+    role: UserRole
+    owner_name: Optional[str] = None
+    needs_password_change: bool = True
+    reset_token: Optional[str] = None
+    reset_token_expires: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    role: UserRole
+    owner_name: Optional[str] = None
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: dict
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ConfirmResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+class UpdateProfileRequest(BaseModel):
+    owner_name: str
+
+
+# ==================== Reference Item Models ====================
+class ReferenceItem(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    lote: str
+    lot_number: int
+    regiao: str
+    descricao: str
+    unidade: str
+    marca_modelo: str
+    codigo_item: str
+    responsavel: str
+    preco_venda_unitario: Optional[float] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+# ==================== Purchase Order Models ====================
+class FonteCompra(BaseModel):
+    """Representa uma fonte/local de compra para um item"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    quantidade: int
+    preco_unitario: float
+    frete: float = 0
+    link: str = ""
+    fornecedor: str = ""
+
+
+class Notificacao(BaseModel):
+    """Notificação de evento do sistema"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tipo: str  # "entrega", "novo_item", etc
+    titulo: str
+    numero_oc: str
+    codigo_item: str
+    descricao_item: str
+    lida: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class NotaFiscalDoc(BaseModel):
+    """Documento de Nota Fiscal (PDF ou XML)"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    filename: str
+    content_type: str  # application/pdf ou text/xml
+    file_data: str  # Base64 encoded
+    ncm: Optional[str] = None  # NCM extraído ou manual
+    uploaded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    uploaded_by: Optional[str] = None
+
+
+class POItem(BaseModel):
+    codigo_item: str
+    descricao: str = ""
+    quantidade: int
+    unidade: str = "UN"
+    marca_modelo: str = ""
+    lote: str = ""
+    lot_number: int = 0
+    regiao: str = ""
+    endereco_entrega: str = ""
+    responsavel: str = ""
+    status: ItemStatus = ItemStatus.PENDENTE
+    link_compra: Optional[str] = None
+    preco_compra: Optional[float] = None
+    preco_venda: Optional[float] = None
+    imposto: Optional[float] = None
+    frete_compra: Optional[float] = None
+    frete_envio: Optional[float] = None
+    lucro_liquido: Optional[float] = None
+    fontes_compra: List[FonteCompra] = []
+    data_cotacao: Optional[datetime] = None
+    data_compra: Optional[datetime] = None
+    data_envio: Optional[datetime] = None
+    data_entrega: Optional[datetime] = None
+    codigo_rastreio: Optional[str] = None
+    rastreio_eventos: List[dict] = []
+    notas_fiscais_fornecedor: List[NotaFiscalDoc] = []
+    nota_fiscal_revenda: Optional[NotaFiscalDoc] = None
+    nf_emitida_pronto_despacho: bool = False
+
+
+class PurchaseOrder(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    numero_oc: str
+    cliente: str = "FIEP"
+    cnpj_requisitante: str = ""
+    items: List[POItem]
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_by: Optional[str] = None
+
+
+class PurchaseOrderCreate(BaseModel):
+    numero_oc: str
+    items: List[POItem]
+    created_by: Optional[str] = None
+
+
+# ==================== Update Models ====================
+class ItemStatusUpdate(BaseModel):
+    status: ItemStatus
+    link_compra: Optional[str] = None
+    preco_compra: Optional[float] = None
+    preco_venda: Optional[float] = None
+    imposto: Optional[float] = None
+    frete_compra: Optional[float] = None
+    frete_envio: Optional[float] = None
+    fontes_compra: Optional[List[FonteCompra]] = None
+    codigo_rastreio: Optional[str] = None
+
+
+class ItemFullUpdate(BaseModel):
+    """Atualização completa do item - apenas admin"""
+    descricao: Optional[str] = None
+    quantidade: Optional[int] = None
+    unidade: Optional[str] = None
+    responsavel: Optional[str] = None
+    lote: Optional[str] = None
+    marca_modelo: Optional[str] = None
+    status: Optional[str] = None
+    preco_venda: Optional[float] = None
+
+
+# ==================== Dashboard Models ====================
+class DashboardStats(BaseModel):
+    total_ocs: int
+    total_items: int
+    items_pendentes: int
+    items_cotados: int
+    items_comprados: int
+    items_em_separacao: int
+    items_em_transito: int
+    items_entregues: int
+    items_por_responsavel: Dict[str, int]
+
+
+class AdminSummary(BaseModel):
+    numero_oc: str
+    codigo_item: str
+    nome_item: str
+    quem_cotou: str
+    preco_compra: Optional[float]
+    preco_venda: Optional[float]
+    imposto: Optional[float]
+    frete_compra: Optional[float]
+    frete_envio: Optional[float]
+    lucro_liquido: Optional[float]
+    status: str
+
+
+# ==================== Commission Models ====================
+class CommissionPayment(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    owner_name: str
+    valor_pago: float
+    percentual_comissao: float
+    valor_venda_total: float
+    itens_pagos: List[dict]
+    data_pagamento: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    observacao: Optional[str] = None
+    created_by: Optional[str] = None
+
+
+class CommissionPaymentCreate(BaseModel):
+    owner_name: str
+    valor_pago: float
+    percentual_comissao: float
+    valor_venda_total: float
+    itens_pagos: List[dict]
+    observacao: Optional[str] = None
+
+
+class CommissionPaymentUpdate(BaseModel):
+    valor_pago: Optional[float] = None
+    observacao: Optional[str] = None
+
+
+# ==================== Backup Models ====================
+class BackupData(BaseModel):
+    purchase_orders: List[dict]
+    reference_items: List[dict]
+    users: List[dict]
+    notificacoes: List[dict]
+    commission_payments: List[dict]
+    backup_date: str
+    version: str = "2.0"
