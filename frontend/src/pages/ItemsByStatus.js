@@ -33,6 +33,12 @@ const ItemsByStatus = () => {
   
   // Estados para visualização por OC (em_separacao)
   const [expandedOC, setExpandedOC] = useState(null);  // OC expandida para ver itens
+  
+  // Estados para carrinho e mover em lote
+  const [selectedItems, setSelectedItems] = useState(new Set());  // Itens selecionados para mover
+  const [movingToComprado, setMovingToComprado] = useState(false);  // Loading do botão
+  const [editingObservacao, setEditingObservacao] = useState(null);  // Item com observação sendo editada
+  const [observacaoTemp, setObservacaoTemp] = useState('');  // Valor temporário da observação
 
   const statusLabels = {
     'pendente': 'Pendentes',
@@ -45,6 +51,7 @@ const ItemsByStatus = () => {
 
   useEffect(() => {
     loadItems();
+    setSelectedItems(new Set());  // Limpar seleção ao trocar de status
   }, [status]);
 
   const loadItems = async () => {
