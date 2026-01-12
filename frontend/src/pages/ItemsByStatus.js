@@ -286,6 +286,10 @@ const ItemsByStatus = () => {
 
   const saveEdit = async (item) => {
     try {
+      console.log('saveEdit chamado para item:', item);
+      console.log('formData:', formData);
+      console.log('item._itemIndexInPO:', item._itemIndexInPO);
+      
       const payload = {
         status: formData.status,
         preco_venda: formData.preco_venda ? parseFloat(formData.preco_venda) : null,
@@ -301,15 +305,20 @@ const ItemsByStatus = () => {
         })).filter(fc => fc.quantidade > 0)
       };
       
+      console.log('Payload:', payload);
+      console.log('URL:', `${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}`);
+      
       // Usar endpoint com índice para evitar problema com itens duplicados
-      await apiPatch(`${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}`, payload);
+      const response = await apiPatch(`${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}`, payload);
+      console.log('Resposta:', response.data);
       
       setEditingItem(null);
       setFormData({});
       loadItems();
     } catch (error) {
       console.error('Erro ao atualizar item:', error);
-      alert('Erro ao atualizar item');
+      console.error('Error response:', error.response?.data);
+      alert('Erro ao atualizar item: ' + (error.response?.data?.detail || error.message));
     }
   };
 
