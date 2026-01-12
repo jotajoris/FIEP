@@ -1639,6 +1639,14 @@ async def update_item_by_index_status(
     if update.codigo_rastreio is not None:
         item['codigo_rastreio'] = update.codigo_rastreio.strip().upper() if update.codigo_rastreio else None
     
+    # No carrinho - checkbox
+    if update.no_carrinho is not None:
+        item['no_carrinho'] = update.no_carrinho
+    
+    # Observação
+    if update.observacao is not None:
+        item['observacao'] = update.observacao
+    
     # Calcular lucro
     preco_venda = item.get('preco_venda')
     quantidade = item.get('quantidade', 0)
