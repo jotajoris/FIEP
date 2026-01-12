@@ -12,18 +12,29 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 ## Usuários do Sistema
 ### Admins
-- projetos.onsolucoes@gmail.com
-- comercial.onsolucoes@gmail.com
-- gerencia.onsolucoes@gmail.com
+- projetos.onsolucoes@gmail.com (João)
+- comercial.onsolucoes@gmail.com (Mateus)
+- gerencia.onsolucoes@gmail.com (Roberto)
 
 ### Usuários (Cotadores)
 - Maria (maria.onsolucoes@gmail.com) - Lotes 1-12, 43-53
-- Mateus (Lotes 13-20, 54-66)
-- João (Lotes 21-31, 67-79)
 - Mylena (mylena.onsolucoes@gmail.com) - Lotes 80-97
 - Fabio (fabioonsolucoes@gmail.com) - Lotes 32-42
 
 **Senha padrão:** on123456
+
+## Versão Atual: 2.1.0 (12/01/2026)
+
+### Correções Críticas Nesta Sessão
+- ✅ **BUG CRÍTICO RESOLVIDO**: Usuários não-admin não conseguiam salvar edições
+  - **Causa**: Quando o backend filtrava itens por responsável, os índices mudavam
+  - **Solução**: Adicionado campo `_originalIndex` que preserva o índice real do item no banco
+  - **Frontend atualizado** para usar `_originalIndex` ao salvar
+
+### Refatoração do Backend (12/01/2026)
+- ✅ Modelos Pydantic extraídos para `/app/backend/models/schemas.py`
+- ✅ Arquivo `server.py` reduzido de 3610 para 3434 linhas
+- ✅ Estrutura de pastas criada: `/models`, `/routes`, `/services`, `/utils`
 
 ## Funcionalidades Implementadas
 
@@ -42,12 +53,18 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 - Atribuição automática por lote
 - Itens em múltiplos lotes: sorteio entre não-admins (Maria, Mylena, Fabio)
 
-### ✅ Campos Financeiros (Atualizado: 08/01/2026)
+### ✅ Edição de Itens (CORRIGIDO 12/01/2026)
+- **TODOS os usuários autenticados podem editar itens**
+- Preço de venda, preço de compra, fontes de compra - editável por todos
+- Imposto e frete de envio - editável por todos
+- Campo `_originalIndex` garante que o item correto é atualizado
+
+### ✅ Campos Financeiros
 - **Preço de Venda** - Auto-preenchido do Excel de referência ou informado manualmente
 - **Preço de Compra** - Editável por todos (ou calculado das fontes)
 - **Imposto** - Calculado (11% do valor de venda)
 - **Frete Compra** - Editável por todos (ou soma das fontes)
-- **Frete Envio/Embalagem** - Editável apenas por admins
+- **Frete Envio/Embalagem** - Editável por todos
 - **Lucro Líquido** - Calculado automaticamente:
   ```
   lucro = receita_venda - custo_compras - frete_compra - imposto - frete_envio
