@@ -147,6 +147,8 @@ class POItem(BaseModel):
     notas_fiscais_fornecedor: List[NotaFiscalDoc] = []
     nota_fiscal_revenda: Optional[NotaFiscalDoc] = None
     nf_emitida_pronto_despacho: bool = False
+    no_carrinho: bool = False  # Checkbox para marcar itens no carrinho
+    observacao: Optional[str] = None  # Campo de observação visível para todos
 
 
 class PurchaseOrder(BaseModel):
