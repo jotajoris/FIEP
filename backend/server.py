@@ -23,6 +23,7 @@ import openpyxl
 import resend
 import fitz  # PyMuPDF
 import re
+from pydantic import BaseModel
 
 # Importar modelos do módulo models
 from models import (
