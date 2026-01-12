@@ -1597,10 +1597,6 @@ async def update_item_by_index_status(
     # Apenas campos financeiros (preço venda, imposto, frete envio) são restritos a admins
     
     item['status'] = update.status
-        logger.warning(f"Permissão negada: item_responsavel='{item_responsavel}' vs user_owner_name='{user_owner_name}'")
-        raise HTTPException(status_code=403, detail=f"Você só pode editar seus próprios itens. Responsável do item: '{item_responsavel_raw}', Seu nome: '{user_owner_name_raw}'")
-    
-    item['status'] = update.status
     
     # Atualizar fontes de compra
     if update.fontes_compra is not None:
