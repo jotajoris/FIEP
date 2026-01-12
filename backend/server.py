@@ -1536,10 +1536,12 @@ async def update_item_status(po_id: str, codigo_item: str, update: ItemStatusUpd
             if update.frete_compra is not None and not update.fontes_compra:
                 item['frete_compra'] = update.frete_compra
             
-            # Apenas admins podem editar preço de venda, impostos e frete de envio
+            # Preço de venda pode ser editado por qualquer usuário
+            if update.preco_venda is not None:
+                item['preco_venda'] = update.preco_venda
+            
+            # Imposto e frete de envio são restritos a admins
             if current_user['role'] == 'admin':
-                if update.preco_venda is not None:
-                    item['preco_venda'] = update.preco_venda
                 if update.imposto is not None:
                     item['imposto'] = update.imposto
                 if update.frete_envio is not None:
