@@ -743,6 +743,56 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     """Obter informações do usuário logado"""
     return current_user
 
+# Endpoint de diagnóstico SIMPLES - mostra os itens do usuário e o problema
+@api_router.get("/debug/meus-itens")
+async def debug_meus_itens(current_user: dict = Depends(get_current_user)):
+    """
+    Endpoint de diagnóstico simples - acesse logado como Maria ou Fabio
+    URL: https://onlicitacoes.com/api/debug/meus-itens
+    """
+    user_email = current_user.get('sub', '')
+    user_role = current_user.get('role', '')
+    user_owner_name = current_user.get('owner_name') or ''
+    
+    # Buscar todas as OCs
+    all_pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(1000)
+    
+    # Encontrar itens que DEVERIAM ser do usuário
+    meus_itens = []
+    for po in all_pos:
+        for idx, item in enumerate(po.get('items', [])):
+            item_resp = item.get('responsavel', '')
+            # Verificar se o nome bate (case-insensitive)
+            if item_resp.strip().upper() == user_owner_name.strip().upper():
+                meus_itens.append({
+                    "po_id": po['id'],
+                    "numero_oc": po['numero_oc'],
+                    "item_index": idx,
+                    "codigo_item": item.get('codigo_item'),
+                    "responsavel_no_item": item_resp,
+                    "status": item.get('status'),
+                    "comparacao": {
+                        "item_responsavel_raw": item_resp,
+                        "item_responsavel_upper": item_resp.strip().upper(),
+                        "user_owner_name_raw": user_owner_name,
+                        "user_owner_name_upper": user_owner_name.strip().upper(),
+                        "match": item_resp.strip().upper() == user_owner_name.strip().upper()
+                    }
+                })
+    
+    return {
+        "usuario_logado": {
+            "email": user_email,
+            "role": user_role,
+            "owner_name": user_owner_name,
+            "owner_name_upper": user_owner_name.strip().upper() if user_owner_name else None,
+            "owner_name_bytes": [ord(c) for c in user_owner_name] if user_owner_name else []
+        },
+        "total_itens_encontrados": len(meus_itens),
+        "primeiros_5_itens": meus_itens[:5],
+        "mensagem": "Se 'total_itens_encontrados' é 0 e você é Maria/Fabio, o owner_name não está correto no seu token/usuário"
+    }
+
 # Endpoint de diagnóstico para debug do bug de permissão
 @api_router.get("/debug/permission/{po_id}/{item_index}")
 async def debug_permission(po_id: str, item_index: int, current_user: dict = Depends(get_current_user)):
