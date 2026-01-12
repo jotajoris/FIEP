@@ -392,6 +392,7 @@ const CreatePO = () => {
       unidade: 'UN',
       descricao: '',
       responsavel: '',
+      lote: '',
       preco_venda: ''
     });
   };
