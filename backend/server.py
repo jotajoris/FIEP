@@ -1475,8 +1475,12 @@ async def update_item_by_index_status(
     
     item = po['items'][item_index]
     
-    # Verificar permissão
-    if current_user['role'] != 'admin' and item.get('responsavel') != current_user.get('owner_name'):
+    # Verificar permissão (comparação case-insensitive e sem espaços extras)
+    item_responsavel = (item.get('responsavel') or '').strip().upper()
+    user_owner_name = (current_user.get('owner_name') or '').strip().upper()
+    
+    if current_user['role'] != 'admin' and item_responsavel != user_owner_name:
+        logger.warning(f"Permissão negada: item_responsavel='{item_responsavel}' vs user_owner_name='{user_owner_name}'")
         raise HTTPException(status_code=403, detail="Você só pode editar seus próprios itens")
     
     item['status'] = update.status
