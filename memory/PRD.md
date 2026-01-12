@@ -23,9 +23,19 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 2.1.0 (12/01/2026)
+## Versão Atual: 2.2.0 (12/01/2026)
 
-### Correções Críticas Nesta Sessão
+### Novas Funcionalidades (12/01/2026)
+- ✅ **Campo "Observação"** - Campo de texto visível para todos os usuários em cada item
+  - Pode ser adicionado/editado em qualquer página de status
+  - Persiste no banco de dados
+- ✅ **Checkbox "No Carrinho"** - Disponível apenas na página de itens "Cotados"
+  - Permite selecionar múltiplos itens para mover em lote
+- ✅ **Botão "Mover para Comprado"** - Aparece quando há itens selecionados
+  - Move todos os itens selecionados para status "Comprado" de uma vez
+  - Atualiza `data_compra` automaticamente
+
+### Correções Críticas (Sessão Anterior)
 - ✅ **BUG CRÍTICO RESOLVIDO**: Usuários não-admin não conseguiam salvar edições
   - **Causa**: Quando o backend filtrava itens por responsável, os índices mudavam
   - **Solução**: Adicionado campo `_originalIndex` que preserva o índice real do item no banco
