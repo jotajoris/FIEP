@@ -746,7 +746,7 @@ Chave PIX: 46.663.556/0001-69`;
                   const input = document.createElement('input');
                   input.type = 'file';
                   input.accept = '.pdf,.xml';
-                  input.onchange = (e) => uploadNF(item, e.target.files[0], 'fornecedor');
+                  input.onchange = (e) => handleFileUpload(item, 'fornecedor', e);
                   input.click();
                 }}
                 disabled={uploadingNF === item._uniqueId}
