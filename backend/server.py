@@ -288,13 +288,13 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                     quantidade = 0
                     unidade = "UN"
                     
-                    qty_match = re.search(r'\b(\d+)\s*(UN|UND|UNID|KG|PC|M|L|CX|KIT)\b', line, re.IGNORECASE)
+                    qty_match = re.search(r'\b(\d+)\s*(UN|UND|UNID|KG|PC|M|L|CX|KIT|CT|CEN|CENTO|PAR|PCT)\b', line, re.IGNORECASE)
                     if qty_match:
                         quantidade = int(qty_match.group(1))
                         unidade = qty_match.group(2).upper()
                     else:
                         for j in range(i+1, min(i+8, len(lines))):
-                            qty_match = re.search(r'\b(\d+)\s*(UN|UND|UNID|KG|PC|M|L|CX|KIT)\b', lines[j], re.IGNORECASE)
+                            qty_match = re.search(r'\b(\d+)\s*(UN|UND|UNID|KG|PC|M|L|CX|KIT|CT|CEN|CENTO|PAR|PCT)\b', lines[j], re.IGNORECASE)
                             if qty_match:
                                 quantidade = int(qty_match.group(1))
                                 unidade = qty_match.group(2).upper()
