@@ -729,8 +729,58 @@ Chave PIX: 46.663.556/0001-69`;
         {/* Seção de Rastreio para Em Trânsito */}
         {status === 'em_transito' && renderRastreioSection(item)}
 
-        {/* Botão Editar */}
-        <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
+        {/* Observação - visível para todos */}
+        <div style={{ marginTop: '1rem', padding: '0.75rem', background: '#f0f9ff', borderRadius: '8px', border: '1px solid #bae6fd' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+            <span style={{ fontWeight: '600', color: '#0369a1', fontSize: '0.85rem' }}>💬 Observação</span>
+            {editingObservacao !== item._uniqueId && (
+              <button
+                onClick={() => iniciarEdicaoObservacao(item)}
+                style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                {item.observacao ? 'Editar' : 'Adicionar'}
+              </button>
+            )}
+          </div>
+          {editingObservacao === item._uniqueId ? (
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <textarea
+                value={observacaoTemp}
+                onChange={(e) => setObservacaoTemp(e.target.value)}
+                placeholder="Digite uma observação..."
+                style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', minHeight: '60px', resize: 'vertical' }}
+              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <button onClick={() => salvarObservacao(item)} style={{ padding: '0.5rem', background: '#22c55e', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>✓</button>
+                <button onClick={cancelarEdicaoObservacao} style={{ padding: '0.5rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>✕</button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ color: item.observacao ? '#1e3a8a' : '#94a3b8', fontStyle: item.observacao ? 'normal' : 'italic' }}>
+              {item.observacao || 'Nenhuma observação'}
+            </div>
+          )}
+        </div>
+
+        {/* Ações: Checkbox Carrinho + Botão Editar */}
+        <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {/* Checkbox para marcar no carrinho (apenas para cotado) */}
+          {status === 'cotado' && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem', background: item.no_carrinho ? '#dcfce7' : '#f3f4f6', borderRadius: '8px', border: item.no_carrinho ? '2px solid #22c55e' : '1px solid #d1d5db' }}>
+              <input
+                type="checkbox"
+                checked={selectedItems.has(item._uniqueId)}
+                onChange={() => toggleItemSelection(item)}
+                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+              />
+              <span style={{ fontWeight: '500', color: selectedItems.has(item._uniqueId) ? '#15803d' : '#4b5563' }}>
+                🛒 Selecionar p/ Comprar
+              </span>
+            </label>
+          )}
+          
+          {status !== 'cotado' && <div></div>}
+          
           <button
             onClick={() => startEdit(item)}
             className="btn btn-primary"
