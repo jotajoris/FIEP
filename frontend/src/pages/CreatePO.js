@@ -323,7 +323,8 @@ const CreatePO = () => {
       unidade: item.unidade,
       descricao: item.descricao || '',
       responsavel: item.responsavel || '',
-      preco_venda: item.preco_venda || ''
+      preco_venda: item.preco_venda || '',
+      lote: item.lote || ''
     });
   };
 
@@ -338,7 +339,8 @@ const CreatePO = () => {
       unidade: editForm.unidade,
       descricao: editForm.descricao,
       responsavel: editForm.responsavel,
-      preco_venda: editForm.preco_venda ? parseFloat(editForm.preco_venda) : null
+      preco_venda: editForm.preco_venda ? parseFloat(editForm.preco_venda) : null,
+      lote: editForm.lote
     };
     
     setPdfPreview({
