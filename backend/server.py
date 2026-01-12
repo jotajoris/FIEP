@@ -214,7 +214,7 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                                         if j+1 < len(lines):
                                             unit_line = lines[j+1].strip().upper()
                                             # Lista expandida de unidades aceitas
-                                            valid_units = ['UN', 'UND', 'UNID', 'KG', 'PC', 'PÇA', 'PÇ', 'PCA', 'M', 'L', 'CX', 'PAR', 'PCT', 'KIT', 'JG', 'JOGO', 'RL', 'ROLO', 'MT', 'METRO']
+                                            valid_units = ['UN', 'UND', 'UNID', 'KG', 'PC', 'PÇA', 'PÇ', 'PCA', 'M', 'L', 'CX', 'PAR', 'PCT', 'KIT', 'JG', 'JOGO', 'RL', 'ROLO', 'MT', 'METRO', 'CT', 'CEN', 'CENTO', 'MILHEIRO', 'MIL']
                                             if unit_line in valid_units:
                                                 quantidade = qty
                                                 # Normalizar unidades
