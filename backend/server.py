@@ -844,11 +844,103 @@ async def root():
 @api_router.get("/version")
 async def get_version():
     return {
-        "version": "2.0.3",
+        "version": "2.0.4",
         "deploy_date": "2025-01-12",
-        "fix": "Endpoint de teste direto adicionado",
+        "fix": "Debug detalhado do update",
         "status": "OK"
     }
+
+# ENDPOINT DE DEBUG DO UPDATE - MOSTRA EXATAMENTE O QUE ACONTECE
+@api_router.patch("/debug-update/{po_id}/{item_index}")
+async def debug_update(
+    po_id: str, 
+    item_index: int, 
+    update: ItemStatusUpdate, 
+    current_user: dict = Depends(get_current_user)
+):
+    """Debug do update - retorna detalhes do que aconteceu"""
+    debug_info = {
+        "user": current_user.get('sub'),
+        "role": current_user.get('role'),
+        "po_id": po_id,
+        "item_index": item_index,
+        "update_recebido": {
+            "status": update.status,
+            "preco_venda": update.preco_venda,
+            "fontes_compra": len(update.fontes_compra) if update.fontes_compra else 0
+        }
+    }
+    
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    
+    if not po:
+        debug_info["erro"] = "OC não encontrada"
+        return debug_info
+    
+    if item_index < 0 or item_index >= len(po['items']):
+        debug_info["erro"] = f"Índice inválido. Total items: {len(po['items'])}"
+        return debug_info
+    
+    item = po['items'][item_index]
+    
+    debug_info["item_antes"] = {
+        "codigo": item.get('codigo_item'),
+        "preco_compra": item.get('preco_compra'),
+        "preco_venda": item.get('preco_venda'),
+        "fontes_compra": len(item.get('fontes_compra', []))
+    }
+    
+    # APLICAR TODAS AS ALTERAÇÕES SEM RESTRIÇÃO
+    item['status'] = update.status
+    
+    if update.fontes_compra is not None:
+        item['fontes_compra'] = [fc.model_dump() for fc in update.fontes_compra]
+        total_custo = sum(fc.quantidade * fc.preco_unitario for fc in update.fontes_compra)
+        total_frete = sum(fc.frete for fc in update.fontes_compra)
+        total_qtd = sum(fc.quantidade for fc in update.fontes_compra)
+        if total_qtd > 0:
+            item['preco_compra'] = round(total_custo / total_qtd, 2)
+        item['frete_compra'] = total_frete
+    
+    if update.preco_venda is not None:
+        item['preco_venda'] = update.preco_venda
+    
+    if update.imposto is not None:
+        item['imposto'] = update.imposto
+    
+    if update.frete_envio is not None:
+        item['frete_envio'] = update.frete_envio
+    
+    debug_info["item_depois"] = {
+        "codigo": item.get('codigo_item'),
+        "preco_compra": item.get('preco_compra'),
+        "preco_venda": item.get('preco_venda'),
+        "fontes_compra": len(item.get('fontes_compra', []))
+    }
+    
+    # Salvar
+    result = await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    debug_info["mongodb"] = {
+        "matched": result.matched_count,
+        "modified": result.modified_count
+    }
+    
+    # Verificar se salvou
+    po_verificar = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    item_verificar = po_verificar['items'][item_index]
+    
+    debug_info["item_verificado"] = {
+        "preco_compra": item_verificar.get('preco_compra'),
+        "preco_venda": item_verificar.get('preco_venda'),
+        "fontes_compra": len(item_verificar.get('fontes_compra', []))
+    }
+    
+    debug_info["sucesso"] = True
+    return debug_info
 
 # ENDPOINT DE TESTE DIRETO - PARA DEBUG DEFINITIVO
 @api_router.post("/test-update-direto/{po_id}/{item_index}")
