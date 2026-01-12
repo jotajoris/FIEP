@@ -1180,34 +1180,59 @@ Chave PIX: 46.663.556/0001-69`;
             </div>
           </div>
           
-          {/* Botão Meus Itens */}
-          {user?.owner_name && (
-            <button
-              onClick={() => setShowOnlyMine(!showOnlyMine)}
-              className={showOnlyMine ? 'btn btn-primary' : 'btn btn-secondary'}
-              style={{ 
-                padding: '0.6rem 1.2rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}
-              data-testid="filter-my-items-btn"
-            >
-              {showOnlyMine ? '👤 Meus Itens ✓' : '👤 Meus Itens'}
-              {showOnlyMine && (
-                <span style={{ 
-                  background: 'white', 
-                  color: '#667eea', 
-                  borderRadius: '50%', 
-                  padding: '0.1rem 0.5rem',
-                  fontSize: '0.8rem',
-                  fontWeight: '700'
-                }}>
-                  {displayItems.length}
-                </span>
-              )}
-            </button>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {/* Botão Mover para Comprado - aparece quando há itens selecionados */}
+            {status === 'cotado' && selectedItems.size > 0 && (
+              <button
+                onClick={moverParaComprado}
+                disabled={movingToComprado}
+                style={{ 
+                  padding: '0.6rem 1.2rem',
+                  background: movingToComprado ? '#9ca3af' : '#22c55e',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  cursor: movingToComprado ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}
+                data-testid="mover-para-comprado-btn"
+              >
+                {movingToComprado ? '⏳ Movendo...' : `🛒 Mover ${selectedItems.size} para Comprado`}
+              </button>
+            )}
+            
+            {/* Botão Meus Itens */}
+            {user?.owner_name && (
+              <button
+                onClick={() => setShowOnlyMine(!showOnlyMine)}
+                className={showOnlyMine ? 'btn btn-primary' : 'btn btn-secondary'}
+                style={{ 
+                  padding: '0.6rem 1.2rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+                data-testid="filter-my-items-btn"
+              >
+                {showOnlyMine ? '👤 Meus Itens ✓' : '👤 Meus Itens'}
+                {showOnlyMine && (
+                  <span style={{ 
+                    background: 'white', 
+                    color: '#667eea', 
+                    borderRadius: '50%', 
+                    padding: '0.1rem 0.5rem',
+                    fontSize: '0.8rem',
+                    fontWeight: '700'
+                  }}>
+                    {displayItems.length}
+                  </span>
+                )}
+              </button>
+            )}
         </div>
       </div>
 
