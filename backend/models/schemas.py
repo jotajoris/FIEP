@@ -196,6 +196,17 @@ class ItemFullUpdate(BaseModel):
     observacao: Optional[str] = None
 
 
+class ResponsavelBreakdown(BaseModel):
+    """Breakdown de itens por status para cada responsável"""
+    total: int = 0
+    pendente: int = 0
+    cotado: int = 0
+    comprado: int = 0
+    em_separacao: int = 0
+    em_transito: int = 0
+    entregue: int = 0
+
+
 class DashboardStats(BaseModel):
     total_ocs: int
     total_items: int
@@ -205,7 +216,7 @@ class DashboardStats(BaseModel):
     items_em_separacao: int
     items_em_transito: int
     items_entregues: int
-    items_por_responsavel: Dict[str, int]
+    items_por_responsavel: Dict[str, ResponsavelBreakdown]
 
 
 class AdminSummary(BaseModel):
