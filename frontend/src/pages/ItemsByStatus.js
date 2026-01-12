@@ -1031,7 +1031,7 @@ Chave PIX: 46.663.556/0001-69`;
                 {showOnlyMine ? (
                   <>{displayItems.length} de {items.length} itens (filtrado por {user?.owner_name})</>
                 ) : (
-                  <>{items.length} {items.length === 1 ? 'item' : 'itens'} com status "{status}"</>
+                  <>{items.length} {items.length === 1 ? 'item' : 'itens'} com status &quot;{status}&quot;</>
                 )}
               </p>
             </div>
