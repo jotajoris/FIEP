@@ -123,9 +123,19 @@ const ItemsByStatus = () => {
       });
     }
     
-    // Filtro por responsável (apenas se não for "todos")
+    // Filtro por responsável
     if (filterResponsavel !== 'todos') {
-      filtered = filtered.filter(item => item.responsavel === filterResponsavel);
+      if (filterResponsavel === 'nao_atribuido') {
+        // Filtrar itens sem responsável ou com responsável inválido
+        filtered = filtered.filter(item => 
+          !item.responsavel || 
+          item.responsavel.trim() === '' || 
+          item.responsavel.includes('NÃO ENCONTRADO') ||
+          item.responsavel.includes('Não atribuído')
+        );
+      } else {
+        filtered = filtered.filter(item => item.responsavel === filterResponsavel);
+      }
     }
     
     // Pesquisa por código do item
