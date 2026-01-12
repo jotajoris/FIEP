@@ -1814,9 +1814,10 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     ocs_with_user_items = 0
     
     for po in pos:
-        # Filtrar itens baseado no role
+        # Filtrar itens baseado no role (case-insensitive)
         if current_user['role'] != 'admin' and current_user.get('owner_name'):
-            filtered_items = [item for item in po['items'] if item.get('responsavel') == current_user['owner_name']]
+            user_name = current_user['owner_name'].strip().upper()
+            filtered_items = [item for item in po['items'] if (item.get('responsavel') or '').strip().upper() == user_name]
             if filtered_items:  # Só contar OCs que têm itens do usuário
                 ocs_with_user_items += 1
             all_items.extend(filtered_items)
@@ -1839,12 +1840,13 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     if current_user['role'] == 'admin':
         # Admin vê todos os responsáveis
         for owner in ['Maria', 'Mateus', 'João', 'Mylena', 'Fabio']:
-            items_por_responsavel[owner] = sum(1 for item in all_items if item.get('responsavel') == owner)
+            items_por_responsavel[owner] = sum(1 for item in all_items if (item.get('responsavel') or '').strip().upper() == owner.upper())
     else:
         # Usuário não-admin vê apenas seus próprios itens
         owner_name = current_user.get('owner_name')
         if owner_name:
-            items_por_responsavel[owner_name] = sum(1 for item in all_items if item.get('responsavel') == owner_name)
+            user_name = owner_name.strip().upper()
+            items_por_responsavel[owner_name] = sum(1 for item in all_items if (item.get('responsavel') or '').strip().upper() == user_name)
     
     return DashboardStats(
         total_ocs=total_ocs,
