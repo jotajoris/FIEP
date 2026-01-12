@@ -1365,9 +1365,10 @@ async def get_purchase_orders(current_user: dict = Depends(get_current_user)):
         if isinstance(po['created_at'], str):
             po['created_at'] = datetime.fromisoformat(po['created_at'])
         
-        # Se não for admin, filtrar apenas itens do responsável
+        # Se não for admin, filtrar apenas itens do responsável (case-insensitive)
         if current_user['role'] != 'admin' and current_user.get('owner_name'):
-            po['items'] = [item for item in po['items'] if item.get('responsavel') == current_user['owner_name']]
+            user_name = current_user['owner_name'].strip().upper()
+            po['items'] = [item for item in po['items'] if (item.get('responsavel') or '').strip().upper() == user_name]
     
     return pos
 
@@ -1382,9 +1383,10 @@ async def get_purchase_order(po_id: str, current_user: dict = Depends(get_curren
     if isinstance(po['created_at'], str):
         po['created_at'] = datetime.fromisoformat(po['created_at'])
     
-    # Se não for admin, filtrar apenas itens do responsável
+    # Se não for admin, filtrar apenas itens do responsável (case-insensitive)
     if current_user['role'] != 'admin' and current_user.get('owner_name'):
-        po['items'] = [item for item in po['items'] if item.get('responsavel') == current_user['owner_name']]
+        user_name = current_user['owner_name'].strip().upper()
+        po['items'] = [item for item in po['items'] if (item.get('responsavel') or '').strip().upper() == user_name]
     
     return po
 
