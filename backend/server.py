@@ -1534,7 +1534,7 @@ async def create_purchase_order(po_create: PurchaseOrderCreate, current_user: di
     
     return po
 
-@api_router.get("/purchase-orders", response_model=List[PurchaseOrder])
+@api_router.get("/purchase-orders")
 async def get_purchase_orders(current_user: dict = Depends(get_current_user)):
     """Listar Ordens de Compra"""
     query = {}
@@ -1556,7 +1556,7 @@ async def get_purchase_orders(current_user: dict = Depends(get_current_user)):
     
     return pos
 
-@api_router.get("/purchase-orders/{po_id}", response_model=PurchaseOrder)
+@api_router.get("/purchase-orders/{po_id}")
 async def get_purchase_order(po_id: str, current_user: dict = Depends(get_current_user)):
     """Obter detalhes de uma OC"""
     po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
