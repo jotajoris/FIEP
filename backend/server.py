@@ -840,6 +840,47 @@ async def debug_permission(po_id: str, item_index: int, current_user: dict = Dep
 async def root():
     return {"message": "Sistema de Gestão de Ordens de Compra FIEP"}
 
+# ENDPOINT DE VERIFICAÇÃO DE VERSÃO - USE PARA CONFIRMAR QUE O DEPLOY FOI FEITO
+@api_router.get("/version")
+async def get_version():
+    return {
+        "version": "2.0.1",
+        "deploy_date": "2025-01-12",
+        "fix": "Removida verificação de permissão por responsável - qualquer usuário autenticado pode editar",
+        "status": "OK"
+    }
+
+# ENDPOINT DE TESTE DE EDIÇÃO - PARA DEBUG
+@api_router.post("/test-edit/{po_id}/{item_index}")
+async def test_edit(po_id: str, item_index: int, current_user: dict = Depends(get_current_user)):
+    """Endpoint de teste para verificar se edição funciona"""
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    
+    if not po:
+        return {"error": "OC não encontrada", "po_id": po_id}
+    
+    if item_index < 0 or item_index >= len(po['items']):
+        return {"error": "Índice inválido", "item_index": item_index, "total_items": len(po['items'])}
+    
+    item = po['items'][item_index]
+    
+    # Tentar atualizar
+    try:
+        item['_test_edit'] = "OK"
+        await db.purchase_orders.update_one(
+            {"id": po_id},
+            {"$set": {"items": po['items']}}
+        )
+        return {
+            "success": True,
+            "message": "Edição funcionou!",
+            "user": current_user.get('sub'),
+            "role": current_user.get('role'),
+            "item_codigo": item.get('codigo_item')
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
 @api_router.post("/reference-items/seed")
 async def seed_reference_items(current_user: dict = Depends(require_admin)):
     """Popula banco com itens de referência do Excel (ADMIN ONLY)"""
