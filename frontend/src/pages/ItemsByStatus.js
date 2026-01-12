@@ -1115,6 +1115,7 @@ Chave PIX: 46.663.556/0001-69`;
                 data-testid="filter-responsavel"
               >
                 <option value="todos">Todos</option>
+                <option value="nao_atribuido">⚠️ Não Atribuído</option>
                 {responsaveisDisponiveis.map(responsavel => (
                   <option key={responsavel} value={responsavel}>{responsavel}</option>
                 ))}
