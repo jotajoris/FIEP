@@ -179,6 +179,8 @@ class ItemStatusUpdate(BaseModel):
     frete_envio: Optional[float] = None
     fontes_compra: Optional[List[FonteCompra]] = None
     codigo_rastreio: Optional[str] = None
+    no_carrinho: Optional[bool] = None  # Checkbox para marcar itens no carrinho
+    observacao: Optional[str] = None  # Campo de observação
 
 
 class ItemFullUpdate(BaseModel):
@@ -190,6 +192,8 @@ class ItemFullUpdate(BaseModel):
     marca_modelo: Optional[str] = None
     status: Optional[str] = None
     preco_venda: Optional[float] = None
+    no_carrinho: Optional[bool] = None
+    observacao: Optional[str] = None
 
 
 class DashboardStats(BaseModel):
