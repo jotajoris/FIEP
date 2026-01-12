@@ -1455,21 +1455,13 @@ async def update_item_status(po_id: str, codigo_item: str, update: ItemStatusUpd
         raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
     
     item_updated = False
-    user_owner_name_raw = current_user.get('owner_name') or ''
-    user_owner_name = user_owner_name_raw.strip().upper()
     user_role = current_user.get('role', '')
+    user_email = current_user.get('sub', '')
     
     for item in po['items']:
         if item['codigo_item'] == codigo_item:
-            # Verificar permissão (comparação case-insensitive)
-            item_responsavel_raw = item.get('responsavel') or ''
-            item_responsavel = item_responsavel_raw.strip().upper()
-            
-            logger.info(f"Verificando permissão: role='{user_role}', item_responsavel='{item_responsavel}', user_owner_name='{user_owner_name}'")
-            
-            if user_role != 'admin' and item_responsavel != user_owner_name:
-                logger.warning(f"Permissão negada: item_responsavel='{item_responsavel}' vs user_owner_name='{user_owner_name}'")
-                raise HTTPException(status_code=403, detail=f"Você só pode editar seus próprios itens. Responsável do item: '{item_responsavel_raw}', Seu nome: '{user_owner_name_raw}'")
+            # PERMISSÃO SIMPLIFICADA: Qualquer usuário autenticado pode editar
+            logger.info(f"Usuário {user_email} (role={user_role}) editando item {codigo_item}")
             
             item['status'] = update.status
             
