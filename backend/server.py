@@ -743,6 +743,48 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     """Obter informações do usuário logado"""
     return current_user
 
+# Endpoint de diagnóstico para debug do bug de permissão
+@api_router.get("/debug/permission/{po_id}/{item_index}")
+async def debug_permission(po_id: str, item_index: int, current_user: dict = Depends(get_current_user)):
+    """Endpoint de diagnóstico para verificar problema de permissão"""
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    
+    if not po:
+        return {"error": "OC não encontrada"}
+    
+    if item_index < 0 or item_index >= len(po['items']):
+        return {"error": "Índice inválido"}
+    
+    item = po['items'][item_index]
+    
+    item_responsavel_raw = item.get('responsavel') or ''
+    user_owner_name_raw = current_user.get('owner_name') or ''
+    item_responsavel = item_responsavel_raw.strip().upper()
+    user_owner_name = user_owner_name_raw.strip().upper()
+    user_role = current_user.get('role', '')
+    
+    return {
+        "user_info": {
+            "email": current_user.get('sub'),
+            "role": user_role,
+            "owner_name_raw": user_owner_name_raw,
+            "owner_name_normalized": user_owner_name,
+            "owner_name_bytes": [ord(c) for c in user_owner_name_raw]
+        },
+        "item_info": {
+            "codigo_item": item.get('codigo_item'),
+            "responsavel_raw": item_responsavel_raw,
+            "responsavel_normalized": item_responsavel,
+            "responsavel_bytes": [ord(c) for c in item_responsavel_raw],
+            "status": item.get('status')
+        },
+        "permission_check": {
+            "is_admin": user_role == 'admin',
+            "names_match": item_responsavel == user_owner_name,
+            "would_allow": user_role == 'admin' or item_responsavel == user_owner_name
+        }
+    }
+
 # Routes
 @api_router.get("/")
 async def root():
