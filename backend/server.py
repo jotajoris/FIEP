@@ -844,9 +844,9 @@ async def root():
 @api_router.get("/version")
 async def get_version():
     return {
-        "version": "2.0.6",
+        "version": "2.0.7",
         "deploy_date": "2025-01-12",
-        "fix": "CORRIGIDO: índice original preservado no filtro de itens",
+        "fix": "CORRIGIDO: _originalIndex agora é preservado - usuários podem editar",
         "status": "OK"
     }
 
