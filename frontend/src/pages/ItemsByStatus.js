@@ -1868,7 +1868,7 @@ Chave PIX: 46.663.556/0001-69`;
                                 <div style={{ textAlign: 'center', color: '#6b7280', padding: '1rem' }}>
                                   Nenhum evento de rastreio disponível ainda.
                                   <br />
-                                  <small>Clique em "Atualizar" para buscar informações.</small>
+                                  <small>Clique em &quot;Atualizar&quot; para buscar informações.</small>
                                 </div>
                               )}
                             </div>
