@@ -330,6 +330,91 @@ const ItemsByStatus = () => {
     }
   };
 
+  // Funções para Carrinho
+  const toggleItemSelection = (item) => {
+    const itemKey = item._uniqueId;
+    setSelectedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemKey)) {
+        newSet.delete(itemKey);
+      } else {
+        newSet.add(itemKey);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleCarrinho = async (item) => {
+    try {
+      const newValue = !item.no_carrinho;
+      await apiPatch(`${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}`, {
+        status: item.status,
+        no_carrinho: newValue
+      });
+      loadItems();
+    } catch (error) {
+      console.error('Erro ao atualizar carrinho:', error);
+      alert('Erro ao atualizar carrinho');
+    }
+  };
+
+  const moverParaComprado = async () => {
+    if (selectedItems.size === 0) {
+      alert('Selecione pelo menos um item');
+      return;
+    }
+    
+    const confirmacao = window.confirm(`Mover ${selectedItems.size} item(s) para "Comprado"?`);
+    if (!confirmacao) return;
+    
+    setMovingToComprado(true);
+    try {
+      // Montar lista de itens para mover
+      const itensParaMover = items
+        .filter(item => selectedItems.has(item._uniqueId))
+        .map(item => ({
+          po_id: item.po_id,
+          item_index: item._itemIndexInPO
+        }));
+      
+      const response = await apiPost(`${API}/purchase-orders/mover-carrinho-para-comprado`, itensParaMover);
+      alert(response.data.message);
+      setSelectedItems(new Set());
+      loadItems();
+    } catch (error) {
+      console.error('Erro ao mover itens:', error);
+      alert('Erro ao mover itens: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setMovingToComprado(false);
+    }
+  };
+
+  // Funções para Observação
+  const iniciarEdicaoObservacao = (item) => {
+    setEditingObservacao(item._uniqueId);
+    setObservacaoTemp(item.observacao || '');
+  };
+
+  const salvarObservacao = async (item) => {
+    try {
+      await apiPatch(`${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}`, {
+        status: item.status,
+        observacao: observacaoTemp
+      });
+      setEditingObservacao(null);
+      setObservacaoTemp('');
+      loadItems();
+    } catch (error) {
+      console.error('Erro ao salvar observação:', error);
+      alert('Erro ao salvar observação');
+    }
+  };
+
+  const cancelarEdicaoObservacao = () => {
+    setEditingObservacao(null);
+    setObservacaoTemp('');
+  };
+
   // Funções de Rastreio
   const toggleRastreio = (itemKey) => {
     setExpandedRastreio(prev => ({
