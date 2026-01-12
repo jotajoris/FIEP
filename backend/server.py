@@ -844,9 +844,9 @@ async def root():
 @api_router.get("/version")
 async def get_version():
     return {
-        "version": "2.0.5",
+        "version": "2.0.6",
         "deploy_date": "2025-01-12",
-        "fix": "Endpoint normal reescrito - TODOS podem editar tudo",
+        "fix": "CORRIGIDO: índice original preservado no filtro de itens",
         "status": "OK"
     }
 
