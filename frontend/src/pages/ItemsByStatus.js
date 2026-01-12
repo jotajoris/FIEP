@@ -57,15 +57,16 @@ const ItemsByStatus = () => {
       response.data.forEach(po => {
         po.items.forEach((item, itemIndexInPO) => {
           if (item.status === status) {
-            // Criar ID único para cada item (combina po_id + índice dentro da OC)
-            const uniqueId = `${po.id}_${itemIndexInPO}`;
+            // Usar o índice original do banco se disponível, senão usar o índice do array
+            const realIndex = item._originalIndex !== undefined ? item._originalIndex : itemIndexInPO;
+            const uniqueId = `${po.id}_${realIndex}`;
             allItems.push({
               ...item,
               numero_oc: po.numero_oc,
               po_id: po.id,
-              cnpj_requisitante: po.cnpj_requisitante || '',  // CNPJ do cliente/requisitante
-              _itemIndexInPO: itemIndexInPO,
-              _uniqueId: uniqueId  // ID único para este item
+              cnpj_requisitante: po.cnpj_requisitante || '',
+              _itemIndexInPO: realIndex,  // USAR ÍNDICE ORIGINAL DO BANCO
+              _uniqueId: uniqueId
             });
           }
         });
