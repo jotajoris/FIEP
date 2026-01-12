@@ -41,12 +41,23 @@ const Dashboard = () => {
         if (!temItem) return false;
       }
       
-      // Filtro por responsável (comparação exata)
+      // Filtro por responsável
       if (searchResponsavel) {
-        const temResponsavel = order.items.some(item => 
-          item.responsavel === searchResponsavel
-        );
-        if (!temResponsavel) return false;
+        if (searchResponsavel === 'nao_atribuido') {
+          // Filtrar OCs que têm pelo menos um item sem responsável
+          const temNaoAtribuido = order.items.some(item => 
+            !item.responsavel || 
+            item.responsavel.trim() === '' || 
+            item.responsavel.includes('NÃO ENCONTRADO') ||
+            item.responsavel.includes('Não atribuído')
+          );
+          if (!temNaoAtribuido) return false;
+        } else {
+          const temResponsavel = order.items.some(item => 
+            item.responsavel === searchResponsavel
+          );
+          if (!temResponsavel) return false;
+        }
       }
       
       // Filtro por data
