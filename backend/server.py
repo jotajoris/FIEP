@@ -1588,16 +1588,15 @@ async def update_item_by_index_status(
     
     item = po['items'][item_index]
     
-    # Verificar permissão (comparação case-insensitive e sem espaços extras)
-    item_responsavel_raw = item.get('responsavel') or ''
-    user_owner_name_raw = current_user.get('owner_name') or ''
-    item_responsavel = item_responsavel_raw.strip().upper()
-    user_owner_name = user_owner_name_raw.strip().upper()
+    # PERMISSÃO SIMPLIFICADA: Qualquer usuário autenticado pode editar itens
+    # (todos são da mesma empresa, a verificação por responsável estava causando problemas)
     user_role = current_user.get('role', '')
+    user_email = current_user.get('sub', '')
+    logger.info(f"Usuário {user_email} (role={user_role}) editando item {item.get('codigo_item')}")
     
-    logger.info(f"Verificando permissão: role='{user_role}', item_responsavel_raw='{item_responsavel_raw}', user_owner_name_raw='{user_owner_name_raw}', item_responsavel='{item_responsavel}', user_owner_name='{user_owner_name}'")
+    # Apenas campos financeiros (preço venda, imposto, frete envio) são restritos a admins
     
-    if user_role != 'admin' and item_responsavel != user_owner_name:
+    item['status'] = update.status
         logger.warning(f"Permissão negada: item_responsavel='{item_responsavel}' vs user_owner_name='{user_owner_name}'")
         raise HTTPException(status_code=403, detail=f"Você só pode editar seus próprios itens. Responsável do item: '{item_responsavel_raw}', Seu nome: '{user_owner_name_raw}'")
     
