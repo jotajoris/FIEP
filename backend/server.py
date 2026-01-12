@@ -3392,13 +3392,27 @@ async def startup_event():
 # Include the router in the main app
 app.include_router(api_router)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=["*", "https://onlicitacoes.com", "https://pedidos-fiep.emergent.host", "https://fiepcompras.preview.emergentagent.com"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS Configuration - usando variável de ambiente
+cors_origins_env = os.environ.get('CORS_ORIGINS', '*')
+if cors_origins_env == '*':
+    # Wildcard não pode ser usado com credentials
+    app.add_middleware(
+        CORSMiddleware,
+        allow_credentials=False,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    # Lista específica de origens permite credentials
+    cors_origins_list = [origin.strip() for origin in cors_origins_env.split(',')]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_credentials=True,
+        allow_origins=cors_origins_list,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 # Logger já configurado no início do arquivo
 
