@@ -1475,6 +1475,8 @@ async def update_item_by_index_status(
     current_user: dict = Depends(get_current_user)
 ):
     """Atualizar item por índice - resolve problema de itens duplicados"""
+    logger.info(f"update_item_by_index_status chamado: po_id={po_id}, item_index={item_index}, user={current_user.get('sub')}")
+    
     po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
     
     if not po:
@@ -1486,12 +1488,17 @@ async def update_item_by_index_status(
     item = po['items'][item_index]
     
     # Verificar permissão (comparação case-insensitive e sem espaços extras)
-    item_responsavel = (item.get('responsavel') or '').strip().upper()
-    user_owner_name = (current_user.get('owner_name') or '').strip().upper()
+    item_responsavel_raw = item.get('responsavel') or ''
+    user_owner_name_raw = current_user.get('owner_name') or ''
+    item_responsavel = item_responsavel_raw.strip().upper()
+    user_owner_name = user_owner_name_raw.strip().upper()
+    user_role = current_user.get('role', '')
     
-    if current_user['role'] != 'admin' and item_responsavel != user_owner_name:
+    logger.info(f"Verificando permissão: role='{user_role}', item_responsavel_raw='{item_responsavel_raw}', user_owner_name_raw='{user_owner_name_raw}', item_responsavel='{item_responsavel}', user_owner_name='{user_owner_name}'")
+    
+    if user_role != 'admin' and item_responsavel != user_owner_name:
         logger.warning(f"Permissão negada: item_responsavel='{item_responsavel}' vs user_owner_name='{user_owner_name}'")
-        raise HTTPException(status_code=403, detail="Você só pode editar seus próprios itens")
+        raise HTTPException(status_code=403, detail=f"Você só pode editar seus próprios itens. Responsável do item: '{item_responsavel_raw}', Seu nome: '{user_owner_name_raw}'")
     
     item['status'] = update.status
     
