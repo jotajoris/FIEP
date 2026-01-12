@@ -529,6 +529,7 @@ const Dashboard = () => {
               data-testid="search-responsavel-input"
             >
               <option value="">Todos</option>
+              <option value="nao_atribuido">⚠️ Não Atribuído</option>
               <option value="Maria">Maria</option>
               <option value="Mateus">Mateus</option>
               <option value="João">João</option>
