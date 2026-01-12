@@ -1907,15 +1907,33 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     # Para usuários não-admin, mostrar apenas seus próprios itens no breakdown por responsável
     items_por_responsavel = {}
     if current_user['role'] == 'admin':
-        # Admin vê todos os responsáveis
+        # Admin vê todos os responsáveis com breakdown por status
         for owner in ['Maria', 'Mateus', 'João', 'Mylena', 'Fabio']:
-            items_por_responsavel[owner] = sum(1 for item in all_items if (item.get('responsavel') or '').strip().upper() == owner.upper())
+            owner_items = [item for item in all_items if (item.get('responsavel') or '').strip().upper() == owner.upper()]
+            items_por_responsavel[owner] = {
+                "total": len(owner_items),
+                "pendente": sum(1 for item in owner_items if item['status'] == ItemStatus.PENDENTE),
+                "cotado": sum(1 for item in owner_items if item['status'] == ItemStatus.COTADO),
+                "comprado": sum(1 for item in owner_items if item['status'] == ItemStatus.COMPRADO),
+                "em_separacao": sum(1 for item in owner_items if item['status'] == ItemStatus.EM_SEPARACAO),
+                "em_transito": sum(1 for item in owner_items if item['status'] == ItemStatus.EM_TRANSITO),
+                "entregue": sum(1 for item in owner_items if item['status'] == ItemStatus.ENTREGUE)
+            }
     else:
-        # Usuário não-admin vê apenas seus próprios itens
+        # Usuário não-admin vê apenas seus próprios itens com breakdown
         owner_name = current_user.get('owner_name')
         if owner_name:
             user_name = owner_name.strip().upper()
-            items_por_responsavel[owner_name] = sum(1 for item in all_items if (item.get('responsavel') or '').strip().upper() == user_name)
+            owner_items = [item for item in all_items if (item.get('responsavel') or '').strip().upper() == user_name]
+            items_por_responsavel[owner_name] = {
+                "total": len(owner_items),
+                "pendente": sum(1 for item in owner_items if item['status'] == ItemStatus.PENDENTE),
+                "cotado": sum(1 for item in owner_items if item['status'] == ItemStatus.COTADO),
+                "comprado": sum(1 for item in owner_items if item['status'] == ItemStatus.COMPRADO),
+                "em_separacao": sum(1 for item in owner_items if item['status'] == ItemStatus.EM_SEPARACAO),
+                "em_transito": sum(1 for item in owner_items if item['status'] == ItemStatus.EM_TRANSITO),
+                "entregue": sum(1 for item in owner_items if item['status'] == ItemStatus.ENTREGUE)
+            }
     
     return DashboardStats(
         total_ocs=total_ocs,
