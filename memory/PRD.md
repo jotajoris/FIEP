@@ -174,11 +174,22 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
   - ⏳ **Status para comissão**: Apenas itens "entregue" ou "em_transito" geram comissão
   - 📝 **Registro de Pagamentos**: Admin pode selecionar itens e registrar pagamento de comissão
   - 📜 **Histórico de Pagamentos**: Visualização, edição e exclusão de pagamentos anteriores
+- [12/01/2026] ✅ **Filtro "Não Atribuído"**: Novo filtro nos dropdowns de Responsável nas páginas Dashboard e ItemsByStatus para encontrar itens sem responsável ou com responsável inválido
+- [12/01/2026] ✅ **Correção de Logging no Backend**: Logger agora é configurado no início do arquivo server.py, resolvendo potenciais erros quando funções de permissão tentavam usar logger antes de ser definido
+- [12/01/2026] ✅ **Endpoint de Debug de Permissões**: Novo endpoint `/api/debug/permission/{po_id}/{item_index}` para diagnosticar problemas de autorização em produção
+- [12/01/2026] ✅ **Logging Detalhado de Permissões**: Funções de atualização de itens agora logam informações detalhadas sobre verificações de permissão
+
+## Bugs Conhecidos/Em Investigação
+- **Bug P0 (Produção)**: Usuários (Maria, Fabio) não conseguem atualizar itens em produção. O código do preview está correto e funcionando. O problema pode ser:
+  1. Código antigo ainda em produção (sem as correções de case-insensitive)
+  2. Logger não definido causando erro silencioso
+  3. Dados inconsistentes no banco de produção
+  **Ação necessária**: Usuário precisa fazer novo deploy e testar novamente. Se continuar falhando, usar endpoint de debug para investigar.
 
 ## Próximas Tarefas (Backlog)
 
 ### P3 - Baixa Prioridade (Adiadas pelo usuário)
-- [ ] **Refatoração do Backend** - Dividir server.py em módulos menores (usuário concordou em adiar)
+- [ ] **Refatoração do Backend** - Dividir server.py em módulos menores (estrutura já criada em /app/backend/routes, /models, /services, /utils)
 - [ ] **Verificação de Domínio Resend** - Para emails funcionarem externamente (adiado pelo usuário)
 
 ### Notas de Limitações Conhecidas
@@ -187,7 +198,8 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 ## Credenciais de Teste
 ```
 Admin: projetos.onsolucoes@gmail.com / on123456
-User:  fabioonsolucoes@gmail.com / on123456
+User (Maria):  maria.onsolucoes@gmail.com / on123456
+User (Fabio):  fabioonsolucoes@gmail.com / on123456
 ```
 
 ## Notas Técnicas
@@ -195,3 +207,4 @@ User:  fabioonsolucoes@gmail.com / on123456
 - Frete Envio: Campo `frete_envio` no POItem, editável apenas por admins
 - Lucro só aparece para admins na UI
 - AllItemsSummary mostra totais de ambos os fretes
+
