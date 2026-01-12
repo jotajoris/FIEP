@@ -668,9 +668,9 @@ async def root():
 @api_router.get("/version")
 async def get_version():
     return {
-        "version": "2.0.7",
+        "version": "2.1.0",
         "deploy_date": "2025-01-12",
-        "fix": "CORRIGIDO: _originalIndex agora é preservado - usuários podem editar",
+        "fix": "Refatoração: modelos extraídos para /models, código organizado",
         "status": "OK"
     }
 
