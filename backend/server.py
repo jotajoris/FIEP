@@ -8,6 +8,13 @@ import os
 import logging
 import asyncio
 from pathlib import Path
+
+# Configure logging FIRST - before any logger usage
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional, Dict
 import uuid
