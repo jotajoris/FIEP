@@ -519,7 +519,16 @@ const CreatePO = () => {
                             <option value="Fabio">Fabio</option>
                           </select>
                         </td>
-                        <td style={{ padding: '0.5rem' }}>{item.lote || '-'}</td>
+                        <td style={{ padding: '0.5rem' }}>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={editForm.lote}
+                            onChange={(e) => setEditForm({...editForm, lote: e.target.value})}
+                            style={{ padding: '0.4rem', width: '70px' }}
+                            placeholder="Lote"
+                          />
+                        </td>
                         <td style={{ padding: '0.5rem' }}>
                           <input
                             type="number"
