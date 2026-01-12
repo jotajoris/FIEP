@@ -392,10 +392,20 @@ const Dashboard = () => {
             <div className="card" style={{ marginBottom: '2rem' }}>
               <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: '700' }}>Itens por Responsável</h2>
               <div className="owner-grid">
-                {Object.entries(stats.items_por_responsavel).map(([owner, count]) => (
-                  <Link key={owner} to={`/owner/${owner}`} className="owner-card" data-testid={`owner-card-${owner.toLowerCase()}`}>
-                    <div className="owner-name">{owner}</div>
-                    <div className="owner-count">{count}</div>
+                {Object.entries(stats.items_por_responsavel).map(([owner, breakdown]) => (
+                  <Link key={owner} to={`/owner/${owner}`} className="owner-card" data-testid={`owner-card-${owner.toLowerCase()}`} style={{ padding: '1rem', minHeight: '140px' }}>
+                    <div className="owner-name" style={{ marginBottom: '0.5rem' }}>{owner}</div>
+                    <div className="owner-count" style={{ marginBottom: '0.75rem' }}>{breakdown.total || breakdown}</div>
+                    {breakdown.total !== undefined && (
+                      <div style={{ fontSize: '0.7rem', color: '#6b7280', lineHeight: '1.4' }}>
+                        {breakdown.pendente > 0 && <div style={{ color: '#f59e0b' }}>⏳ Pendente: {breakdown.pendente}</div>}
+                        {breakdown.cotado > 0 && <div style={{ color: '#3b82f6' }}>📋 Cotado: {breakdown.cotado}</div>}
+                        {breakdown.comprado > 0 && <div style={{ color: '#8b5cf6' }}>🛒 Comprado: {breakdown.comprado}</div>}
+                        {breakdown.em_separacao > 0 && <div style={{ color: '#ec4899' }}>📦 Separação: {breakdown.em_separacao}</div>}
+                        {breakdown.em_transito > 0 && <div style={{ color: '#06b6d4' }}>🚚 Trânsito: {breakdown.em_transito}</div>}
+                        {breakdown.entregue > 0 && <div style={{ color: '#22c55e' }}>✅ Entregue: {breakdown.entregue}</div>}
+                      </div>
+                    )}
                   </Link>
                 ))}
               </div>
