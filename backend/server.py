@@ -1751,9 +1751,10 @@ async def update_item_by_index_status(
     update: ItemStatusUpdate, 
     current_user: dict = Depends(get_current_user)
 ):
-    """Atualizar item por índice - resolve problema de itens duplicados"""
-    logger.info(f"update_item_by_index_status chamado: po_id={po_id}, item_index={item_index}, user={current_user.get('sub')}")
+    """Atualizar item por índice - QUALQUER USUÁRIO PODE EDITAR"""
+    logger.info(f"update_item_by_index_status: po_id={po_id}, item_index={item_index}, user={current_user.get('sub')}")
     
+    # Buscar OC diretamente sem filtro
     po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
     
     if not po:
@@ -1763,52 +1764,85 @@ async def update_item_by_index_status(
         raise HTTPException(status_code=404, detail="Índice de item inválido")
     
     item = po['items'][item_index]
+    logger.info(f"Editando item {item.get('codigo_item')} - user: {current_user.get('sub')}")
     
-    # PERMISSÃO SIMPLIFICADA: Qualquer usuário autenticado pode editar itens
-    # (todos são da mesma empresa, a verificação por responsável estava causando problemas)
-    user_role = current_user.get('role', '')
-    user_email = current_user.get('sub', '')
-    logger.info(f"Usuário {user_email} (role={user_role}) editando item {item.get('codigo_item')}")
-    
-    # Apenas campos financeiros (preço venda, imposto, frete envio) são restritos a admins
-    
+    # APLICAR TODAS AS ALTERAÇÕES - SEM RESTRIÇÕES
     item['status'] = update.status
     
-    # Atualizar fontes de compra
+    # Fontes de compra
     if update.fontes_compra is not None:
         item['fontes_compra'] = [fc.model_dump() for fc in update.fontes_compra]
-        
-        total_custo = 0
-        total_frete = 0
-        total_qtd = 0
-        for fc in update.fontes_compra:
-            total_custo += fc.quantidade * fc.preco_unitario
-            total_frete += fc.frete
-            total_qtd += fc.quantidade
-        
+        total_custo = sum(fc.quantidade * fc.preco_unitario for fc in update.fontes_compra)
+        total_frete = sum(fc.frete for fc in update.fontes_compra)
+        total_qtd = sum(fc.quantidade for fc in update.fontes_compra)
         if total_qtd > 0:
             item['preco_compra'] = round(total_custo / total_qtd, 2)
         item['frete_compra'] = total_frete
     
-    if update.link_compra is not None:
-        item['link_compra'] = update.link_compra
-    
-    if update.preco_compra is not None and not update.fontes_compra:
-        item['preco_compra'] = update.preco_compra
-    
-    if update.frete_compra is not None and not update.fontes_compra:
-        item['frete_compra'] = update.frete_compra
-    
-    # Preço de venda pode ser editado por qualquer usuário
+    # Preço de venda - TODOS podem editar
     if update.preco_venda is not None:
         item['preco_venda'] = update.preco_venda
     
-    # Imposto e frete de envio são restritos a admins
-    if current_user['role'] == 'admin':
-        if update.imposto is not None:
-            item['imposto'] = update.imposto
-        if update.frete_envio is not None:
-            item['frete_envio'] = update.frete_envio
+    # Imposto - TODOS podem editar
+    if update.imposto is not None:
+        item['imposto'] = update.imposto
+    
+    # Frete envio - TODOS podem editar
+    if update.frete_envio is not None:
+        item['frete_envio'] = update.frete_envio
+    
+    # Link de compra
+    if update.link_compra is not None:
+        item['link_compra'] = update.link_compra
+    
+    # Preço de compra manual
+    if update.preco_compra is not None and not update.fontes_compra:
+        item['preco_compra'] = update.preco_compra
+    
+    # Frete de compra manual
+    if update.frete_compra is not None and not update.fontes_compra:
+        item['frete_compra'] = update.frete_compra
+    
+    # Código de rastreio
+    if update.codigo_rastreio is not None:
+        item['codigo_rastreio'] = update.codigo_rastreio.strip().upper() if update.codigo_rastreio else None
+    
+    # Calcular lucro
+    preco_venda = item.get('preco_venda')
+    quantidade = item.get('quantidade', 0)
+    if preco_venda and quantidade:
+        fontes = item.get('fontes_compra', [])
+        if fontes:
+            total_custo_compra = sum(fc['quantidade'] * fc['preco_unitario'] for fc in fontes)
+            total_frete_compra = sum(fc.get('frete', 0) for fc in fontes)
+        else:
+            total_custo_compra = (item.get('preco_compra') or 0) * quantidade
+            total_frete_compra = item.get('frete_compra') or 0
+        
+        receita_total = preco_venda * quantidade
+        impostos = receita_total * 0.11
+        frete_envio = item.get('frete_envio') or 0
+        item['lucro_liquido'] = round(receita_total - total_custo_compra - total_frete_compra - impostos - frete_envio, 2)
+        item['imposto'] = round(impostos, 2)
+    
+    # Atualizar datas
+    now = datetime.now(timezone.utc).isoformat()
+    if update.status == ItemStatus.COTADO:
+        item['data_cotacao'] = now
+    elif update.status == ItemStatus.COMPRADO:
+        item['data_compra'] = now
+    elif update.status == ItemStatus.EM_TRANSITO:
+        item['data_envio'] = now
+    elif update.status == ItemStatus.ENTREGUE:
+        item['data_entrega'] = now
+    
+    # SALVAR
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    return {"message": "Item atualizado com sucesso"}
     
     # Calcular lucro líquido
     preco_venda = item.get('preco_venda')
