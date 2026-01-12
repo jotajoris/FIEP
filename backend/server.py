@@ -844,9 +844,9 @@ async def root():
 @api_router.get("/version")
 async def get_version():
     return {
-        "version": "2.0.1",
+        "version": "2.0.2",
         "deploy_date": "2025-01-12",
-        "fix": "Removida verificação de permissão por responsável - qualquer usuário autenticado pode editar",
+        "fix": "Permitido usuários não-admin editarem preço de venda",
         "status": "OK"
     }
 
