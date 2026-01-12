@@ -1684,6 +1684,62 @@ async def update_item_by_index_status(
     
     return {"message": "Item atualizado com sucesso"}
 
+# Endpoint para mover múltiplos itens do carrinho para Comprado
+@api_router.post("/purchase-orders/mover-carrinho-para-comprado")
+async def mover_carrinho_para_comprado(
+    items: List[dict],
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Move múltiplos itens marcados como 'no_carrinho' para status 'comprado'
+    Recebe lista de: [{"po_id": "xxx", "item_index": 0}, ...]
+    """
+    logger.info(f"mover_carrinho_para_comprado: {len(items)} itens, user={current_user.get('sub')}")
+    
+    updated_count = 0
+    errors = []
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Agrupar por po_id para otimizar updates
+    items_by_po = {}
+    for item_info in items:
+        po_id = item_info.get('po_id')
+        item_index = item_info.get('item_index')
+        if po_id and item_index is not None:
+            if po_id not in items_by_po:
+                items_by_po[po_id] = []
+            items_by_po[po_id].append(item_index)
+    
+    for po_id, indices in items_by_po.items():
+        try:
+            po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+            if not po:
+                errors.append(f"OC {po_id} não encontrada")
+                continue
+            
+            for item_index in indices:
+                if 0 <= item_index < len(po['items']):
+                    item = po['items'][item_index]
+                    item['status'] = 'comprado'
+                    item['no_carrinho'] = False
+                    item['data_compra'] = now
+                    updated_count += 1
+                else:
+                    errors.append(f"Índice {item_index} inválido na OC {po_id}")
+            
+            await db.purchase_orders.update_one(
+                {"id": po_id},
+                {"$set": {"items": po['items']}}
+            )
+        except Exception as e:
+            errors.append(f"Erro ao atualizar OC {po_id}: {str(e)}")
+    
+    return {
+        "message": f"{updated_count} itens movidos para Comprado",
+        "updated_count": updated_count,
+        "errors": errors if errors else None
+    }
+
 @api_router.patch("/purchase-orders/{po_id}/items/{codigo_item}/full")
 async def update_item_full(
     po_id: str, 
