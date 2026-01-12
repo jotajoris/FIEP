@@ -15,15 +15,25 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-from pydantic import BaseModel, Field, ConfigDict, EmailStr
+
 from typing import List, Optional, Dict
 import uuid
 from datetime import datetime, timezone, timedelta
-from enum import Enum
 import openpyxl
 import resend
 import fitz  # PyMuPDF
 import re
+
+# Importar modelos do módulo models
+from models import (
+    UserRole, ItemStatus, User, UserCreate, LoginRequest, LoginResponse,
+    ChangePasswordRequest, ResetPasswordRequest, ConfirmResetPasswordRequest,
+    ReferenceItem, FonteCompra, Notificacao, NotaFiscalDoc,
+    POItem, PurchaseOrder, PurchaseOrderCreate, ItemStatusUpdate, ItemFullUpdate,
+    DashboardStats, AdminSummary, CommissionPayment, CommissionPaymentCreate,
+    CommissionPaymentUpdate
+)
+
 from auth import (
     verify_password, get_password_hash, create_access_token,
     get_current_user, require_admin
@@ -72,6 +82,9 @@ EMAIL_TO_OWNER = {
     'mylena.onsolucoes@gmail.com': 'Mylena',
     'fabioonsolucoes@gmail.com': 'Fabio'
 }
+
+# OCs excluídas do cálculo de comissão
+EXCLUDED_OCS_FROM_COMMISSION = ['OC-2.118938', 'OC-2.118941']
 
 # Health check endpoint (for Kubernetes)
 @app.get("/health")
