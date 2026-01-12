@@ -844,11 +844,58 @@ async def root():
 @api_router.get("/version")
 async def get_version():
     return {
-        "version": "2.0.2",
+        "version": "2.0.3",
         "deploy_date": "2025-01-12",
-        "fix": "Permitido usuários não-admin editarem preço de venda",
+        "fix": "Endpoint de teste direto adicionado",
         "status": "OK"
     }
+
+# ENDPOINT DE TESTE DIRETO - PARA DEBUG DEFINITIVO
+@api_router.post("/test-update-direto/{po_id}/{item_index}")
+async def test_update_direto(po_id: str, item_index: int, current_user: dict = Depends(get_current_user)):
+    """
+    Teste direto de update - faz uma edição simples e retorna o resultado
+    """
+    try:
+        # 1. Buscar a OC
+        po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+        
+        if not po:
+            return {"erro": "OC não encontrada", "po_id": po_id}
+        
+        if item_index < 0 or item_index >= len(po['items']):
+            return {"erro": "Índice inválido", "item_index": item_index, "total": len(po['items'])}
+        
+        # 2. Pegar o item
+        item = po['items'][item_index]
+        valor_antigo = item.get('preco_compra')
+        
+        # 3. Fazer uma edição de teste
+        item['preco_compra'] = 12345.67
+        item['_teste_update'] = "FUNCIONOU"
+        
+        # 4. Salvar
+        result = await db.purchase_orders.update_one(
+            {"id": po_id},
+            {"$set": {"items": po['items']}}
+        )
+        
+        # 5. Buscar novamente para confirmar
+        po_depois = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+        item_depois = po_depois['items'][item_index]
+        
+        return {
+            "sucesso": True,
+            "usuario": current_user.get('sub'),
+            "role": current_user.get('role'),
+            "valor_antigo": valor_antigo,
+            "valor_novo": item_depois.get('preco_compra'),
+            "teste_campo": item_depois.get('_teste_update'),
+            "mongodb_matched": result.matched_count,
+            "mongodb_modified": result.modified_count
+        }
+    except Exception as e:
+        return {"erro": str(e)}
 
 # ENDPOINT DE TESTE DE EDIÇÃO - PARA DEBUG
 @api_router.post("/test-edit/{po_id}/{item_index}")
