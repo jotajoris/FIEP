@@ -534,6 +534,17 @@ const PODetails = () => {
               )}
             </div>
           ))}
+          
+          {/* Paginação */}
+          {po.items.length > 5 && (
+            <Pagination
+              totalItems={po.items.length}
+              currentPage={currentPage}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={setItemsPerPage}
+            />
+          )}
         </div>
       </div>
     </div>
