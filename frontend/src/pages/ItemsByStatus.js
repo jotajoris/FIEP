@@ -4,6 +4,7 @@ import { apiGet, apiPatch, apiPost, apiDelete, API, formatBRL } from '../utils/a
 import { useAuth } from '../contexts/AuthContext';
 import { v4 as uuidv4 } from 'uuid';
 import { normalizeText } from '../utils/textUtils';
+import Pagination from '../components/Pagination';
 
 const ItemsByStatus = () => {
   const { status } = useParams();
