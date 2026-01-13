@@ -85,6 +85,17 @@ const Dashboard = () => {
     });
   }, [orders, searchTerm, searchCodigoItem, searchResponsavel, dateFrom, dateTo]);
 
+  // Dados paginados
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredOrders.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredOrders, currentPage, itemsPerPage]);
+
+  // Reset página quando filtros mudam
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, searchCodigoItem, searchResponsavel, dateFrom, dateTo]);
+
   const clearFilters = () => {
     setSearchTerm('');
     setSearchCodigoItem('');
