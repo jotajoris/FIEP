@@ -1589,7 +1589,7 @@ Chave PIX: 46.663.556/0001-69`;
         ) : (
           /* ============ VISUALIZAÇÃO NORMAL (outros status) ============ */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {displayItems.map((item) => (
+            {paginatedItems.map((item) => (
               <div 
                 key={item._uniqueId} 
                 className="card" 
