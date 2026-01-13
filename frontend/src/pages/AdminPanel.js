@@ -546,6 +546,38 @@ const AdminPanel = () => {
           <>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1.5rem' }}>Todas as Notas Fiscais</h2>
             
+            {/* Aviso de NFs Duplicadas */}
+            {notasFiscais.notas_duplicadas && notasFiscais.notas_duplicadas.length > 0 && (
+              <div style={{ 
+                marginBottom: '1.5rem', 
+                padding: '1rem', 
+                background: '#fef3c7', 
+                border: '1px solid #f59e0b',
+                borderRadius: '8px'
+              }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: '700', color: '#92400e', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  ⚠️ NFs Usadas em Múltiplos Itens ({notasFiscais.total_duplicadas})
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {notasFiscais.notas_duplicadas.map((nf, idx) => (
+                    <div key={idx} style={{ 
+                      padding: '0.5rem 0.75rem', 
+                      background: 'white', 
+                      borderRadius: '6px',
+                      fontSize: '0.85rem'
+                    }}>
+                      <div style={{ fontWeight: '600', color: '#92400e' }}>
+                        📄 {nf.filename} - NF: {nf.numero_nf || '-'} (usada em {nf.qtd_usos} itens)
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                        Itens: {nf.itens.map(i => `${i.numero_oc}/${i.codigo_item}`).join(', ')}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             {/* Layout em duas colunas */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
               
