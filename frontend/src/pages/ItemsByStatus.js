@@ -903,48 +903,90 @@ Chave PIX: 46.663.556/0001-69`;
     
     return (
       <div style={{ marginTop: '1rem' }}>
-        {/* Grid de duas colunas para NFs e Dados */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-          gap: '1rem',
-          marginTop: '1rem'
-        }}>
-          {/* Coluna Esquerda: CNPJ e NFs */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {/* CNPJ do Requisitante */}
-            {item.cnpj_requisitante && (
-              <div style={{ 
-                padding: '0.75rem', 
-                background: '#fef3c7', 
-                borderRadius: '8px',
-                border: '1px solid #fcd34d'
-              }}>
-                <div style={{ fontSize: '0.75rem', color: '#92400e', fontWeight: '600', marginBottom: '0.25rem' }}>
-                  CNPJ DO REQUISITANTE
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontWeight: '600', color: '#78350f' }}>{item.cnpj_requisitante}</span>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(item.cnpj_requisitante);
-                      alert('CNPJ copiado!');
-                    }}
-                    style={{ 
-                      padding: '0.25rem 0.5rem', 
-                      fontSize: '0.75rem', 
-                      background: '#f59e0b', 
-                      color: 'white', 
-                      border: 'none', 
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    📋 Copiar
-                  </button>
-                </div>
-              </div>
-            )}
+        {/* Header com botão toggle */}
+        <div 
+          onClick={() => toggleNFSection(item._uniqueId)}
+          style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            padding: '0.75rem',
+            background: isExpanded ? '#667eea' : '#e2e8f0',
+            borderRadius: isExpanded ? '8px 8px 0 0' : '8px',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <span style={{ fontWeight: '600', color: isExpanded ? 'white' : '#4a5568' }}>
+            📄 Gestão de Notas Fiscais
+          </span>
+          <button
+            style={{ 
+              padding: '0.4rem 0.8rem', 
+              fontSize: '0.85rem', 
+              background: isExpanded ? 'white' : '#667eea', 
+              color: isExpanded ? '#667eea' : 'white', 
+              border: 'none', 
+              borderRadius: '6px',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
+            {isExpanded ? '✓ Fechar' : '✏️ Abrir'}
+          </button>
+        </div>
+
+        {/* Conteúdo expansível */}
+        {isExpanded && (
+          <div style={{ 
+            padding: '1rem',
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0',
+            borderTop: 'none',
+            borderRadius: '0 0 8px 8px'
+          }}>
+            {/* Grid de duas colunas para NFs e Dados */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+              gap: '1rem'
+            }}>
+              {/* Coluna Esquerda: CNPJ e NFs */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {/* CNPJ do Requisitante */}
+                {item.cnpj_requisitante && (
+                  <div style={{ 
+                    padding: '0.75rem', 
+                    background: '#fef3c7', 
+                    borderRadius: '8px',
+                    border: '1px solid #fcd34d'
+                  }}>
+                    <div style={{ fontSize: '0.75rem', color: '#92400e', fontWeight: '600', marginBottom: '0.25rem' }}>
+                      CNPJ DO REQUISITANTE
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontWeight: '600', color: '#78350f' }}>{item.cnpj_requisitante}</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigator.clipboard.writeText(item.cnpj_requisitante);
+                          alert('CNPJ copiado!');
+                        }}
+                        style={{ 
+                          padding: '0.25rem 0.5rem', 
+                          fontSize: '0.75rem', 
+                          background: '#f59e0b', 
+                          color: 'white', 
+                          border: 'none', 
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        📋 Copiar
+                      </button>
+                    </div>
+                  </div>
+                )}
 
             {/* NFs de Compra (Fornecedor) */}
             <div style={{ 
