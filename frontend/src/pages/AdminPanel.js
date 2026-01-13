@@ -749,7 +749,7 @@ const AdminPanel = () => {
                   </p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {notasFiscais.notas_venda.map((nf, index) => (
+                    {paginatedNfVenda.map((nf, index) => (
                       <div 
                         key={index} 
                         style={{ 
@@ -776,7 +776,7 @@ const AdminPanel = () => {
                           fontSize: '0.8rem',
                           flexShrink: 0
                         }}>
-                          {index + 1}
+                          {(nfVendaPage - 1) * nfVendaPerPage + index + 1}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#1f2937' }}>
@@ -804,6 +804,16 @@ const AdminPanel = () => {
                         </button>
                       </div>
                     ))}
+                    {/* Paginação NFs Venda */}
+                    {notasFiscais.notas_venda.length > 5 && (
+                      <Pagination
+                        totalItems={notasFiscais.notas_venda.length}
+                        currentPage={nfVendaPage}
+                        itemsPerPage={nfVendaPerPage}
+                        onPageChange={setNfVendaPage}
+                        onItemsPerPageChange={setNfVendaPerPage}
+                      />
+                    )}
                   </div>
                 )}
               </div>
