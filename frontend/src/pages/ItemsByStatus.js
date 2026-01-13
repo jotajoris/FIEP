@@ -70,10 +70,13 @@ const ItemsByStatus = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiGet(`${API}/purchase-orders`);
+      const response = await apiGet(`${API}/purchase-orders?limit=0`);
+      
+      // O endpoint retorna {data: [...], total: ..., page: ...}
+      const purchaseOrders = response.data.data || response.data || [];
       
       const allItems = [];
-      response.data.forEach(po => {
+      purchaseOrders.forEach(po => {
         po.items.forEach((item, itemIndexInPO) => {
           if (item.status === status) {
             // Usar o índice original do banco se disponível, senão usar o índice do array
