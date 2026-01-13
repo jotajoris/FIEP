@@ -3474,6 +3474,24 @@ async def delete_pagamento(
     
     return {"success": True, "message": "Pagamento deletado com sucesso"}
 
+
+@api_router.get("/fornecedores")
+async def get_fornecedores(current_user: dict = Depends(get_current_user)):
+    """Buscar lista de fornecedores únicos do sistema"""
+    
+    pos = await db.purchase_orders.find({}, {"_id": 0, "items.fontes_compra.fornecedor": 1}).to_list(1000)
+    
+    fornecedores = set()
+    for po in pos:
+        for item in po.get('items', []):
+            for fonte in item.get('fontes_compra', []):
+                fornecedor = fonte.get('fornecedor', '').strip()
+                if fornecedor:
+                    fornecedores.add(fornecedor)
+    
+    return {"fornecedores": sorted(list(fornecedores))}
+
+
 @app.on_event("startup")
 async def startup_event():
     """Iniciar job de verificação de rastreios ao iniciar o servidor"""
