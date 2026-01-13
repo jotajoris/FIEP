@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { formatBRL } from '../utils/api';
+import Pagination from '../components/Pagination';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const AdminPanel = () => {
   const [comissoes, setComissoes] = useState([]);
-  const [notasFiscais, setNotasFiscais] = useState({ notas_compra: [], notas_venda: [] });
+  const [notasFiscais, setNotasFiscais] = useState({ notas_compra: [], notas_venda: [], notas_duplicadas: [], total_duplicadas: 0 });
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('comissoes');
   const [expandedResponsavel, setExpandedResponsavel] = useState(null);
@@ -18,6 +19,16 @@ const AdminPanel = () => {
   const [downloadingNF, setDownloadingNF] = useState(null);
   const [editingPagamento, setEditingPagamento] = useState(null);
   const [editPagamentoForm, setEditPagamentoForm] = useState({ valor_comissao: 0 });
+  
+  // Paginação para NFs
+  const [nfCompraPage, setNfCompraPage] = useState(1);
+  const [nfCompraPerPage, setNfCompraPerPage] = useState(5);
+  const [nfVendaPage, setNfVendaPage] = useState(1);
+  const [nfVendaPerPage, setNfVendaPerPage] = useState(5);
+  
+  // Paginação para itens do responsável
+  const [itensPage, setItensPage] = useState(1);
+  const [itensPerPage, setItensPerPage] = useState(5);
 
   useEffect(() => {
     loadData();
