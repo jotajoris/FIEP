@@ -110,7 +110,7 @@ const Dashboard = () => {
     try {
       const [statsRes, ordersRes] = await Promise.all([
         apiGet(`${API}/dashboard`),
-        apiGet(`${API}/purchase-orders`)
+        apiGet(`${API}/purchase-orders/list/simple`)  // Endpoint otimizado
       ]);
       setStats(statsRes.data);
       setOrders(ordersRes.data);
