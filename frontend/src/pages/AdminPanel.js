@@ -20,6 +20,11 @@ const AdminPanel = () => {
   const [editingPagamento, setEditingPagamento] = useState(null);
   const [editPagamentoForm, setEditPagamentoForm] = useState({ valor_comissao: 0 });
   
+  // Seleção de NFs para download bulk
+  const [selectedNFsCompra, setSelectedNFsCompra] = useState(new Set());
+  const [selectedNFsVenda, setSelectedNFsVenda] = useState(new Set());
+  const [downloadingBulk, setDownloadingBulk] = useState(false);
+  
   // Paginação para NFs
   const [nfCompraPage, setNfCompraPage] = useState(1);
   const [nfCompraPerPage, setNfCompraPerPage] = useState(5);
