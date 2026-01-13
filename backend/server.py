@@ -3543,7 +3543,9 @@ async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
                     'codigo_item': item.get('codigo_item'),
                     'descricao': item.get('descricao', '')[:50],
                     'po_id': po.get('id'),
-                    'item_index': idx
+                    'item_index': idx,
+                    'baixado_por': nf.get('baixado_por'),
+                    'baixado_em': nf.get('baixado_em')
                 })
             
             # NF de venda (revenda)
@@ -3560,7 +3562,9 @@ async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
                     'codigo_item': item.get('codigo_item'),
                     'descricao': item.get('descricao', '')[:50],
                     'po_id': po.get('id'),
-                    'item_index': idx
+                    'item_index': idx,
+                    'baixado_por': nf_revenda.get('baixado_por'),
+                    'baixado_em': nf_revenda.get('baixado_em')
                 })
     
     # Marcar NFs que são usadas em múltiplos itens
