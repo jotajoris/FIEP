@@ -1222,9 +1222,287 @@ Chave PIX: 46.663.556/0001-69`;
 
   // Renderiza o formulário de edição do item
   const renderEditForm = (item) => {
-    // Isso vai ser substituído pela renderização existente do formulário
-    // Por enquanto, retorna null e usaremos o código inline existente
-    return null;
+    return (
+      <div style={{ marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: '8px' }}>
+        {/* Status e Informações de Venda (somente leitura) */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+          <div className="form-group">
+            <label className="form-label">Status</label>
+            <select
+              className="form-input"
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              data-testid={`select-status-${item.codigo_item}`}
+            >
+              <option value="pendente">Pendente</option>
+              <option value="cotado">Cotado</option>
+              <option value="comprado">Comprado</option>
+              <option value="em_separacao">Em Separação</option>
+              <option value="em_transito">Em Trânsito</option>
+              <option value="entregue">Entregue</option>
+            </select>
+          </div>
+          
+          {/* Preço de Venda - Somente leitura para todos */}
+          {item.preco_venda && (
+            <div className="form-group">
+              <label className="form-label">Preço Venda Unit.</label>
+              <div 
+                style={{ 
+                  padding: '0.75rem', 
+                  background: '#f0f4f8', 
+                  borderRadius: '8px', 
+                  fontWeight: '600',
+                  color: '#3b82f6'
+                }}
+              >
+                {formatBRL(item.preco_venda)}
+              </div>
+            </div>
+          )}
+
+          {/* Valor Total de Venda - Calculado */}
+          {item.preco_venda && (
+            <div className="form-group">
+              <label className="form-label">Valor Total Venda</label>
+              <div 
+                style={{ 
+                  padding: '0.75rem', 
+                  background: '#e8f4fd', 
+                  borderRadius: '8px', 
+                  fontWeight: '700',
+                  color: '#2563eb'
+                }}
+              >
+                {formatBRL((item.preco_venda || 0) * (item.quantidade || 0))}
+              </div>
+            </div>
+          )}
+
+          {/* Imposto - Calculado automaticamente (11% do valor total) - Somente leitura */}
+          {item.preco_venda && (
+            <div className="form-group">
+              <label className="form-label">Imposto (11%)</label>
+              <div 
+                style={{ 
+                  padding: '0.75rem', 
+                  background: '#fef3c7', 
+                  borderRadius: '8px', 
+                  fontWeight: '600',
+                  color: '#b45309'
+                }}
+              >
+                {formatBRL(((item.preco_venda || 0) * (item.quantidade || 0)) * 0.11)}
+              </div>
+            </div>
+          )}
+          
+          {/* Frete Envio - Editável apenas para admin */}
+          {isAdmin() && (
+            <div className="form-group">
+              <label className="form-label">Frete Envio/Embalagem (R$)</label>
+              <input
+                type="number"
+                step="0.01"
+                className="form-input"
+                value={formData.frete_envio}
+                onChange={(e) => setFormData({ ...formData, frete_envio: e.target.value })}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Fontes de Compra */}
+        <div style={{ borderTop: '2px solid #e2e8f0', paddingTop: '1rem', marginTop: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '600', color: '#4a5568' }}>
+              📦 Locais de Compra
+            </h4>
+            <button
+              type="button"
+              onClick={addFonteCompra}
+              className="btn btn-secondary"
+              style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+            >
+              + Adicionar Local
+            </button>
+          </div>
+
+          {formData.fontes_compra?.map((fonte, idx) => (
+            <div 
+              key={fonte.id || `fonte-${idx}`} 
+              style={{ 
+                background: '#f0f4f8', 
+                padding: '1rem', 
+                borderRadius: '8px', 
+                marginBottom: '0.75rem',
+                border: '1px solid #e2e8f0'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <span style={{ fontWeight: '600', color: '#667eea', fontSize: '0.9rem' }}>
+                  Local #{idx + 1}
+                </span>
+                {formData.fontes_compra.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeFonteCompra(idx)}
+                    style={{ 
+                      background: '#ef4444', 
+                      color: 'white', 
+                      border: 'none', 
+                      padding: '0.25rem 0.5rem', 
+                      borderRadius: '4px', 
+                      cursor: 'pointer',
+                      fontSize: '0.8rem'
+                    }}
+                  >
+                    Remover
+                  </button>
+                )}
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.75rem' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontSize: '0.8rem' }}>Quantidade</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    value={fonte.quantidade}
+                    onChange={(e) => updateFonteCompra(idx, 'quantidade', e.target.value)}
+                    min="1"
+                    style={{ padding: '0.5rem' }}
+                  />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontSize: '0.8rem' }}>Preço Unit. (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="form-input"
+                    value={fonte.preco_unitario}
+                    onChange={(e) => updateFonteCompra(idx, 'preco_unitario', e.target.value)}
+                    style={{ padding: '0.5rem' }}
+                  />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontSize: '0.8rem' }}>Frete (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="form-input"
+                    value={fonte.frete}
+                    onChange={(e) => updateFonteCompra(idx, 'frete', e.target.value)}
+                    style={{ padding: '0.5rem' }}
+                  />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0, gridColumn: 'span 2' }}>
+                  <label className="form-label" style={{ fontSize: '0.8rem' }}>Link de Compra</label>
+                  <input
+                    type="url"
+                    className="form-input"
+                    value={fonte.link}
+                    onChange={(e) => updateFonteCompra(idx, 'link', e.target.value)}
+                    placeholder="https://..."
+                    style={{ padding: '0.5rem' }}
+                  />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0, position: 'relative' }}>
+                  <label className="form-label" style={{ fontSize: '0.8rem' }}>Fornecedor</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={fonte.fornecedor}
+                    onChange={(e) => {
+                      updateFonteCompra(idx, 'fornecedor', normalizeText(e.target.value));
+                      filterFornecedorSugestoes(e.target.value, idx);
+                    }}
+                    onFocus={() => filterFornecedorSugestoes(fonte.fornecedor, idx)}
+                    onBlur={fecharSugestoes}
+                    placeholder="Nome do fornecedor"
+                    style={{ padding: '0.5rem' }}
+                    autoComplete="off"
+                  />
+                  {/* Menu de sugestões */}
+                  {activeFornecedorIdx === idx && fornecedorSugestoes.length > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      background: 'white',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                      zIndex: 1000,
+                      maxHeight: '200px',
+                      overflowY: 'auto'
+                    }}>
+                      {fornecedorSugestoes.map((sugestao, sIdx) => (
+                        <div
+                          key={sIdx}
+                          onMouseDown={() => selecionarFornecedor(sugestao, idx)}
+                          style={{
+                            padding: '0.5rem 0.75rem',
+                            cursor: 'pointer',
+                            borderBottom: sIdx < fornecedorSugestoes.length - 1 ? '1px solid #f0f0f0' : 'none',
+                            background: 'white',
+                            fontSize: '0.85rem'
+                          }}
+                          onMouseEnter={(e) => e.target.style.background = '#f0f4ff'}
+                          onMouseLeave={(e) => e.target.style.background = 'white'}
+                        >
+                          {sugestao}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* Resumo das fontes */}
+          {formData.fontes_compra?.length > 0 && (
+            <div style={{ 
+              background: '#e8f4fd', 
+              padding: '0.75rem 1rem', 
+              borderRadius: '8px', 
+              marginTop: '1rem',
+              display: 'flex',
+              gap: '2rem',
+              flexWrap: 'wrap',
+              fontSize: '0.9rem'
+            }}>
+              {(() => {
+                const { totalQtd, totalCusto, totalFrete } = calcularTotalFontes();
+                const qtdRestante = (formData.quantidade_total || item.quantidade) - totalQtd;
+                return (
+                  <>
+                    <span>
+                      <strong>Total Qtd:</strong> {totalQtd} / {formData.quantidade_total || item.quantidade}
+                      {qtdRestante > 0 && <span style={{ color: '#f59e0b' }}> (faltam {qtdRestante})</span>}
+                      {qtdRestante < 0 && <span style={{ color: '#ef4444' }}> (excedeu {Math.abs(qtdRestante)})</span>}
+                    </span>
+                    <span><strong>Custo Total:</strong> {formatBRL(totalCusto)}</span>
+                    <span><strong>Frete Total:</strong> {formatBRL(totalFrete)}</span>
+                  </>
+                );
+              })()}
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+          <button onClick={cancelEdit} className="btn btn-secondary" style={{ padding: '0.5rem 1rem' }}>
+            Cancelar
+          </button>
+          <button onClick={() => saveEdit(item)} className="btn btn-primary" style={{ padding: '0.5rem 1rem' }}>
+            Salvar
+          </button>
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
