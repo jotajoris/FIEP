@@ -781,58 +781,119 @@ const AdminPanel = () => {
                   </span>
                 </h3>
                 
+                {/* Botões de ação bulk */}
+                {notasFiscais.notas_compra.length > 0 && (
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={selectAllNFsCompra}
+                      style={{ 
+                        padding: '0.4rem 0.8rem',
+                        background: paginatedNfCompra.every(nf => selectedNFsCompra.has(`${nf.po_id}_${nf.item_index}_${nf.id}`)) ? '#94a3b8' : '#e2e8f0',
+                        color: '#374151',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.8rem'
+                      }}
+                    >
+                      {paginatedNfCompra.every(nf => selectedNFsCompra.has(`${nf.po_id}_${nf.item_index}_${nf.id}`)) ? '☑️ Desselecionar' : '☐ Selecionar Todos'}
+                    </button>
+                    {selectedNFsCompra.size > 0 && (
+                      <button
+                        onClick={() => downloadBulkNFs('compra')}
+                        disabled={downloadingBulk}
+                        style={{ 
+                          padding: '0.4rem 0.8rem',
+                          background: downloadingBulk ? '#9ca3af' : '#22c55e',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: downloadingBulk ? 'not-allowed' : 'pointer',
+                          fontSize: '0.8rem',
+                          fontWeight: '600'
+                        }}
+                      >
+                        {downloadingBulk ? '⏳ Baixando...' : `📦 Baixar ${selectedNFsCompra.size} NF(s) em ZIP`}
+                      </button>
+                    )}
+                  </div>
+                )}
+                
                 {notasFiscais.notas_compra.length === 0 ? (
                   <p style={{ textAlign: 'center', color: '#718096', padding: '2rem', background: '#f9fafb', borderRadius: '8px' }}>
                     Nenhuma NF de compra
                   </p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {paginatedNfCompra.map((nf, index) => (
-                      <div 
-                        key={index} 
-                        style={{ 
-                          padding: '0.75rem',
-                          background: nf.duplicada ? '#fef3c7' : 'white',
-                          borderRadius: '6px',
-                          border: nf.duplicada ? '1px solid #f59e0b' : '1px solid #e5e7eb',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: '0.75rem'
-                        }}
-                      >
-                        <div style={{ 
-                          width: '28px', 
-                          height: '28px', 
-                          borderRadius: '50%', 
-                          background: nf.duplicada ? '#f59e0b' : '#7c3aed',
-                          color: 'white',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontWeight: '700',
-                          fontSize: '0.8rem',
-                          flexShrink: 0
-                        }}>
-                          {nf.duplicada ? '⚠️' : (nfCompraPage - 1) * nfCompraPerPage + index + 1}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            NF: {nf.numero_nf || '-'}
-                            {nf.duplicada && (
-                              <span style={{ fontSize: '0.7rem', background: '#f59e0b', color: 'white', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
-                                {nf.qtd_usos}x
-                              </span>
+                    {paginatedNfCompra.map((nf, index) => {
+                      const nfKey = `${nf.po_id}_${nf.item_index}_${nf.id}`;
+                      const isSelected = selectedNFsCompra.has(nfKey);
+                      return (
+                        <div 
+                          key={index} 
+                          style={{ 
+                            padding: '0.75rem',
+                            background: isSelected ? '#e0f2fe' : (nf.duplicada ? '#fef3c7' : 'white'),
+                            borderRadius: '6px',
+                            border: isSelected ? '2px solid #0ea5e9' : (nf.duplicada ? '1px solid #f59e0b' : '1px solid #e5e7eb'),
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '0.75rem'
+                          }}
+                        >
+                          {/* Checkbox */}
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleNFCompraSelection(nf)}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', marginTop: '4px', flexShrink: 0 }}
+                          />
+                          
+                          <div style={{ 
+                            width: '28px', 
+                            height: '28px', 
+                            borderRadius: '50%', 
+                            background: nf.duplicada ? '#f59e0b' : '#7c3aed',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: '700',
+                            fontSize: '0.8rem',
+                            flexShrink: 0
+                          }}>
+                            {nf.duplicada ? '⚠️' : (nfCompraPage - 1) * nfCompraPerPage + index + 1}
+                          </div>
+                          
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                              NF: {nf.numero_nf || '-'}
+                              {nf.duplicada && (
+                                <span style={{ fontSize: '0.7rem', background: '#f59e0b', color: 'white', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                                  {nf.qtd_usos}x
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                              OC: {nf.numero_oc}
+                            </div>
+                            {/* Indicação de quem baixou */}
+                            {nf.baixado_por && (
+                              <div style={{ 
+                                fontSize: '0.7rem', 
+                                color: '#dc2626', 
+                                marginTop: '0.25rem',
+                                fontWeight: '500'
+                              }}>
+                                ⬇️ Baixada por: {nf.baixado_por}
+                              </div>
                             )}
                           </div>
-                          <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                            OC: {nf.numero_oc}
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => downloadNF(nf)}
-                          disabled={downloadingNF === nf.id}
-                          style={{ 
+                          
+                          <button
+                            onClick={() => downloadNF(nf)}
+                            disabled={downloadingNF === nf.id}
+                            style={{ 
                             padding: '0.4rem 0.8rem',
                             background: '#7c3aed',
                             color: 'white',
