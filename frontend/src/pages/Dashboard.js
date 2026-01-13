@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { apiGet, apiPost, apiDelete, API, formatBRL } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
+import Pagination from '../components/Pagination';
 
 const Dashboard = () => {
   const { isAdmin } = useAuth();
@@ -12,6 +13,10 @@ const Dashboard = () => {
   const [seeded, setSeeded] = useState(false);
   const [selectedOrders, setSelectedOrders] = useState(new Set());
   const [deleting, setDeleting] = useState(false);
+  
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
