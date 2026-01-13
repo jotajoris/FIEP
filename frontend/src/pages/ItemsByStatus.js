@@ -2558,6 +2558,17 @@ Chave PIX: 46.663.556/0001-69`;
                 )}
               </div>
             ))}
+            
+            {/* Paginação */}
+            {displayItems.length > 5 && (
+              <Pagination
+                totalItems={displayItems.length}
+                currentPage={currentPage}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+                onItemsPerPageChange={setItemsPerPage}
+              />
+            )}
           </div>
         )}
       </div>
