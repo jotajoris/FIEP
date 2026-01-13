@@ -3139,6 +3139,91 @@ async def download_nota_fiscal(
     
     raise HTTPException(status_code=404, detail="Nota fiscal não encontrada")
 
+
+class BulkDownloadRequest(BaseModel):
+    nfs: List[dict]  # Lista de {po_id, item_index, nf_id, tipo}
+
+
+@api_router.post("/admin/notas-fiscais/bulk-download")
+async def bulk_download_notas_fiscais(
+    request: BulkDownloadRequest,
+    current_user: dict = Depends(require_admin)
+):
+    """Download de múltiplas notas fiscais em formato ZIP"""
+    import zipfile
+    import io
+    import base64
+    
+    if not request.nfs:
+        raise HTTPException(status_code=400, detail="Nenhuma NF selecionada")
+    
+    # Criar arquivo ZIP em memória
+    zip_buffer = io.BytesIO()
+    user_name = current_user.get('owner_name', current_user.get('email', 'admin'))
+    downloaded_at = datetime.now(timezone.utc).isoformat()
+    
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for nf_info in request.nfs:
+            po_id = nf_info.get('po_id')
+            item_index = nf_info.get('item_index')
+            nf_id = nf_info.get('nf_id')
+            tipo = nf_info.get('tipo', 'fornecedor')
+            
+            po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+            if not po or item_index >= len(po['items']):
+                continue
+            
+            item = po['items'][item_index]
+            nf_data = None
+            
+            if tipo == 'fornecedor':
+                for nf in item.get('notas_fiscais_fornecedor', []):
+                    if nf['id'] == nf_id:
+                        nf_data = nf
+                        break
+            else:
+                nf_revenda = item.get('nota_fiscal_revenda')
+                if nf_revenda and nf_revenda['id'] == nf_id:
+                    nf_data = nf_revenda
+            
+            if nf_data:
+                # Decodificar arquivo base64
+                file_bytes = base64.b64decode(nf_data['file_data'])
+                filename = f"{po['numero_oc']}_{item.get('codigo_item', 'item')}_{nf_data['filename']}"
+                zip_file.writestr(filename, file_bytes)
+                
+                # Marcar NF como baixada
+                if tipo == 'fornecedor':
+                    for idx, nf in enumerate(item.get('notas_fiscais_fornecedor', [])):
+                        if nf['id'] == nf_id:
+                            await db.purchase_orders.update_one(
+                                {"id": po_id},
+                                {"$set": {
+                                    f"items.{item_index}.notas_fiscais_fornecedor.{idx}.baixado_por": user_name,
+                                    f"items.{item_index}.notas_fiscais_fornecedor.{idx}.baixado_em": downloaded_at
+                                }}
+                            )
+                            break
+                else:
+                    await db.purchase_orders.update_one(
+                        {"id": po_id},
+                        {"$set": {
+                            f"items.{item_index}.nota_fiscal_revenda.baixado_por": user_name,
+                            f"items.{item_index}.nota_fiscal_revenda.baixado_em": downloaded_at
+                        }}
+                    )
+    
+    zip_buffer.seek(0)
+    zip_base64 = base64.b64encode(zip_buffer.read()).decode('utf-8')
+    
+    return {
+        "filename": f"notas_fiscais_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
+        "content_type": "application/zip",
+        "file_data": zip_base64,
+        "total_nfs": len(request.nfs)
+    }
+
+
 @api_router.delete("/purchase-orders/{po_id}/items/by-index/{item_index}/notas-fiscais/{nf_id}")
 async def delete_nota_fiscal(
     po_id: str,
