@@ -20,29 +20,30 @@ const Dashboard = () => {
   
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchCodigoItem, setSearchCodigoItem] = useState('');
+  const [searchResponsavel, setSearchResponsavel] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  
+  // Loading de filtro (para feedback visual)
+  const [filtering, setFiltering] = useState(false);
 
   useEffect(() => {
     loadData();
   }, []);
 
-  // Filtrar ordens
+  // Recarregar quando filtros mudam (com debounce)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadData();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm, searchCodigoItem, searchResponsavel, dateFrom, dateTo]);
+
+  // Filtrar ordens (agora é feito no servidor, mas mantemos para paginação local)
   const filteredOrders = useMemo(() => {
-    return orders.filter(order => {
-      // Filtro por número da OC
-      if (searchTerm && !order.numero_oc.toLowerCase().includes(searchTerm.toLowerCase())) {
-        return false;
-      }
-      
-      // Filtro por data
-      const orderDate = new Date(order.created_at);
-      orderDate.setHours(0, 0, 0, 0);
-      
-      if (dateFrom) {
-        const fromDate = new Date(dateFrom);
-        fromDate.setHours(0, 0, 0, 0);
-        if (orderDate < fromDate) return false;
+    return orders; // Filtros já aplicados no servidor
+  }, [orders]);
       }
       
       if (dateTo) {
