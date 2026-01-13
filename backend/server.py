@@ -1359,11 +1359,27 @@ async def create_purchase_order(po_create: PurchaseOrderCreate, current_user: di
     return po
 
 @api_router.get("/purchase-orders")
-async def get_purchase_orders(current_user: dict = Depends(get_current_user)):
-    """Listar Ordens de Compra"""
+async def get_purchase_orders(
+    current_user: dict = Depends(get_current_user),
+    page: int = 1,
+    limit: int = 5,
+    search: str = None,
+    responsavel: str = None
+):
+    """Listar Ordens de Compra com paginação server-side"""
     query = {}
     
-    pos = await db.purchase_orders.find(query, {"_id": 0}).to_list(1000)
+    # Busca total primeiro (para paginação)
+    total = await db.purchase_orders.count_documents(query)
+    
+    # Paginação
+    skip = (page - 1) * limit
+    
+    # Se limit = 0, retornar todos (para compatibilidade)
+    if limit == 0:
+        pos = await db.purchase_orders.find(query, {"_id": 0}).to_list(1000)
+    else:
+        pos = await db.purchase_orders.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
     
     for po in pos:
         if isinstance(po['created_at'], str):
@@ -1378,7 +1394,71 @@ async def get_purchase_orders(current_user: dict = Depends(get_current_user)):
             user_name = current_user['owner_name'].strip().upper()
             po['items'] = [item for item in po['items'] if (item.get('responsavel') or '').strip().upper() == user_name]
     
-    return pos
+    return {
+        "data": pos,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "total_pages": (total + limit - 1) // limit if limit > 0 else 1
+    }
+
+
+@api_router.get("/purchase-orders/list/simple")
+async def get_purchase_orders_simple(current_user: dict = Depends(get_current_user)):
+    """Listar Ordens de Compra de forma simplificada (para carregamento rápido)
+    Retorna apenas dados essenciais sem os itens completos"""
+    query = {}
+    
+    pos = await db.purchase_orders.find(query, {
+        "_id": 0,
+        "id": 1,
+        "numero_oc": 1,
+        "created_at": 1,
+        "cnpj_requisitante": 1,
+        "items": 1  # Necessário para contagem e filtro
+    }).to_list(1000)
+    
+    result = []
+    for po in pos:
+        if isinstance(po.get('created_at'), str):
+            po['created_at'] = datetime.fromisoformat(po['created_at'])
+        
+        items = po.get('items', [])
+        
+        # Se não for admin, filtrar apenas itens do responsável
+        if current_user['role'] != 'admin' and current_user.get('owner_name'):
+            user_name = current_user['owner_name'].strip().upper()
+            items = [item for item in items if (item.get('responsavel') or '').strip().upper() == user_name]
+        
+        # Calcular resumo dos itens
+        total_items = len(items)
+        if total_items == 0:
+            continue  # Pular OCs sem itens para o usuário
+            
+        valor_total = sum(
+            (item.get('preco_venda') or 0) * (item.get('quantidade') or 1) 
+            for item in items
+        )
+        
+        result.append({
+            "id": po['id'],
+            "numero_oc": po['numero_oc'],
+            "created_at": po['created_at'],
+            "cnpj_requisitante": po.get('cnpj_requisitante', ''),
+            "total_items": total_items,
+            "valor_total": valor_total,
+            # Resumo por status
+            "status_count": {
+                "pendente": sum(1 for i in items if i.get('status') == 'pendente'),
+                "cotado": sum(1 for i in items if i.get('status') == 'cotado'),
+                "comprado": sum(1 for i in items if i.get('status') == 'comprado'),
+                "em_separacao": sum(1 for i in items if i.get('status') == 'em_separacao'),
+                "em_transito": sum(1 for i in items if i.get('status') == 'em_transito'),
+                "entregue": sum(1 for i in items if i.get('status') == 'entregue'),
+            }
+        })
+    
+    return result
 
 @api_router.get("/purchase-orders/{po_id}")
 async def get_purchase_order(po_id: str, current_user: dict = Depends(get_current_user)):
