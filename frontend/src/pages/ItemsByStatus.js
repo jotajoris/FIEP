@@ -103,6 +103,40 @@ const ItemsByStatus = () => {
     }
   };
 
+  // Recarregar apenas um item específico sem recarregar toda a lista
+  // Preserva estados de expansão e não causa "refresh" visual
+  const reloadSingleItem = async (po_id, itemIndex, uniqueId) => {
+    try {
+      const response = await apiGet(`${API}/purchase-orders/${po_id}`);
+      const po = response.data;
+      
+      if (!po || !po.items) return;
+      
+      // Encontrar o item específico no PO
+      const updatedItem = po.items[itemIndex];
+      if (!updatedItem) return;
+      
+      // Atualizar apenas esse item no estado
+      setItems(prevItems => prevItems.map(item => {
+        if (item._uniqueId === uniqueId) {
+          return {
+            ...updatedItem,
+            numero_oc: po.numero_oc,
+            po_id: po.id,
+            cnpj_requisitante: po.cnpj_requisitante || '',
+            _itemIndexInPO: itemIndex,
+            _uniqueId: uniqueId
+          };
+        }
+        return item;
+      }));
+    } catch (error) {
+      console.error('Erro ao recarregar item:', error);
+      // Em caso de erro, faz reload completo como fallback
+      loadItems();
+    }
+  };
+
   // Carregar lista de fornecedores do sistema para autocomplete
   const loadFornecedoresSistema = async () => {
     try {
