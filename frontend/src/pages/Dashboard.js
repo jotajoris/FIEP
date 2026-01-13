@@ -659,7 +659,7 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredOrders.map((order) => {
+                {paginatedOrders.map((order) => {
                   const valorTotal = calcularValorTotalOC(order);
                   return (
                     <tr 
