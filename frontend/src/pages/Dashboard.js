@@ -189,15 +189,6 @@ const Dashboard = () => {
     event.target.value = '';
   };
 
-  // Calcular valor total de uma OC
-  const calcularValorTotalOC = (order) => {
-    return order.items.reduce((total, item) => {
-      const precoVenda = item.preco_venda || 0;
-      const quantidade = item.quantidade || 0;
-      return total + (precoVenda * quantidade);
-    }, 0);
-  };
-
   // Toggle seleção de uma OC
   const toggleSelectOrder = (orderId) => {
     const newSelected = new Set(selectedOrders);
