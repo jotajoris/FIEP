@@ -618,9 +618,9 @@ const AdminPanel = () => {
                         key={index} 
                         style={{ 
                           padding: '0.75rem',
-                          background: 'white',
+                          background: nf.duplicada ? '#fef3c7' : 'white',
                           borderRadius: '6px',
-                          border: '1px solid #e5e7eb',
+                          border: nf.duplicada ? '1px solid #f59e0b' : '1px solid #e5e7eb',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
@@ -631,7 +631,7 @@ const AdminPanel = () => {
                           width: '28px', 
                           height: '28px', 
                           borderRadius: '50%', 
-                          background: '#7c3aed',
+                          background: nf.duplicada ? '#f59e0b' : '#7c3aed',
                           color: 'white',
                           display: 'flex',
                           alignItems: 'center',
@@ -640,11 +640,16 @@ const AdminPanel = () => {
                           fontSize: '0.8rem',
                           flexShrink: 0
                         }}>
-                          {index + 1}
+                          {nf.duplicada ? '⚠️' : index + 1}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#1f2937' }}>
+                          <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             NF: {nf.numero_nf || '-'}
+                            {nf.duplicada && (
+                              <span style={{ fontSize: '0.7rem', background: '#f59e0b', color: 'white', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                                {nf.qtd_usos}x
+                              </span>
+                            )}
                           </div>
                           <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                             OC: {nf.numero_oc}
