@@ -245,10 +245,12 @@ const PODetails = () => {
       </div>
 
       <div className="card">
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1.5rem' }}>Itens da Ordem de Compra</h2>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1.5rem' }}>
+          Itens da Ordem de Compra ({po.items.length})
+        </h2>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {po.items.map((item, index) => (
+          {po.items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((item, index) => (
             <div key={index} className="card" style={{ background: '#f7fafc', border: '1px solid #e2e8f0' }} data-testid={`item-card-${item.codigo_item}`}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
                 <div>
