@@ -643,7 +643,7 @@ const AdminPanel = () => {
                   </p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {notasFiscais.notas_compra.map((nf, index) => (
+                    {paginatedNfCompra.map((nf, index) => (
                       <div 
                         key={index} 
                         style={{ 
@@ -670,7 +670,7 @@ const AdminPanel = () => {
                           fontSize: '0.8rem',
                           flexShrink: 0
                         }}>
-                          {nf.duplicada ? '⚠️' : index + 1}
+                          {nf.duplicada ? '⚠️' : (nfCompraPage - 1) * nfCompraPerPage + index + 1}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -703,6 +703,16 @@ const AdminPanel = () => {
                         </button>
                       </div>
                     ))}
+                    {/* Paginação NFs Compra */}
+                    {notasFiscais.notas_compra.length > 5 && (
+                      <Pagination
+                        totalItems={notasFiscais.notas_compra.length}
+                        currentPage={nfCompraPage}
+                        itemsPerPage={nfCompraPerPage}
+                        onPageChange={setNfCompraPage}
+                        onItemsPerPageChange={setNfCompraPerPage}
+                      />
+                    )}
                   </div>
                 )}
               </div>
