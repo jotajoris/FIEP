@@ -894,20 +894,21 @@ const AdminPanel = () => {
                             onClick={() => downloadNF(nf)}
                             disabled={downloadingNF === nf.id}
                             style={{ 
-                            padding: '0.4rem 0.8rem',
-                            background: '#7c3aed',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '0.8rem',
-                            flexShrink: 0
-                          }}
-                        >
-                          {downloadingNF === nf.id ? '...' : '⬇️'}
-                        </button>
-                      </div>
-                    ))}
+                              padding: '0.4rem 0.8rem',
+                              background: '#7c3aed',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '0.8rem',
+                              flexShrink: 0
+                            }}
+                          >
+                            {downloadingNF === nf.id ? '...' : '⬇️'}
+                          </button>
+                        </div>
+                      );
+                    })}
                     {/* Paginação NFs Compra */}
                     {notasFiscais.notas_compra.length > 5 && (
                       <Pagination
