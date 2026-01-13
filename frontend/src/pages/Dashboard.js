@@ -64,12 +64,10 @@ const Dashboard = () => {
   // Reset página quando filtros mudam
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, searchCodigoItem, searchResponsavel, dateFrom, dateTo]);
+  }, [searchTerm, dateFrom, dateTo]);
 
   const clearFilters = () => {
     setSearchTerm('');
-    setSearchCodigoItem('');
-    setSearchResponsavel('');
     setDateFrom('');
     setDateTo('');
   };
