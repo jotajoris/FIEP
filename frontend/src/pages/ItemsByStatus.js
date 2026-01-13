@@ -215,6 +215,17 @@ const ItemsByStatus = () => {
     
     return filtered;
   }, [items, showOnlyMine, user?.owner_name, filterFornecedor, filterResponsavel, searchCodigo, searchOC]);
+
+  // Itens paginados
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return displayItems.slice(startIndex, startIndex + itemsPerPage);
+  }, [displayItems, currentPage, itemsPerPage]);
+
+  // Reset página quando filtros mudam
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [showOnlyMine, filterFornecedor, filterResponsavel, searchCodigo, searchOC]);
   
   const myItemsCount = useMemo(() => {
     if (!user?.owner_name) return 0;
