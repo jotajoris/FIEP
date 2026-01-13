@@ -251,6 +251,145 @@ const AdminPanel = () => {
     }
   };
 
+  // Toggle seleção de NF de Compra
+  const toggleNFCompraSelection = (nf) => {
+    const key = `${nf.po_id}_${nf.item_index}_${nf.id}`;
+    setSelectedNFsCompra(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
+  // Toggle seleção de NF de Venda
+  const toggleNFVendaSelection = (nf) => {
+    const key = `${nf.po_id}_${nf.item_index}_${nf.id}`;
+    setSelectedNFsVenda(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
+  // Selecionar todas as NFs de Compra da página atual
+  const selectAllNFsCompra = () => {
+    const allKeys = paginatedNfCompra.map(nf => `${nf.po_id}_${nf.item_index}_${nf.id}`);
+    const allSelected = allKeys.every(key => selectedNFsCompra.has(key));
+    
+    if (allSelected) {
+      // Desselecionar todos
+      setSelectedNFsCompra(prev => {
+        const next = new Set(prev);
+        allKeys.forEach(key => next.delete(key));
+        return next;
+      });
+    } else {
+      // Selecionar todos
+      setSelectedNFsCompra(prev => {
+        const next = new Set(prev);
+        allKeys.forEach(key => next.add(key));
+        return next;
+      });
+    }
+  };
+
+  // Selecionar todas as NFs de Venda da página atual
+  const selectAllNFsVenda = () => {
+    const allKeys = paginatedNfVenda.map(nf => `${nf.po_id}_${nf.item_index}_${nf.id}`);
+    const allSelected = allKeys.every(key => selectedNFsVenda.has(key));
+    
+    if (allSelected) {
+      setSelectedNFsVenda(prev => {
+        const next = new Set(prev);
+        allKeys.forEach(key => next.delete(key));
+        return next;
+      });
+    } else {
+      setSelectedNFsVenda(prev => {
+        const next = new Set(prev);
+        allKeys.forEach(key => next.add(key));
+        return next;
+      });
+    }
+  };
+
+  // Download em bulk das NFs selecionadas
+  const downloadBulkNFs = async (tipo) => {
+    const selectedSet = tipo === 'compra' ? selectedNFsCompra : selectedNFsVenda;
+    const nfList = tipo === 'compra' ? notasFiscais.notas_compra : notasFiscais.notas_venda;
+    
+    if (selectedSet.size === 0) {
+      alert('Selecione pelo menos uma NF para baixar');
+      return;
+    }
+
+    setDownloadingBulk(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Montar lista de NFs para download
+      const nfsToDownload = nfList
+        .filter(nf => selectedSet.has(`${nf.po_id}_${nf.item_index}_${nf.id}`))
+        .map(nf => ({
+          po_id: nf.po_id,
+          item_index: nf.item_index,
+          nf_id: nf.id,
+          tipo: tipo === 'compra' ? 'fornecedor' : 'revenda'
+        }));
+
+      const response = await axios.post(
+        `${API}/admin/notas-fiscais/bulk-download`,
+        { nfs: nfsToDownload },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const { file_data, filename, content_type } = response.data;
+      
+      // Criar download
+      const byteCharacters = atob(file_data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: content_type });
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      // Limpar seleção e recarregar dados
+      if (tipo === 'compra') {
+        setSelectedNFsCompra(new Set());
+      } else {
+        setSelectedNFsVenda(new Set());
+      }
+      
+      // Recarregar para mostrar quem baixou
+      await loadData();
+      
+      alert(`${nfsToDownload.length} NF(s) baixadas com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao baixar NFs em bulk:', error);
+      alert('Erro ao baixar notas fiscais');
+    } finally {
+      setDownloadingBulk(false);
+    }
+  };
+
   // Extrair nome limpo do responsável
   const getNome = (responsavel) => {
     if (!responsavel) return '';
