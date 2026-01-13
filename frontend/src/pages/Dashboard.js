@@ -653,8 +653,7 @@ const Dashboard = () => {
                         </div>
                       </td>
                     </tr>
-                  );
-                })}
+                ))}
               </tbody>
             </table>
             
