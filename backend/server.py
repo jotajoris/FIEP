@@ -1480,7 +1480,6 @@ async def get_purchase_orders_simple(
             
             if not items:
                 continue  # Pular OC se nenhum item corresponder
-            items = [item for item in items if (item.get('responsavel') or '').strip().upper() == user_name]
         
         # Calcular resumo dos itens
         total_items = len(items)
