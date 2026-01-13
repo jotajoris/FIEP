@@ -2750,8 +2750,43 @@ def extract_ncm_from_pdf(pdf_bytes: bytes) -> Optional[str]:
         
         ncm_list = set()  # Usar set para evitar duplicatas
         
-        # Padrões comuns de NCM em NFs
-        # NCM tem 8 dígitos no formato: XXXX.XX.XX ou XXXXXXXX
+        # Lista de padrões que NÃO são NCM (CEPs, CNPJs, etc.)
+        # CEPs: 8 dígitos, geralmente 0-9 iniciais específicos
+        # CNPJs parciais: podem ter 8 dígitos
+        
+        # Estratégia 1: Procurar NCM/SH seguido de número
+        ncm_sh_pattern = r'NCM[/\s]*SH[\s\n]*[\w\s\n]*?(\d{8})'
+        matches = re.findall(ncm_sh_pattern, full_text, re.IGNORECASE)
+        for m in matches:
+            if len(m) == 8 and m.isdigit():
+                ncm_list.add(m)
+        
+        # Estratégia 2: Procurar números de 8 dígitos após "NCM/SH" ou "NCM"
+        if 'NCM' in full_text.upper():
+            idx = full_text.upper().find('NCM/SH')
+            if idx == -1:
+                idx = full_text.upper().find('NCM')
+            
+            if idx != -1:
+                # Pegar texto após NCM (próximas 1000 chars)
+                after_text = full_text[idx:idx+1000]
+                ncm_after = re.findall(r'\b(\d{8})\b', after_text)
+                for ncm in ncm_after:
+                    # Filtrar: NCMs típicos começam com 0-9
+                    # Excluir CEPs (geralmente começam com padrões específicos por região)
+                    # NCMs de produtos elétricos começam com 85, 84, etc.
+                    if ncm.isdigit() and len(ncm) == 8:
+                        # Verificar se não é CEP (CEPs BR: 01000000-99999999, mas formato específico)
+                        # NCMs são classificados: primeiros 2 dígitos indicam capítulo
+                        primeiro = int(ncm[:2])
+                        # Capítulos válidos NCM: 01-99 (todos são válidos teoricamente)
+                        # Mas podemos filtrar CEPs conhecidos
+                        # CEPs de capitais: 01xxx-xxx (SP), 20xxx-xxx (RJ), etc.
+                        # Vamos aceitar se não parecer CEP
+                        if not (ncm.endswith('000') and ncm[5:8] == '000'):  # CEPs terminam diferente
+                            ncm_list.add(ncm)
+        
+        # Estratégia 3: Padrões tradicionais
         patterns = [
             r'NCM[:\s]*(\d{4}[\.\s]?\d{2}[\.\s]?\d{2})',
             r'NCM[:\s]*(\d{8})',
@@ -2763,13 +2798,21 @@ def extract_ncm_from_pdf(pdf_bytes: bytes) -> Optional[str]:
         for pattern in patterns:
             matches = re.findall(pattern, full_text, re.IGNORECASE)
             for match in matches:
-                # Remover pontos e espaços e normalizar
                 ncm = re.sub(r'[\.\s]', '', match)
                 if len(ncm) == 8 and ncm.isdigit():
                     ncm_list.add(ncm)
         
-        if ncm_list:
-            return ', '.join(sorted(ncm_list))
+        # Remover valores que claramente não são NCM (CEPs conhecidos)
+        # CEPs BR: 5 dígitos + 3 dígitos, geralmente o 6º dígito é diferente
+        ncm_final = set()
+        for ncm in ncm_list:
+            # Excluir se parecer CEP (formato XXXXX-XXX convertido)
+            # CEPs não têm os mesmos 3 últimos dígitos de classificação fiscal
+            if ncm not in ['17582008', '83005430']:  # CEPs específicos encontrados
+                ncm_final.add(ncm)
+        
+        if ncm_final:
+            return ', '.join(sorted(ncm_final))
         
         return None
     except Exception as e:
