@@ -585,16 +585,18 @@ const Dashboard = () => {
         </div>
 
         {/* Contador de resultados */}
-        {(searchTerm || dateFrom || dateTo) && (
-          <div style={{ marginBottom: '1rem', color: '#718096', fontSize: '0.9rem' }}>
-            Mostrando {filteredOrders.length} de {orders.length} OCs
+        {(searchTerm || searchCodigoItem || searchResponsavel || dateFrom || dateTo) && (
+          <div style={{ marginBottom: '1rem', color: '#718096', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {filtering && <span>🔄</span>}
+            Mostrando {filteredOrders.length} OCs
+            {(searchCodigoItem || searchResponsavel) && ' (filtrado por itens)'}
           </div>
         )}
         
         {filteredOrders.length === 0 ? (
           <p style={{ textAlign: 'center', color: '#718096', padding: '2rem' }} data-testid="no-orders-message">
-            {orders.length === 0 
-              ? 'Nenhuma ordem de compra cadastrada ainda.'
+            {filtering 
+              ? 'Buscando...'
               : 'Nenhuma OC encontrada com os filtros aplicados.'
             }
           </p>
