@@ -46,6 +46,10 @@ const ItemsByStatus = () => {
   const [fornecedorSugestoes, setFornecedorSugestoes] = useState([]);  // Sugestões filtradas
   const [activeFornecedorIdx, setActiveFornecedorIdx] = useState(null);  // Índice do campo de fornecedor ativo
 
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+
   const statusLabels = {
     'pendente': 'Pendentes',
     'cotado': 'Cotados',
@@ -59,6 +63,7 @@ const ItemsByStatus = () => {
     loadItems();
     loadFornecedoresSistema();
     setSelectedItems(new Set());  // Limpar seleção ao trocar de status
+    setCurrentPage(1);  // Reset página ao trocar de status
   }, [status]);
 
   const loadItems = async () => {
