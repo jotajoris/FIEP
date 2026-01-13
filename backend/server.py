@@ -3299,13 +3299,26 @@ async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
     nfs_compra = []  # NFs de fornecedor
     nfs_venda = []   # NFs de revenda (ON)
     
+    # Para detectar duplicatas, usamos o filename como chave
+    nf_por_filename = {}  # filename -> lista de itens que usam essa NF
+    
     for po in pos:
         for idx, item in enumerate(po.get('items', [])):
             # NFs de compra (fornecedor)
             for nf in item.get('notas_fiscais_fornecedor', []):
+                filename = nf.get('filename', '')
+                
+                # Rastrear quais itens usam cada NF
+                if filename not in nf_por_filename:
+                    nf_por_filename[filename] = []
+                nf_por_filename[filename].append({
+                    'numero_oc': po.get('numero_oc'),
+                    'codigo_item': item.get('codigo_item')
+                })
+                
                 nfs_compra.append({
                     'id': nf.get('id'),
-                    'filename': nf.get('filename'),
+                    'filename': filename,
                     'content_type': nf.get('content_type'),
                     'ncm': nf.get('ncm'),
                     'numero_nf': nf.get('numero_nf'),  # Número da NF
@@ -3334,6 +3347,28 @@ async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
                     'item_index': idx
                 })
     
+    # Marcar NFs que são usadas em múltiplos itens
+    for nf in nfs_compra:
+        filename = nf.get('filename', '')
+        itens_usando = nf_por_filename.get(filename, [])
+        nf['duplicada'] = len(itens_usando) > 1
+        nf['itens_usando'] = itens_usando if len(itens_usando) > 1 else []
+        nf['qtd_usos'] = len(itens_usando)
+    
+    # Criar lista de NFs duplicadas (únicas por filename)
+    nfs_duplicadas = []
+    filenames_vistos = set()
+    for nf in nfs_compra:
+        if nf.get('duplicada') and nf['filename'] not in filenames_vistos:
+            filenames_vistos.add(nf['filename'])
+            nfs_duplicadas.append({
+                'filename': nf['filename'],
+                'numero_nf': nf.get('numero_nf'),
+                'ncm': nf.get('ncm'),
+                'qtd_usos': nf['qtd_usos'],
+                'itens': nf['itens_usando']
+            })
+    
     # Ordenar por data de upload (mais recente primeiro)
     nfs_compra.sort(key=lambda x: x.get('uploaded_at', ''), reverse=True)
     nfs_venda.sort(key=lambda x: x.get('uploaded_at', ''), reverse=True)
@@ -3342,7 +3377,9 @@ async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
         'notas_compra': nfs_compra,
         'notas_venda': nfs_venda,
         'total_compra': len(nfs_compra),
-        'total_venda': len(nfs_venda)
+        'total_venda': len(nfs_venda),
+        'notas_duplicadas': nfs_duplicadas,
+        'total_duplicadas': len(nfs_duplicadas)
     }
 
 @api_router.get("/admin/itens-responsavel/{responsavel}")
