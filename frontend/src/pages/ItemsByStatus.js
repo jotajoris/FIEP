@@ -1793,16 +1793,56 @@ Chave PIX: 46.663.556/0001-69`;
                                 style={{ padding: '0.5rem' }}
                               />
                             </div>
-                            <div className="form-group" style={{ marginBottom: 0 }}>
+                            <div className="form-group" style={{ marginBottom: 0, position: 'relative' }}>
                               <label className="form-label" style={{ fontSize: '0.8rem' }}>Fornecedor</label>
                               <input
                                 type="text"
                                 className="form-input"
                                 value={fonte.fornecedor}
-                                onChange={(e) => updateFonteCompra(idx, 'fornecedor', normalizeText(e.target.value))}
+                                onChange={(e) => {
+                                  updateFonteCompra(idx, 'fornecedor', normalizeText(e.target.value));
+                                  filterFornecedorSugestoes(e.target.value, idx);
+                                }}
+                                onFocus={() => filterFornecedorSugestoes(fonte.fornecedor, idx)}
+                                onBlur={fecharSugestoes}
                                 placeholder="Nome do fornecedor"
                                 style={{ padding: '0.5rem' }}
+                                autoComplete="off"
                               />
+                              {/* Menu de sugestões */}
+                              {activeFornecedorIdx === idx && fornecedorSugestoes.length > 0 && (
+                                <div style={{
+                                  position: 'absolute',
+                                  top: '100%',
+                                  left: 0,
+                                  right: 0,
+                                  background: 'white',
+                                  border: '1px solid #e2e8f0',
+                                  borderRadius: '8px',
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                  zIndex: 1000,
+                                  maxHeight: '200px',
+                                  overflowY: 'auto'
+                                }}>
+                                  {fornecedorSugestoes.map((sugestao, sIdx) => (
+                                    <div
+                                      key={sIdx}
+                                      onMouseDown={() => selecionarFornecedor(sugestao, idx)}
+                                      style={{
+                                        padding: '0.5rem 0.75rem',
+                                        cursor: 'pointer',
+                                        borderBottom: sIdx < fornecedorSugestoes.length - 1 ? '1px solid #f0f0f0' : 'none',
+                                        background: 'white',
+                                        fontSize: '0.85rem'
+                                      }}
+                                      onMouseEnter={(e) => e.target.style.background = '#f0f4ff'}
+                                      onMouseLeave={(e) => e.target.style.background = 'white'}
+                                    >
+                                      {sugestao}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
