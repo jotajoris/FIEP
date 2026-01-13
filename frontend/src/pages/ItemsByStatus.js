@@ -693,7 +693,8 @@ const ItemsByStatus = () => {
         `${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}/notas-fiscais/${nfId}?tipo=${tipo}`
       );
       alert('Nota fiscal removida com sucesso!');
-      loadItems();
+      // Recarregar apenas este item para manter seção expandida
+      await reloadSingleItem(item.po_id, item._itemIndexInPO, item._uniqueId);
     } catch (error) {
       console.error('Erro ao remover NF:', error);
       alert('Erro ao remover nota fiscal.');
@@ -712,7 +713,8 @@ const ItemsByStatus = () => {
         { ncm: ncmValue.toUpperCase() }
       );
       alert('NCM atualizado!');
-      loadItems();
+      // Recarregar apenas este item para manter seção expandida
+      await reloadSingleItem(item.po_id, item._itemIndexInPO, item._uniqueId);
     } catch (error) {
       console.error('Erro ao atualizar NCM:', error);
       alert('Erro ao atualizar NCM.');
@@ -725,7 +727,8 @@ const ItemsByStatus = () => {
         `${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}/nf-emitida`,
         { nf_emitida_pronto_despacho: !item.nf_emitida_pronto_despacho }
       );
-      loadItems();
+      // Recarregar apenas este item para manter seção expandida
+      await reloadSingleItem(item.po_id, item._itemIndexInPO, item._uniqueId);
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
       alert('Erro ao atualizar status.');
