@@ -14,10 +14,13 @@ const OwnerPanel = () => {
 
   const loadItems = async () => {
     try {
-      const response = await apiGet(`${API}/purchase-orders`);
+      const response = await apiGet(`${API}/purchase-orders?limit=0`);
+      
+      // O endpoint retorna {data: [...], total: ..., page: ...}
+      const purchaseOrders = response.data.data || response.data || [];
       
       const allItems = [];
-      response.data.forEach(po => {
+      purchaseOrders.forEach(po => {
         po.items.forEach(item => {
           // Filtrar pelo responsável
           if (item.responsavel === name) {
