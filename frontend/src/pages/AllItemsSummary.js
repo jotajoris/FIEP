@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { apiGet, API, formatBRL } from '../utils/api';
+import Pagination from '../components/Pagination';
 
 // Mapeamento de lotes por pessoa para cálculo de comissões
 const LOTES_POR_PESSOA = {
@@ -25,6 +26,10 @@ const AllItemsSummary = () => {
   const [loading, setLoading] = useState(true);
   const [filterResponsavel, setFilterResponsavel] = useState('todos');
   const [filterStatus, setFilterStatus] = useState('todos');
+  
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     loadAllItems();
@@ -32,11 +37,12 @@ const AllItemsSummary = () => {
 
   const loadAllItems = async () => {
     try {
-      const response = await apiGet(`${API}/purchase-orders`);
+      const response = await apiGet(`${API}/purchase-orders?limit=0`);
       
       // Flatten todos os itens de todas as OCs
       const items = [];
-      response.data.forEach(po => {
+      const data = response.data.data || response.data;
+      data.forEach(po => {
         po.items.forEach(item => {
           items.push({
             ...item,
