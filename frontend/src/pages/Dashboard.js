@@ -738,6 +738,17 @@ const Dashboard = () => {
                 })}
               </tbody>
             </table>
+            
+            {/* Paginação */}
+            {filteredOrders.length > 5 && (
+              <Pagination
+                totalItems={filteredOrders.length}
+                currentPage={currentPage}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+                onItemsPerPageChange={setItemsPerPage}
+              />
+            )}
           </div>
         )}
       </div>
