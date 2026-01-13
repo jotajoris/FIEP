@@ -255,7 +255,7 @@ const AllItemsSummary = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredItems.map((item, index) => (
+                {paginatedItems.map((item, index) => (
                   <tr key={index} data-testid={`item-row-${item.codigo_item}`}>
                     <td><strong>{item.numero_oc}</strong></td>
                     <td>{item.codigo_item}</td>
@@ -305,6 +305,17 @@ const AllItemsSummary = () => {
                 ))}
               </tbody>
             </table>
+            
+            {/* Paginação */}
+            {filteredItems.length > 5 && (
+              <Pagination
+                totalItems={filteredItems.length}
+                currentPage={currentPage}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+                onItemsPerPageChange={setItemsPerPage}
+              />
+            )}
           </div>
         )}
       </div>
