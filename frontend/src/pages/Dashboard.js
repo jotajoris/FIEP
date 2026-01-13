@@ -631,9 +631,7 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {paginatedOrders.map((order) => {
-                  const valorTotal = calcularValorTotalOC(order);
-                  return (
+                {paginatedOrders.map((order) => (
                     <tr 
                       key={order.id} 
                       data-testid={`order-row-${order.numero_oc}`}
@@ -662,11 +660,11 @@ const Dashboard = () => {
                           fontWeight: '600',
                           fontSize: '0.9rem'
                         }}>
-                          {order.items.length}
+                          {order.total_items}
                         </span>
                       </td>
-                      <td style={{ textAlign: 'right', fontWeight: '600', color: valorTotal > 0 ? '#059669' : '#718096' }}>
-                        {valorTotal > 0 ? formatBRL(valorTotal) : '-'}
+                      <td style={{ textAlign: 'right', fontWeight: '600', color: order.valor_total > 0 ? '#059669' : '#718096' }}>
+                        {order.valor_total > 0 ? formatBRL(order.valor_total) : '-'}
                       </td>
                       <td>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
