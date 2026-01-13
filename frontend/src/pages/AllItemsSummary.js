@@ -61,15 +61,28 @@ const AllItemsSummary = () => {
     }
   };
 
-  const filteredItems = allItems.filter(item => {
-    if (filterResponsavel !== 'todos' && item.responsavel !== filterResponsavel) {
-      return false;
-    }
-    if (filterStatus !== 'todos' && item.status !== filterStatus) {
-      return false;
-    }
-    return true;
-  });
+  const filteredItems = useMemo(() => {
+    return allItems.filter(item => {
+      if (filterResponsavel !== 'todos' && item.responsavel !== filterResponsavel) {
+        return false;
+      }
+      if (filterStatus !== 'todos' && item.status !== filterStatus) {
+        return false;
+      }
+      return true;
+    });
+  }, [allItems, filterResponsavel, filterStatus]);
+
+  // Paginação
+  const paginatedItems = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredItems.slice(start, start + itemsPerPage);
+  }, [filteredItems, currentPage, itemsPerPage]);
+
+  // Reset página quando filtros mudam
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterResponsavel, filterStatus]);
 
   const responsaveis = ['Maria', 'Mateus', 'João', 'Mylena', 'Fabio'];
 
