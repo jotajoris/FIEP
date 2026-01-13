@@ -509,44 +509,6 @@ const Dashboard = () => {
             />
           </div>
           
-          {/* Pesquisa por código do item */}
-          <div style={{ flex: '1', minWidth: '180px' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
-              🔍 Código do Item
-            </label>
-            <input
-              type="text"
-              placeholder="Código do item..."
-              value={searchCodigoItem}
-              onChange={(e) => setSearchCodigoItem(e.target.value)}
-              className="form-input"
-              style={{ width: '100%' }}
-              data-testid="search-codigo-item-input"
-            />
-          </div>
-          
-          {/* Pesquisa por responsável */}
-          <div style={{ flex: '1', minWidth: '180px' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
-              👤 Responsável
-            </label>
-            <select
-              value={searchResponsavel}
-              onChange={(e) => setSearchResponsavel(e.target.value)}
-              className="form-input"
-              style={{ width: '100%' }}
-              data-testid="search-responsavel-input"
-            >
-              <option value="">Todos</option>
-              <option value="nao_atribuido">⚠️ Não Atribuído</option>
-              <option value="Maria">Maria</option>
-              <option value="Mateus">Mateus</option>
-              <option value="João">João</option>
-              <option value="Mylena">Mylena</option>
-              <option value="Fabio">Fabio</option>
-            </select>
-          </div>
-          
           {/* Filtro por data inicial */}
           <div style={{ minWidth: '140px' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
@@ -578,7 +540,7 @@ const Dashboard = () => {
           </div>
           
           {/* Botão Limpar Filtros */}
-          {(searchTerm || searchCodigoItem || searchResponsavel || dateFrom || dateTo) && (
+          {(searchTerm || dateFrom || dateTo) && (
             <div style={{ display: 'flex', alignItems: 'flex-end' }}>
               <button
                 onClick={clearFilters}
@@ -593,7 +555,7 @@ const Dashboard = () => {
         </div>
 
         {/* Contador de resultados */}
-        {(searchTerm || searchCodigoItem || searchResponsavel || dateFrom || dateTo) && (
+        {(searchTerm || dateFrom || dateTo) && (
           <div style={{ marginBottom: '1rem', color: '#718096', fontSize: '0.9rem' }}>
             Mostrando {filteredOrders.length} de {orders.length} OCs
           </div>
