@@ -61,28 +61,15 @@ const AllItemsSummary = () => {
     }
   };
 
-  const filteredItems = useMemo(() => {
-    return allItems.filter(item => {
-      if (filterResponsavel !== 'todos' && item.responsavel !== filterResponsavel) {
-        return false;
-      }
-      if (filterStatus !== 'todos' && item.status !== filterStatus) {
-        return false;
-      }
-      return true;
-    });
-  }, [allItems, filterResponsavel, filterStatus]);
-
-  // Paginação
-  const paginatedItems = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredItems.slice(start, start + itemsPerPage);
-  }, [filteredItems, currentPage, itemsPerPage]);
-
-  // Reset página quando filtros mudam
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filterResponsavel, filterStatus]);
+  const filteredItems = allItems.filter(item => {
+    if (filterResponsavel !== 'todos' && item.responsavel !== filterResponsavel) {
+      return false;
+    }
+    if (filterStatus !== 'todos' && item.status !== filterStatus) {
+      return false;
+    }
+    return true;
+  });
 
   const responsaveis = ['Maria', 'Mateus', 'João', 'Mylena', 'Fabio'];
 
@@ -255,7 +242,7 @@ const AllItemsSummary = () => {
                 </tr>
               </thead>
               <tbody>
-                {paginatedItems.map((item, index) => (
+                {filteredItems.map((item, index) => (
                   <tr key={index} data-testid={`item-row-${item.codigo_item}`}>
                     <td><strong>{item.numero_oc}</strong></td>
                     <td>{item.codigo_item}</td>
@@ -305,17 +292,6 @@ const AllItemsSummary = () => {
                 ))}
               </tbody>
             </table>
-            
-            {/* Paginação */}
-            {filteredItems.length > 5 && (
-              <Pagination
-                totalItems={filteredItems.length}
-                currentPage={currentPage}
-                itemsPerPage={itemsPerPage}
-                onPageChange={setCurrentPage}
-                onItemsPerPageChange={setItemsPerPage}
-              />
-            )}
           </div>
         )}
       </div>
