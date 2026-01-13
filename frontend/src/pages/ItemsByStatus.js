@@ -982,11 +982,44 @@ Chave PIX: 46.663.556/0001-69`;
                         </button>
                       </div>
                     </div>
+                    {/* NCM da NF com botão de copiar */}
+                    {nf.ncm && (
+                      <div style={{ 
+                        marginTop: '0.25rem', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem',
+                        padding: '0.25rem 0.5rem',
+                        background: '#fef3c7',
+                        borderRadius: '4px'
+                      }}>
+                        <span style={{ fontSize: '0.75rem', color: '#92400e' }}>
+                          <strong>NCM:</strong> {nf.ncm}
+                        </span>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(nf.ncm);
+                            alert('NCM copiado!');
+                          }}
+                          style={{ 
+                            padding: '0.15rem 0.35rem', 
+                            fontSize: '0.65rem', 
+                            background: '#f59e0b', 
+                            color: 'white', 
+                            border: 'none', 
+                            borderRadius: '3px', 
+                            cursor: 'pointer' 
+                          }}
+                        >
+                          📋
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))
               ) : (
                 <div style={{ color: '#9ca3af', fontSize: '0.8rem' }}>Nenhuma NF de compra adicionada</div>
-              )}
+              )}}
               <button
                 onClick={() => {
                   const input = document.createElement('input');
