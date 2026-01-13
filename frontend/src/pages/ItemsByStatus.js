@@ -39,6 +39,11 @@ const ItemsByStatus = () => {
   const [movingToComprado, setMovingToComprado] = useState(false);  // Loading do botão
   const [editingObservacao, setEditingObservacao] = useState(null);  // Item com observação sendo editada
   const [observacaoTemp, setObservacaoTemp] = useState('');  // Valor temporário da observação
+  
+  // Estados para autocomplete de fornecedor
+  const [fornecedoresSistema, setFornecedoresSistema] = useState([]);  // Lista de fornecedores do sistema
+  const [fornecedorSugestoes, setFornecedorSugestoes] = useState([]);  // Sugestões filtradas
+  const [activeFornecedorIdx, setActiveFornecedorIdx] = useState(null);  // Índice do campo de fornecedor ativo
 
   const statusLabels = {
     'pendente': 'Pendentes',
