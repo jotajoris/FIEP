@@ -1404,9 +1404,17 @@ async def get_purchase_orders(
 
 
 @api_router.get("/purchase-orders/list/simple")
-async def get_purchase_orders_simple(current_user: dict = Depends(get_current_user)):
+async def get_purchase_orders_simple(
+    current_user: dict = Depends(get_current_user),
+    search_oc: str = None,
+    search_codigo: str = None,
+    search_responsavel: str = None,
+    date_from: str = None,
+    date_to: str = None
+):
     """Listar Ordens de Compra de forma simplificada (para carregamento rápido)
-    Retorna apenas dados essenciais sem os itens completos"""
+    Retorna apenas dados essenciais sem os itens completos
+    Suporta filtros server-side para performance"""
     query = {}
     
     pos = await db.purchase_orders.find(query, {
@@ -1423,11 +1431,55 @@ async def get_purchase_orders_simple(current_user: dict = Depends(get_current_us
         if isinstance(po.get('created_at'), str):
             po['created_at'] = datetime.fromisoformat(po['created_at'])
         
+        # Filtro por número da OC
+        if search_oc:
+            if search_oc.lower() not in po['numero_oc'].lower():
+                continue
+        
+        # Filtro por data
+        if date_from or date_to:
+            po_date = po['created_at']
+            if isinstance(po_date, str):
+                po_date = datetime.fromisoformat(po_date)
+            
+            if date_from:
+                from_date = datetime.fromisoformat(date_from)
+                if po_date.date() < from_date.date():
+                    continue
+            
+            if date_to:
+                to_date = datetime.fromisoformat(date_to)
+                if po_date.date() > to_date.date():
+                    continue
+        
         items = po.get('items', [])
         
         # Se não for admin, filtrar apenas itens do responsável
         if current_user['role'] != 'admin' and current_user.get('owner_name'):
             user_name = current_user['owner_name'].strip().upper()
+            items = [item for item in items if (item.get('responsavel') or '').strip().upper() == user_name]
+        
+        # Filtro por código do item
+        if search_codigo:
+            search_codigo_upper = search_codigo.upper()
+            items = [item for item in items if search_codigo_upper in (item.get('codigo_item') or '').upper()]
+            if not items:
+                continue  # Pular OC se nenhum item corresponder
+        
+        # Filtro por responsável
+        if search_responsavel:
+            if search_responsavel == 'nao_atribuido':
+                items = [item for item in items if 
+                    not item.get('responsavel') or 
+                    item.get('responsavel', '').strip() == '' or
+                    'NÃO ENCONTRADO' in item.get('responsavel', '') or
+                    'Não atribuído' in item.get('responsavel', '')
+                ]
+            else:
+                items = [item for item in items if item.get('responsavel') == search_responsavel]
+            
+            if not items:
+                continue  # Pular OC se nenhum item corresponder
             items = [item for item in items if (item.get('responsavel') or '').strip().upper() == user_name]
         
         # Calcular resumo dos itens
