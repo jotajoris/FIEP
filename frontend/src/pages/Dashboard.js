@@ -44,17 +44,6 @@ const Dashboard = () => {
   const filteredOrders = useMemo(() => {
     return orders; // Filtros já aplicados no servidor
   }, [orders]);
-      }
-      
-      if (dateTo) {
-        const toDate = new Date(dateTo);
-        toDate.setHours(23, 59, 59, 999);
-        if (orderDate > toDate) return false;
-      }
-      
-      return true;
-    });
-  }, [orders, searchTerm, dateFrom, dateTo]);
 
   // Dados paginados
   const paginatedOrders = useMemo(() => {
@@ -65,21 +54,35 @@ const Dashboard = () => {
   // Reset página quando filtros mudam
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, dateFrom, dateTo]);
+  }, [searchTerm, searchCodigoItem, searchResponsavel, dateFrom, dateTo]);
 
   const clearFilters = () => {
     setSearchTerm('');
+    setSearchCodigoItem('');
+    setSearchResponsavel('');
     setDateFrom('');
     setDateTo('');
   };
 
   const loadData = async () => {
     setLoading(true);
+    setFiltering(true);
     setError(null);
     try {
+      // Construir query params para filtros
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search_oc', searchTerm);
+      if (searchCodigoItem) params.append('search_codigo', searchCodigoItem);
+      if (searchResponsavel) params.append('search_responsavel', searchResponsavel);
+      if (dateFrom) params.append('date_from', dateFrom);
+      if (dateTo) params.append('date_to', dateTo);
+      
+      const queryString = params.toString();
+      const ordersUrl = `${API}/purchase-orders/list/simple${queryString ? '?' + queryString : ''}`;
+      
       const [statsRes, ordersRes] = await Promise.all([
         apiGet(`${API}/dashboard`),
-        apiGet(`${API}/purchase-orders/list/simple`)  // Endpoint otimizado
+        apiGet(ordersUrl)
       ]);
       setStats(statsRes.data);
       setOrders(ordersRes.data);
@@ -89,6 +92,7 @@ const Dashboard = () => {
       setError('Erro ao carregar dados. Clique para tentar novamente.');
     } finally {
       setLoading(false);
+      setFiltering(false);
     }
   };
 
