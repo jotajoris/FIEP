@@ -55,6 +55,24 @@ const AdminPanel = () => {
     }
   };
 
+  // Paginação de NFs de Compra
+  const paginatedNfCompra = useMemo(() => {
+    const start = (nfCompraPage - 1) * nfCompraPerPage;
+    return notasFiscais.notas_compra.slice(start, start + nfCompraPerPage);
+  }, [notasFiscais.notas_compra, nfCompraPage, nfCompraPerPage]);
+
+  // Paginação de NFs de Venda
+  const paginatedNfVenda = useMemo(() => {
+    const start = (nfVendaPage - 1) * nfVendaPerPage;
+    return notasFiscais.notas_venda.slice(start, start + nfVendaPerPage);
+  }, [notasFiscais.notas_venda, nfVendaPage, nfVendaPerPage]);
+
+  // Paginação de itens do responsável
+  const paginatedItensResponsavel = useMemo(() => {
+    const start = (itensPage - 1) * itensPerPage;
+    return itensResponsavel.slice(start, start + itensPerPage);
+  }, [itensResponsavel, itensPage, itensPerPage]);
+
   const loadItensResponsavel = async (responsavel) => {
     try {
       const token = localStorage.getItem('token');
@@ -64,6 +82,7 @@ const AdminPanel = () => {
       );
       setItensResponsavel(response.data);
       setSelectedItens([]);
+      setItensPage(1);  // Reset página
     } catch (error) {
       console.error('Erro ao carregar itens:', error);
       setItensResponsavel([]);
