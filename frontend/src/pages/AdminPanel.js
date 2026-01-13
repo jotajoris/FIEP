@@ -949,67 +949,129 @@ const AdminPanel = () => {
                   </span>
                 </h3>
                 
+                {/* Botões de ação bulk para NFs de Venda */}
+                {notasFiscais.notas_venda.length > 0 && (
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={selectAllNFsVenda}
+                      style={{ 
+                        padding: '0.4rem 0.8rem',
+                        background: paginatedNfVenda.every(nf => selectedNFsVenda.has(`${nf.po_id}_${nf.item_index}_${nf.id}`)) ? '#94a3b8' : '#e2e8f0',
+                        color: '#374151',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.8rem'
+                      }}
+                    >
+                      {paginatedNfVenda.every(nf => selectedNFsVenda.has(`${nf.po_id}_${nf.item_index}_${nf.id}`)) ? '☑️ Desselecionar' : '☐ Selecionar Todos'}
+                    </button>
+                    {selectedNFsVenda.size > 0 && (
+                      <button
+                        onClick={() => downloadBulkNFs('venda')}
+                        disabled={downloadingBulk}
+                        style={{ 
+                          padding: '0.4rem 0.8rem',
+                          background: downloadingBulk ? '#9ca3af' : '#22c55e',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: downloadingBulk ? 'not-allowed' : 'pointer',
+                          fontSize: '0.8rem',
+                          fontWeight: '600'
+                        }}
+                      >
+                        {downloadingBulk ? '⏳ Baixando...' : `📦 Baixar ${selectedNFsVenda.size} NF(s) em ZIP`}
+                      </button>
+                    )}
+                  </div>
+                )}
+                
                 {notasFiscais.notas_venda.length === 0 ? (
                   <p style={{ textAlign: 'center', color: '#718096', padding: '2rem', background: '#f9fafb', borderRadius: '8px' }}>
                     Nenhuma NF de venda
                   </p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {paginatedNfVenda.map((nf, index) => (
-                      <div 
-                        key={index} 
-                        style={{ 
-                          padding: '0.75rem',
-                          background: 'white',
-                          borderRadius: '6px',
-                          border: '1px solid #e5e7eb',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: '0.75rem'
-                        }}
-                      >
-                        <div style={{ 
-                          width: '28px', 
-                          height: '28px', 
-                          borderRadius: '50%', 
-                          background: '#06b6d4',
-                          color: 'white',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontWeight: '700',
-                          fontSize: '0.8rem',
-                          flexShrink: 0
-                        }}>
-                          {(nfVendaPage - 1) * nfVendaPerPage + index + 1}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#1f2937' }}>
-                            NF: {nf.numero_nf || '-'}
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                            OC: {nf.numero_oc}
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => downloadNF(nf)}
-                          disabled={downloadingNF === nf.id}
+                    {paginatedNfVenda.map((nf, index) => {
+                      const nfKey = `${nf.po_id}_${nf.item_index}_${nf.id}`;
+                      const isSelected = selectedNFsVenda.has(nfKey);
+                      return (
+                        <div 
+                          key={index} 
                           style={{ 
-                            padding: '0.4rem 0.8rem',
-                            background: '#06b6d4',
-                            color: 'white',
-                            border: 'none',
+                            padding: '0.75rem',
+                            background: isSelected ? '#e0f2fe' : 'white',
                             borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '0.8rem',
-                            flexShrink: 0
+                            border: isSelected ? '2px solid #0ea5e9' : '1px solid #e5e7eb',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '0.75rem'
                           }}
                         >
-                          {downloadingNF === nf.id ? '...' : '⬇️'}
-                        </button>
-                      </div>
-                    ))}
+                          {/* Checkbox */}
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleNFVendaSelection(nf)}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', marginTop: '4px', flexShrink: 0 }}
+                          />
+                          
+                          <div style={{ 
+                            width: '28px', 
+                            height: '28px', 
+                            borderRadius: '50%', 
+                            background: '#06b6d4',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: '700',
+                            fontSize: '0.8rem',
+                            flexShrink: 0
+                          }}>
+                            {(nfVendaPage - 1) * nfVendaPerPage + index + 1}
+                          </div>
+                          
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#1f2937' }}>
+                              NF: {nf.numero_nf || '-'}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                              OC: {nf.numero_oc}
+                            </div>
+                            {/* Indicação de quem baixou */}
+                            {nf.baixado_por && (
+                              <div style={{ 
+                                fontSize: '0.7rem', 
+                                color: '#dc2626', 
+                                marginTop: '0.25rem',
+                                fontWeight: '500'
+                              }}>
+                                ⬇️ Baixada por: {nf.baixado_por}
+                              </div>
+                            )}
+                          </div>
+                          
+                          <button
+                            onClick={() => downloadNF(nf)}
+                            disabled={downloadingNF === nf.id}
+                            style={{ 
+                              padding: '0.4rem 0.8rem',
+                              background: '#06b6d4',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '0.8rem',
+                              flexShrink: 0
+                            }}
+                          >
+                            {downloadingNF === nf.id ? '...' : '⬇️'}
+                          </button>
+                        </div>
+                      );
+                    })}
                     {/* Paginação NFs Venda */}
                     {notasFiscais.notas_venda.length > 5 && (
                       <Pagination
