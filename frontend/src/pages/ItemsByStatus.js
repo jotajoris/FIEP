@@ -56,6 +56,7 @@ const ItemsByStatus = () => {
 
   useEffect(() => {
     loadItems();
+    loadFornecedoresSistema();
     setSelectedItems(new Set());  // Limpar seleção ao trocar de status
   }, [status]);
 
@@ -91,6 +92,45 @@ const ItemsByStatus = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Carregar lista de fornecedores do sistema para autocomplete
+  const loadFornecedoresSistema = async () => {
+    try {
+      const response = await apiGet(`${API}/fornecedores`);
+      setFornecedoresSistema(response.data.fornecedores || []);
+    } catch (error) {
+      console.error('Erro ao carregar fornecedores:', error);
+    }
+  };
+
+  // Filtrar sugestões de fornecedor baseado no texto digitado
+  const filterFornecedorSugestoes = (texto, idx) => {
+    setActiveFornecedorIdx(idx);
+    if (!texto || texto.length < 1) {
+      setFornecedorSugestoes([]);
+      return;
+    }
+    const textoNorm = texto.toUpperCase();
+    const sugestoes = fornecedoresSistema.filter(f => 
+      f.toUpperCase().includes(textoNorm)
+    ).slice(0, 8);  // Limitar a 8 sugestões
+    setFornecedorSugestoes(sugestoes);
+  };
+
+  // Selecionar fornecedor da lista de sugestões
+  const selecionarFornecedor = (fornecedor, idx) => {
+    updateFonteCompra(idx, 'fornecedor', fornecedor);
+    setFornecedorSugestoes([]);
+    setActiveFornecedorIdx(null);
+  };
+
+  // Fechar sugestões ao clicar fora
+  const fecharSugestoes = () => {
+    setTimeout(() => {
+      setFornecedorSugestoes([]);
+      setActiveFornecedorIdx(null);
+    }, 200);
   };
 
   // Extrair lista única de fornecedores dos itens
