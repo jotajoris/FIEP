@@ -37,34 +37,6 @@ const Dashboard = () => {
         return false;
       }
       
-      // Filtro por código do item
-      if (searchCodigoItem) {
-        const termo = searchCodigoItem.toLowerCase();
-        const temItem = order.items.some(item => 
-          item.codigo_item && item.codigo_item.toLowerCase().includes(termo)
-        );
-        if (!temItem) return false;
-      }
-      
-      // Filtro por responsável
-      if (searchResponsavel) {
-        if (searchResponsavel === 'nao_atribuido') {
-          // Filtrar OCs que têm pelo menos um item sem responsável
-          const temNaoAtribuido = order.items.some(item => 
-            !item.responsavel || 
-            item.responsavel.trim() === '' || 
-            item.responsavel.includes('NÃO ENCONTRADO') ||
-            item.responsavel.includes('Não atribuído')
-          );
-          if (!temNaoAtribuido) return false;
-        } else {
-          const temResponsavel = order.items.some(item => 
-            item.responsavel === searchResponsavel
-          );
-          if (!temResponsavel) return false;
-        }
-      }
-      
       // Filtro por data
       const orderDate = new Date(order.created_at);
       orderDate.setHours(0, 0, 0, 0);
@@ -83,7 +55,7 @@ const Dashboard = () => {
       
       return true;
     });
-  }, [orders, searchTerm, searchCodigoItem, searchResponsavel, dateFrom, dateTo]);
+  }, [orders, searchTerm, dateFrom, dateTo]);
 
   // Dados paginados
   const paginatedOrders = useMemo(() => {
