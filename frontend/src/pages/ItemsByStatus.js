@@ -638,7 +638,8 @@ const ItemsByStatus = () => {
         
         alert(`Nota fiscal adicionada! NCM: ${response.data.ncm}`);
         setNcmManual(prev => ({ ...prev, [`${item._uniqueId}-${tipo}`]: '' }));
-        loadItems();
+        // Recarregar apenas este item para manter seção expandida
+        await reloadSingleItem(item.po_id, item._itemIndexInPO, item._uniqueId);
       };
       reader.readAsDataURL(file);
     } catch (error) {
