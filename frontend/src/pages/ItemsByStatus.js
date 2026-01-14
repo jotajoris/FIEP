@@ -1888,7 +1888,7 @@ Chave PIX: 46.663.556/0001-69`;
                       textAlign: 'center',
                       lineHeight: '1.1'
                     }}>
-                      {oc.prontoParaDespacho ? '✓' : `${oc.itensComNFEmitida}/${oc.totalItens}`}
+                      {oc.prontoParaDespacho ? '✓' : oc.totalItens}
                     </div>
                     
                     <div>
