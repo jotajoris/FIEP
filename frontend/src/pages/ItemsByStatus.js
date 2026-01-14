@@ -1949,6 +1949,131 @@ Chave PIX: 46.663.556/0001-69`;
                 {/* Área expandida - Itens da OC */}
                 {expandedOC === oc.po_id && (
                   <div style={{ marginTop: '1rem', borderTop: '1px solid #e5e7eb', paddingTop: '1rem' }}>
+                    
+                    {/* NF de Venda da OC (1 por OC inteira) */}
+                    <div style={{ 
+                      marginBottom: '1.5rem', 
+                      padding: '1rem', 
+                      background: oc.nota_fiscal_venda ? '#dcfce7' : '#fef3c7', 
+                      borderRadius: '8px',
+                      border: `2px solid ${oc.nota_fiscal_venda ? '#22c55e' : '#f59e0b'}`
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <h4 style={{ 
+                          margin: 0, 
+                          fontSize: '1rem', 
+                          fontWeight: '700', 
+                          color: oc.nota_fiscal_venda ? '#166534' : '#92400e'
+                        }}>
+                          🏢 NF de Venda (ON) - {oc.numero_oc}
+                        </h4>
+                        {oc.nota_fiscal_venda && (
+                          <span style={{ 
+                            background: '#22c55e', 
+                            color: 'white', 
+                            padding: '0.25rem 0.75rem', 
+                            borderRadius: '12px',
+                            fontSize: '0.8rem',
+                            fontWeight: '600'
+                          }}>
+                            ✓ NF Anexada
+                          </span>
+                        )}
+                      </div>
+                      
+                      {oc.nota_fiscal_venda ? (
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'space-between',
+                          padding: '0.75rem',
+                          background: 'white',
+                          borderRadius: '6px'
+                        }}>
+                          <div>
+                            <span style={{ fontWeight: '600' }}>
+                              {oc.nota_fiscal_venda.filename.endsWith('.xml') ? '📑' : '📄'} {oc.nota_fiscal_venda.filename}
+                            </span>
+                            {oc.nota_fiscal_venda.numero_nf && (
+                              <span style={{ marginLeft: '1rem', color: '#6b7280', fontSize: '0.9rem' }}>
+                                (NF: {oc.nota_fiscal_venda.numero_nf})
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                downloadNFVendaOC(oc.po_id, oc.nota_fiscal_venda.filename);
+                              }}
+                              style={{ 
+                                padding: '0.4rem 0.8rem', 
+                                fontSize: '0.85rem', 
+                                background: '#667eea', 
+                                color: 'white', 
+                                border: 'none', 
+                                borderRadius: '6px', 
+                                cursor: 'pointer' 
+                              }}
+                            >
+                              ⬇️ Baixar
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNFVendaOC(oc.po_id);
+                              }}
+                              style={{ 
+                                padding: '0.4rem 0.8rem', 
+                                fontSize: '0.85rem', 
+                                background: '#ef4444', 
+                                color: 'white', 
+                                border: 'none', 
+                                borderRadius: '6px', 
+                                cursor: 'pointer' 
+                              }}
+                            >
+                              🗑️ Remover
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ textAlign: 'center' }}>
+                          <p style={{ color: '#92400e', fontSize: '0.9rem', marginBottom: '0.75rem' }}>
+                            Adicione a NF de Venda (ON) para esta OC completa
+                          </p>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = '.pdf,.xml';
+                              input.onchange = (ev) => {
+                                if (ev.target.files && ev.target.files[0]) {
+                                  uploadNFVendaOC(oc.po_id, ev.target.files[0]);
+                                }
+                              };
+                              input.click();
+                            }}
+                            disabled={uploadingNFVendaOC === oc.po_id}
+                            style={{ 
+                              padding: '0.6rem 1.5rem', 
+                              fontSize: '0.9rem', 
+                              background: uploadingNFVendaOC === oc.po_id ? '#9ca3af' : '#22c55e', 
+                              color: 'white', 
+                              border: 'none', 
+                              borderRadius: '8px',
+                              cursor: uploadingNFVendaOC === oc.po_id ? 'not-allowed' : 'pointer',
+                              fontWeight: '600'
+                            }}
+                          >
+                            {uploadingNFVendaOC === oc.po_id ? '⏳ Enviando...' : '+ Adicionar NF de Venda (ON)'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Lista de Itens da OC */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                       {oc.items.map((item) => (
                         <div 
