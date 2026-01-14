@@ -3101,6 +3101,116 @@ async def upload_nota_fiscal(
         "ncm": ncm or "NCM NAO ENCONTRADO"
     }
 
+
+# ============== ENDPOINTS PARA NF DE VENDA DA OC (não do item) ==============
+
+class NFVendaOCRequest(BaseModel):
+    filename: str
+    content_type: str
+    file_data: str  # Base64
+
+
+@api_router.post("/purchase-orders/{po_id}/nf-venda")
+async def add_nf_venda_oc(
+    po_id: str,
+    request: NFVendaOCRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Adicionar NF de Venda para a OC inteira (não por item)"""
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    # Extrair número da NF do PDF se aplicável
+    numero_nf = None
+    if request.filename.lower().endswith('.pdf'):
+        try:
+            import base64
+            pdf_bytes = base64.b64decode(request.file_data)
+            doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+            text = ""
+            for page in doc:
+                text += page.get_text()
+            doc.close()
+            
+            nf_patterns = [
+                r'NF[- ]?e?[:\s]*(\d{6,})',
+                r'N[úu]mero[:\s]*(\d{6,})',
+                r'NOTA FISCAL[:\s]*(\d{6,})'
+            ]
+            for pattern in nf_patterns:
+                match = re.search(pattern, text, re.IGNORECASE)
+                if match:
+                    numero_nf = match.group(1)
+                    break
+        except Exception as e:
+            logger.warning(f"Erro ao extrair número da NF: {e}")
+    
+    nf_doc = {
+        "id": str(uuid.uuid4()),
+        "filename": request.filename,
+        "content_type": request.content_type,
+        "file_data": request.file_data,
+        "numero_nf": numero_nf,
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "uploaded_by": current_user.get('sub')
+    }
+    
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"nota_fiscal_venda": nf_doc}}
+    )
+    
+    return {
+        "success": True,
+        "message": "NF de Venda adicionada à OC",
+        "nf_id": nf_doc["id"],
+        "numero_nf": numero_nf
+    }
+
+
+@api_router.get("/purchase-orders/{po_id}/nf-venda/download")
+async def download_nf_venda_oc(
+    po_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Download da NF de Venda da OC"""
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    nf_venda = po.get('nota_fiscal_venda')
+    if not nf_venda:
+        raise HTTPException(status_code=404, detail="NF de Venda não encontrada")
+    
+    return {
+        "filename": nf_venda['filename'],
+        "content_type": nf_venda['content_type'],
+        "file_data": nf_venda['file_data']
+    }
+
+
+@api_router.delete("/purchase-orders/{po_id}/nf-venda")
+async def delete_nf_venda_oc(
+    po_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Remover NF de Venda da OC"""
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$unset": {"nota_fiscal_venda": ""}}
+    )
+    
+    return {"success": True, "message": "NF de Venda removida"}
+
+
 @api_router.get("/purchase-orders/{po_id}/items/by-index/{item_index}/notas-fiscais/{nf_id}/download")
 async def download_nota_fiscal(
     po_id: str,
