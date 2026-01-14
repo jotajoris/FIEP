@@ -748,8 +748,6 @@ const ItemsByStatus = () => {
   };
 
   // ============== FUNÇÕES PARA NF DE VENDA DA OC (não do item) ==============
-  const [uploadingNFVendaOC, setUploadingNFVendaOC] = useState(null);
-  const [ocNFVenda, setOcNFVenda] = useState({}); // {po_id: nf_data}
 
   const uploadNFVendaOC = async (poId, file) => {
     setUploadingNFVendaOC(poId);
