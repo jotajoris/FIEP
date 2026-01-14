@@ -820,6 +820,21 @@ const ItemsByStatus = () => {
     }
   };
 
+  // Toggle "Pronto para Despacho" da OC inteira
+  const toggleProntoDespachoOC = async (poId) => {
+    const currentValue = ocProntoDespacho[poId] || false;
+    try {
+      await apiPatch(`${API}/purchase-orders/${poId}/pronto-despacho`, {
+        pronto_despacho: !currentValue
+      });
+      // Atualizar estado local imediatamente para feedback visual
+      setOcProntoDespacho(prev => ({ ...prev, [poId]: !currentValue }));
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      alert('Erro ao atualizar status.');
+    }
+  };
+
   // Função para gerar texto dos Dados Adicionais da NF
   const gerarDadosAdicionaisNF = (item) => {
     // Extrair apenas o número da OC (ex: "OC-2.118938" -> "2.118938")
