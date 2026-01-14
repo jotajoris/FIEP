@@ -2139,22 +2139,13 @@ Chave PIX: 46.663.556/0001-69`;
                           }} 
                           data-testid={`item-card-${item._uniqueId}`}
                         >
-                          {/* Renderização normal do item (reutiliza a estrutura existente) */}
+                          {/* Renderização normal do item */}
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
                             <div style={{ flex: 1 }}>
                               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem' }}>
                                 <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0 }}>
                                   Código: {item.codigo_item}
-                                </h3> 
-                                    color: 'white', 
-                                    padding: '0.15rem 0.5rem', 
-                                    borderRadius: '8px',
-                                    fontSize: '0.7rem',
-                                    fontWeight: '600'
-                                  }}>
-                                    NF OK
-                                  </span>
-                                )}
+                                </h3>
                               </div>
                               <p style={{ color: '#4a5568', marginBottom: '0.5rem' }}>{item.descricao}</p>
                               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.9rem', color: '#718096' }}>
