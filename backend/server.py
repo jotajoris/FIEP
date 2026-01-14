@@ -2881,69 +2881,61 @@ def extract_ncm_from_pdf(pdf_bytes: bytes) -> Optional[str]:
         
         ncm_list = set()  # Usar set para evitar duplicatas
         
-        # Lista de padrões que NÃO são NCM (CEPs, CNPJs, etc.)
-        # CEPs: 8 dígitos, geralmente 0-9 iniciais específicos
-        # CNPJs parciais: podem ter 8 dígitos
+        # Lista de valores que NÃO são NCM (CEPs, códigos de barras, etc.)
+        invalid_ncms = {
+            '17582008', '83005430',  # CEPs
+            '83704614',  # Código de vendedor/outro
+        }
         
-        # Estratégia 1: Procurar NCM/SH seguido de número
-        ncm_sh_pattern = r'NCM[/\s]*SH[\s\n]*[\w\s\n]*?(\d{8})'
-        matches = re.findall(ncm_sh_pattern, full_text, re.IGNORECASE)
+        # Estratégia 1: Procurar padrão "NCM/SH" seguido diretamente por 8 dígitos (mais confiável)
+        # Em DANFEs, o NCM aparece na coluna NCM/SH
+        ncm_direct_pattern = r'NCM[/\s]*SH[:\s]*(\d{8})'
+        matches = re.findall(ncm_direct_pattern, full_text, re.IGNORECASE)
         for m in matches:
-            if len(m) == 8 and m.isdigit():
+            if len(m) == 8 and m.isdigit() and m not in invalid_ncms:
                 ncm_list.add(m)
         
-        # Estratégia 2: Procurar números de 8 dígitos após "NCM/SH" ou "NCM"
-        if 'NCM' in full_text.upper():
-            idx = full_text.upper().find('NCM/SH')
-            if idx == -1:
-                idx = full_text.upper().find('NCM')
-            
-            if idx != -1:
-                # Pegar texto após NCM (próximas 1000 chars)
-                after_text = full_text[idx:idx+1000]
-                ncm_after = re.findall(r'\b(\d{8})\b', after_text)
-                for ncm in ncm_after:
-                    # Filtrar: NCMs típicos começam com 0-9
-                    # Excluir CEPs (geralmente começam com padrões específicos por região)
-                    # NCMs de produtos elétricos começam com 85, 84, etc.
-                    if ncm.isdigit() and len(ncm) == 8:
-                        # Verificar se não é CEP (CEPs BR: 01000000-99999999, mas formato específico)
-                        # NCMs são classificados: primeiros 2 dígitos indicam capítulo
-                        primeiro = int(ncm[:2])
-                        # Capítulos válidos NCM: 01-99 (todos são válidos teoricamente)
-                        # Mas podemos filtrar CEPs conhecidos
-                        # CEPs de capitais: 01xxx-xxx (SP), 20xxx-xxx (RJ), etc.
-                        # Vamos aceitar se não parecer CEP
-                        if not (ncm.endswith('000') and ncm[5:8] == '000'):  # CEPs terminam diferente
-                            ncm_list.add(ncm)
+        # Estratégia 2: Procurar na estrutura típica de DANFE
+        # O NCM geralmente aparece após o código do produto e antes do CFOP
+        # Padrão: linha com NCM/SH seguida de 8 dígitos em formato específico
+        ncm_table_pattern = r'(?:NCM|NCM/SH)\s*\n?\s*(\d{8})'
+        matches = re.findall(ncm_table_pattern, full_text, re.IGNORECASE | re.MULTILINE)
+        for m in matches:
+            if len(m) == 8 and m.isdigit() and m not in invalid_ncms:
+                # Verificar se os primeiros 2 dígitos são capítulos válidos de NCM
+                capitulo = int(m[:2])
+                # Capítulos comuns: 84, 85 (máquinas/elétricos), 73 (ferro/aço), etc.
+                # Capítulos válidos: 01-97
+                if 1 <= capitulo <= 97:
+                    ncm_list.add(m)
         
-        # Estratégia 3: Padrões tradicionais
+        # Estratégia 3: Buscar números de 8 dígitos que começam com capítulos comuns
+        # Capítulos mais comuns em compras: 84, 85, 73, 39, 40, 48, 90, etc.
+        common_chapters = ['84', '85', '73', '39', '40', '48', '90', '94', '72', '76', '83']
+        all_8digit = re.findall(r'\b(\d{8})\b', full_text)
+        for num in all_8digit:
+            if num[:2] in common_chapters and num not in invalid_ncms:
+                ncm_list.add(num)
+        
+        # Estratégia 4: Padrões tradicionais com formatação
         patterns = [
             r'NCM[:\s]*(\d{4}[\.\s]?\d{2}[\.\s]?\d{2})',
-            r'NCM[:\s]*(\d{8})',
             r'Classifica[çc][ãa]o Fiscal[:\s]*(\d{4}[\.\s]?\d{2}[\.\s]?\d{2})',
-            r'Classifica[çc][ãa]o Fiscal[:\s]*(\d{8})',
-            r'(\d{4}\.\d{2}\.\d{2})',  # Padrão com pontos
+            r'(\d{4}\.\d{2}\.\d{2})',  # Padrão com pontos (mais específico)
         ]
         
         for pattern in patterns:
             matches = re.findall(pattern, full_text, re.IGNORECASE)
             for match in matches:
                 ncm = re.sub(r'[\.\s]', '', match)
-                if len(ncm) == 8 and ncm.isdigit():
-                    ncm_list.add(ncm)
+                if len(ncm) == 8 and ncm.isdigit() and ncm not in invalid_ncms:
+                    capitulo = int(ncm[:2])
+                    if 1 <= capitulo <= 97:
+                        ncm_list.add(ncm)
         
-        # Remover valores que claramente não são NCM (CEPs conhecidos)
-        # CEPs BR: 5 dígitos + 3 dígitos, geralmente o 6º dígito é diferente
-        ncm_final = set()
-        for ncm in ncm_list:
-            # Excluir se parecer CEP (formato XXXXX-XXX convertido)
-            # CEPs não têm os mesmos 3 últimos dígitos de classificação fiscal
-            if ncm not in ['17582008', '83005430']:  # CEPs específicos encontrados
-                ncm_final.add(ncm)
-        
-        if ncm_final:
-            return ', '.join(sorted(ncm_final))
+        if ncm_list:
+            # Ordenar e retornar
+            return ', '.join(sorted(ncm_list))
         
         return None
     except Exception as e:
