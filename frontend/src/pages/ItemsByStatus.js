@@ -1183,30 +1183,6 @@ Chave PIX: 46.663.556/0001-69`;
                 {uploadingNF === item._uniqueId ? 'Enviando...' : '+ Adicionar NF Compra'}
               </button>
             </div>
-
-            {/* Checkbox NF Emitida */}
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '0.5rem',
-              padding: '0.5rem',
-              background: item.nf_emitida_pronto_despacho ? '#dcfce7' : '#fef2f2',
-              borderRadius: '6px'
-            }}>
-              <input
-                type="checkbox"
-                checked={item.nf_emitida_pronto_despacho || false}
-                onChange={() => toggleNFEmitida(item)}
-                style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-              />
-              <span style={{ 
-                fontSize: '0.9rem', 
-                fontWeight: '600', 
-                color: item.nf_emitida_pronto_despacho ? '#16a34a' : '#dc2626' 
-              }}>
-                {item.nf_emitida_pronto_despacho ? '✓ NF Emitida / Pronto para Despacho' : '✗ NF Emitida / Pronto para Despacho'}
-              </span>
-            </div>
           </div>
 
           {/* Coluna Direita: Endereço e Dados Adicionais */}
