@@ -2942,6 +2942,83 @@ def extract_ncm_from_pdf(pdf_bytes: bytes) -> Optional[str]:
         logging.error(f"Erro ao extrair NCM do PDF: {str(e)}")
         return None
 
+
+def extract_items_with_ncm_from_pdf(pdf_bytes: bytes) -> List[dict]:
+    """Extrair lista de itens com seus respectivos NCMs do PDF de NF"""
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        full_text = ""
+        for page in doc:
+            full_text += page.get_text()
+        doc.close()
+        
+        items = []
+        invalid_ncms = {'17582008', '83005430', '83704614'}
+        
+        # Procurar seção de produtos
+        start = full_text.find("DADOS DO PRODUTO")
+        if start == -1:
+            start = full_text.find("DADOS DOS PRODUTOS")
+        
+        if start != -1:
+            # Pegar seção de produtos (até CÁLCULO ou DADOS ADICIONAIS)
+            end_markers = ["CÁLCULO DO ISSQN", "DADOS ADICIONAIS", "INFORMAÇÕES COMPLEMENTARES"]
+            end = len(full_text)
+            for marker in end_markers:
+                idx = full_text.find(marker, start)
+                if idx != -1 and idx < end:
+                    end = idx
+            
+            product_section = full_text[start:end]
+            
+            # Encontrar todos os NCMs de 8 dígitos na seção de produtos
+            # Em DANFEs, a estrutura é: CÓDIGO | DESCRIÇÃO | NCM | ...
+            ncm_matches = list(re.finditer(r'\b(\d{8})\b', product_section))
+            
+            for match in ncm_matches:
+                ncm = match.group(1)
+                capitulo = int(ncm[:2])
+                
+                # Verificar se é um NCM válido (capítulos 01-97)
+                if 1 <= capitulo <= 97 and ncm not in invalid_ncms:
+                    # Procurar descrição ANTES do NCM (na mesma linha ou linhas anteriores)
+                    before_text = product_section[:match.start()]
+                    
+                    # Pegar as últimas linhas antes do NCM para encontrar a descrição
+                    lines_before = before_text.split('\n')[-10:]  # Últimas 10 linhas
+                    
+                    # Procurar linha com descrição (geralmente tem mais de 20 chars e letras)
+                    descricao = ""
+                    for line in reversed(lines_before):
+                        line = line.strip()
+                        # Descrição geralmente tem mais de 15 chars e contém letras
+                        if len(line) > 15 and re.search(r'[A-Za-z]', line):
+                            # Ignorar linhas que são só cabeçalhos
+                            if not any(header in line.upper() for header in ['DESCRIÇÃO', 'NCM/SH', 'CFOP', 'QUANT', 'VALOR', 'DADOS DO']):
+                                descricao = line[:80]  # Limitar a 80 chars
+                                break
+                    
+                    if descricao:
+                        items.append({
+                            'descricao': descricao.upper(),
+                            'ncm': ncm
+                        })
+        
+        # Remover duplicatas mantendo ordem
+        seen = set()
+        unique_items = []
+        for item in items:
+            key = (item['descricao'], item['ncm'])
+            if key not in seen:
+                seen.add(key)
+                unique_items.append(item)
+        
+        return unique_items
+    except Exception as e:
+        logging.error(f"Erro ao extrair itens do PDF: {str(e)}")
+        return []
+
+
 import base64
 
 def extract_numero_nf_from_xml(xml_content: str) -> Optional[str]:
