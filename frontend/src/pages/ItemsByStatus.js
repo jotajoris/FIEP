@@ -1121,8 +1121,77 @@ Chave PIX: 46.663.556/0001-69`;
                         </button>
                       </div>
                     </div>
-                    {/* NCM da NF com botão de copiar */}
-                    {nf.ncm && (
+                    {/* Lista de itens da NF com seus NCMs */}
+                    {nf.itens_nf && nf.itens_nf.length > 0 && (
+                      <div style={{ 
+                        marginTop: '0.5rem', 
+                        padding: '0.5rem',
+                        background: '#f0fdf4',
+                        borderRadius: '6px',
+                        border: '1px solid #86efac'
+                      }}>
+                        <div style={{ fontSize: '0.7rem', color: '#166534', fontWeight: '600', marginBottom: '0.4rem' }}>
+                          📦 Itens da NF ({nf.itens_nf.length}):
+                        </div>
+                        {nf.itens_nf.map((itemNf, itemIdx) => (
+                          <div 
+                            key={itemIdx} 
+                            style={{ 
+                              display: 'flex', 
+                              justifyContent: 'space-between', 
+                              alignItems: 'center',
+                              padding: '0.3rem 0.5rem',
+                              background: 'white',
+                              borderRadius: '4px',
+                              marginBottom: '0.25rem',
+                              fontSize: '0.7rem'
+                            }}
+                          >
+                            <span style={{ 
+                              flex: 1, 
+                              overflow: 'hidden', 
+                              textOverflow: 'ellipsis', 
+                              whiteSpace: 'nowrap',
+                              color: '#374151',
+                              marginRight: '0.5rem'
+                            }}>
+                              {itemNf.descricao}
+                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexShrink: 0 }}>
+                              <span style={{ 
+                                background: '#fef3c7', 
+                                padding: '0.1rem 0.4rem', 
+                                borderRadius: '3px',
+                                fontWeight: '600',
+                                color: '#92400e'
+                              }}>
+                                {itemNf.ncm}
+                              </span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(itemNf.ncm);
+                                  alert(`NCM ${itemNf.ncm} copiado!`);
+                                }}
+                                style={{ 
+                                  padding: '0.1rem 0.3rem', 
+                                  fontSize: '0.6rem', 
+                                  background: '#f59e0b', 
+                                  color: 'white', 
+                                  border: 'none', 
+                                  borderRadius: '3px', 
+                                  cursor: 'pointer' 
+                                }}
+                              >
+                                📋
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* NCM único (fallback para NFs antigas sem lista de itens) */}
+                    {(!nf.itens_nf || nf.itens_nf.length === 0) && nf.ncm && (
                       <div style={{ 
                         marginTop: '0.25rem', 
                         display: 'flex', 
@@ -1158,7 +1227,7 @@ Chave PIX: 46.663.556/0001-69`;
                 ))
               ) : (
                 <div style={{ color: '#9ca3af', fontSize: '0.8rem' }}>Nenhuma NF de compra adicionada</div>
-              )}
+              )}}
               <button
                 onClick={() => {
                   const input = document.createElement('input');
