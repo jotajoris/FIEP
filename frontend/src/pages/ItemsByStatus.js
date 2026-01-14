@@ -79,12 +79,15 @@ const ItemsByStatus = () => {
       
       const allItems = [];
       const nfVendaByOC = {}; // Armazenar NF de Venda por OC
+      const prontoDespachoByOC = {}; // Armazenar status "pronto para despacho" por OC
       
       purchaseOrders.forEach(po => {
         // Armazenar NF de Venda da OC (se existir)
         if (po.nota_fiscal_venda) {
           nfVendaByOC[po.id] = po.nota_fiscal_venda;
         }
+        // Armazenar status "pronto para despacho"
+        prontoDespachoByOC[po.id] = po.pronto_despacho || false;
         
         po.items.forEach((item, itemIndexInPO) => {
           if (item.status === status) {
@@ -98,7 +101,8 @@ const ItemsByStatus = () => {
               cnpj_requisitante: po.cnpj_requisitante || '',
               _itemIndexInPO: realIndex,  // USAR ÍNDICE ORIGINAL DO BANCO
               _uniqueId: uniqueId,
-              _ocNFVenda: po.nota_fiscal_venda || null // NF de Venda da OC
+              _ocNFVenda: po.nota_fiscal_venda || null, // NF de Venda da OC
+              _ocProntoDespacho: po.pronto_despacho || false // Status pronto para despacho da OC
             });
           }
         });
@@ -106,6 +110,7 @@ const ItemsByStatus = () => {
       
       setItems(allItems);
       setOcNFVenda(nfVendaByOC); // Atualizar estado de NF de Venda por OC
+      setOcProntoDespacho(prontoDespachoByOC); // Atualizar estado de pronto despacho por OC
     } catch (error) {
       console.error('Erro ao carregar itens:', error);
       setError('Erro ao carregar itens. Clique para tentar novamente.');
