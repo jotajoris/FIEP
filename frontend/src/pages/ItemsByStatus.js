@@ -735,6 +735,75 @@ const ItemsByStatus = () => {
     }
   };
 
+  // ============== FUNÇÕES PARA NF DE VENDA DA OC (não do item) ==============
+  const [uploadingNFVendaOC, setUploadingNFVendaOC] = useState(null);
+  const [ocNFVenda, setOcNFVenda] = useState({}); // {po_id: nf_data}
+
+  const uploadNFVendaOC = async (poId, file) => {
+    setUploadingNFVendaOC(poId);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = reader.result.split(',')[1];
+        const payload = {
+          filename: file.name.toUpperCase(),
+          content_type: file.type || 'application/pdf',
+          file_data: base64
+        };
+        
+        await apiPost(`${API}/purchase-orders/${poId}/nf-venda`, payload);
+        alert('NF de Venda adicionada à OC!');
+        loadItems(); // Recarregar para atualizar dados da OC
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Erro ao enviar NF de Venda:', error);
+      alert('Erro ao enviar NF de Venda.');
+    } finally {
+      setUploadingNFVendaOC(null);
+    }
+  };
+
+  const downloadNFVendaOC = async (poId, filename) => {
+    try {
+      const response = await apiGet(`${API}/purchase-orders/${poId}/nf-venda/download`);
+      const { file_data, content_type } = response.data;
+      
+      const byteCharacters = atob(file_data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: content_type });
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Erro ao baixar NF de Venda:', error);
+      alert('Erro ao baixar NF de Venda.');
+    }
+  };
+
+  const deleteNFVendaOC = async (poId) => {
+    if (!window.confirm('Tem certeza que deseja remover a NF de Venda desta OC?')) return;
+    
+    try {
+      await apiDelete(`${API}/purchase-orders/${poId}/nf-venda`);
+      alert('NF de Venda removida!');
+      loadItems();
+    } catch (error) {
+      console.error('Erro ao remover NF de Venda:', error);
+      alert('Erro ao remover NF de Venda.');
+    }
+  };
+
   // Função para gerar texto dos Dados Adicionais da NF
   const gerarDadosAdicionaisNF = (item) => {
     // Extrair apenas o número da OC (ex: "OC-2.118938" -> "2.118938")
