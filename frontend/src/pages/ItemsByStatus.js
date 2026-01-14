@@ -290,6 +290,7 @@ const ItemsByStatus = () => {
           po_id: ocId,
           numero_oc: item.numero_oc,
           cnpj_requisitante: item.cnpj_requisitante,
+          nota_fiscal_venda: ocNFVenda[ocId] || item._ocNFVenda || null, // NF de Venda da OC
           items: []
         };
       }
@@ -307,7 +308,7 @@ const ItemsByStatus = () => {
         totalItens,
         itensComNFEmitida,
         todosComNF,
-        prontoParaDespacho: todosComNF
+        prontoParaDespacho: todosComNF && oc.nota_fiscal_venda // Só está pronto se todos os itens têm NF E a OC tem NF de Venda
       };
     }).sort((a, b) => {
       // Ordenar: prontos para despacho primeiro, depois por número de itens
@@ -316,7 +317,7 @@ const ItemsByStatus = () => {
       }
       return b.totalItens - a.totalItens;
     });
-  }, [status, displayItems]);
+  }, [status, displayItems, ocNFVenda]);
 
   const startEdit = (item) => {
     // Usar ID único do item para evitar conflito
