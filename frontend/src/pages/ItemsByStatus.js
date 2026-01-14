@@ -1227,7 +1227,7 @@ Chave PIX: 46.663.556/0001-69`;
                 ))
               ) : (
                 <div style={{ color: '#9ca3af', fontSize: '0.8rem' }}>Nenhuma NF de compra adicionada</div>
-              )}}
+              )}
               <button
                 onClick={() => {
                   const input = document.createElement('input');
