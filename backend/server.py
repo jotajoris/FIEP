@@ -3143,6 +3143,7 @@ async def upload_nota_fiscal(
         "file_data": request.file_data,
         "ncm": ncm,
         "numero_nf": numero_nf,  # Número da NF extraído
+        "itens_nf": itens_nf,  # Lista de itens com NCMs
         "uploaded_at": datetime.now(timezone.utc).isoformat(),
         "uploaded_by": current_user.get('sub')
     }
@@ -3167,7 +3168,8 @@ async def upload_nota_fiscal(
         "success": True,
         "message": "Nota fiscal adicionada com sucesso",
         "nf_id": nf_doc["id"],
-        "ncm": ncm or "NCM NAO ENCONTRADO"
+        "ncm": ncm or "NCM NAO ENCONTRADO",
+        "itens_nf": itens_nf
     }
 
 
