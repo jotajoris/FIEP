@@ -76,7 +76,14 @@ const ItemsByStatus = () => {
       const purchaseOrders = response.data.data || response.data || [];
       
       const allItems = [];
+      const nfVendaByOC = {}; // Armazenar NF de Venda por OC
+      
       purchaseOrders.forEach(po => {
+        // Armazenar NF de Venda da OC (se existir)
+        if (po.nota_fiscal_venda) {
+          nfVendaByOC[po.id] = po.nota_fiscal_venda;
+        }
+        
         po.items.forEach((item, itemIndexInPO) => {
           if (item.status === status) {
             // Usar o índice original do banco se disponível, senão usar o índice do array
@@ -88,13 +95,15 @@ const ItemsByStatus = () => {
               po_id: po.id,
               cnpj_requisitante: po.cnpj_requisitante || '',
               _itemIndexInPO: realIndex,  // USAR ÍNDICE ORIGINAL DO BANCO
-              _uniqueId: uniqueId
+              _uniqueId: uniqueId,
+              _ocNFVenda: po.nota_fiscal_venda || null // NF de Venda da OC
             });
           }
         });
       });
       
       setItems(allItems);
+      setOcNFVenda(nfVendaByOC); // Atualizar estado de NF de Venda por OC
     } catch (error) {
       console.error('Erro ao carregar itens:', error);
       setError('Erro ao carregar itens. Clique para tentar novamente.');
