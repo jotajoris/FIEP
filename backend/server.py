@@ -2972,7 +2972,6 @@ def extract_items_with_ncm_from_pdf(pdf_bytes: bytes) -> List[dict]:
             product_section = full_text[start:end]
             
             # Encontrar todos os NCMs de 8 dígitos na seção de produtos
-            # Em DANFEs, a estrutura é: CÓDIGO | DESCRIÇÃO | NCM | ...
             ncm_matches = list(re.finditer(r'\b(\d{8})\b', product_section))
             
             for match in ncm_matches:
@@ -2981,22 +2980,34 @@ def extract_items_with_ncm_from_pdf(pdf_bytes: bytes) -> List[dict]:
                 
                 # Verificar se é um NCM válido (capítulos 01-97)
                 if 1 <= capitulo <= 97 and ncm not in invalid_ncms:
-                    # Procurar descrição ANTES do NCM (na mesma linha ou linhas anteriores)
-                    before_text = product_section[:match.start()]
+                    # A descrição pode estar ANTES ou DEPOIS do NCM dependendo do layout
+                    # Tentar primeiro DEPOIS do NCM (padrão mais comum em DANFEs)
+                    after_text = product_section[match.end():match.end()+500]
+                    lines_after = after_text.split('\n')[:8]
                     
-                    # Pegar as últimas linhas antes do NCM para encontrar a descrição
-                    lines_before = before_text.split('\n')[-10:]  # Últimas 10 linhas
-                    
-                    # Procurar linha com descrição (geralmente tem mais de 20 chars e letras)
                     descricao = ""
-                    for line in reversed(lines_before):
+                    for line in lines_after:
                         line = line.strip()
-                        # Descrição geralmente tem mais de 15 chars e contém letras
+                        # Descrição tem mais de 15 chars, contém letras e não é cabeçalho
                         if len(line) > 15 and re.search(r'[A-Za-z]', line):
-                            # Ignorar linhas que são só cabeçalhos
-                            if not any(header in line.upper() for header in ['DESCRIÇÃO', 'NCM/SH', 'CFOP', 'QUANT', 'VALOR', 'DADOS DO']):
-                                descricao = line[:80]  # Limitar a 80 chars
+                            if not any(header in line.upper() for header in ['DESCRIÇÃO', 'NCM/SH', 'CFOP', 'QUANT', 'VALOR', 'DADOS DO', 'CST', 'ALÍQUOTA']):
+                                # Limpar a descrição (remover | Ped: etc)
+                                descricao = re.sub(r'\s*\|\s*Ped:.*', '', line)
+                                descricao = descricao[:80].strip()
                                 break
+                    
+                    # Se não encontrou depois, tentar antes
+                    if not descricao:
+                        before_text = product_section[:match.start()]
+                        lines_before = before_text.split('\n')[-10:]
+                        
+                        for line in reversed(lines_before):
+                            line = line.strip()
+                            if len(line) > 15 and re.search(r'[A-Za-z]', line):
+                                if not any(header in line.upper() for header in ['DESCRIÇÃO', 'NCM/SH', 'CFOP', 'QUANT', 'VALOR', 'DADOS DO']):
+                                    descricao = re.sub(r'\s*\|\s*Ped:.*', '', line)
+                                    descricao = descricao[:80].strip()
+                                    break
                     
                     if descricao:
                         items.append({
