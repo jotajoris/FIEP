@@ -3211,6 +3211,30 @@ async def delete_nf_venda_oc(
     return {"success": True, "message": "NF de Venda removida"}
 
 
+class ProntoDespachoOCRequest(BaseModel):
+    pronto_despacho: bool
+
+
+@api_router.patch("/purchase-orders/{po_id}/pronto-despacho")
+async def toggle_pronto_despacho_oc(
+    po_id: str,
+    request: ProntoDespachoOCRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Marcar OC inteira como Pronta para Despacho"""
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"pronto_despacho": request.pronto_despacho}}
+    )
+    
+    return {"success": True, "pronto_despacho": request.pronto_despacho}
+
+
 @api_router.get("/purchase-orders/{po_id}/items/by-index/{item_index}/notas-fiscais/{nf_id}/download")
 async def download_nota_fiscal(
     po_id: str,
