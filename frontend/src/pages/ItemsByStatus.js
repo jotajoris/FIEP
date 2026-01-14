@@ -34,6 +34,8 @@ const ItemsByStatus = () => {
   
   // Estados para visualização por OC (em_separacao)
   const [expandedOC, setExpandedOC] = useState(null);  // OC expandida para ver itens
+  const [uploadingNFVendaOC, setUploadingNFVendaOC] = useState(null);  // Upload de NF de Venda da OC
+  const [ocNFVenda, setOcNFVenda] = useState({});  // {po_id: nf_data} - NFs de Venda por OC
   
   // Estados para carrinho e mover em lote
   const [selectedItems, setSelectedItems] = useState(new Set());  // Itens selecionados para mover
