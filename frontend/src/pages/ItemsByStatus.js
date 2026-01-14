@@ -1087,67 +1087,6 @@ Chave PIX: 46.663.556/0001-69`;
               </button>
             </div>
 
-            {/* NF de Venda (ON) */}
-            <div style={{ 
-              padding: '0.75rem', 
-              background: '#ecfdf5', 
-              borderRadius: '8px',
-              border: '1px solid #86efac'
-            }}>
-              <div style={{ fontSize: '0.85rem', color: '#166534', fontWeight: '600', marginBottom: '0.5rem' }}>
-                📄 NF de Venda (ON)
-              </div>
-              {item.nota_fiscal_revenda ? (
-                <div style={{ 
-                  padding: '0.5rem', 
-                  background: 'white', 
-                  borderRadius: '4px',
-                  fontSize: '0.8rem'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>{item.nota_fiscal_revenda.filename}</span>
-                    <div style={{ display: 'flex', gap: '0.25rem' }}>
-                      <button
-                        onClick={() => downloadNF(item, item.nota_fiscal_revenda.id, item.nota_fiscal_revenda.filename)}
-                        style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem', background: '#667eea', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                      >
-                        ⬇️
-                      </button>
-                      <button
-                        onClick={() => deleteNF(item, item.nota_fiscal_revenda.id, 'revenda')}
-                        style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={() => {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = '.pdf,.xml';
-                    input.onchange = (e) => handleFileUpload(item, 'revenda', e);
-                    input.click();
-                  }}
-                  disabled={uploadingNF === item._uniqueId}
-                  style={{ 
-                    padding: '0.4rem 0.8rem', 
-                    fontSize: '0.8rem', 
-                    background: '#22c55e', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    width: '100%'
-                  }}
-                >
-                  {uploadingNF === item._uniqueId ? 'Enviando...' : '+ Adicionar NF Venda'}
-                </button>
-              )}
-            </div>
-
             {/* Checkbox NF Emitida */}
             <div style={{ 
               display: 'flex', 
