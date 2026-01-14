@@ -3117,9 +3117,10 @@ async def upload_nota_fiscal(
     
     item = po['items'][item_index]
     
-    # Tentar extrair NCM e número da NF
+    # Tentar extrair NCM, número da NF e itens
     ncm = request.ncm_manual
     numero_nf = None
+    itens_nf = []  # Lista de itens com NCMs
     try:
         file_bytes = base64.b64decode(request.file_data)
         
@@ -3132,6 +3133,8 @@ async def upload_nota_fiscal(
             if not ncm:
                 ncm = extract_ncm_from_pdf(file_bytes)
             numero_nf = extract_numero_nf_from_pdf(file_bytes)
+            # Extrair itens com NCMs
+            itens_nf = extract_items_with_ncm_from_pdf(file_bytes)
     except Exception as e:
         logging.error(f"Erro ao processar arquivo: {str(e)}")
     
