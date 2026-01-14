@@ -1910,12 +1910,12 @@ Chave PIX: 46.663.556/0001-69`;
                         )}
                       </div>
                       <div style={{ fontSize: '0.9rem', color: '#6b7280' }}>
-                        <strong style={{ color: oc.prontoParaDespacho ? '#16a34a' : '#d97706' }}>
-                          {oc.itensComNFEmitida} de {oc.totalItens} itens com NF emitida
+                        <strong style={{ color: '#667eea' }}>
+                          {oc.totalItens} {oc.totalItens === 1 ? 'item' : 'itens'}
                         </strong>
-                        {!oc.prontoParaDespacho && (
-                          <span style={{ marginLeft: '0.5rem', color: '#9ca3af' }}>
-                            (faltam {oc.totalItens - oc.itensComNFEmitida})
+                        {oc.nota_fiscal_venda && (
+                          <span style={{ marginLeft: '0.5rem', color: '#16a34a' }}>
+                            • NF Anexada
                           </span>
                         )}
                       </div>
