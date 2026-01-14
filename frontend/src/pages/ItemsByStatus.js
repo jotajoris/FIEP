@@ -2091,6 +2091,42 @@ Chave PIX: 46.663.556/0001-69`;
                       )}
                     </div>
 
+                    {/* Checkbox Pronto para Despacho da OC */}
+                    <div style={{ 
+                      marginBottom: '1.5rem', 
+                      padding: '1rem', 
+                      background: oc.pronto_despacho ? '#dcfce7' : '#fef2f2', 
+                      borderRadius: '8px',
+                      border: `2px solid ${oc.pronto_despacho ? '#22c55e' : '#fca5a5'}`
+                    }}>
+                      <label style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '0.75rem',
+                        cursor: 'pointer',
+                        fontSize: '1rem',
+                        fontWeight: '600'
+                      }}>
+                        <input
+                          type="checkbox"
+                          checked={oc.pronto_despacho || false}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            toggleProntoDespachoOC(oc.po_id);
+                          }}
+                          style={{ 
+                            width: '22px', 
+                            height: '22px', 
+                            cursor: 'pointer',
+                            accentColor: '#22c55e'
+                          }}
+                        />
+                        <span style={{ color: oc.pronto_despacho ? '#16a34a' : '#dc2626' }}>
+                          {oc.pronto_despacho ? '✅ NF Emitida / Pronto para Despacho' : '⏳ NF Emitida / Pronto para Despacho'}
+                        </span>
+                      </label>
+                    </div>
+
                     {/* Lista de Itens da OC */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                       {oc.items.map((item) => (
@@ -2098,8 +2134,8 @@ Chave PIX: 46.663.556/0001-69`;
                           key={item._uniqueId} 
                           className="card" 
                           style={{ 
-                            background: item.nf_emitida_pronto_despacho ? '#f0fdf4' : 'white', 
-                            border: item.nf_emitida_pronto_despacho ? '1px solid #86efac' : '1px solid #e2e8f0'
+                            background: 'white', 
+                            border: '1px solid #e2e8f0'
                           }} 
                           data-testid={`item-card-${item._uniqueId}`}
                         >
@@ -2109,10 +2145,7 @@ Chave PIX: 46.663.556/0001-69`;
                               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem' }}>
                                 <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0 }}>
                                   Código: {item.codigo_item}
-                                </h3>
-                                {item.nf_emitida_pronto_despacho && (
-                                  <span style={{ 
-                                    background: '#22c55e', 
+                                </h3> 
                                     color: 'white', 
                                     padding: '0.15rem 0.5rem', 
                                     borderRadius: '8px',
