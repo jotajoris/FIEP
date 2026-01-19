@@ -270,8 +270,34 @@ const ItemsByStatus = () => {
       );
     }
     
+    // Pesquisa por descrição/nome do item
+    if (searchDescricao.trim()) {
+      const termo = searchDescricao.trim().toLowerCase();
+      filtered = filtered.filter(item => 
+        item.descricao && item.descricao.toLowerCase().includes(termo)
+      );
+    }
+    
+    // Pesquisa por marca
+    if (searchMarca.trim()) {
+      const termo = searchMarca.trim().toLowerCase();
+      filtered = filtered.filter(item => 
+        item.marca_modelo && item.marca_modelo.toLowerCase().includes(termo)
+      );
+    }
+    
+    // Pesquisa por link de compra
+    if (searchLink.trim()) {
+      const termo = searchLink.trim().toLowerCase();
+      filtered = filtered.filter(item => 
+        item.fontes_compra && item.fontes_compra.some(fc => 
+          fc.link && fc.link.toLowerCase().includes(termo)
+        )
+      );
+    }
+    
     return filtered;
-  }, [items, showOnlyMine, user?.owner_name, filterFornecedor, filterResponsavel, searchCodigo, searchOC]);
+  }, [items, showOnlyMine, user?.owner_name, filterFornecedor, filterResponsavel, searchCodigo, searchOC, searchDescricao, searchMarca, searchLink]);
 
   // Itens paginados
   const paginatedItems = useMemo(() => {
@@ -282,7 +308,7 @@ const ItemsByStatus = () => {
   // Reset página quando filtros mudam
   useEffect(() => {
     setCurrentPage(1);
-  }, [showOnlyMine, filterFornecedor, filterResponsavel, searchCodigo, searchOC]);
+  }, [showOnlyMine, filterFornecedor, filterResponsavel, searchCodigo, searchOC, searchDescricao, searchMarca, searchLink]);
   
   const myItemsCount = useMemo(() => {
     if (!user?.owner_name) return 0;
