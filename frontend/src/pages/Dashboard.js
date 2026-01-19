@@ -519,6 +519,22 @@ const Dashboard = () => {
             />
           </div>
           
+          {/* Pesquisa por descrição/nome do item */}
+          <div style={{ flex: '1', minWidth: '180px' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
+              📦 Nome Item
+            </label>
+            <input
+              type="text"
+              placeholder="Ex: SENSOR..."
+              value={searchDescricaoItem}
+              onChange={(e) => setSearchDescricaoItem(e.target.value)}
+              className="form-input"
+              style={{ width: '100%' }}
+              data-testid="search-descricao-input"
+            />
+          </div>
+          
           {/* Filtro por responsável */}
           <div style={{ flex: '1', minWidth: '140px' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
