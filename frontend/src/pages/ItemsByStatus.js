@@ -1499,6 +1499,23 @@ Chave PIX: 46.663.556/0001-69`;
           )}
         </div>
 
+        {/* Campo de Observação */}
+        <div style={{ borderTop: '2px solid #e2e8f0', paddingTop: '1rem', marginTop: '1rem' }}>
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '1rem', fontWeight: '600', color: '#4a5568' }}>
+              💬 Observação
+            </label>
+            <textarea
+              className="form-input"
+              value={formData.observacao || ''}
+              onChange={(e) => setFormData({ ...formData, observacao: e.target.value.toUpperCase() })}
+              placeholder="Digite uma observação sobre este item..."
+              rows={3}
+              style={{ resize: 'vertical', minHeight: '80px' }}
+            />
+          </div>
+        </div>
+
         {/* Fontes de Compra */}
         <div style={{ borderTop: '2px solid #e2e8f0', paddingTop: '1rem', marginTop: '1rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
