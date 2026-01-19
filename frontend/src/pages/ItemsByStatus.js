@@ -20,6 +20,9 @@ const ItemsByStatus = () => {
   const [filterResponsavel, setFilterResponsavel] = useState('todos');
   const [searchCodigo, setSearchCodigo] = useState('');
   const [searchOC, setSearchOC] = useState('');
+  const [searchDescricao, setSearchDescricao] = useState('');  // Pesquisa por nome/descrição
+  const [searchMarca, setSearchMarca] = useState('');  // Pesquisa por marca
+  const [searchLink, setSearchLink] = useState('');  // Pesquisa por link de compra
   const [expandedRastreio, setExpandedRastreio] = useState({});
   const [codigosRastreio, setCodigosRastreio] = useState({});  // Objeto com código por item
   const [salvandoRastreio, setSalvandoRastreio] = useState(null);
