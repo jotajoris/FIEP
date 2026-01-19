@@ -1467,6 +1467,13 @@ async def get_purchase_orders_simple(
             if not items:
                 continue  # Pular OC se nenhum item corresponder
         
+        # Filtro por descrição/nome do item
+        if search_descricao:
+            search_descricao_upper = search_descricao.upper()
+            items = [item for item in items if search_descricao_upper in (item.get('descricao') or '').upper()]
+            if not items:
+                continue  # Pular OC se nenhum item corresponder
+        
         # Filtro por responsável
         if search_responsavel:
             if search_responsavel == 'nao_atribuido':
