@@ -890,11 +890,14 @@ const ItemsByStatus = () => {
     }
   };
 
-  const deleteNFVendaOC = async (poId) => {
-    if (!window.confirm('Tem certeza que deseja remover a NF de Venda desta OC?')) return;
+  const deleteNFVendaOC = async (poId, nfId = null) => {
+    if (!window.confirm('Tem certeza que deseja remover esta NF de Venda?')) return;
     
     try {
-      await apiDelete(`${API}/purchase-orders/${poId}/nf-venda`);
+      const url = nfId 
+        ? `${API}/purchase-orders/${poId}/nf-venda?nf_id=${nfId}`
+        : `${API}/purchase-orders/${poId}/nf-venda`;
+      await apiDelete(url);
       alert('NF de Venda removida!');
       loadItems();
     } catch (error) {
