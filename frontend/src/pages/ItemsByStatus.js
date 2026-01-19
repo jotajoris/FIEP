@@ -2299,40 +2299,129 @@ Chave PIX: 46.663.556/0001-69`;
                       </label>
                     </div>
 
+                    {/* Seleção de Itens para NF de Venda */}
+                    <div style={{ 
+                      marginBottom: '1rem', 
+                      padding: '0.75rem', 
+                      background: '#f0f4ff', 
+                      borderRadius: '8px',
+                      border: '1px solid #c7d2fe',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: '0.5rem'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleTodosItensNFVenda(oc.po_id, oc.items);
+                          }}
+                          style={{ 
+                            padding: '0.4rem 0.8rem',
+                            background: oc.items.every(item => getItensSelecionados(oc.po_id).has(item._uniqueId)) ? '#6366f1' : '#e2e8f0',
+                            color: oc.items.every(item => getItensSelecionados(oc.po_id).has(item._uniqueId)) ? 'white' : '#374151',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '0.85rem',
+                            fontWeight: '600'
+                          }}
+                        >
+                          {oc.items.every(item => getItensSelecionados(oc.po_id).has(item._uniqueId)) ? '☑️ Desmarcar Todos' : '☐ Selecionar Todos'}
+                        </button>
+                        <span style={{ fontSize: '0.9rem', color: '#4338ca', fontWeight: '600' }}>
+                          📋 {getItensSelecionados(oc.po_id).size} de {oc.items.length} itens selecionados para NF
+                        </span>
+                      </div>
+                      {getItensSelecionados(oc.po_id).size > 0 && (
+                        <span style={{ 
+                          padding: '0.3rem 0.6rem',
+                          background: '#22c55e',
+                          color: 'white',
+                          borderRadius: '6px',
+                          fontSize: '0.8rem',
+                          fontWeight: '600'
+                        }}>
+                          ✓ Itens prontos para emissão
+                        </span>
+                      )}
+                    </div>
+
                     {/* Lista de Itens da OC */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      {oc.items.map((item) => (
-                        <div 
-                          key={item._uniqueId} 
-                          className="card" 
-                          style={{ 
-                            background: 'white', 
-                            border: '1px solid #e2e8f0'
-                          }} 
-                          data-testid={`item-card-${item._uniqueId}`}
-                        >
-                          {/* Renderização normal do item */}
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem' }}>
-                                <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0 }}>
-                                  Código: {item.codigo_item}
-                                </h3>
+                      {oc.items.map((item) => {
+                        const isSelectedForNF = getItensSelecionados(oc.po_id).has(item._uniqueId);
+                        return (
+                          <div 
+                            key={item._uniqueId} 
+                            className="card" 
+                            style={{ 
+                              background: isSelectedForNF ? '#f0fdf4' : 'white', 
+                              border: isSelectedForNF ? '2px solid #22c55e' : '1px solid #e2e8f0'
+                            }} 
+                            data-testid={`item-card-${item._uniqueId}`}
+                          >
+                            {/* Checkbox e Renderização do item */}
+                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                              {/* Checkbox para seleção */}
+                              <div style={{ paddingTop: '0.25rem' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={isSelectedForNF}
+                                  onChange={(e) => {
+                                    e.stopPropagation();
+                                    toggleItemParaNFVenda(oc.po_id, item._uniqueId);
+                                  }}
+                                  style={{ 
+                                    width: '20px', 
+                                    height: '20px', 
+                                    cursor: 'pointer',
+                                    accentColor: '#22c55e'
+                                  }}
+                                  title="Selecionar para NF de Venda"
+                                />
                               </div>
-                              <p style={{ color: '#4a5568', marginBottom: '0.5rem' }}>{item.descricao}</p>
-                              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.9rem', color: '#718096' }}>
-                                <span><strong>Responsável:</strong> <strong style={{ color: '#667eea' }}>{item.responsavel}</strong></span>
-                                <span><strong>Quantidade:</strong> {item.quantidade} {item.unidade}</span>
-                                <span><strong>Lote:</strong> {item.lote}</span>
-                                {item.marca_modelo && <span><strong>Marca/Modelo:</strong> {item.marca_modelo}</span>}
+                              
+                              {/* Conteúdo do item */}
+                              <div style={{ flex: 1 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
+                                  <div style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                      <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0 }}>
+                                        Código: {item.codigo_item}
+                                      </h3>
+                                      {isSelectedForNF && (
+                                        <span style={{ 
+                                          background: '#22c55e',
+                                          color: 'white',
+                                          padding: '0.15rem 0.5rem',
+                                          borderRadius: '8px',
+                                          fontSize: '0.7rem',
+                                          fontWeight: '600'
+                                        }}>
+                                          ✓ SELECIONADO
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p style={{ color: '#4a5568', marginBottom: '0.5rem' }}>{item.descricao}</p>
+                                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.9rem', color: '#718096' }}>
+                                      <span><strong>Responsável:</strong> <strong style={{ color: '#667eea' }}>{item.responsavel}</strong></span>
+                                      <span><strong>Quantidade:</strong> {item.quantidade} {item.unidade}</span>
+                                      <span><strong>Lote:</strong> {item.lote}</span>
+                                      {item.marca_modelo && <span><strong>Marca/Modelo:</strong> {item.marca_modelo}</span>}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Reutiliza a renderização de edição/NF do item original */}
+                                {renderItemContent(item)}
                               </div>
                             </div>
                           </div>
-
-                          {/* Reutiliza a renderização de edição/NF do item original */}
-                          {renderItemContent(item)}
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
