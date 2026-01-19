@@ -4062,8 +4062,35 @@ async def get_fornecedores(current_user: dict = Depends(get_current_user)):
 
 @app.on_event("startup")
 async def startup_event():
-    """Iniciar job de verificação de rastreios ao iniciar o servidor"""
+    """Iniciar job de verificação de rastreios e criar índices no MongoDB"""
     global rastreio_task
+    
+    # Criar índices para otimizar queries
+    try:
+        # Índices para purchase_orders
+        await db.purchase_orders.create_index("id", unique=True)
+        await db.purchase_orders.create_index("numero_oc")
+        await db.purchase_orders.create_index("items.status")
+        await db.purchase_orders.create_index("items.responsavel")
+        await db.purchase_orders.create_index("created_at")
+        
+        # Índices para users
+        await db.users.create_index("email", unique=True)
+        await db.users.create_index("owner_name")
+        
+        # Índices para reference_items
+        await db.reference_items.create_index("codigo_item")
+        await db.reference_items.create_index("descricao")
+        
+        # Índices para notifications
+        await db.notifications.create_index("user_email")
+        await db.notifications.create_index("created_at")
+        
+        logging.getLogger(__name__).info("Índices do MongoDB criados/verificados com sucesso")
+    except Exception as e:
+        logging.getLogger(__name__).warning(f"Erro ao criar índices: {e}")
+    
+    # Iniciar job de verificação de rastreios
     rastreio_task = asyncio.create_task(verificar_rastreios_em_transito())
     logging.getLogger(__name__).info("Job de verificação de rastreios iniciado")
 
