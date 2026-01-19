@@ -849,6 +849,42 @@ const ItemsByStatus = () => {
     }
   };
 
+  // Toggle seleção de item para NF de Venda
+  const toggleItemParaNFVenda = (poId, itemUniqueId) => {
+    setItensParaNFVenda(prev => {
+      const currentSet = prev[poId] || new Set();
+      const newSet = new Set(currentSet);
+      if (newSet.has(itemUniqueId)) {
+        newSet.delete(itemUniqueId);
+      } else {
+        newSet.add(itemUniqueId);
+      }
+      return { ...prev, [poId]: newSet };
+    });
+  };
+
+  // Selecionar/desselecionar todos os itens de uma OC
+  const toggleTodosItensNFVenda = (poId, items) => {
+    setItensParaNFVenda(prev => {
+      const currentSet = prev[poId] || new Set();
+      const allSelected = items.every(item => currentSet.has(item._uniqueId));
+      
+      if (allSelected) {
+        // Desselecionar todos
+        return { ...prev, [poId]: new Set() };
+      } else {
+        // Selecionar todos
+        const newSet = new Set(items.map(item => item._uniqueId));
+        return { ...prev, [poId]: newSet };
+      }
+    });
+  };
+
+  // Obter itens selecionados de uma OC
+  const getItensSelecionados = (poId) => {
+    return itensParaNFVenda[poId] || new Set();
+  };
+
   // Toggle "Pronto para Despacho" da OC inteira
   const toggleProntoDespachoOC = async (poId) => {
     const currentValue = ocProntoDespacho[poId] || false;
