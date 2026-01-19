@@ -2460,11 +2460,23 @@ Chave PIX: 46.663.556/0001-69`;
                               <div style={{ flex: 1 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
                                   <div style={{ flex: 1 }}>
-                                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
                                       <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0 }}>
                                         Código: {item.codigo_item}
                                       </h3>
-                                      {isSelectedForNF && (
+                                      {jaTemNF && (
+                                        <span style={{ 
+                                          background: '#16a34a',
+                                          color: 'white',
+                                          padding: '0.15rem 0.5rem',
+                                          borderRadius: '8px',
+                                          fontSize: '0.7rem',
+                                          fontWeight: '600'
+                                        }}>
+                                          ✓ COM NF
+                                        </span>
+                                      )}
+                                      {!jaTemNF && isSelectedForNF && (
                                         <span style={{ 
                                           background: '#22c55e',
                                           color: 'white',
