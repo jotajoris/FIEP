@@ -2139,12 +2139,29 @@ Chave PIX: 46.663.556/0001-69`;
                         )}
                       </div>
                       <div style={{ fontSize: '0.9rem', color: '#6b7280' }}>
-                        <strong style={{ color: '#667eea' }}>
-                          {oc.totalItens} {oc.totalItens === 1 ? 'item' : 'itens'}
-                        </strong>
-                        {oc.nota_fiscal_venda && (
+                        {/* Mostrar contagem de itens prontos/restantes */}
+                        {oc.itensProntos > 0 ? (
+                          <>
+                            <strong style={{ color: '#22c55e' }}>
+                              {oc.itensProntos} {oc.itensProntos === 1 ? 'item pronto' : 'itens prontos'}
+                            </strong>
+                            {oc.itensRestantes > 0 && (
+                              <span style={{ marginLeft: '0.5rem', color: '#f59e0b' }}>
+                                • {oc.itensRestantes} {oc.itensRestantes === 1 ? 'restante' : 'restantes'}
+                              </span>
+                            )}
+                            <span style={{ marginLeft: '0.5rem', color: '#6b7280' }}>
+                              (Total: {oc.totalItens})
+                            </span>
+                          </>
+                        ) : (
+                          <strong style={{ color: '#667eea' }}>
+                            {oc.totalItens} {oc.totalItens === 1 ? 'item' : 'itens'}
+                          </strong>
+                        )}
+                        {oc.notas_fiscais_venda && oc.notas_fiscais_venda.length > 0 && (
                           <span style={{ marginLeft: '0.5rem', color: '#16a34a' }}>
-                            • NF Anexada
+                            • {oc.notas_fiscais_venda.length} NF(s) anexada(s)
                           </span>
                         )}
                       </div>
