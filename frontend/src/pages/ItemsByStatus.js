@@ -84,13 +84,18 @@ const ItemsByStatus = () => {
       const purchaseOrders = response.data.data || response.data || [];
       
       const allItems = [];
-      const nfVendaByOC = {}; // Armazenar NF de Venda por OC
+      const nfVendaByOC = {}; // Armazenar NF de Venda por OC (última)
+      const nfsVendaByOC = {}; // Armazenar todas NFs de Venda por OC
       const prontoDespachoByOC = {}; // Armazenar status "pronto para despacho" por OC
       
       purchaseOrders.forEach(po => {
         // Armazenar NF de Venda da OC (se existir)
         if (po.nota_fiscal_venda) {
           nfVendaByOC[po.id] = po.nota_fiscal_venda;
+        }
+        // Armazenar todas NFs de Venda (para NF parcial)
+        if (po.notas_fiscais_venda && po.notas_fiscais_venda.length > 0) {
+          nfsVendaByOC[po.id] = po.notas_fiscais_venda;
         }
         // Armazenar status "pronto para despacho"
         prontoDespachoByOC[po.id] = po.pronto_despacho || false;
@@ -108,6 +113,7 @@ const ItemsByStatus = () => {
               _itemIndexInPO: realIndex,  // USAR ÍNDICE ORIGINAL DO BANCO
               _uniqueId: uniqueId,
               _ocNFVenda: po.nota_fiscal_venda || null, // NF de Venda da OC
+              _ocNFsVenda: po.notas_fiscais_venda || [], // Todas NFs de Venda da OC
               _ocProntoDespacho: po.pronto_despacho || false // Status pronto para despacho da OC
             });
           }
@@ -116,6 +122,7 @@ const ItemsByStatus = () => {
       
       setItems(allItems);
       setOcNFVenda(nfVendaByOC); // Atualizar estado de NF de Venda por OC
+      setOcNFsVenda(nfsVendaByOC); // Atualizar estado de todas NFs de Venda por OC
       setOcProntoDespacho(prontoDespachoByOC); // Atualizar estado de pronto despacho por OC
     } catch (error) {
       console.error('Erro ao carregar itens:', error);
