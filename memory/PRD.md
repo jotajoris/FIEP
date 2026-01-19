@@ -142,6 +142,11 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 ```
 
 ## Tarefas Concluídas Recentemente
+- [19/01/2026] ✅ **NF de Venda Parcial** - Permite emitir NF para itens selecionados de uma OC (entregas parciais)
+- [19/01/2026] ✅ **Múltiplas NFs por OC** - Sistema agora suporta várias NFs de venda por OC
+- [19/01/2026] ✅ **Contagem de Itens com NF** - Mostra "X itens prontos, Y restantes" no header da OC
+- [19/01/2026] ✅ **Campo Observação no Formulário de Edição** - Observação agora é editada junto com outros campos
+- [19/01/2026] ✅ **Observação Visível (Read-only)** - Observação aparece na visualização do item sem botão de edição separado
 - [08/01/2026] ✅ Implementação de campos de frete (frete_compra e frete_envio)
 - [08/01/2026] ✅ Atualização do cálculo de lucro líquido
 - [08/01/2026] ✅ Proteção do campo frete_envio (apenas admin)
