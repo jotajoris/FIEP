@@ -1944,7 +1944,7 @@ Chave PIX: 46.663.556/0001-69`;
         </div>
 
         {/* Indicador de filtros ativos */}
-        {(filterFornecedor !== 'todos' || filterResponsavel !== 'todos' || searchCodigo.trim() || searchOC.trim()) && (
+        {(filterFornecedor !== 'todos' || filterResponsavel !== 'todos' || searchCodigo.trim() || searchOC.trim() || searchDescricao.trim() || searchMarca.trim() || searchLink.trim()) && (
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
