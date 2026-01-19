@@ -376,6 +376,7 @@ const ItemsByStatus = () => {
       preco_venda: item.preco_venda || '',
       imposto: item.imposto || '',
       frete_envio: item.frete_envio || '',
+      observacao: item.observacao || '',  // Campo de observação
       fontes_compra: fontesExistentes.length > 0 ? fontesExistentes : [{
         id: uuidv4(),
         quantidade: item.quantidade || 1,
