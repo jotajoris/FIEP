@@ -588,7 +588,7 @@ const Dashboard = () => {
           </div>
           
           {/* Botão Limpar Filtros */}
-          {(searchTerm || searchCodigoItem || searchResponsavel || dateFrom || dateTo) && (
+          {(searchTerm || searchCodigoItem || searchDescricaoItem || searchResponsavel || dateFrom || dateTo) && (
             <div style={{ display: 'flex', alignItems: 'flex-end' }}>
               <button
                 onClick={clearFilters}
