@@ -39,6 +39,7 @@ const ItemsByStatus = () => {
   const [expandedOC, setExpandedOC] = useState(null);  // OC expandida para ver itens
   const [uploadingNFVendaOC, setUploadingNFVendaOC] = useState(null);  // Upload de NF de Venda da OC
   const [ocNFVenda, setOcNFVenda] = useState({});  // {po_id: nf_data} - NFs de Venda por OC
+  const [ocNFsVenda, setOcNFsVenda] = useState({});  // {po_id: [nfs]} - Lista de todas NFs de Venda por OC
   const [ocProntoDespacho, setOcProntoDespacho] = useState({});  // {po_id: boolean} - Status pronto despacho por OC
   const [itensParaNFVenda, setItensParaNFVenda] = useState({});  // {po_id: Set(uniqueId)} - Itens selecionados para NF de Venda
   
