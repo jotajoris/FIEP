@@ -3201,6 +3201,7 @@ class NFVendaOCRequest(BaseModel):
     filename: str
     content_type: str
     file_data: str  # Base64
+    itens_indices: Optional[List[int]] = None  # Índices dos itens incluídos na NF
 
 
 @api_router.post("/purchase-orders/{po_id}/nf-venda")
@@ -3209,7 +3210,7 @@ async def add_nf_venda_oc(
     request: NFVendaOCRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """Adicionar NF de Venda para a OC inteira (não por item)"""
+    """Adicionar NF de Venda para a OC (pode ser parcial com itens selecionados)"""
     po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
     
     if not po:
@@ -3240,6 +3241,17 @@ async def add_nf_venda_oc(
         except Exception as e:
             logger.warning(f"Erro ao extrair número da NF: {e}")
     
+    # Se itens_indices foi fornecido, usar; senão, incluir todos os itens
+    items = po.get('items', [])
+    total_itens = len(items)
+    
+    # Determinar quais itens serão incluídos nesta NF
+    if request.itens_indices is not None and len(request.itens_indices) > 0:
+        itens_nf = request.itens_indices
+    else:
+        # Incluir todos os itens que estão em "em_separacao"
+        itens_nf = [i for i, item in enumerate(items) if item.get('status') == 'em_separacao']
+    
     nf_doc = {
         "id": str(uuid.uuid4()),
         "filename": request.filename,
@@ -3247,19 +3259,30 @@ async def add_nf_venda_oc(
         "file_data": request.file_data,
         "numero_nf": numero_nf,
         "uploaded_at": datetime.now(timezone.utc).isoformat(),
-        "uploaded_by": current_user.get('sub')
+        "uploaded_by": current_user.get('sub'),
+        "itens_indices": itens_nf  # Guardar quais itens estão na NF
     }
     
+    # Mesclar com NF existente se houver (para permitir múltiplas NFs parciais)
+    existing_nfs = po.get('notas_fiscais_venda', [])
+    existing_nfs.append(nf_doc)
+    
+    # Também manter retrocompatibilidade com nota_fiscal_venda (última NF)
     await db.purchase_orders.update_one(
         {"id": po_id},
-        {"$set": {"nota_fiscal_venda": nf_doc}}
+        {"$set": {
+            "nota_fiscal_venda": nf_doc,
+            "notas_fiscais_venda": existing_nfs
+        }}
     )
     
     return {
         "success": True,
-        "message": "NF de Venda adicionada à OC",
+        "message": f"NF de Venda adicionada para {len(itens_nf)} item(s)",
         "nf_id": nf_doc["id"],
-        "numero_nf": numero_nf
+        "numero_nf": numero_nf,
+        "itens_incluidos": len(itens_nf),
+        "total_itens_oc": total_itens
     }
 
 
