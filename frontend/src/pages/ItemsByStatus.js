@@ -40,6 +40,7 @@ const ItemsByStatus = () => {
   const [uploadingNFVendaOC, setUploadingNFVendaOC] = useState(null);  // Upload de NF de Venda da OC
   const [ocNFVenda, setOcNFVenda] = useState({});  // {po_id: nf_data} - NFs de Venda por OC
   const [ocProntoDespacho, setOcProntoDespacho] = useState({});  // {po_id: boolean} - Status pronto despacho por OC
+  const [itensParaNFVenda, setItensParaNFVenda] = useState({});  // {po_id: Set(uniqueId)} - Itens selecionados para NF de Venda
   
   // Estados para carrinho e mover em lote
   const [selectedItems, setSelectedItems] = useState(new Set());  // Itens selecionados para mover
