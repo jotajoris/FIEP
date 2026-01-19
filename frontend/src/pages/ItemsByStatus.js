@@ -784,7 +784,27 @@ const ItemsByStatus = () => {
 
   // ============== FUNÇÕES PARA NF DE VENDA DA OC (não do item) ==============
 
-  const uploadNFVendaOC = async (poId, file) => {
+  const uploadNFVendaOC = async (poId, file, ocItems) => {
+    // Obter os índices dos itens selecionados
+    const selectedSet = itensParaNFVenda[poId] || new Set();
+    const itensIndices = [];
+    
+    // Converter uniqueIds em índices dos itens
+    if (selectedSet.size > 0 && ocItems) {
+      ocItems.forEach(item => {
+        if (selectedSet.has(item._uniqueId)) {
+          itensIndices.push(item._itemIndexInPO);
+        }
+      });
+    }
+    
+    if (itensIndices.length === 0 && ocItems) {
+      // Se nenhum item foi selecionado, incluir todos
+      ocItems.forEach(item => {
+        itensIndices.push(item._itemIndexInPO);
+      });
+    }
+    
     setUploadingNFVendaOC(poId);
     try {
       const reader = new FileReader();
@@ -793,11 +813,14 @@ const ItemsByStatus = () => {
         const payload = {
           filename: file.name.toUpperCase(),
           content_type: file.type || 'application/pdf',
-          file_data: base64
+          file_data: base64,
+          itens_indices: itensIndices
         };
         
-        await apiPost(`${API}/purchase-orders/${poId}/nf-venda`, payload);
-        alert('NF de Venda adicionada à OC!');
+        const response = await apiPost(`${API}/purchase-orders/${poId}/nf-venda`, payload);
+        alert(`NF de Venda adicionada para ${response.data.itens_incluidos} item(s)!`);
+        // Limpar seleção após adicionar NF
+        setItensParaNFVenda(prev => ({ ...prev, [poId]: new Set() }));
         loadItems(); // Recarregar para atualizar dados da OC
       };
       reader.readAsDataURL(file);
