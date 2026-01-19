@@ -21,6 +21,7 @@ const Dashboard = () => {
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [searchCodigoItem, setSearchCodigoItem] = useState('');
+  const [searchDescricaoItem, setSearchDescricaoItem] = useState('');  // Pesquisa por descrição/nome do item
   const [searchResponsavel, setSearchResponsavel] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -38,7 +39,7 @@ const Dashboard = () => {
       loadData();
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchTerm, searchCodigoItem, searchResponsavel, dateFrom, dateTo]);
+  }, [searchTerm, searchCodigoItem, searchDescricaoItem, searchResponsavel, dateFrom, dateTo]);
 
   // Filtrar ordens (agora é feito no servidor, mas mantemos para paginação local)
   const filteredOrders = useMemo(() => {
