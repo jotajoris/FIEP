@@ -337,6 +337,7 @@ const ItemsByStatus = () => {
           numero_oc: item.numero_oc,
           cnpj_requisitante: item.cnpj_requisitante,
           nota_fiscal_venda: ocNFVenda[ocId] || item._ocNFVenda || null, // NF de Venda da OC
+          notas_fiscais_venda: ocNFsVenda[ocId] || item._ocNFsVenda || [], // Todas NFs de Venda
           pronto_despacho: ocProntoDespacho[ocId] || item._ocProntoDespacho || false, // Status pronto para despacho
           items: []
         };
@@ -348,9 +349,31 @@ const ItemsByStatus = () => {
     return Object.values(grouped).map(oc => {
       const totalItens = oc.items.length;
       
+      // Calcular quantos itens já estão em alguma NF
+      const nfs = oc.notas_fiscais_venda || [];
+      const itensComNF = new Set();
+      nfs.forEach(nf => {
+        if (nf.itens_indices) {
+          nf.itens_indices.forEach(idx => itensComNF.add(idx));
+        }
+      });
+      
+      // Contar itens prontos (que já estão em NF) dentro dos itens atuais
+      let itensProntos = 0;
+      oc.items.forEach(item => {
+        if (itensComNF.has(item._itemIndexInPO)) {
+          itensProntos++;
+        }
+      });
+      
+      const itensRestantes = totalItens - itensProntos;
+      
       return {
         ...oc,
         totalItens,
+        itensProntos,
+        itensRestantes,
+        itensComNFIndices: itensComNF, // Set com índices de itens que já têm NF
         prontoParaDespacho: oc.pronto_despacho // Agora é controlado pelo checkbox da OC
       };
     }).sort((a, b) => {
@@ -360,7 +383,7 @@ const ItemsByStatus = () => {
       }
       return b.totalItens - a.totalItens;
     });
-  }, [status, displayItems, ocNFVenda, ocProntoDespacho]);
+  }, [status, displayItems, ocNFVenda, ocNFsVenda, ocProntoDespacho]);
 
   const startEdit = (item) => {
     // Usar ID único do item para evitar conflito
