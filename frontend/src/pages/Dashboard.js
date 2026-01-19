@@ -607,7 +607,7 @@ const Dashboard = () => {
           <div style={{ marginBottom: '1rem', color: '#718096', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {filtering && <span>🔄</span>}
             Mostrando {filteredOrders.length} OCs
-            {(searchCodigoItem || searchResponsavel) && ' (filtrado por itens)'}
+            {(searchCodigoItem || searchDescricaoItem || searchResponsavel) && ' (filtrado por itens)'}
           </div>
         )}
         
