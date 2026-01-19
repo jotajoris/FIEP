@@ -1408,6 +1408,7 @@ async def get_purchase_orders_simple(
     current_user: dict = Depends(get_current_user),
     search_oc: str = None,
     search_codigo: str = None,
+    search_descricao: str = None,
     search_responsavel: str = None,
     date_from: str = None,
     date_to: str = None
