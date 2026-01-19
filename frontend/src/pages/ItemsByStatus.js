@@ -2331,7 +2331,6 @@ Chave PIX: 46.663.556/0001-69`;
                           {uploadingNFVendaOC === oc.po_id ? '⏳ Enviando...' : getItensSelecionados(oc.po_id).size > 0 ? `+ Adicionar NF para ${getItensSelecionados(oc.po_id).size} item(s) selecionado(s)` : '+ Adicionar NF de Venda (todos os itens)'}
                           </button>
                         </div>
-                      )}
                     </div>
 
                     {/* Checkbox Pronto para Despacho da OC */}
