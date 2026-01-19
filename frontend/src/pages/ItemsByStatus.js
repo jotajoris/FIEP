@@ -1848,6 +1848,48 @@ Chave PIX: 46.663.556/0001-69`;
               data-testid="search-oc"
             />
           </div>
+          <div>
+            <label style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.85rem', display: 'block', marginBottom: '0.5rem' }}>
+              📦 Pesquisar Nome do Item:
+            </label>
+            <input
+              type="text"
+              value={searchDescricao}
+              onChange={(e) => setSearchDescricao(e.target.value)}
+              placeholder="Digite o nome/descrição..."
+              className="form-input"
+              style={{ width: '100%', padding: '0.5rem 1rem' }}
+              data-testid="search-descricao"
+            />
+          </div>
+          <div>
+            <label style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.85rem', display: 'block', marginBottom: '0.5rem' }}>
+              🏷️ Pesquisar Marca:
+            </label>
+            <input
+              type="text"
+              value={searchMarca}
+              onChange={(e) => setSearchMarca(e.target.value)}
+              placeholder="Digite a marca..."
+              className="form-input"
+              style={{ width: '100%', padding: '0.5rem 1rem' }}
+              data-testid="search-marca"
+            />
+          </div>
+          <div>
+            <label style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.85rem', display: 'block', marginBottom: '0.5rem' }}>
+              🔗 Pesquisar Link:
+            </label>
+            <input
+              type="text"
+              value={searchLink}
+              onChange={(e) => setSearchLink(e.target.value)}
+              placeholder="Digite parte do link..."
+              className="form-input"
+              style={{ width: '100%', padding: '0.5rem 1rem' }}
+              data-testid="search-link"
+            />
+          </div>
         </div>
 
         {/* Filtros por Select */}
