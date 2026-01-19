@@ -74,6 +74,7 @@ const Dashboard = () => {
       const params = new URLSearchParams();
       if (searchTerm) params.append('search_oc', searchTerm);
       if (searchCodigoItem) params.append('search_codigo', searchCodigoItem);
+      if (searchDescricaoItem) params.append('search_descricao', searchDescricaoItem);
       if (searchResponsavel) params.append('search_responsavel', searchResponsavel);
       if (dateFrom) params.append('date_from', dateFrom);
       if (dateTo) params.append('date_to', dateTo);
