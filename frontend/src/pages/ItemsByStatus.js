@@ -2424,13 +2424,14 @@ Chave PIX: 46.663.556/0001-69`;
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                       {oc.items.map((item) => {
                         const isSelectedForNF = getItensSelecionados(oc.po_id).has(item._uniqueId);
+                        const jaTemNF = oc.itensComNFIndices && oc.itensComNFIndices.has(item._itemIndexInPO);
                         return (
                           <div 
                             key={item._uniqueId} 
                             className="card" 
                             style={{ 
-                              background: isSelectedForNF ? '#f0fdf4' : 'white', 
-                              border: isSelectedForNF ? '2px solid #22c55e' : '1px solid #e2e8f0'
+                              background: jaTemNF ? '#dcfce7' : isSelectedForNF ? '#f0fdf4' : 'white', 
+                              border: jaTemNF ? '2px solid #16a34a' : isSelectedForNF ? '2px solid #22c55e' : '1px solid #e2e8f0'
                             }} 
                             data-testid={`item-card-${item._uniqueId}`}
                           >
