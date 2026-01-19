@@ -3311,18 +3311,36 @@ async def download_nf_venda_oc(
 @api_router.delete("/purchase-orders/{po_id}/nf-venda")
 async def delete_nf_venda_oc(
     po_id: str,
+    nf_id: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    """Remover NF de Venda da OC"""
+    """Remover NF de Venda da OC (específica ou todas)"""
     po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
     
     if not po:
         raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
     
-    await db.purchase_orders.update_one(
-        {"id": po_id},
-        {"$unset": {"nota_fiscal_venda": ""}}
-    )
+    if nf_id:
+        # Remover NF específica da lista
+        existing_nfs = po.get('notas_fiscais_venda', [])
+        existing_nfs = [nf for nf in existing_nfs if nf.get('id') != nf_id]
+        
+        # Atualizar nota_fiscal_venda para a última NF ou None
+        last_nf = existing_nfs[-1] if existing_nfs else None
+        
+        await db.purchase_orders.update_one(
+            {"id": po_id},
+            {"$set": {
+                "notas_fiscais_venda": existing_nfs,
+                "nota_fiscal_venda": last_nf
+            }}
+        )
+    else:
+        # Remover todas as NFs
+        await db.purchase_orders.update_one(
+            {"id": po_id},
+            {"$unset": {"nota_fiscal_venda": "", "notas_fiscais_venda": ""}}
+        )
     
     return {"success": True, "message": "NF de Venda removida"}
 
