@@ -474,6 +474,7 @@ const ItemsByStatus = () => {
           numero_oc: item.numero_oc,
           cnpj_requisitante: item.cnpj_requisitante,
           data_entrega: item.data_entrega || null, // Data de entrega da OC
+          endereco_entrega: item.endereco_entrega_oc || item.endereco_entrega || null, // Endereço de entrega da OC
           nota_fiscal_venda: ocNFVenda[ocId] || item._ocNFVenda || null, // NF de Venda da OC
           notas_fiscais_venda: ocNFsVenda[ocId] || item._ocNFsVenda || [], // Todas NFs de Venda
           pronto_despacho: ocProntoDespacho[ocId] || item._ocProntoDespacho || false, // Status pronto para despacho
