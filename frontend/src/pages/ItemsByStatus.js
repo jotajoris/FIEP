@@ -3096,14 +3096,15 @@ Chave PIX: 46.663.556/0001-69`;
                       {oc.items.map((item) => {
                         const isSelectedForNF = getItensSelecionados(oc.po_id).has(item._uniqueId);
                         const isSelectedForFrete = itensParaFrete[oc.po_id]?.has(item._itemIndexInPO) || false;
+                        const isSelectedForStatus = itensParaStatus[oc.po_id]?.has(item._itemIndexInPO) || false;
                         const jaTemNF = oc.itensComNFIndices && oc.itensComNFIndices.has(item._itemIndexInPO);
                         return (
                           <div 
                             key={item._uniqueId} 
                             className="card" 
                             style={{ 
-                              background: jaTemNF ? '#dcfce7' : isSelectedForNF ? '#f0fdf4' : isSelectedForFrete ? '#fef9c3' : 'white', 
-                              border: jaTemNF ? '2px solid #16a34a' : isSelectedForNF ? '2px solid #22c55e' : isSelectedForFrete ? '2px solid #f59e0b' : '1px solid #e2e8f0'
+                              background: jaTemNF ? '#dcfce7' : isSelectedForNF ? '#f0fdf4' : isSelectedForFrete ? '#fef9c3' : isSelectedForStatus ? '#f3e8ff' : 'white', 
+                              border: jaTemNF ? '2px solid #16a34a' : isSelectedForNF ? '2px solid #22c55e' : isSelectedForFrete ? '2px solid #f59e0b' : isSelectedForStatus ? '2px solid #8b5cf6' : '1px solid #e2e8f0'
                             }} 
                             data-testid={`item-card-${item._uniqueId}`}
                           >
@@ -3149,6 +3150,27 @@ Chave PIX: 46.663.556/0001-69`;
                                       title="Selecionar para Frete de Envio"
                                     />
                                     <span style={{ fontSize: '0.7rem', color: '#d97706', fontWeight: '600' }}>🚚</span>
+                                  </div>
+                                )}
+                                {/* Checkbox Status */}
+                                {isAdmin() && (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelectedForStatus}
+                                      onChange={(e) => {
+                                        e.stopPropagation();
+                                        toggleItemParaStatus(oc.po_id, item._itemIndexInPO);
+                                      }}
+                                      style={{ 
+                                        width: '18px', 
+                                        height: '18px', 
+                                        cursor: 'pointer',
+                                        accentColor: '#8b5cf6'
+                                      }}
+                                      title="Selecionar para Mudar Status"
+                                    />
+                                    <span style={{ fontSize: '0.7rem', color: '#7c3aed', fontWeight: '600' }}>🔄</span>
                                   </div>
                                 )}
                               </div>
