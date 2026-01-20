@@ -126,6 +126,72 @@ const PODetails = () => {
     }
   };
 
+  // Função para atualizar OC com PDF (preencher dados faltantes)
+  const handleAtualizarComPDF = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      alert('Por favor, selecione um arquivo PDF');
+      return;
+    }
+    
+    if (!window.confirm(
+      `Atualizar ${po.numero_oc} com o PDF "${file.name}"?\n\n` +
+      `Esta ação irá:\n` +
+      `✅ Preencher ENDEREÇO DE ENTREGA (se estiver vazio)\n` +
+      `✅ Preencher DATA DE ENTREGA (se estiver vazia)\n\n` +
+      `Esta ação NÃO altera:\n` +
+      `🔒 Status dos itens\n` +
+      `🔒 Responsáveis\n` +
+      `🔒 Fontes de compra\n` +
+      `🔒 Notas fiscais\n` +
+      `🔒 Observações`
+    )) {
+      event.target.value = '';
+      return;
+    }
+    
+    setAtualizandoPDF(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/purchase-orders/${id}/atualizar-pdf`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.detail || 'Erro ao atualizar');
+      }
+      
+      if (result.campos_atualizados && result.campos_atualizados.length > 0) {
+        alert(
+          `✅ ${result.message}\n\n` +
+          `Campos atualizados:\n${result.campos_atualizados.map(c => `• ${c}`).join('\n')}`
+        );
+        // Recarregar a OC para mostrar os novos dados
+        loadPO();
+      } else {
+        alert('ℹ️ Nenhum campo precisou ser atualizado (todos já estão preenchidos)');
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar com PDF:', error);
+      alert(`❌ Erro ao atualizar: ${error.message}`);
+    } finally {
+      setAtualizandoPDF(false);
+      event.target.value = '';
+    }
+  };
+
   const handleDelete = async () => {
     if (!window.confirm('Tem certeza que deseja deletar esta Ordem de Compra? Esta ação não pode ser desfeita.')) {
       return;
