@@ -54,6 +54,10 @@ const ItemsByStatus = () => {
   const [fornecedorSugestoes, setFornecedorSugestoes] = useState([]);  // Sugestões filtradas
   const [activeFornecedorIdx, setActiveFornecedorIdx] = useState(null);  // Índice do campo de fornecedor ativo
 
+  // Estados para histórico de cotações (itens pendentes)
+  const [historicoCotacoes, setHistoricoCotacoes] = useState({});  // {uniqueId: {historico: [], loading: boolean}}
+  const [expandedHistorico, setExpandedHistorico] = useState({});  // {uniqueId: boolean} - histórico expandido
+
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
