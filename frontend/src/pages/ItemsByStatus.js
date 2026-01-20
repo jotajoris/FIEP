@@ -182,6 +182,7 @@ const ItemsByStatus = () => {
   // Estados para mudança de status em massa
   const [novoStatusMassa, setNovoStatusMassa] = useState({});  // {po_id: status} - Status selecionado para mudança em massa
   const [aplicandoStatusMassa, setAplicandoStatusMassa] = useState(null);  // po_id do status sendo aplicado
+  const [itensParaStatus, setItensParaStatus] = useState({});  // {po_id: Set(item_index)} - Itens selecionados para mudança de status
   
   // Estados para carrinho e mover em lote
   const [selectedItems, setSelectedItems] = useState(new Set());  // Itens selecionados para mover
