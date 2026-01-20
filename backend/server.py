@@ -4227,6 +4227,70 @@ async def get_fornecedores(current_user: dict = Depends(get_current_user)):
     return {"fornecedores": sorted(list(fornecedores))}
 
 
+@api_router.patch("/purchase-orders/{po_id}/endereco-entrega")
+async def update_po_endereco_entrega(
+    po_id: str,
+    data: dict,
+    current_user: dict = Depends(require_admin)
+):
+    """Atualizar endereço de entrega da OC (apenas admin)"""
+    
+    endereco = data.get("endereco_entrega", "").strip().upper()
+    
+    result = await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"endereco_entrega": endereco}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    return {"success": True, "endereco_entrega": endereco}
+
+
+@api_router.post("/admin/migrar-enderecos")
+async def migrar_enderecos_itens_para_oc(current_user: dict = Depends(require_admin)):
+    """
+    Migrar endereços de entrega dos itens para o nível da OC.
+    Para cada OC sem endereco_entrega, busca o endereço do primeiro item que tenha.
+    """
+    
+    # Buscar todas as OCs que não têm endereco_entrega
+    pos = await db.purchase_orders.find(
+        {"$or": [{"endereco_entrega": ""}, {"endereco_entrega": None}, {"endereco_entrega": {"$exists": False}}]},
+        {"_id": 0, "id": 1, "numero_oc": 1, "items.endereco_entrega": 1}
+    ).to_list(1000)
+    
+    migrados = 0
+    erros = []
+    
+    for po in pos:
+        # Buscar o primeiro item que tenha endereço de entrega
+        endereco = None
+        for item in po.get('items', []):
+            item_endereco = item.get('endereco_entrega', '').strip()
+            if item_endereco:
+                endereco = item_endereco
+                break
+        
+        if endereco:
+            try:
+                await db.purchase_orders.update_one(
+                    {"id": po['id']},
+                    {"$set": {"endereco_entrega": endereco}}
+                )
+                migrados += 1
+            except Exception as e:
+                erros.append(f"{po['numero_oc']}: {str(e)}")
+    
+    return {
+        "success": True,
+        "total_ocs_processadas": len(pos),
+        "enderecos_migrados": migrados,
+        "erros": erros
+    }
+
+
 @app.on_event("startup")
 async def startup_event():
     """Iniciar job de verificação de rastreios e criar índices no MongoDB"""
