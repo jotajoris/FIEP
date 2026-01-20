@@ -7,7 +7,7 @@ import { normalizeText } from '../utils/textUtils';
 import Pagination from '../components/Pagination';
 
 // Helper para calcular contagem regressiva e status de atraso
-const calcularStatusEntrega = (dataEntrega) => {
+const calcularStatusEntrega = (dataEntrega, todosEntregues = false) => {
   if (!dataEntrega) return null;
   
   try {
@@ -20,6 +20,19 @@ const calcularStatusEntrega = (dataEntrega) => {
     
     // Formatar data para exibição (DD/MM/YYYY)
     const dataFormatada = entrega.toLocaleDateString('pt-BR');
+    
+    // Se todos os itens foram entregues, mostrar status positivo
+    if (todosEntregues) {
+      return {
+        atrasado: false,
+        entregue: true,
+        dias: 0,
+        texto: '✅ ENTREGUE',
+        dataFormatada,
+        cor: '#22c55e', // verde
+        bg: '#f0fdf4'
+      };
+    }
     
     if (diffDays < 0) {
       return {
@@ -73,8 +86,8 @@ const calcularStatusEntrega = (dataEntrega) => {
 };
 
 // Componente para exibir a data de entrega com contagem regressiva
-const DataEntregaBadge = ({ dataEntrega, compact = false }) => {
-  const status = calcularStatusEntrega(dataEntrega);
+const DataEntregaBadge = ({ dataEntrega, compact = false, todosEntregues = false }) => {
+  const status = calcularStatusEntrega(dataEntrega, todosEntregues);
   if (!status) return null;
   
   if (compact) {
@@ -89,9 +102,10 @@ const DataEntregaBadge = ({ dataEntrega, compact = false }) => {
         border: `1px solid ${status.cor}`,
         whiteSpace: 'nowrap'
       }}>
-        {status.atrasado ? '⚠️ ' : '📅 '}{status.dataFormatada}
+        {status.entregue ? '✅ ' : status.atrasado ? '⚠️ ' : '📅 '}{status.dataFormatada}
+        {status.entregue && ' ✓'}
         {status.atrasado && ` (-${status.dias}d)`}
-        {!status.atrasado && status.dias <= 3 && ` (${status.dias}d)`}
+        {!status.atrasado && !status.entregue && status.dias <= 3 && ` (${status.dias}d)`}
       </span>
     );
   }
