@@ -1318,7 +1318,7 @@ async def upload_multiple_pdfs(files: List[UploadFile] = File(...), current_user
                     preco_venda=preco_venda
                 ))
             
-            # Criar OC
+            # Criar OC com data de entrega
             po = PurchaseOrder(
                 numero_oc=oc_data["numero_oc"],
                 cnpj_requisitante=oc_data.get("cnpj_requisitante", ""),
@@ -1328,6 +1328,10 @@ async def upload_multiple_pdfs(files: List[UploadFile] = File(...), current_user
             
             doc = po.model_dump()
             doc['created_at'] = doc['created_at'].isoformat()
+            
+            # Adicionar data de entrega se extraída do PDF
+            if oc_data.get("data_entrega"):
+                doc['data_entrega'] = oc_data["data_entrega"]
             
             await db.purchase_orders.insert_one(doc)
             
