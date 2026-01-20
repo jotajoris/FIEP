@@ -14,6 +14,120 @@ const normalizeText = (text) => {
     .toUpperCase();
 };
 
+// Componente para editar data de entrega com botão de salvar
+const DataEntregaEditor = ({ order, setOrder }) => {
+  const [dataTemp, setDataTemp] = useState(order.data_entrega || '');
+  const [salvando, setSalvando] = useState(false);
+  const [modificado, setModificado] = useState(false);
+  
+  // Verificar se todos os itens estão entregues
+  const todosEntregues = order.items.every(item => item.status === 'entregue');
+  
+  const salvarData = async () => {
+    if (!dataTemp) {
+      alert('Selecione uma data');
+      return;
+    }
+    
+    setSalvando(true);
+    try {
+      await apiPatch(`${API}/purchase-orders/${order.id}/data-entrega`, {
+        data_entrega: dataTemp
+      });
+      setOrder({ ...order, data_entrega: dataTemp });
+      setModificado(false);
+      alert('Data de entrega salva!');
+    } catch (error) {
+      console.error('Erro ao salvar data:', error);
+      alert('Erro ao salvar data de entrega');
+    } finally {
+      setSalvando(false);
+    }
+  };
+  
+  const calcularStatus = () => {
+    if (!dataTemp) return null;
+    if (todosEntregues) return { texto: '✅ OC ENTREGUE', cor: '#22c55e', bg: '#f0fdf4' };
+    
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const entrega = new Date(dataTemp + 'T00:00:00');
+    const diff = Math.ceil((entrega - hoje) / (1000 * 60 * 60 * 24));
+    
+    if (diff < 0) {
+      return { texto: `⚠️ ${Math.abs(diff)} dias em atraso`, cor: '#dc2626', bg: '#fef2f2' };
+    } else if (diff === 0) {
+      return { texto: 'Entrega HOJE!', cor: '#f59e0b', bg: '#fffbeb' };
+    } else {
+      return { texto: `✓ ${diff} dias restantes`, cor: '#22c55e', bg: '#f0fdf4' };
+    }
+  };
+  
+  const status = calcularStatus();
+  
+  return (
+    <div style={{ 
+      marginTop: '1.5rem', 
+      paddingTop: '1rem', 
+      borderTop: '2px solid #e2e8f0',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '1rem',
+      flexWrap: 'wrap'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <label style={{ fontWeight: '600', color: '#4a5568' }}>📅 Data de Entrega:</label>
+        <input
+          type="date"
+          value={dataTemp}
+          onChange={(e) => {
+            setDataTemp(e.target.value);
+            setModificado(e.target.value !== order.data_entrega);
+          }}
+          style={{
+            padding: '0.5rem',
+            borderRadius: '6px',
+            border: modificado ? '2px solid #f59e0b' : '2px solid #e2e8f0',
+            fontSize: '1rem',
+            fontWeight: '600',
+            background: modificado ? '#fffbeb' : 'white'
+          }}
+          data-testid="input-data-entrega"
+        />
+        <button
+          onClick={salvarData}
+          disabled={!modificado || salvando}
+          style={{
+            padding: '0.5rem 1rem',
+            borderRadius: '6px',
+            border: 'none',
+            background: modificado ? '#22c55e' : '#9ca3af',
+            color: 'white',
+            fontWeight: '600',
+            cursor: modificado ? 'pointer' : 'not-allowed',
+            opacity: modificado ? 1 : 0.5
+          }}
+        >
+          {salvando ? '⏳ Salvando...' : '💾 Salvar Data'}
+        </button>
+      </div>
+      {status && (
+        <span style={{ 
+          padding: '0.4rem 0.8rem',
+          borderRadius: '8px',
+          background: status.bg,
+          border: `2px solid ${status.cor}`,
+          color: status.cor,
+          fontWeight: '700',
+          fontSize: '0.9rem'
+        }}>
+          {status.texto}
+        </span>
+      )}
+    </div>
+  );
+};
+
 const EditPO = () => {
   const { id } = useParams();
   const navigate = useNavigate();
