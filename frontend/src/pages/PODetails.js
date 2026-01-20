@@ -357,23 +357,6 @@ const PODetails = () => {
               </div>
             );
           })()}
-          
-          {/* Endereço de Entrega */}
-          {po.endereco_entrega && (
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-              <span style={{ fontWeight: '600', color: '#4a5568', whiteSpace: 'nowrap' }}>📍 Endereço:</span>
-              <span style={{ 
-                color: '#1f2937',
-                background: '#f3f4f6',
-                padding: '0.5rem 0.75rem',
-                borderRadius: '6px',
-                fontSize: '0.95rem',
-                lineHeight: '1.4'
-              }}>
-                {po.endereco_entrega}
-              </span>
-            </div>
-          )}
         </div>
       </div>
 
