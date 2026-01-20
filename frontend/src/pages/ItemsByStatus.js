@@ -174,6 +174,11 @@ const ItemsByStatus = () => {
   const [ocProntoDespacho, setOcProntoDespacho] = useState({});  // {po_id: boolean} - Status pronto despacho por OC
   const [itensParaNFVenda, setItensParaNFVenda] = useState({});  // {po_id: Set(uniqueId)} - Itens selecionados para NF de Venda
   
+  // Estados para frete de envio em lote
+  const [itensParaFrete, setItensParaFrete] = useState({});  // {po_id: Set(item_index)} - Itens selecionados para frete
+  const [freteEnvioTotal, setFreteEnvioTotal] = useState({});  // {po_id: valor} - Valor total do frete por OC
+  const [aplicandoFrete, setAplicandoFrete] = useState(null);  // po_id do frete sendo aplicado
+  
   // Estados para carrinho e mover em lote
   const [selectedItems, setSelectedItems] = useState(new Set());  // Itens selecionados para mover
   const [movingToComprado, setMovingToComprado] = useState(false);  // Loading do botão
