@@ -300,28 +300,36 @@ const PODetails = () => {
               {valorTotal > 0 ? formatBRL(valorTotal) : 'Não informado'}
             </div>
           </div>
-          {/* Data de Entrega com contagem regressiva */}
+        {/* Data de Entrega e Endereço de Entrega */}
+        <div style={{ 
+          marginTop: '1.5rem', 
+          paddingTop: '1rem', 
+          borderTop: '1px solid #e2e8f0',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1rem'
+        }}>
+          {/* Data de Entrega */}
           {po.data_entrega && (() => {
             const statusEntrega = calcularStatusEntrega(po.data_entrega);
             if (!statusEntrega) return null;
             return (
-              <div>
-                <div className="stat-label">Data de Entrega</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                <span style={{ fontWeight: '600', color: '#4a5568' }}>📅 Data de Entrega:</span>
                 <div style={{ 
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  padding: '0.5rem 0.75rem',
+                  padding: '0.4rem 0.75rem',
                   borderRadius: '8px',
                   background: statusEntrega.bg,
-                  border: `2px solid ${statusEntrega.cor}`,
-                  marginTop: '0.25rem'
+                  border: `2px solid ${statusEntrega.cor}`
                 }}>
-                  <span style={{ fontWeight: '600', color: statusEntrega.cor, fontSize: '1.1rem' }}>
-                    📅 {statusEntrega.dataFormatada}
+                  <span style={{ fontWeight: '600', color: statusEntrega.cor }}>
+                    {statusEntrega.dataFormatada}
                   </span>
                   <span style={{
-                    padding: '0.2rem 0.6rem',
+                    padding: '0.15rem 0.5rem',
                     borderRadius: '12px',
                     fontSize: '0.8rem',
                     fontWeight: '700',
@@ -334,13 +342,24 @@ const PODetails = () => {
               </div>
             );
           })()}
+          
+          {/* Endereço de Entrega */}
+          {po.endereco_entrega && (
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+              <span style={{ fontWeight: '600', color: '#4a5568', whiteSpace: 'nowrap' }}>📍 Endereço:</span>
+              <span style={{ 
+                color: '#1f2937',
+                background: '#f3f4f6',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '6px',
+                fontSize: '0.95rem',
+                lineHeight: '1.4'
+              }}>
+                {po.endereco_entrega}
+              </span>
+            </div>
+          )}
         </div>
-        {po.endereco_entrega && (
-          <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
-            <div className="stat-label">Endereço de Entrega</div>
-            <div style={{ color: '#4a5568', marginTop: '0.25rem' }}>{po.endereco_entrega}</div>
-          </div>
-        )}
       </div>
 
       <div className="card">
