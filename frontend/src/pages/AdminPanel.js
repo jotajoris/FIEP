@@ -25,6 +25,10 @@ const AdminPanel = () => {
   const [selectedNFsVenda, setSelectedNFsVenda] = useState(new Set());
   const [downloadingBulk, setDownloadingBulk] = useState(false);
   
+  // Atualização em massa de OCs
+  const [atualizandoOCs, setAtualizandoOCs] = useState(false);
+  const [resultadoAtualizacao, setResultadoAtualizacao] = useState(null);
+  
   // Paginação para NFs
   const [nfCompraPage, setNfCompraPage] = useState(1);
   const [nfCompraPerPage, setNfCompraPerPage] = useState(5);
