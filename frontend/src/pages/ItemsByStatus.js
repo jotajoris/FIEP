@@ -2344,7 +2344,7 @@ Chave PIX: 46.663.556/0001-69`;
                       textAlign: 'center',
                       lineHeight: '1.1'
                     }}>
-                      {oc.prontoParaDespacho ? '✓' : oc.totalItens}
+                      {oc.prontoParaEnvio ? '✓' : oc.totalItens}
                     </div>
                     
                     <div>
@@ -2354,7 +2354,8 @@ Chave PIX: 46.663.556/0001-69`;
                         </h3>
                         {/* Data de Entrega com contagem regressiva */}
                         {oc.data_entrega && <DataEntregaBadge dataEntrega={oc.data_entrega} compact={true} />}
-                        {oc.prontoParaDespacho && (
+                        {/* Badge de Status */}
+                        {oc.prontoParaEnvio ? (
                           <span style={{ 
                             background: '#22c55e', 
                             color: 'white', 
@@ -2363,36 +2364,75 @@ Chave PIX: 46.663.556/0001-69`;
                             fontSize: '0.75rem',
                             fontWeight: '600'
                           }}>
-                            PRONTO PARA DESPACHO
+                            ✅ PRONTO PARA ENVIO
                           </span>
-                        )}
+                        ) : oc.temNFFornecedor ? (
+                          <span style={{ 
+                            background: '#3b82f6', 
+                            color: 'white', 
+                            padding: '0.2rem 0.6rem', 
+                            borderRadius: '12px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600'
+                          }}>
+                            📦 NF FORNECEDOR
+                          </span>
+                        ) : null}
                       </div>
-                      <div style={{ fontSize: '0.9rem', color: '#6b7280' }}>
-                        {/* Mostrar contagem de itens prontos/restantes */}
-                        {oc.itensProntos > 0 ? (
-                          <>
-                            <strong style={{ color: '#22c55e' }}>
-                              {oc.itensProntos} {oc.itensProntos === 1 ? 'item pronto' : 'itens prontos'}
-                            </strong>
-                            {oc.itensRestantes > 0 && (
-                              <span style={{ marginLeft: '0.5rem', color: '#f59e0b' }}>
-                                • {oc.itensRestantes} {oc.itensRestantes === 1 ? 'restante' : 'restantes'}
-                              </span>
-                            )}
-                            <span style={{ marginLeft: '0.5rem', color: '#6b7280' }}>
-                              (Total: {oc.totalItens})
-                            </span>
-                          </>
-                        ) : (
-                          <strong style={{ color: '#667eea' }}>
-                            {oc.totalItens} {oc.totalItens === 1 ? 'item' : 'itens'}
-                          </strong>
-                        )}
-                        {oc.notas_fiscais_venda && oc.notas_fiscais_venda.length > 0 && (
-                          <span style={{ marginLeft: '0.5rem', color: '#16a34a' }}>
-                            • {oc.notas_fiscais_venda.length} NF(s) anexada(s)
+                      
+                      {/* Status de NFs */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.85rem' }}>
+                        {/* NF Fornecedor */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ 
+                            color: oc.todosFornecedor ? '#22c55e' : oc.temNFFornecedor ? '#3b82f6' : '#9ca3af',
+                            fontWeight: '600'
+                          }}>
+                            📦 NF Fornecedor:
                           </span>
-                        )}
+                          {oc.itensComNFFornecedor > 0 ? (
+                            <>
+                              <span style={{ color: '#22c55e', fontWeight: '700' }}>
+                                {oc.itensComNFFornecedor} de {oc.totalItens}
+                              </span>
+                              {oc.itensRestantesFornecedor > 0 && (
+                                <span style={{ color: '#f59e0b', fontSize: '0.8rem' }}>
+                                  (falta {oc.itensRestantesFornecedor})
+                                </span>
+                              )}
+                              {oc.todosFornecedor && (
+                                <span style={{ color: '#22c55e' }}>✓</span>
+                              )}
+                            </>
+                          ) : (
+                            <span style={{ color: '#9ca3af' }}>Nenhuma</span>
+                          )}
+                        </div>
+                        
+                        {/* NF Venda (ON) */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ 
+                            color: oc.temNFVenda ? '#22c55e' : '#9ca3af',
+                            fontWeight: '600'
+                          }}>
+                            🏢 NF Venda (ON):
+                          </span>
+                          {oc.notas_fiscais_venda && oc.notas_fiscais_venda.length > 0 ? (
+                            <>
+                              <span style={{ color: '#22c55e', fontWeight: '700' }}>
+                                {oc.itensProntos} de {oc.totalItens}
+                              </span>
+                              {oc.itensRestantes > 0 && (
+                                <span style={{ color: '#f59e0b', fontSize: '0.8rem' }}>
+                                  (falta {oc.itensRestantes})
+                                </span>
+                              )}
+                              <span style={{ color: '#22c55e' }}>✓ {oc.notas_fiscais_venda.length} NF(s)</span>
+                            </>
+                          ) : (
+                            <span style={{ color: '#9ca3af' }}>Nenhuma</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
