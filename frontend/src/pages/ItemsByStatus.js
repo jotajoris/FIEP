@@ -2596,6 +2596,152 @@ Chave PIX: 46.663.556/0001-69`;
                   </div>
                 </div>
 
+                {/* ============ HISTÓRICO DE COTAÇÕES (APENAS PENDENTES) ============ */}
+                {status === 'pendente' && (
+                  <div style={{ 
+                    marginBottom: '1rem', 
+                    padding: '0.75rem', 
+                    background: '#fef3c7', 
+                    borderRadius: '8px',
+                    border: '1px solid #fcd34d'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: '600', color: '#92400e', fontSize: '0.9rem' }}>
+                        📜 Cotações Anteriores
+                      </span>
+                      <button
+                        onClick={() => buscarHistoricoCotacoes(item)}
+                        style={{ 
+                          padding: '0.4rem 0.8rem', 
+                          fontSize: '0.8rem', 
+                          background: historicoCotacoes[item._uniqueId]?.encontrado ? '#22c55e' : '#f59e0b', 
+                          color: 'white', 
+                          border: 'none', 
+                          borderRadius: '6px', 
+                          cursor: 'pointer',
+                          fontWeight: '600'
+                        }}
+                        data-testid={`btn-historico-${item._uniqueId}`}
+                      >
+                        {historicoCotacoes[item._uniqueId]?.loading 
+                          ? '⏳ Buscando...' 
+                          : historicoCotacoes[item._uniqueId]?.encontrado
+                            ? `✓ ${historicoCotacoes[item._uniqueId]?.historico?.length || 0} encontrado(s)`
+                            : expandedHistorico[item._uniqueId]
+                              ? '▲ Ocultar'
+                              : '🔍 Buscar'}
+                      </button>
+                    </div>
+                    
+                    {/* Exibir histórico quando expandido */}
+                    {expandedHistorico[item._uniqueId] && historicoCotacoes[item._uniqueId] && (
+                      <div style={{ marginTop: '0.75rem' }}>
+                        {historicoCotacoes[item._uniqueId].loading ? (
+                          <div style={{ textAlign: 'center', padding: '1rem', color: '#6b7280' }}>
+                            Buscando cotações anteriores...
+                          </div>
+                        ) : historicoCotacoes[item._uniqueId].historico?.length > 0 ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <div style={{ fontSize: '0.8rem', color: '#166534', fontWeight: '600', marginBottom: '0.25rem' }}>
+                              ✅ Este item já foi cotado/comprado anteriormente:
+                            </div>
+                            {historicoCotacoes[item._uniqueId].historico.map((hist, idx) => (
+                              <div 
+                                key={idx}
+                                style={{ 
+                                  padding: '0.6rem', 
+                                  background: 'white', 
+                                  borderRadius: '6px',
+                                  border: '1px solid #d1fae5',
+                                  fontSize: '0.85rem'
+                                }}
+                              >
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
+                                  {hist.fornecedor && (
+                                    <span style={{ fontWeight: '600', color: '#374151' }}>
+                                      🏪 {hist.fornecedor}
+                                    </span>
+                                  )}
+                                  {hist.preco_unitario > 0 && (
+                                    <span style={{ color: '#059669', fontWeight: '600' }}>
+                                      💰 {formatBRL(hist.preco_unitario)}
+                                    </span>
+                                  )}
+                                  {hist.frete > 0 && (
+                                    <span style={{ color: '#6b7280', fontSize: '0.8rem' }}>
+                                      (+ {formatBRL(hist.frete)} frete)
+                                    </span>
+                                  )}
+                                  <span style={{ 
+                                    fontSize: '0.75rem', 
+                                    padding: '0.15rem 0.4rem', 
+                                    background: hist.status === 'entregue' ? '#dcfce7' : '#e0f2fe',
+                                    color: hist.status === 'entregue' ? '#166534' : '#0369a1',
+                                    borderRadius: '4px',
+                                    fontWeight: '500'
+                                  }}>
+                                    {hist.status.toUpperCase()}
+                                  </span>
+                                  <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+                                    {hist.numero_oc}
+                                  </span>
+                                </div>
+                                {hist.link && (
+                                  <div style={{ marginTop: '0.4rem' }}>
+                                    <a 
+                                      href={hist.link} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      style={{ 
+                                        fontSize: '0.8rem', 
+                                        color: '#2563eb', 
+                                        wordBreak: 'break-all',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.25rem'
+                                      }}
+                                    >
+                                      🔗 {hist.link.length > 60 ? hist.link.substring(0, 60) + '...' : hist.link}
+                                    </a>
+                                    <button
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(hist.link);
+                                        alert('Link copiado!');
+                                      }}
+                                      style={{ 
+                                        marginTop: '0.25rem',
+                                        padding: '0.2rem 0.5rem', 
+                                        fontSize: '0.7rem', 
+                                        background: '#e5e7eb', 
+                                        border: 'none', 
+                                        borderRadius: '4px', 
+                                        cursor: 'pointer' 
+                                      }}
+                                    >
+                                      📋 Copiar Link
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div style={{ 
+                            textAlign: 'center', 
+                            padding: '0.75rem', 
+                            color: '#6b7280',
+                            background: 'white',
+                            borderRadius: '6px',
+                            fontSize: '0.85rem'
+                          }}>
+                            Nenhuma cotação anterior encontrada para este item.
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {editingItem === item._uniqueId ? (
                   <div style={{ marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: '8px' }}>
                     {/* Status e Informações de Venda (somente leitura) */}
