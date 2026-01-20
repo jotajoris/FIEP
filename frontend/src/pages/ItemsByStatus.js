@@ -179,6 +179,10 @@ const ItemsByStatus = () => {
   const [freteEnvioTotal, setFreteEnvioTotal] = useState({});  // {po_id: valor} - Valor total do frete por OC
   const [aplicandoFrete, setAplicandoFrete] = useState(null);  // po_id do frete sendo aplicado
   
+  // Estados para mudança de status em massa
+  const [novoStatusMassa, setNovoStatusMassa] = useState({});  // {po_id: status} - Status selecionado para mudança em massa
+  const [aplicandoStatusMassa, setAplicandoStatusMassa] = useState(null);  // po_id do status sendo aplicado
+  
   // Estados para carrinho e mover em lote
   const [selectedItems, setSelectedItems] = useState(new Set());  // Itens selecionados para mover
   const [movingToComprado, setMovingToComprado] = useState(false);  // Loading do botão
