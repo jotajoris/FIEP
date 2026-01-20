@@ -127,7 +127,7 @@ const EditPO = () => {
 
       {/* Informações da OC */}
       <div className="card" style={{ marginBottom: '1.5rem' }}>
-        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <div>
             <span style={{ fontWeight: '600', color: '#4a5568' }}>Número OC:</span>
             <span style={{ marginLeft: '0.5rem', fontWeight: '700', color: '#667eea' }}>{order.numero_oc}</span>
@@ -145,6 +145,62 @@ const EditPO = () => {
               <span style={{ fontWeight: '600', color: '#4a5568' }}>Endereço:</span>
               <span style={{ marginLeft: '0.5rem' }}>{order.endereco_entrega}</span>
             </div>
+          )}
+        </div>
+        
+        {/* Edição de Data de Entrega */}
+        <div style={{ 
+          marginTop: '1.5rem', 
+          paddingTop: '1rem', 
+          borderTop: '2px solid #e2e8f0',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+          flexWrap: 'wrap'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <label style={{ fontWeight: '600', color: '#4a5568' }}>📅 Data de Entrega:</label>
+            <input
+              type="date"
+              value={order.data_entrega || ''}
+              onChange={async (e) => {
+                const newDate = e.target.value;
+                try {
+                  const response = await apiPatch(`${API}/purchase-orders/${order.id}/data-entrega`, {
+                    data_entrega: newDate
+                  });
+                  setOrder({ ...order, data_entrega: newDate });
+                  alert('Data de entrega atualizada!');
+                } catch (error) {
+                  console.error('Erro ao atualizar data:', error);
+                  alert('Erro ao atualizar data de entrega');
+                }
+              }}
+              style={{
+                padding: '0.5rem',
+                borderRadius: '6px',
+                border: '2px solid #e2e8f0',
+                fontSize: '1rem',
+                fontWeight: '600'
+              }}
+              data-testid="input-data-entrega"
+            />
+          </div>
+          {order.data_entrega && (
+            <span style={{ 
+              padding: '0.4rem 0.8rem',
+              borderRadius: '8px',
+              background: new Date(order.data_entrega) < new Date() ? '#fef2f2' : '#f0fdf4',
+              border: `2px solid ${new Date(order.data_entrega) < new Date() ? '#dc2626' : '#22c55e'}`,
+              color: new Date(order.data_entrega) < new Date() ? '#dc2626' : '#22c55e',
+              fontWeight: '700',
+              fontSize: '0.9rem'
+            }}>
+              {new Date(order.data_entrega) < new Date() 
+                ? `⚠️ ${Math.ceil((new Date() - new Date(order.data_entrega)) / (1000 * 60 * 60 * 24))} dias em atraso`
+                : `✓ ${Math.ceil((new Date(order.data_entrega) - new Date()) / (1000 * 60 * 60 * 24))} dias restantes`
+              }
+            </span>
           )}
         </div>
       </div>
