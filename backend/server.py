@@ -1722,11 +1722,44 @@ async def update_purchase_order(po_id: str, po_update: PurchaseOrderCreate, curr
         {"id": po_id},
         {"$set": {
             "numero_oc": po_update.numero_oc,
+            "data_entrega": po_update.data_entrega,
             "items": [item.model_dump() for item in processed_items]
         }}
     )
     
     return {"message": "Ordem de Compra atualizada com sucesso"}
+
+
+@api_router.patch("/purchase-orders/{po_id}/data-entrega")
+async def update_data_entrega(
+    po_id: str,
+    data_entrega: str = Body(..., embed=True),
+    current_user: dict = Depends(require_admin)
+):
+    """Atualizar data de entrega de uma OC (ADMIN ONLY)"""
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    # Validar formato da data (YYYY-MM-DD ou DD/MM/YYYY)
+    try:
+        if '/' in data_entrega:
+            # Converter de DD/MM/YYYY para YYYY-MM-DD
+            dia, mes, ano = data_entrega.split('/')
+            data_entrega = f"{ano}-{mes}-{dia}"
+        # Validar que é uma data válida
+        datetime.strptime(data_entrega, '%Y-%m-%d')
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Data inválida. Use o formato DD/MM/AAAA ou AAAA-MM-DD")
+    
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"data_entrega": data_entrega}}
+    )
+    
+    return {"message": "Data de entrega atualizada com sucesso", "data_entrega": data_entrega}
+
 
 @api_router.patch("/purchase-orders/{po_id}/items/{codigo_item}")
 async def update_item_status(po_id: str, codigo_item: str, update: ItemStatusUpdate, current_user: dict = Depends(get_current_user)):
