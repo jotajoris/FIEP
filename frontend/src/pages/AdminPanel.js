@@ -495,7 +495,7 @@ const AdminPanel = () => {
       </div>
 
       <div className="card" style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
           <button
             onClick={() => setView('comissoes')}
             className={`btn ${view === 'comissoes' ? 'btn-primary' : 'btn-secondary'}`}
@@ -510,7 +510,113 @@ const AdminPanel = () => {
           >
             📄 Notas Fiscais ({notasFiscais.total_compra + notasFiscais.total_venda})
           </button>
+          <button
+            onClick={() => setView('atualizar-ocs')}
+            className={`btn ${view === 'atualizar-ocs' ? 'btn-primary' : 'btn-secondary'}`}
+            data-testid="view-atualizar-ocs-btn"
+          >
+            🔄 Atualizar OCs
+          </button>
         </div>
+
+        {/* ============== ABA ATUALIZAR OCS ============== */}
+        {view === 'atualizar-ocs' && (
+          <>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem' }}>Atualizar OCs com PDFs</h2>
+            <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '1rem' }}>
+              Selecione múltiplos PDFs de OCs para preencher automaticamente os dados faltantes (endereço de entrega, data de entrega).
+              <br />
+              <strong>Nenhum dado dos itens será alterado</strong> - status, responsáveis, fontes de compra, notas fiscais e observações são preservados.
+            </p>
+            
+            <div style={{ 
+              padding: '1.5rem', 
+              background: '#f0f9ff', 
+              borderRadius: '12px', 
+              border: '2px dashed #3b82f6',
+              textAlign: 'center',
+              marginBottom: '1.5rem'
+            }}>
+              <label 
+                style={{ 
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '1rem 2rem',
+                  background: atualizandoOCs ? '#9ca3af' : '#3b82f6',
+                  color: 'white',
+                  borderRadius: '8px',
+                  cursor: atualizandoOCs ? 'wait' : 'pointer',
+                  fontWeight: '600',
+                  fontSize: '1rem'
+                }}
+              >
+                {atualizandoOCs ? '⏳ Processando...' : '📁 Selecionar PDFs das OCs'}
+                <input 
+                  type="file" 
+                  accept=".pdf"
+                  multiple
+                  onChange={handleAtualizarOCsEmMassa}
+                  disabled={atualizandoOCs}
+                  style={{ display: 'none' }}
+                />
+              </label>
+              <p style={{ marginTop: '1rem', fontSize: '0.85rem', color: '#6b7280' }}>
+                Você pode selecionar múltiplos arquivos PDF de uma vez
+              </p>
+            </div>
+            
+            {/* Resultado da atualização */}
+            {resultadoAtualizacao && (
+              <div style={{ marginTop: '1.5rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>
+                  📊 Resultado do Processamento
+                </h3>
+                <div style={{ 
+                  background: '#f9fafb', 
+                  borderRadius: '8px', 
+                  border: '1px solid #e5e7eb',
+                  overflow: 'hidden'
+                }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                    <thead>
+                      <tr style={{ background: '#f3f4f6' }}>
+                        <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Arquivo</th>
+                        <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>OC</th>
+                        <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Status</th>
+                        <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Campos Atualizados</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {resultadoAtualizacao.resultados.map((r, idx) => (
+                        <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                          <td style={{ padding: '0.75rem' }}>{r.arquivo}</td>
+                          <td style={{ padding: '0.75rem', fontWeight: '600' }}>{r.numero_oc || '-'}</td>
+                          <td style={{ padding: '0.75rem' }}>
+                            {r.success ? (
+                              <span style={{ color: '#059669' }}>✅ OK</span>
+                            ) : (
+                              <span style={{ color: '#dc2626' }}>❌ Erro</span>
+                            )}
+                          </td>
+                          <td style={{ padding: '0.75rem', fontSize: '0.85rem' }}>
+                            {r.success ? (
+                              r.campos_atualizados.map((c, i) => (
+                                <div key={i}>{c}</div>
+                              ))
+                            ) : (
+                              <span style={{ color: '#dc2626' }}>{r.erro}</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
+        )}
 
         {/* ============== ABA COMISSÕES ============== */}
         {view === 'comissoes' && (
