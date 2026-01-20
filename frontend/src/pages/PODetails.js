@@ -5,6 +5,71 @@ import { useAuth } from '../contexts/AuthContext';
 import { v4 as uuidv4 } from 'uuid';
 import Pagination from '../components/Pagination';
 
+// Helper para calcular contagem regressiva e status de atraso
+const calcularStatusEntrega = (dataEntrega) => {
+  if (!dataEntrega) return null;
+  
+  try {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
+    const entrega = new Date(dataEntrega + 'T00:00:00');
+    const diffTime = entrega.getTime() - hoje.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    const dataFormatada = entrega.toLocaleDateString('pt-BR');
+    
+    if (diffDays < 0) {
+      return {
+        atrasado: true,
+        dias: Math.abs(diffDays),
+        texto: `${Math.abs(diffDays)} dia(s) em atraso`,
+        dataFormatada,
+        cor: '#dc2626',
+        bg: '#fef2f2'
+      };
+    } else if (diffDays === 0) {
+      return {
+        atrasado: false,
+        dias: 0,
+        texto: 'Entrega HOJE!',
+        dataFormatada,
+        cor: '#f59e0b',
+        bg: '#fffbeb'
+      };
+    } else if (diffDays <= 3) {
+      return {
+        atrasado: false,
+        dias: diffDays,
+        texto: `${diffDays} dia(s) restante(s)`,
+        dataFormatada,
+        cor: '#f59e0b',
+        bg: '#fffbeb'
+      };
+    } else if (diffDays <= 7) {
+      return {
+        atrasado: false,
+        dias: diffDays,
+        texto: `${diffDays} dias restantes`,
+        dataFormatada,
+        cor: '#3b82f6',
+        bg: '#eff6ff'
+      };
+    } else {
+      return {
+        atrasado: false,
+        dias: diffDays,
+        texto: `${diffDays} dias restantes`,
+        dataFormatada,
+        cor: '#22c55e',
+        bg: '#f0fdf4'
+      };
+    }
+  } catch (e) {
+    return null;
+  }
+};
+
 const PODetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
