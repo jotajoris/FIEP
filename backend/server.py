@@ -1617,6 +1617,7 @@ async def get_purchase_orders_simple(
             "id": po['id'],
             "numero_oc": po['numero_oc'],
             "created_at": po['created_at'],
+            "data_entrega": po.get('data_entrega'),  # Data de entrega extraída do PDF
             "cnpj_requisitante": po.get('cnpj_requisitante', ''),
             "total_items": total_items,
             "valor_total": valor_total,
