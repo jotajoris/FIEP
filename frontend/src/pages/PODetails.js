@@ -300,6 +300,7 @@ const PODetails = () => {
               {valorTotal > 0 ? formatBRL(valorTotal) : 'Não informado'}
             </div>
           </div>
+        </div>
         {/* Data de Entrega e Endereço de Entrega */}
         <div style={{ 
           marginTop: '1.5rem', 
