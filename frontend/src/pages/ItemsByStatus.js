@@ -682,6 +682,53 @@ const ItemsByStatus = () => {
     }));
   };
 
+  // ============== FUNÇÃO PARA BUSCAR HISTÓRICO DE COTAÇÕES ==============
+  const buscarHistoricoCotacoes = async (item) => {
+    const uniqueId = item._uniqueId;
+    
+    // Se já está carregando ou já tem dados, não buscar novamente
+    if (historicoCotacoes[uniqueId]?.loading) return;
+    if (historicoCotacoes[uniqueId]?.historico?.length > 0) {
+      // Apenas expandir/colapsar
+      setExpandedHistorico(prev => ({ ...prev, [uniqueId]: !prev[uniqueId] }));
+      return;
+    }
+    
+    // Marcar como carregando
+    setHistoricoCotacoes(prev => ({
+      ...prev,
+      [uniqueId]: { historico: [], loading: true }
+    }));
+    setExpandedHistorico(prev => ({ ...prev, [uniqueId]: true }));
+    
+    try {
+      const params = new URLSearchParams();
+      if (item.codigo_item) params.append('codigo_item', item.codigo_item);
+      if (item.descricao) params.append('descricao', item.descricao);
+      
+      const response = await apiGet(`${API}/items/historico-cotacoes?${params.toString()}`);
+      
+      setHistoricoCotacoes(prev => ({
+        ...prev,
+        [uniqueId]: { 
+          historico: response.data.historico || [], 
+          loading: false,
+          encontrado: response.data.encontrado
+        }
+      }));
+    } catch (error) {
+      console.error('Erro ao buscar histórico:', error);
+      setHistoricoCotacoes(prev => ({
+        ...prev,
+        [uniqueId]: { historico: [], loading: false, erro: true }
+      }));
+    }
+  };
+
+  const toggleHistorico = (uniqueId) => {
+    setExpandedHistorico(prev => ({ ...prev, [uniqueId]: !prev[uniqueId] }));
+  };
+
   const handleFileUpload = async (item, tipo, event) => {
     const file = event.target.files[0];
     if (!file) return;
