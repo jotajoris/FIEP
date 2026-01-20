@@ -486,37 +486,77 @@ const ItemsByStatus = () => {
     return Object.values(grouped).map(oc => {
       const totalItens = oc.items.length;
       
-      // Calcular quantos itens já estão em alguma NF
-      const nfs = oc.notas_fiscais_venda || [];
-      const itensComNF = new Set();
-      nfs.forEach(nf => {
+      // Calcular quantos itens já estão em alguma NF de Venda (ON)
+      const nfsVenda = oc.notas_fiscais_venda || [];
+      const itensComNFVenda = new Set();
+      nfsVenda.forEach(nf => {
         if (nf.itens_indices) {
-          nf.itens_indices.forEach(idx => itensComNF.add(idx));
+          nf.itens_indices.forEach(idx => itensComNFVenda.add(idx));
         }
       });
       
-      // Contar itens prontos (que já estão em NF) dentro dos itens atuais
-      let itensProntos = 0;
+      // Calcular quantos itens têm NF de Fornecedor
+      let itensComNFFornecedor = 0;
       oc.items.forEach(item => {
-        if (itensComNF.has(item._itemIndexInPO)) {
-          itensProntos++;
+        const nfsFornecedor = item.notas_fiscais_fornecedor || [];
+        if (nfsFornecedor && nfsFornecedor.length > 0) {
+          itensComNFFornecedor++;
         }
       });
       
-      const itensRestantes = totalItens - itensProntos;
+      // Contar itens com NF de Venda dentro dos itens atuais
+      let itensComNFVendaCount = 0;
+      oc.items.forEach(item => {
+        if (itensComNFVenda.has(item._itemIndexInPO)) {
+          itensComNFVendaCount++;
+        }
+      });
+      
+      const itensRestantesVenda = totalItens - itensComNFVendaCount;
+      const itensRestantesFornecedor = totalItens - itensComNFFornecedor;
+      
+      // Determinar status para ordenação
+      // Prioridade: 1) Tem NF Venda + NF Fornecedor, 2) Só NF Fornecedor, 3) Sem NF
+      const temNFVenda = nfsVenda.length > 0;
+      const temNFFornecedor = itensComNFFornecedor > 0;
+      const todosFornecedor = itensComNFFornecedor === totalItens;
+      const todosVenda = itensComNFVendaCount === totalItens;
+      
+      let prioridadeOrdenacao = 3; // Sem NF
+      if (temNFVenda && temNFFornecedor) {
+        prioridadeOrdenacao = 1; // Pronto para envio (tem ambas)
+      } else if (temNFFornecedor) {
+        prioridadeOrdenacao = 2; // Só NF Fornecedor
+      }
       
       return {
         ...oc,
         totalItens,
-        itensProntos,
-        itensRestantes,
-        itensComNFIndices: itensComNF, // Set com índices de itens que já têm NF
-        prontoParaDespacho: oc.pronto_despacho // Agora é controlado pelo checkbox da OC
+        // NF de Venda (ON)
+        itensProntos: itensComNFVendaCount,
+        itensRestantes: itensRestantesVenda,
+        itensComNFIndices: itensComNFVenda,
+        // NF de Fornecedor
+        itensComNFFornecedor,
+        itensRestantesFornecedor,
+        todosFornecedor,
+        temNFFornecedor,
+        // NF de Venda
+        temNFVenda,
+        todosVenda,
+        // Status geral
+        prontoParaDespacho: oc.pronto_despacho,
+        prontoParaEnvio: temNFVenda && todosFornecedor,
+        prioridadeOrdenacao
       };
     }).sort((a, b) => {
-      // Ordenar: prontos para despacho primeiro, depois por número de itens
-      if (a.prontoParaDespacho !== b.prontoParaDespacho) {
-        return a.prontoParaDespacho ? -1 : 1;
+      // Ordenar: 1) Prontos para envio, 2) Com NF Fornecedor, 3) Sem NF
+      if (a.prioridadeOrdenacao !== b.prioridadeOrdenacao) {
+        return a.prioridadeOrdenacao - b.prioridadeOrdenacao;
+      }
+      // Dentro da mesma prioridade, ordenar por itens com NF
+      if (a.itensComNFFornecedor !== b.itensComNFFornecedor) {
+        return b.itensComNFFornecedor - a.itensComNFFornecedor;
       }
       return b.totalItens - a.totalItens;
     });
