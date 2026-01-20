@@ -246,6 +246,7 @@ const ItemsByStatus = () => {
               po_id: po.id,
               cnpj_requisitante: po.cnpj_requisitante || '',
               data_entrega: po.data_entrega || null, // Data de entrega da OC
+              endereco_entrega_oc: po.endereco_entrega || null, // Endereço de entrega da OC
               _itemIndexInPO: realIndex,  // USAR ÍNDICE ORIGINAL DO BANCO
               _uniqueId: uniqueId,
               _ocNFVenda: po.nota_fiscal_venda || null, // NF de Venda da OC
