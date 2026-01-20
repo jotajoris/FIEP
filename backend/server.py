@@ -915,6 +915,84 @@ async def get_reference_items(codigo: Optional[str] = None, current_user: dict =
             item['created_at'] = datetime.fromisoformat(item['created_at'])
     return items
 
+
+@api_router.get("/items/historico-cotacoes")
+async def get_historico_cotacoes(
+    codigo_item: Optional[str] = None,
+    descricao: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Buscar histórico de cotações anteriores para um item.
+    Retorna links e fornecedores de itens já cotados/comprados com mesmo código ou descrição similar.
+    """
+    if not codigo_item and not descricao:
+        return {"historico": [], "encontrado": False}
+    
+    # Buscar todas as OCs
+    pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(5000)
+    
+    historico = []
+    seen_combinations = set()  # Para evitar duplicatas
+    
+    # Status que indicam que o item já foi cotado
+    status_cotados = ['cotado', 'comprado', 'em_separacao', 'em_transito', 'entregue']
+    
+    for po in pos:
+        for item in po.get('items', []):
+            item_status = item.get('status', '').lower()
+            
+            # Verificar se o item já foi cotado
+            if item_status not in status_cotados:
+                continue
+            
+            # Verificar se é o mesmo item (por código ou descrição similar)
+            match_codigo = codigo_item and item.get('codigo_item', '').upper() == codigo_item.upper()
+            match_descricao = descricao and descricao.upper() in (item.get('descricao', '') or '').upper()
+            
+            if not match_codigo and not match_descricao:
+                continue
+            
+            # Extrair fontes de compra do item
+            fontes_compra = item.get('fontes_compra', [])
+            
+            for fonte in fontes_compra:
+                fornecedor = fonte.get('fornecedor', '').strip()
+                link = fonte.get('link', '').strip()
+                preco = fonte.get('preco_unitario', 0)
+                frete = fonte.get('frete', 0)
+                
+                # Criar chave única para evitar duplicatas
+                key = f"{fornecedor}_{link}_{preco}"
+                if key in seen_combinations:
+                    continue
+                seen_combinations.add(key)
+                
+                if fornecedor or link:
+                    historico.append({
+                        "numero_oc": po.get('numero_oc', ''),
+                        "codigo_item": item.get('codigo_item', ''),
+                        "descricao": item.get('descricao', ''),
+                        "status": item_status,
+                        "fornecedor": fornecedor,
+                        "link": link,
+                        "preco_unitario": preco,
+                        "frete": frete,
+                        "data_compra": item.get('updated_at') or item.get('created_at', '')
+                    })
+    
+    # Ordenar por data mais recente
+    historico.sort(key=lambda x: x.get('data_compra', ''), reverse=True)
+    
+    # Limitar a 10 resultados mais recentes
+    historico = historico[:10]
+    
+    return {
+        "historico": historico,
+        "encontrado": len(historico) > 0,
+        "total": len(historico)
+    }
+
 @api_router.post("/purchase-orders/preview-pdf")
 async def preview_pdf_purchase_order(file: UploadFile = File(...), current_user: dict = Depends(require_admin)):
     """Preview de PDF de Ordem de Compra - retorna itens sem criar OC (ADMIN ONLY)"""
