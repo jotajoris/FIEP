@@ -6,6 +6,123 @@ import { v4 as uuidv4 } from 'uuid';
 import { normalizeText } from '../utils/textUtils';
 import Pagination from '../components/Pagination';
 
+// Helper para calcular contagem regressiva e status de atraso
+const calcularStatusEntrega = (dataEntrega) => {
+  if (!dataEntrega) return null;
+  
+  try {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
+    const entrega = new Date(dataEntrega + 'T00:00:00');
+    const diffTime = entrega.getTime() - hoje.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Formatar data para exibição (DD/MM/YYYY)
+    const dataFormatada = entrega.toLocaleDateString('pt-BR');
+    
+    if (diffDays < 0) {
+      return {
+        atrasado: true,
+        dias: Math.abs(diffDays),
+        texto: `${Math.abs(diffDays)} dia(s) em atraso`,
+        dataFormatada,
+        cor: '#dc2626', // vermelho
+        bg: '#fef2f2'
+      };
+    } else if (diffDays === 0) {
+      return {
+        atrasado: false,
+        dias: 0,
+        texto: 'Entrega HOJE!',
+        dataFormatada,
+        cor: '#f59e0b', // amarelo
+        bg: '#fffbeb'
+      };
+    } else if (diffDays <= 3) {
+      return {
+        atrasado: false,
+        dias: diffDays,
+        texto: `${diffDays} dia(s) restante(s)`,
+        dataFormatada,
+        cor: '#f59e0b', // amarelo - urgente
+        bg: '#fffbeb'
+      };
+    } else if (diffDays <= 7) {
+      return {
+        atrasado: false,
+        dias: diffDays,
+        texto: `${diffDays} dias restantes`,
+        dataFormatada,
+        cor: '#3b82f6', // azul
+        bg: '#eff6ff'
+      };
+    } else {
+      return {
+        atrasado: false,
+        dias: diffDays,
+        texto: `${diffDays} dias restantes`,
+        dataFormatada,
+        cor: '#22c55e', // verde
+        bg: '#f0fdf4'
+      };
+    }
+  } catch (e) {
+    return null;
+  }
+};
+
+// Componente para exibir a data de entrega com contagem regressiva
+const DataEntregaBadge = ({ dataEntrega, compact = false }) => {
+  const status = calcularStatusEntrega(dataEntrega);
+  if (!status) return null;
+  
+  if (compact) {
+    return (
+      <span style={{
+        padding: '0.2rem 0.5rem',
+        borderRadius: '4px',
+        fontSize: '0.75rem',
+        fontWeight: '600',
+        background: status.bg,
+        color: status.cor,
+        border: `1px solid ${status.cor}`,
+        whiteSpace: 'nowrap'
+      }}>
+        {status.atrasado ? '⚠️ ' : '📅 '}{status.dataFormatada}
+        {status.atrasado && ` (-${status.dias}d)`}
+        {!status.atrasado && status.dias <= 3 && ` (${status.dias}d)`}
+      </span>
+    );
+  }
+  
+  return (
+    <div style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      padding: '0.4rem 0.75rem',
+      borderRadius: '8px',
+      background: status.bg,
+      border: `2px solid ${status.cor}`,
+    }}>
+      <span style={{ fontWeight: '600', color: status.cor }}>
+        📅 {status.dataFormatada}
+      </span>
+      <span style={{
+        padding: '0.15rem 0.5rem',
+        borderRadius: '12px',
+        fontSize: '0.8rem',
+        fontWeight: '700',
+        background: status.cor,
+        color: 'white'
+      }}>
+        {status.atrasado ? `⚠️ ${status.texto}` : status.texto}
+      </span>
+    </div>
+  );
+};
+
 const ItemsByStatus = () => {
   const { status } = useParams();
   const navigate = useNavigate();
