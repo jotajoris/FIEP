@@ -4248,6 +4248,299 @@ async def update_po_endereco_entrega(
     return {"success": True, "endereco_entrega": endereco}
 
 
+@api_router.post("/purchase-orders/{po_id}/atualizar-pdf")
+async def atualizar_oc_com_pdf(
+    po_id: str,
+    file: UploadFile = File(...),
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Atualizar uma OC existente com dados de um novo PDF.
+    
+    Esta função PRESERVA todos os dados importantes dos itens:
+    - Status (pendente, cotado, comprado, etc.)
+    - Responsável
+    - Fontes de compra (fornecedor, preço, link)
+    - Notas fiscais anexadas
+    - Observações
+    - Frete, valor unitário de venda, etc.
+    
+    Atualiza apenas:
+    - Endereço de entrega (se estava vazio)
+    - Data de entrega (se estava vazia)
+    - Outros campos do cabeçalho da OC
+    """
+    
+    # Buscar OC existente
+    existing_po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not existing_po:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    # Processar o PDF
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Arquivo deve ser PDF")
+    
+    content = await file.read()
+    
+    try:
+        pdf_doc = fitz.open(stream=content, filetype="pdf")
+        full_text = ""
+        for page in pdf_doc:
+            full_text += page.get_text()
+        pdf_doc.close()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erro ao ler PDF: {str(e)}")
+    
+    # Extrair dados do PDF
+    # Endereço de Entrega
+    endereco_patterns = [
+        r'Endere[çc]o de Entrega[:\s]*(.*?)(?:\n\n|Linha|Item)',
+        r'Local de Entrega[:\s]*(.*?)(?:\n\n|Linha|Item)',
+        r'Entregar em[:\s]*(.*?)(?:\n\n|Linha|Item)'
+    ]
+    
+    novo_endereco = ""
+    for pattern in endereco_patterns:
+        endereco_match = re.search(pattern, full_text, re.IGNORECASE | re.DOTALL)
+        if endereco_match:
+            novo_endereco = endereco_match.group(1).strip()
+            novo_endereco = ' '.join(novo_endereco.split()).upper()
+            break
+    
+    # Data de Entrega
+    nova_data_entrega = None
+    data_patterns = [
+        r'Data de Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
+        r'Data Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
+        r'Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
+        r'Prazo de Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
+        r'Dt\.\s*Entrega[:\s]*(\d{2}/\d{2}/\d{4})'
+    ]
+    
+    for pattern in data_patterns:
+        data_match = re.search(pattern, full_text, re.IGNORECASE)
+        if data_match:
+            try:
+                data_str = data_match.group(1)
+                dia, mes, ano = data_str.split('/')
+                nova_data_entrega = f"{ano}-{mes}-{dia}"
+                break
+            except:
+                pass
+    
+    # Se não encontrou, buscar na tabela de itens
+    if not nova_data_entrega:
+        date_after_req = re.findall(r'\d{1,2}\.\d{2}\.\d{6,}\s*(\d{2}/\d{2}/\d{4})', full_text)
+        if date_after_req:
+            try:
+                data_str = date_after_req[0]
+                dia, mes, ano = data_str.split('/')
+                nova_data_entrega = f"{ano}-{mes}-{dia}"
+            except:
+                pass
+    
+    # Preparar atualizações - SÓ atualiza campos vazios ou inexistentes
+    updates = {}
+    campos_atualizados = []
+    
+    # Atualizar endereço se estava vazio
+    endereco_atual = existing_po.get('endereco_entrega', '').strip()
+    if not endereco_atual and novo_endereco:
+        updates['endereco_entrega'] = novo_endereco
+        campos_atualizados.append(f"endereco_entrega: {novo_endereco}")
+    
+    # Atualizar data de entrega se estava vazia
+    data_atual = existing_po.get('data_entrega', '').strip() if existing_po.get('data_entrega') else ''
+    if not data_atual and nova_data_entrega:
+        updates['data_entrega'] = nova_data_entrega
+        campos_atualizados.append(f"data_entrega: {nova_data_entrega}")
+    
+    if not updates:
+        return {
+            "success": True,
+            "message": "Nenhum campo precisou ser atualizado (todos já estão preenchidos)",
+            "numero_oc": existing_po['numero_oc'],
+            "campos_atualizados": []
+        }
+    
+    # Aplicar atualizações
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": updates}
+    )
+    
+    return {
+        "success": True,
+        "message": f"OC {existing_po['numero_oc']} atualizada com sucesso!",
+        "numero_oc": existing_po['numero_oc'],
+        "campos_atualizados": campos_atualizados,
+        "dados_preservados": [
+            "Status de todos os itens",
+            "Responsáveis dos itens",
+            "Fontes de compra",
+            "Notas fiscais",
+            "Observações",
+            "Valores de frete e venda"
+        ]
+    }
+
+
+@api_router.post("/admin/atualizar-todas-ocs-pdf")
+async def atualizar_todas_ocs_com_pdfs(
+    files: List[UploadFile] = File(...),
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Atualizar múltiplas OCs de uma vez com seus PDFs.
+    Cada PDF deve corresponder a uma OC existente (pelo número da OC no PDF).
+    
+    Preserva todos os dados dos itens, só atualiza campos vazios do cabeçalho.
+    """
+    
+    resultados = []
+    
+    for file in files:
+        if not file.filename.lower().endswith('.pdf'):
+            resultados.append({
+                "arquivo": file.filename,
+                "success": False,
+                "erro": "Arquivo não é PDF"
+            })
+            continue
+        
+        content = await file.read()
+        
+        try:
+            pdf_doc = fitz.open(stream=content, filetype="pdf")
+            full_text = ""
+            for page in pdf_doc:
+                full_text += page.get_text()
+            pdf_doc.close()
+        except Exception as e:
+            resultados.append({
+                "arquivo": file.filename,
+                "success": False,
+                "erro": f"Erro ao ler PDF: {str(e)}"
+            })
+            continue
+        
+        # Extrair número da OC
+        oc_patterns = [
+            r'(?:OC|Ordem de Compra)[:\s\-]*(\d+[\.\-]?\d+)',
+            r'(?:N[úu]mero|N[°º])[:\s]*(\d+[\.\-]?\d+)',
+            r'(\d{1,2}\.\d{6,})'
+        ]
+        
+        numero_oc = None
+        for pattern in oc_patterns:
+            match = re.search(pattern, full_text, re.IGNORECASE)
+            if match:
+                numero_oc = f"OC-{match.group(1)}"
+                break
+        
+        if not numero_oc:
+            resultados.append({
+                "arquivo": file.filename,
+                "success": False,
+                "erro": "Não foi possível identificar o número da OC no PDF"
+            })
+            continue
+        
+        # Buscar OC existente
+        existing_po = await db.purchase_orders.find_one({"numero_oc": numero_oc}, {"_id": 0})
+        if not existing_po:
+            resultados.append({
+                "arquivo": file.filename,
+                "numero_oc": numero_oc,
+                "success": False,
+                "erro": f"OC {numero_oc} não encontrada no sistema"
+            })
+            continue
+        
+        # Extrair dados do PDF
+        # Endereço
+        endereco_patterns = [
+            r'Endere[çc]o de Entrega[:\s]*(.*?)(?:\n\n|Linha|Item)',
+            r'Local de Entrega[:\s]*(.*?)(?:\n\n|Linha|Item)',
+            r'Entregar em[:\s]*(.*?)(?:\n\n|Linha|Item)'
+        ]
+        
+        novo_endereco = ""
+        for pattern in endereco_patterns:
+            endereco_match = re.search(pattern, full_text, re.IGNORECASE | re.DOTALL)
+            if endereco_match:
+                novo_endereco = endereco_match.group(1).strip()
+                novo_endereco = ' '.join(novo_endereco.split()).upper()
+                break
+        
+        # Data de Entrega
+        nova_data_entrega = None
+        data_patterns = [
+            r'Data de Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
+            r'Data Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
+            r'Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
+            r'Prazo de Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
+            r'Dt\.\s*Entrega[:\s]*(\d{2}/\d{2}/\d{4})'
+        ]
+        
+        for pattern in data_patterns:
+            data_match = re.search(pattern, full_text, re.IGNORECASE)
+            if data_match:
+                try:
+                    data_str = data_match.group(1)
+                    dia, mes, ano = data_str.split('/')
+                    nova_data_entrega = f"{ano}-{mes}-{dia}"
+                    break
+                except:
+                    pass
+        
+        if not nova_data_entrega:
+            date_after_req = re.findall(r'\d{1,2}\.\d{2}\.\d{6,}\s*(\d{2}/\d{2}/\d{4})', full_text)
+            if date_after_req:
+                try:
+                    data_str = date_after_req[0]
+                    dia, mes, ano = data_str.split('/')
+                    nova_data_entrega = f"{ano}-{mes}-{dia}"
+                except:
+                    pass
+        
+        # Preparar atualizações
+        updates = {}
+        campos_atualizados = []
+        
+        endereco_atual = existing_po.get('endereco_entrega', '').strip()
+        if not endereco_atual and novo_endereco:
+            updates['endereco_entrega'] = novo_endereco
+            campos_atualizados.append(f"endereco: {novo_endereco[:50]}...")
+        
+        data_atual = existing_po.get('data_entrega', '').strip() if existing_po.get('data_entrega') else ''
+        if not data_atual and nova_data_entrega:
+            updates['data_entrega'] = nova_data_entrega
+            campos_atualizados.append(f"data_entrega: {nova_data_entrega}")
+        
+        if updates:
+            await db.purchase_orders.update_one(
+                {"id": existing_po['id']},
+                {"$set": updates}
+            )
+        
+        resultados.append({
+            "arquivo": file.filename,
+            "numero_oc": numero_oc,
+            "success": True,
+            "campos_atualizados": campos_atualizados if campos_atualizados else ["Nenhum campo precisou ser atualizado"]
+        })
+    
+    atualizadas = sum(1 for r in resultados if r.get('success') and r.get('campos_atualizados', [''])[0] != "Nenhum campo precisou ser atualizado")
+    
+    return {
+        "success": True,
+        "total_arquivos": len(files),
+        "ocs_atualizadas": atualizadas,
+        "resultados": resultados
+    }
+
+
 @api_router.post("/admin/migrar-enderecos")
 async def migrar_enderecos_itens_para_oc(current_user: dict = Depends(require_admin)):
     """
