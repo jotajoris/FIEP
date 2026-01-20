@@ -4255,15 +4255,17 @@ async def atualizar_status_em_massa(
     current_user: dict = Depends(require_admin)
 ):
     """
-    Atualizar o status de todos os itens de uma OC de uma vez.
+    Atualizar o status de itens selecionados de uma OC.
     
     Body:
     {
-        "novo_status": "entregue"  // pendente, cotado, comprado, em_separacao, em_transito, entregue
+        "novo_status": "entregue",  // pendente, cotado, comprado, em_separacao, em_transito, entregue
+        "item_indices": [0, 1, 2]   // Opcional: Se não fornecido, atualiza todos os itens
     }
     """
     
     novo_status = data.get("novo_status", "").strip().lower()
+    item_indices = data.get("item_indices")  # Lista de índices ou None
     
     status_validos = ["pendente", "cotado", "comprado", "em_separacao", "em_transito", "entregue"]
     
@@ -4275,15 +4277,26 @@ async def atualizar_status_em_massa(
     if not po:
         raise HTTPException(status_code=404, detail="OC não encontrada")
     
-    # Atualizar status de todos os itens
+    # Atualizar status dos itens (selecionados ou todos)
     items = po.get('items', [])
     itens_atualizados = 0
     
-    for item in items:
-        status_anterior = item.get('status', 'pendente')
-        if status_anterior != novo_status:
-            item['status'] = novo_status
-            itens_atualizados += 1
+    # Se item_indices foi fornecido, usar apenas esses índices
+    if item_indices is not None:
+        indices_set = set(item_indices)
+        for idx, item in enumerate(items):
+            if idx in indices_set:
+                status_anterior = item.get('status', 'pendente')
+                if status_anterior != novo_status:
+                    item['status'] = novo_status
+                    itens_atualizados += 1
+    else:
+        # Atualizar todos os itens
+        for item in items:
+            status_anterior = item.get('status', 'pendente')
+            if status_anterior != novo_status:
+                item['status'] = novo_status
+                itens_atualizados += 1
     
     # Salvar alterações
     await db.purchase_orders.update_one(
