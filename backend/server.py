@@ -1554,6 +1554,7 @@ async def get_purchase_orders_simple(
         "numero_oc": 1,
         "created_at": 1,
         "data_entrega": 1,  # Data de entrega
+        "endereco_entrega": 1,  # Endereço de entrega
         "cnpj_requisitante": 1,
         "items": 1  # Necessário para contagem e filtro
     }).to_list(1000)
@@ -1635,6 +1636,7 @@ async def get_purchase_orders_simple(
             "numero_oc": po['numero_oc'],
             "created_at": po['created_at'],
             "data_entrega": po.get('data_entrega'),  # Data de entrega extraída do PDF
+            "endereco_entrega": po.get('endereco_entrega'),  # Endereço de entrega extraído do PDF
             "cnpj_requisitante": po.get('cnpj_requisitante', ''),
             "total_items": total_items,
             "valor_total": valor_total,
