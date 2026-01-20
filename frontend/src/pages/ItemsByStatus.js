@@ -3219,6 +3219,18 @@ Chave PIX: 46.663.556/0001-69`;
                                           🚚 FRETE
                                         </span>
                                       )}
+                                      {isSelectedForStatus && (
+                                        <span style={{ 
+                                          background: '#8b5cf6',
+                                          color: 'white',
+                                          padding: '0.15rem 0.5rem',
+                                          borderRadius: '8px',
+                                          fontSize: '0.7rem',
+                                          fontWeight: '600'
+                                        }}>
+                                          🔄 STATUS
+                                        </span>
+                                      )}
                                       {item.frete_envio > 0 && (
                                         <span style={{ 
                                           background: '#0891b2',
