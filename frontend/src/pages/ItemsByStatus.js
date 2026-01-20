@@ -2960,8 +2960,35 @@ Chave PIX: 46.663.556/0001-69`;
                           alignItems: 'center',
                           gap: '0.5rem'
                         }}>
-                          🔄 Mudar Status de TODOS os Itens
+                          🔄 Mudar Status dos Itens Selecionados
                         </h4>
+                        
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+                          {/* Botão selecionar/desselecionar todos */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleAllItensParaStatus(oc.po_id, oc.items);
+                            }}
+                            style={{ 
+                              padding: '0.4rem 0.8rem',
+                              background: (itensParaStatus[oc.po_id]?.size || 0) === oc.items.length ? '#8b5cf6' : '#e2e8f0',
+                              color: (itensParaStatus[oc.po_id]?.size || 0) === oc.items.length ? 'white' : '#374151',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '0.85rem',
+                              fontWeight: '600'
+                            }}
+                          >
+                            {(itensParaStatus[oc.po_id]?.size || 0) === oc.items.length ? '☑️ Desmarcar Todos' : '☐ Selecionar Todos p/ Status'}
+                          </button>
+                          
+                          {/* Contador de selecionados */}
+                          <span style={{ fontSize: '0.9rem', color: '#5b21b6', fontWeight: '600' }}>
+                            🔄 {itensParaStatus[oc.po_id]?.size || 0} de {oc.items.length} itens selecionados
+                          </span>
+                        </div>
                         
                         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
                           <select
@@ -2996,24 +3023,20 @@ Chave PIX: 46.663.556/0001-69`;
                               e.stopPropagation();
                               aplicarStatusEmMassa(oc.po_id, oc.numero_oc, oc.items.length);
                             }}
-                            disabled={aplicandoStatusMassa === oc.po_id || !novoStatusMassa[oc.po_id]}
+                            disabled={aplicandoStatusMassa === oc.po_id || !novoStatusMassa[oc.po_id] || (itensParaStatus[oc.po_id]?.size || 0) === 0}
                             style={{
                               padding: '0.5rem 1rem',
-                              background: aplicandoStatusMassa === oc.po_id ? '#9ca3af' : !novoStatusMassa[oc.po_id] ? '#d1d5db' : '#8b5cf6',
+                              background: aplicandoStatusMassa === oc.po_id ? '#9ca3af' : (!novoStatusMassa[oc.po_id] || (itensParaStatus[oc.po_id]?.size || 0) === 0) ? '#d1d5db' : '#8b5cf6',
                               color: 'white',
                               border: 'none',
                               borderRadius: '6px',
                               fontWeight: '600',
-                              cursor: aplicandoStatusMassa === oc.po_id || !novoStatusMassa[oc.po_id] ? 'not-allowed' : 'pointer',
+                              cursor: (aplicandoStatusMassa === oc.po_id || !novoStatusMassa[oc.po_id] || (itensParaStatus[oc.po_id]?.size || 0) === 0) ? 'not-allowed' : 'pointer',
                               fontSize: '0.9rem'
                             }}
                           >
-                            {aplicandoStatusMassa === oc.po_id ? '⏳ Aplicando...' : `🔄 Aplicar para ${oc.items.length} itens`}
+                            {aplicandoStatusMassa === oc.po_id ? '⏳ Aplicando...' : `🔄 Aplicar para ${itensParaStatus[oc.po_id]?.size || 0} itens`}
                           </button>
-                          
-                          <span style={{ fontSize: '0.85rem', color: '#6b7280', fontStyle: 'italic' }}>
-                            ⚠️ Altera todos os itens de uma vez
-                          </span>
                         </div>
                       </div>
                     )}
