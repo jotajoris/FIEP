@@ -166,6 +166,7 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                 break
         
         # Extrair Data de Entrega (formato DD/MM/YYYY)
+        # A data pode estar em diferentes formatos e locais no PDF
         data_entrega = None
         data_patterns = [
             r'Data de Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
@@ -184,6 +185,21 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                     dia, mes, ano = data_str.split('/')
                     data_entrega = f"{ano}-{mes}-{dia}"  # ISO format YYYY-MM-DD
                     break
+                except:
+                    pass
+        
+        # Se não encontrou nos padrões acima, buscar na tabela de itens
+        # O formato é geralmente: "requisição DD/MM/YYYY" no final de cada linha de item
+        if not data_entrega:
+            # Buscar todas as datas no formato DD/MM/YYYY após um número de requisição
+            date_after_req = re.findall(r'\d{1,2}\.\d{2}\.\d{6,}\s*(\d{2}/\d{2}/\d{4})', full_text)
+            if date_after_req:
+                try:
+                    data_str = date_after_req[0]  # Pegar a primeira data encontrada
+                    dia, mes, ano = data_str.split('/')
+                    # Validar se é uma data futura ou recente (não muito antiga)
+                    if int(ano) >= 2024:
+                        data_entrega = f"{ano}-{mes}-{dia}"
                 except:
                     pass
         
