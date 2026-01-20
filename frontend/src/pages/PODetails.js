@@ -79,6 +79,11 @@ const PODetails = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({});
   
+  // Estado para edição do endereço
+  const [editandoEndereco, setEditandoEndereco] = useState(false);
+  const [novoEndereco, setNovoEndereco] = useState('');
+  const [salvandoEndereco, setSalvandoEndereco] = useState(false);
+  
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
@@ -97,6 +102,24 @@ const PODetails = () => {
       navigate('/');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Função para salvar o endereço de entrega
+  const handleSalvarEndereco = async () => {
+    setSalvandoEndereco(true);
+    try {
+      await apiPatch(`${API}/purchase-orders/${id}/endereco-entrega`, {
+        endereco_entrega: novoEndereco
+      });
+      setPo(prev => ({ ...prev, endereco_entrega: novoEndereco.toUpperCase() }));
+      setEditandoEndereco(false);
+      alert('Endereço atualizado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao atualizar endereço:', error);
+      alert('Erro ao atualizar endereço');
+    } finally {
+      setSalvandoEndereco(false);
     }
   };
 
