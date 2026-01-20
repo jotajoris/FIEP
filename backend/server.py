@@ -4248,6 +4248,58 @@ async def update_po_endereco_entrega(
     return {"success": True, "endereco_entrega": endereco}
 
 
+@api_router.post("/purchase-orders/{po_id}/status-em-massa")
+async def atualizar_status_em_massa(
+    po_id: str,
+    data: dict,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Atualizar o status de todos os itens de uma OC de uma vez.
+    
+    Body:
+    {
+        "novo_status": "entregue"  // pendente, cotado, comprado, em_separacao, em_transito, entregue
+    }
+    """
+    
+    novo_status = data.get("novo_status", "").strip().lower()
+    
+    status_validos = ["pendente", "cotado", "comprado", "em_separacao", "em_transito", "entregue"]
+    
+    if novo_status not in status_validos:
+        raise HTTPException(status_code=400, detail=f"Status inválido. Use: {', '.join(status_validos)}")
+    
+    # Buscar OC
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not po:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    # Atualizar status de todos os itens
+    items = po.get('items', [])
+    itens_atualizados = 0
+    
+    for item in items:
+        status_anterior = item.get('status', 'pendente')
+        if status_anterior != novo_status:
+            item['status'] = novo_status
+            itens_atualizados += 1
+    
+    # Salvar alterações
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": items}}
+    )
+    
+    return {
+        "success": True,
+        "numero_oc": po.get('numero_oc'),
+        "novo_status": novo_status,
+        "itens_atualizados": itens_atualizados,
+        "total_itens": len(items)
+    }
+
+
 @api_router.post("/purchase-orders/{po_id}/frete-envio-multiplo")
 async def aplicar_frete_envio_multiplo(
     po_id: str,
