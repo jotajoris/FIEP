@@ -23,14 +23,16 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 2.5.0 (20/01/2026)
+## Versão Atual: 2.5.1 (20/01/2026)
 
 ### Novas Funcionalidades (20/01/2026)
-- ✅ **Endereço de Entrega Visível em Todo o Sistema** - O endereço de entrega agora aparece em todas as visualizações de OC:
+- ✅ **Endereço de Entrega no Nível da OC** - O endereço de entrega agora é armazenado no nível da OC (não mais apenas nos itens):
+  - **Migração executada**: 52 de 54 OCs tiveram seus endereços migrados dos itens para o nível da OC
+  - **PODetails**: Endereço aparece na seção "Informações da OC" junto com Número OC, Cliente, Total de Itens e Valor Total
   - **Dashboard**: Nova coluna "ENDEREÇO ENTREGA" na tabela de OCs
-  - **ItemsByStatus (Em Separação)**: Endereço exibido no header de cada OC agrupada
-  - **ItemsByStatus (Outros status)**: Endereço exibido no header de cada item individual
-  - **PODetails**: Endereço exibido na seção de informações da OC
+  - **ItemsByStatus (Em Separação)**: Badge com ícone 📍 no header de cada OC agrupada
+  - **Endpoint de edição**: `PATCH /api/purchase-orders/{po_id}/endereco-entrega` para admins editarem o endereço
+  - **Endpoint de migração**: `POST /api/admin/migrar-enderecos` para migrar endereços dos itens para OC (já executado)
 - ✅ **Data de Entrega Visível** - Extraída automaticamente do PDF da OC (formato DD/MM/YYYY)
 - ✅ **Contagem Regressiva** - Mostra dias restantes para a entrega
 - ✅ **Badge de ATRASADO** - Etiqueta vermelha quando a data de entrega passou, com contagem de dias em atraso
