@@ -1458,6 +1458,7 @@ async def create_purchase_order(po_create: PurchaseOrderCreate, current_user: di
     
     po = PurchaseOrder(
         numero_oc=po_create.numero_oc,
+        data_entrega=po_create.data_entrega,
         items=processed_items,
         created_by=current_user.get('sub')
     )
