@@ -2721,7 +2721,7 @@ Chave PIX: 46.663.556/0001-69`;
                         OC: {item.numero_oc}
                       </Link>
                       {/* Data de Entrega com contagem regressiva */}
-                      {item.data_entrega && <DataEntregaBadge dataEntrega={item.data_entrega} compact={true} />}
+                      {item.data_entrega && <DataEntregaBadge dataEntrega={item.data_entrega} compact={true} todosEntregues={status === 'entregue'} />}
                     </div>
                     <p style={{ color: '#4a5568', marginBottom: '0.5rem' }}>{item.descricao}</p>
                     <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.9rem', color: '#718096' }}>
