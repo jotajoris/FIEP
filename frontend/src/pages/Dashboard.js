@@ -5,8 +5,17 @@ import { useAuth } from '../contexts/AuthContext';
 import Pagination from '../components/Pagination';
 
 // Helper para calcular status de entrega
-const calcularStatusEntrega = (dataEntrega) => {
+const calcularStatusEntrega = (dataEntrega, statusCount = {}) => {
   if (!dataEntrega) return null;
+  
+  // Verificar se todos os itens estão entregues
+  const todosEntregues = statusCount && 
+    statusCount.entregue > 0 && 
+    statusCount.pendente === 0 && 
+    statusCount.cotado === 0 && 
+    statusCount.comprado === 0 &&
+    statusCount.em_separacao === 0 &&
+    statusCount.em_transito === 0;
   
   try {
     const hoje = new Date();
@@ -17,6 +26,11 @@ const calcularStatusEntrega = (dataEntrega) => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
     const dataFormatada = entrega.toLocaleDateString('pt-BR');
+    
+    // Se todos entregues, mostrar status positivo
+    if (todosEntregues) {
+      return { entregue: true, dias: 0, dataFormatada, cor: '#22c55e', bg: '#f0fdf4' };
+    }
     
     if (diffDays < 0) {
       return { atrasado: true, dias: Math.abs(diffDays), dataFormatada, cor: '#dc2626', bg: '#fef2f2' };
