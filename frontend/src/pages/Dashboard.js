@@ -711,7 +711,7 @@ const Dashboard = () => {
                       <td>{new Date(order.created_at).toLocaleDateString('pt-BR')}</td>
                       <td>
                         {order.data_entrega ? (() => {
-                          const status = calcularStatusEntrega(order.data_entrega);
+                          const status = calcularStatusEntrega(order.data_entrega, order.status_count);
                           if (!status) return '-';
                           return (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -724,11 +724,13 @@ const Dashboard = () => {
                                 background: status.cor,
                                 color: 'white'
                               }}>
-                                {status.atrasado 
-                                  ? `⚠️ -${status.dias}d` 
-                                  : status.dias === 0 
-                                    ? 'HOJE!' 
-                                    : `${status.dias}d`
+                                {status.entregue 
+                                  ? '✅' 
+                                  : status.atrasado 
+                                    ? `⚠️ -${status.dias}d` 
+                                    : status.dias === 0 
+                                      ? 'HOJE!' 
+                                      : `${status.dias}d`
                                 }
                               </span>
                             </div>
