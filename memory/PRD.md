@@ -140,6 +140,12 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 ```
 
 ## Tarefas Concluídas Recentemente
+- [20/01/2026] ✅ **Endereço de Entrega em Todo o Sistema** - Adicionado endereço de entrega em todas as visualizações:
+  - Dashboard: Nova coluna na tabela de OCs
+  - ItemsByStatus (Em Separação): Badge com ícone 📍 no header de cada OC agrupada
+  - ItemsByStatus (Outros): Badge com endereço no header de cada item
+  - PODetails: Seção dedicada com endereço da OC
+  - Backend atualizado para retornar `endereco_entrega` na listagem simplificada
 - [20/01/2026] ✅ **Histórico de Cotações** - Itens pendentes agora mostram cotações anteriores do mesmo código/descrição
   - Exibe fornecedor, preço, frete e link de compras anteriores
   - Botão "📜 Cotações Anteriores" em cada item pendente
