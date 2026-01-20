@@ -741,13 +741,13 @@ const Dashboard = () => {
                       <td>
                         {order.endereco_entrega ? (
                           <div style={{ 
-                            maxWidth: '200px',
+                            maxWidth: '280px',
                             fontSize: '0.8rem',
                             color: '#374151',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }} title={order.endereco_entrega}>
+                            lineHeight: '1.4',
+                            whiteSpace: 'normal',
+                            wordBreak: 'break-word'
+                          }}>
                             📍 {order.endereco_entrega}
                           </div>
                         ) : <span style={{ color: '#9ca3af' }}>-</span>}
