@@ -1260,12 +1260,45 @@ const ItemsByStatus = () => {
     }
   };
 
-  // Aplicar mudança de status em massa para todos os itens da OC
+  // Toggle seleção de item para mudança de status
+  const toggleItemParaStatus = (poId, itemIndex) => {
+    setItensParaStatus(prev => {
+      const currentSet = prev[poId] || new Set();
+      const newSet = new Set(currentSet);
+      if (newSet.has(itemIndex)) {
+        newSet.delete(itemIndex);
+      } else {
+        newSet.add(itemIndex);
+      }
+      return { ...prev, [poId]: newSet };
+    });
+  };
+
+  // Selecionar/desselecionar todos os itens para mudança de status
+  const toggleAllItensParaStatus = (poId, items) => {
+    const currentSet = itensParaStatus[poId] || new Set();
+    if (currentSet.size === items.length) {
+      // Se todos já estão selecionados, desseleciona todos
+      setItensParaStatus(prev => ({ ...prev, [poId]: new Set() }));
+    } else {
+      // Seleciona todos
+      const newSet = new Set(items.map(item => item._itemIndexInPO));
+      setItensParaStatus(prev => ({ ...prev, [poId]: newSet }));
+    }
+  };
+
+  // Aplicar mudança de status para itens selecionados
   const aplicarStatusEmMassa = async (poId, numeroOC, totalItens) => {
     const novoStatus = novoStatusMassa[poId];
+    const itensSelecionados = itensParaStatus[poId] || new Set();
     
     if (!novoStatus) {
       alert('Selecione um status');
+      return;
+    }
+    
+    if (itensSelecionados.size === 0) {
+      alert('Selecione ao menos um item para mudar o status');
       return;
     }
     
@@ -1279,7 +1312,7 @@ const ItemsByStatus = () => {
     };
     
     if (!window.confirm(
-      `Mudar o status de TODOS os ${totalItens} itens da ${numeroOC} para "${statusLabels[novoStatus]}"?\n\n` +
+      `Mudar o status de ${itensSelecionados.size} item(s) da ${numeroOC} para "${statusLabels[novoStatus]}"?\n\n` +
       `Esta ação não pode ser desfeita facilmente.`
     )) {
       return;
@@ -1289,7 +1322,8 @@ const ItemsByStatus = () => {
     
     try {
       const response = await apiPost(`${API}/purchase-orders/${poId}/status-em-massa`, {
-        novo_status: novoStatus
+        novo_status: novoStatus,
+        item_indices: Array.from(itensSelecionados)
       });
       
       alert(
@@ -1301,6 +1335,7 @@ const ItemsByStatus = () => {
       
       // Limpar seleção
       setNovoStatusMassa(prev => ({ ...prev, [poId]: '' }));
+      setItensParaStatus(prev => ({ ...prev, [poId]: new Set() }));
       
       // Recarregar dados
       loadItems();
