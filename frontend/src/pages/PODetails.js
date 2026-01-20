@@ -300,6 +300,40 @@ const PODetails = () => {
               {valorTotal > 0 ? formatBRL(valorTotal) : 'Não informado'}
             </div>
           </div>
+          {/* Data de Entrega com contagem regressiva */}
+          {po.data_entrega && (() => {
+            const statusEntrega = calcularStatusEntrega(po.data_entrega);
+            if (!statusEntrega) return null;
+            return (
+              <div>
+                <div className="stat-label">Data de Entrega</div>
+                <div style={{ 
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '8px',
+                  background: statusEntrega.bg,
+                  border: `2px solid ${statusEntrega.cor}`,
+                  marginTop: '0.25rem'
+                }}>
+                  <span style={{ fontWeight: '600', color: statusEntrega.cor, fontSize: '1.1rem' }}>
+                    📅 {statusEntrega.dataFormatada}
+                  </span>
+                  <span style={{
+                    padding: '0.2rem 0.6rem',
+                    borderRadius: '12px',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    background: statusEntrega.cor,
+                    color: 'white'
+                  }}>
+                    {statusEntrega.atrasado ? `⚠️ ${statusEntrega.texto}` : statusEntrega.texto}
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
         </div>
         {po.endereco_entrega && (
           <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
