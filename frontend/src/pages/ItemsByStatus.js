@@ -2382,6 +2382,25 @@ Chave PIX: 46.663.556/0001-69`;
                         ) : null}
                       </div>
                       
+                      {/* Endereço de Entrega da OC */}
+                      {oc.endereco_entrega && (
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'flex-start', 
+                          gap: '0.5rem', 
+                          marginBottom: '0.5rem',
+                          fontSize: '0.85rem',
+                          background: '#f0f9ff',
+                          padding: '0.4rem 0.6rem',
+                          borderRadius: '6px',
+                          border: '1px solid #bae6fd',
+                          maxWidth: '400px'
+                        }}>
+                          <span style={{ color: '#0369a1', fontWeight: '600' }}>📍</span>
+                          <span style={{ color: '#0c4a6e', overflow: 'hidden', textOverflow: 'ellipsis' }}>{oc.endereco_entrega}</span>
+                        </div>
+                      )}
+                      
                       {/* Status de NFs */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.85rem' }}>
                         {/* NF Fornecedor */}
