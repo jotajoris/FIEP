@@ -347,18 +347,40 @@ const PODetails = () => {
             </div>
           </div>
           {isAdmin() && (
-            <button 
-              onClick={handleDelete} 
-              className="btn" 
-              style={{ 
-                background: '#ef4444', 
-                color: 'white',
-                padding: '0.75rem 1.5rem'
-              }}
-              data-testid="delete-po-btn"
-            >
-              🗑️ Deletar OC
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <label 
+                className="btn"
+                style={{ 
+                  background: '#3b82f6', 
+                  color: 'white',
+                  padding: '0.75rem 1.5rem',
+                  cursor: atualizandoPDF ? 'wait' : 'pointer',
+                  opacity: atualizandoPDF ? 0.7 : 1
+                }}
+                data-testid="update-pdf-btn"
+              >
+                {atualizandoPDF ? '⏳ Atualizando...' : '📄 Atualizar com PDF'}
+                <input 
+                  type="file" 
+                  accept=".pdf"
+                  onChange={handleAtualizarComPDF}
+                  disabled={atualizandoPDF}
+                  style={{ display: 'none' }}
+                />
+              </label>
+              <button 
+                onClick={handleDelete} 
+                className="btn" 
+                style={{ 
+                  background: '#ef4444', 
+                  color: 'white',
+                  padding: '0.75rem 1.5rem'
+                }}
+                data-testid="delete-po-btn"
+              >
+                🗑️ Deletar OC
+              </button>
+            </div>
           )}
         </div>
       </div>
