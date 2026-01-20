@@ -4248,6 +4248,91 @@ async def update_po_endereco_entrega(
     return {"success": True, "endereco_entrega": endereco}
 
 
+@api_router.post("/purchase-orders/{po_id}/frete-envio-multiplo")
+async def aplicar_frete_envio_multiplo(
+    po_id: str,
+    data: dict,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Aplicar frete de envio dividido entre múltiplos itens.
+    
+    Body:
+    {
+        "item_indices": [0, 1, 2],  // Índices dos itens
+        "frete_total": 150.00       // Valor total do frete a ser dividido
+    }
+    
+    O frete será dividido igualmente entre os itens selecionados.
+    """
+    
+    item_indices = data.get("item_indices", [])
+    frete_total = data.get("frete_total", 0)
+    
+    if not item_indices:
+        raise HTTPException(status_code=400, detail="Nenhum item selecionado")
+    
+    if frete_total <= 0:
+        raise HTTPException(status_code=400, detail="Valor do frete deve ser maior que zero")
+    
+    # Buscar OC
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not po:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    # Calcular frete por item (dividido igualmente)
+    frete_por_item = round(frete_total / len(item_indices), 2)
+    
+    # Atualizar cada item
+    items = po.get('items', [])
+    itens_atualizados = []
+    
+    for idx in item_indices:
+        if idx < 0 or idx >= len(items):
+            continue
+        
+        items[idx]['frete_envio'] = frete_por_item
+        itens_atualizados.append({
+            "indice": idx,
+            "codigo_item": items[idx].get('codigo_item', ''),
+            "frete_envio": frete_por_item
+        })
+        
+        # Recalcular lucro líquido
+        item = items[idx]
+        valor_unitario_venda = item.get('valor_unitario_venda') or 0
+        quantidade = item.get('quantidade') or 1
+        receita_total = valor_unitario_venda * quantidade
+        
+        # Buscar custo total das fontes de compra
+        fontes = item.get('fontes_compra', [])
+        if fontes:
+            total_custo_compra = sum((f.get('valor_unitario') or 0) * (f.get('quantidade') or 0) for f in fontes)
+            total_frete_compra = sum(f.get('frete_compra') or 0 for f in fontes)
+        else:
+            total_custo_compra = (item.get('valor_unitario_compra') or 0) * quantidade
+            total_frete_compra = item.get('frete_compra') or 0
+        
+        impostos = item.get('impostos') or 0
+        frete_envio = item.get('frete_envio') or 0
+        
+        item['lucro_liquido'] = round(receita_total - total_custo_compra - total_frete_compra - impostos - frete_envio, 2)
+    
+    # Salvar alterações
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": items}}
+    )
+    
+    return {
+        "success": True,
+        "frete_total": frete_total,
+        "frete_por_item": frete_por_item,
+        "itens_atualizados": itens_atualizados,
+        "quantidade_itens": len(itens_atualizados)
+    }
+
+
 @api_router.post("/purchase-orders/{po_id}/atualizar-pdf")
 async def atualizar_oc_com_pdf(
     po_id: str,
