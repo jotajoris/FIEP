@@ -23,9 +23,11 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 2.5.1 (20/01/2026)
+## Versão Atual: 2.5.2 (20/01/2026)
 
 ### Novas Funcionalidades (20/01/2026)
+- ✅ **Endereço de Entrega Completo no Dashboard** - Endereços agora aparecem por inteiro com quebra de linha (sem reticências)
+- ✅ **Botão de Edição do Endereço** - Admins podem editar o endereço de entrega diretamente na página PODetails clicando no ícone ✏️
 - ✅ **Endereço de Entrega no Nível da OC** - O endereço de entrega agora é armazenado no nível da OC (não mais apenas nos itens):
   - **Migração executada**: 52 de 54 OCs tiveram seus endereços migrados dos itens para o nível da OC
   - **PODetails**: Endereço aparece na seção "Informações da OC" junto com Número OC, Cliente, Total de Itens e Valor Total
