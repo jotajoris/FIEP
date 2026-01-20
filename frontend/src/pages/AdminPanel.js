@@ -64,6 +64,82 @@ const AdminPanel = () => {
     }
   };
 
+  // Função para atualizar múltiplas OCs com PDFs
+  const handleAtualizarOCsEmMassa = async (event) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    
+    const pdfFiles = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
+    
+    if (pdfFiles.length === 0) {
+      alert('Nenhum arquivo PDF selecionado');
+      return;
+    }
+    
+    if (!window.confirm(
+      `Atualizar ${pdfFiles.length} OC(s) com os PDFs selecionados?\n\n` +
+      `Esta ação irá:\n` +
+      `✅ Preencher ENDEREÇO DE ENTREGA (se estiver vazio)\n` +
+      `✅ Preencher DATA DE ENTREGA (se estiver vazia)\n\n` +
+      `Esta ação NÃO altera:\n` +
+      `🔒 Status dos itens\n` +
+      `🔒 Responsáveis\n` +
+      `🔒 Fontes de compra\n` +
+      `🔒 Notas fiscais\n` +
+      `🔒 Observações`
+    )) {
+      event.target.value = '';
+      return;
+    }
+    
+    setAtualizandoOCs(true);
+    setResultadoAtualizacao(null);
+    
+    try {
+      const formData = new FormData();
+      pdfFiles.forEach(file => {
+        formData.append('files', file);
+      });
+      
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/admin/atualizar-todas-ocs-pdf`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.detail || 'Erro ao atualizar');
+      }
+      
+      setResultadoAtualizacao(result);
+      
+      const sucessos = result.resultados.filter(r => r.success && r.campos_atualizados[0] !== "Nenhum campo precisou ser atualizado").length;
+      const jaTinham = result.resultados.filter(r => r.success && r.campos_atualizados[0] === "Nenhum campo precisou ser atualizado").length;
+      const erros = result.resultados.filter(r => !r.success).length;
+      
+      alert(
+        `✅ Processamento concluído!\n\n` +
+        `📊 Resultados:\n` +
+        `• ${sucessos} OC(s) atualizada(s)\n` +
+        `• ${jaTinham} OC(s) já estavam completas\n` +
+        `• ${erros} erro(s)\n\n` +
+        `Veja os detalhes abaixo.`
+      );
+      
+    } catch (error) {
+      console.error('Erro ao atualizar OCs:', error);
+      alert(`❌ Erro ao atualizar: ${error.message}`);
+    } finally {
+      setAtualizandoOCs(false);
+      event.target.value = '';
+    }
+  };
+
   // Paginação de NFs de Compra
   const paginatedNfCompra = useMemo(() => {
     const start = (nfCompraPage - 1) * nfCompraPerPage;
