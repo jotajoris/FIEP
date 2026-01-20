@@ -300,8 +300,23 @@ const PODetails = () => {
               {valorTotal > 0 ? formatBRL(valorTotal) : 'Não informado'}
             </div>
           </div>
+          {/* Endereço de Entrega dentro do grid */}
+          <div style={{ gridColumn: 'span 2' }}>
+            <div className="stat-label">📍 Endereço de Entrega</div>
+            <div style={{ 
+              fontSize: '1rem', 
+              fontWeight: '600', 
+              color: po.endereco_entrega ? '#1f2937' : '#9ca3af',
+              background: po.endereco_entrega ? '#f0f9ff' : '#f3f4f6',
+              padding: '0.5rem 0.75rem',
+              borderRadius: '8px',
+              marginTop: '0.25rem'
+            }}>
+              {po.endereco_entrega || 'Endereço não informado'}
+            </div>
+          </div>
         </div>
-        {/* Data de Entrega e Endereço de Entrega */}
+        {/* Data de Entrega */}
         <div style={{ 
           marginTop: '1.5rem', 
           paddingTop: '1rem', 
@@ -310,7 +325,6 @@ const PODetails = () => {
           flexDirection: 'column',
           gap: '1rem'
         }}>
-          {/* Data de Entrega */}
           {po.data_entrega && (() => {
             const statusEntrega = calcularStatusEntrega(po.data_entrega);
             if (!statusEntrega) return null;
