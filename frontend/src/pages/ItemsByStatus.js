@@ -2904,36 +2904,62 @@ Chave PIX: 46.663.556/0001-69`;
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                       {oc.items.map((item) => {
                         const isSelectedForNF = getItensSelecionados(oc.po_id).has(item._uniqueId);
+                        const isSelectedForFrete = itensParaFrete[oc.po_id]?.has(item._itemIndexInPO) || false;
                         const jaTemNF = oc.itensComNFIndices && oc.itensComNFIndices.has(item._itemIndexInPO);
                         return (
                           <div 
                             key={item._uniqueId} 
                             className="card" 
                             style={{ 
-                              background: jaTemNF ? '#dcfce7' : isSelectedForNF ? '#f0fdf4' : 'white', 
-                              border: jaTemNF ? '2px solid #16a34a' : isSelectedForNF ? '2px solid #22c55e' : '1px solid #e2e8f0'
+                              background: jaTemNF ? '#dcfce7' : isSelectedForNF ? '#f0fdf4' : isSelectedForFrete ? '#fef9c3' : 'white', 
+                              border: jaTemNF ? '2px solid #16a34a' : isSelectedForNF ? '2px solid #22c55e' : isSelectedForFrete ? '2px solid #f59e0b' : '1px solid #e2e8f0'
                             }} 
                             data-testid={`item-card-${item._uniqueId}`}
                           >
-                            {/* Checkbox e Renderização do item */}
+                            {/* Checkboxes e Renderização do item */}
                             <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                              {/* Checkbox para seleção */}
-                              <div style={{ paddingTop: '0.25rem' }}>
-                                <input
-                                  type="checkbox"
-                                  checked={isSelectedForNF}
-                                  onChange={(e) => {
-                                    e.stopPropagation();
-                                    toggleItemParaNFVenda(oc.po_id, item._uniqueId);
-                                  }}
-                                  style={{ 
-                                    width: '20px', 
-                                    height: '20px', 
-                                    cursor: 'pointer',
-                                    accentColor: '#22c55e'
-                                  }}
-                                  title="Selecionar para NF de Venda"
-                                />
+                              {/* Checkboxes para seleção */}
+                              <div style={{ paddingTop: '0.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                {/* Checkbox NF de Venda */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={isSelectedForNF}
+                                    onChange={(e) => {
+                                      e.stopPropagation();
+                                      toggleItemParaNFVenda(oc.po_id, item._uniqueId);
+                                    }}
+                                    style={{ 
+                                      width: '18px', 
+                                      height: '18px', 
+                                      cursor: 'pointer',
+                                      accentColor: '#22c55e'
+                                    }}
+                                    title="Selecionar para NF de Venda"
+                                  />
+                                  <span style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: '600' }}>NF</span>
+                                </div>
+                                {/* Checkbox Frete */}
+                                {isAdmin() && (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelectedForFrete}
+                                      onChange={(e) => {
+                                        e.stopPropagation();
+                                        toggleItemParaFrete(oc.po_id, item._itemIndexInPO);
+                                      }}
+                                      style={{ 
+                                        width: '18px', 
+                                        height: '18px', 
+                                        cursor: 'pointer',
+                                        accentColor: '#f59e0b'
+                                      }}
+                                      title="Selecionar para Frete de Envio"
+                                    />
+                                    <span style={{ fontSize: '0.7rem', color: '#d97706', fontWeight: '600' }}>🚚</span>
+                                  </div>
+                                )}
                               </div>
                               
                               {/* Conteúdo do item */}
@@ -2966,6 +2992,30 @@ Chave PIX: 46.663.556/0001-69`;
                                           fontWeight: '600'
                                         }}>
                                           ✓ SELECIONADO
+                                        </span>
+                                      )}
+                                      {isSelectedForFrete && (
+                                        <span style={{ 
+                                          background: '#f59e0b',
+                                          color: 'white',
+                                          padding: '0.15rem 0.5rem',
+                                          borderRadius: '8px',
+                                          fontSize: '0.7rem',
+                                          fontWeight: '600'
+                                        }}>
+                                          🚚 FRETE
+                                        </span>
+                                      )}
+                                      {item.frete_envio > 0 && (
+                                        <span style={{ 
+                                          background: '#0891b2',
+                                          color: 'white',
+                                          padding: '0.15rem 0.5rem',
+                                          borderRadius: '8px',
+                                          fontSize: '0.7rem',
+                                          fontWeight: '600'
+                                        }}>
+                                          Frete: {formatBRL(item.frete_envio)}
                                         </span>
                                       )}
                                     </div>
