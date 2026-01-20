@@ -23,18 +23,22 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 2.5.2 (20/01/2026)
+## Versão Atual: 2.5.3 (20/01/2026)
 
 ### Novas Funcionalidades (20/01/2026)
-- ✅ **Endereço de Entrega Completo no Dashboard** - Endereços agora aparecem por inteiro com quebra de linha (sem reticências)
-- ✅ **Botão de Edição do Endereço** - Admins podem editar o endereço de entrega diretamente na página PODetails clicando no ícone ✏️
-- ✅ **Endereço de Entrega no Nível da OC** - O endereço de entrega agora é armazenado no nível da OC (não mais apenas nos itens):
-  - **Migração executada**: 52 de 54 OCs tiveram seus endereços migrados dos itens para o nível da OC
-  - **PODetails**: Endereço aparece na seção "Informações da OC" junto com Número OC, Cliente, Total de Itens e Valor Total
-  - **Dashboard**: Nova coluna "ENDEREÇO ENTREGA" na tabela de OCs
-  - **ItemsByStatus (Em Separação)**: Badge com ícone 📍 no header de cada OC agrupada
-  - **Endpoint de edição**: `PATCH /api/purchase-orders/{po_id}/endereco-entrega` para admins editarem o endereço
-  - **Endpoint de migração**: `POST /api/admin/migrar-enderecos` para migrar endereços dos itens para OC (já executado)
+- ✅ **Frete de Envio em Lote** - Na página "Em Separação", é possível:
+  - Selecionar itens específicos de uma OC para aplicar frete de envio
+  - Informar um valor total de frete que será dividido igualmente entre os itens selecionados
+  - O sistema calcula automaticamente quanto cada item receberá
+  - Checkboxes separados: verde para NF de Venda, laranja para Frete de Envio
+  - Badge "🚚 FRETE" aparece nos itens selecionados
+  - Badge "Frete: R$ X,XX" aparece nos itens que já têm frete cadastrado
+- ✅ **Atualizar OCs com PDF** - Novos recursos para preencher dados faltantes:
+  - Botão "📄 Atualizar com PDF" na página de detalhes de cada OC
+  - Nova aba "🔄 Atualizar OCs" no Painel Admin para atualização em massa
+  - Preserva todos os dados dos itens (status, responsável, NFs, etc.)
+- ✅ **Endereço de Entrega Completo no Dashboard** - Endereços aparecem por inteiro com quebra de linha
+- ✅ **Botão de Edição do Endereço** - Admins podem editar o endereço na página PODetails
 - ✅ **Data de Entrega Visível** - Extraída automaticamente do PDF da OC (formato DD/MM/YYYY)
 - ✅ **Contagem Regressiva** - Mostra dias restantes para a entrega
 - ✅ **Badge de ATRASADO** - Etiqueta vermelha quando a data de entrega passou, com contagem de dias em atraso
