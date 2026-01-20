@@ -1085,6 +1085,8 @@ async def preview_pdf_purchase_order(file: UploadFile = File(...), current_user:
     return {
         "numero_oc": oc_data["numero_oc"],
         "endereco_entrega": oc_data.get("endereco_entrega", ""),
+        "data_entrega": oc_data.get("data_entrega"),
+        "cnpj_requisitante": oc_data.get("cnpj_requisitante", ""),
         "items": preview_items,
         "total_items": len(preview_items),
         "items_without_ref": items_without_ref
