@@ -23,16 +23,21 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 2.4.0 (20/01/2026)
+## Versão Atual: 2.5.0 (20/01/2026)
 
 ### Novas Funcionalidades (20/01/2026)
+- ✅ **Endereço de Entrega Visível em Todo o Sistema** - O endereço de entrega agora aparece em todas as visualizações de OC:
+  - **Dashboard**: Nova coluna "ENDEREÇO ENTREGA" na tabela de OCs
+  - **ItemsByStatus (Em Separação)**: Endereço exibido no header de cada OC agrupada
+  - **ItemsByStatus (Outros status)**: Endereço exibido no header de cada item individual
+  - **PODetails**: Endereço exibido na seção de informações da OC
 - ✅ **Data de Entrega Visível** - Extraída automaticamente do PDF da OC (formato DD/MM/YYYY)
 - ✅ **Contagem Regressiva** - Mostra dias restantes para a entrega
 - ✅ **Badge de ATRASADO** - Etiqueta vermelha quando a data de entrega passou, com contagem de dias em atraso
 - ✅ **Histórico de Cotações** - Itens pendentes mostram cotações anteriores do mesmo código/descrição
 - ✅ **NF de Venda Parcial** - Seleção de itens específicos para emitir NF
 
-### Versão Anterior: 2.3.0 (19/01/2026)
+### Versão Anterior: 2.4.0 (19/01/2026)
 
 ### Novas Funcionalidades (12/01/2026)
 - ✅ **Campo "Observação"** - Campo de texto visível para todos os usuários em cada item
