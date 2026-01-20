@@ -1173,6 +1173,88 @@ const ItemsByStatus = () => {
     return itensParaNFVenda[poId] || new Set();
   };
 
+  // ============== FUNÇÕES PARA FRETE DE ENVIO EM LOTE ==============
+  
+  // Toggle seleção de item para frete
+  const toggleItemParaFrete = (poId, itemIndex) => {
+    setItensParaFrete(prev => {
+      const currentSet = prev[poId] || new Set();
+      const newSet = new Set(currentSet);
+      if (newSet.has(itemIndex)) {
+        newSet.delete(itemIndex);
+      } else {
+        newSet.add(itemIndex);
+      }
+      return { ...prev, [poId]: newSet };
+    });
+  };
+
+  // Selecionar/desselecionar todos os itens para frete
+  const toggleAllItensParaFrete = (poId, items) => {
+    const currentSet = itensParaFrete[poId] || new Set();
+    if (currentSet.size === items.length) {
+      // Se todos já estão selecionados, desseleciona todos
+      setItensParaFrete(prev => ({ ...prev, [poId]: new Set() }));
+    } else {
+      // Seleciona todos
+      const newSet = new Set(items.map(item => item._itemIndexInPO));
+      setItensParaFrete(prev => ({ ...prev, [poId]: newSet }));
+    }
+  };
+
+  // Aplicar frete de envio dividido entre os itens selecionados
+  const aplicarFreteEnvio = async (poId) => {
+    const selectedIndices = itensParaFrete[poId];
+    const freteTotal = parseFloat(freteEnvioTotal[poId] || 0);
+    
+    if (!selectedIndices || selectedIndices.size === 0) {
+      alert('Selecione ao menos um item para aplicar o frete.');
+      return;
+    }
+    
+    if (freteTotal <= 0) {
+      alert('Informe um valor de frete maior que zero.');
+      return;
+    }
+    
+    const fretePorItem = (freteTotal / selectedIndices.size).toFixed(2);
+    
+    if (!window.confirm(
+      `Aplicar frete de ${formatBRL(freteTotal)} dividido entre ${selectedIndices.size} item(s)?\n\n` +
+      `Cada item receberá: ${formatBRL(parseFloat(fretePorItem))}`
+    )) {
+      return;
+    }
+    
+    setAplicandoFrete(poId);
+    
+    try {
+      const response = await apiPost(`${API}/purchase-orders/${poId}/frete-envio-multiplo`, {
+        item_indices: Array.from(selectedIndices),
+        frete_total: freteTotal
+      });
+      
+      alert(
+        `✅ Frete aplicado com sucesso!\n\n` +
+        `• Total: ${formatBRL(freteTotal)}\n` +
+        `• Por item: ${formatBRL(response.data.frete_por_item)}\n` +
+        `• Itens atualizados: ${response.data.quantidade_itens}`
+      );
+      
+      // Limpar seleção e valor
+      setItensParaFrete(prev => ({ ...prev, [poId]: new Set() }));
+      setFreteEnvioTotal(prev => ({ ...prev, [poId]: '' }));
+      
+      // Recarregar dados
+      loadItems();
+    } catch (error) {
+      console.error('Erro ao aplicar frete:', error);
+      alert('Erro ao aplicar frete: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setAplicandoFrete(null);
+    }
+  };
+
   // Toggle "Pronto para Despacho" da OC inteira
   const toggleProntoDespachoOC = async (poId) => {
     const currentValue = ocProntoDespacho[poId] || false;
