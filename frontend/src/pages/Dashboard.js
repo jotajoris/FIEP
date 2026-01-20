@@ -667,6 +667,7 @@ const Dashboard = () => {
                   )}
                   <th>Número OC</th>
                   <th>Data Criação</th>
+                  <th>Data Entrega</th>
                   <th style={{ textAlign: 'center' }}>Qtd Itens</th>
                   <th style={{ textAlign: 'right' }}>Valor Total</th>
                   <th>Ações</th>
