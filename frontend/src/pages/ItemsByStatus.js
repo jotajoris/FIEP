@@ -2294,10 +2294,12 @@ Chave PIX: 46.663.556/0001-69`;
                     </div>
                     
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
                         <h3 style={{ fontSize: '1.2rem', fontWeight: '700', margin: 0, color: '#1f2937' }}>
                           {oc.numero_oc}
                         </h3>
+                        {/* Data de Entrega com contagem regressiva */}
+                        {oc.data_entrega && <DataEntregaBadge dataEntrega={oc.data_entrega} compact={true} />}
                         {oc.prontoParaDespacho && (
                           <span style={{ 
                             background: '#22c55e', 
