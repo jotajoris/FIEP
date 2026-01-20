@@ -2805,6 +2805,25 @@ Chave PIX: 46.663.556/0001-69`;
                       {item.data_entrega && <DataEntregaBadge dataEntrega={item.data_entrega} compact={true} todosEntregues={status === 'entregue'} />}
                     </div>
                     <p style={{ color: '#4a5568', marginBottom: '0.5rem' }}>{item.descricao}</p>
+                    
+                    {/* Endereço de Entrega da OC */}
+                    {item.endereco_entrega_oc && (
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'flex-start', 
+                        gap: '0.5rem', 
+                        marginBottom: '0.5rem',
+                        fontSize: '0.85rem',
+                        background: '#f0f9ff',
+                        padding: '0.4rem 0.6rem',
+                        borderRadius: '6px',
+                        border: '1px solid #bae6fd'
+                      }}>
+                        <span style={{ color: '#0369a1', fontWeight: '600' }}>📍</span>
+                        <span style={{ color: '#0c4a6e' }}>{item.endereco_entrega_oc}</span>
+                      </div>
+                    )}
+                    
                     <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.9rem', color: '#718096' }}>
                       <span><strong>Responsável:</strong> <strong style={{ color: '#667eea' }}>{item.responsavel}</strong></span>
                       <span><strong>Quantidade:</strong> {item.quantidade} {item.unidade}</span>
