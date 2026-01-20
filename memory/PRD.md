@@ -23,23 +23,16 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 2.3.0 (19/01/2026)
+## Versão Atual: 2.4.0 (20/01/2026)
 
-### Novas Funcionalidades (19/01/2026)
-- ✅ **NF de Venda Parcial** - Agora é possível selecionar itens específicos de uma OC para emitir NF de Venda
-  - Checkboxes ao lado de cada item na página "Em Separação"
-  - Botão "Selecionar Todos" / "Desmarcar Todos"
-  - Contador mostrando "X de Y itens selecionados para NF"
-  - Múltiplas NFs podem ser emitidas por OC (para entregas parciais)
-  - Contagem visual: "X itens prontos, Y restantes. Total Z"
-  - Itens com NF ficam destacados em verde
+### Novas Funcionalidades (20/01/2026)
+- ✅ **Data de Entrega Visível** - Extraída automaticamente do PDF da OC (formato DD/MM/YYYY)
+- ✅ **Contagem Regressiva** - Mostra dias restantes para a entrega
+- ✅ **Badge de ATRASADO** - Etiqueta vermelha quando a data de entrega passou, com contagem de dias em atraso
+- ✅ **Histórico de Cotações** - Itens pendentes mostram cotações anteriores do mesmo código/descrição
+- ✅ **NF de Venda Parcial** - Seleção de itens específicos para emitir NF
 
-- ✅ **Campo Observação Reestruturado**
-  - Observação agora é VISÍVEL na parte de fora do item (somente leitura)
-  - Observação é EDITÁVEL apenas dentro do formulário de edição (junto com preço, fornecedor, etc.)
-  - Remove botões duplicados de edição de observação
-
-### Versão Anterior: 2.2.0 (12/01/2026)
+### Versão Anterior: 2.3.0 (19/01/2026)
 
 ### Novas Funcionalidades (12/01/2026)
 - ✅ **Campo "Observação"** - Campo de texto visível para todos os usuários em cada item
