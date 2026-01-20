@@ -1259,6 +1259,58 @@ const ItemsByStatus = () => {
     }
   };
 
+  // Aplicar mudança de status em massa para todos os itens da OC
+  const aplicarStatusEmMassa = async (poId, numeroOC, totalItens) => {
+    const novoStatus = novoStatusMassa[poId];
+    
+    if (!novoStatus) {
+      alert('Selecione um status');
+      return;
+    }
+    
+    const statusLabels = {
+      'pendente': 'Pendente',
+      'cotado': 'Cotado',
+      'comprado': 'Comprado',
+      'em_separacao': 'Em Separação',
+      'em_transito': 'Em Trânsito',
+      'entregue': 'Entregue'
+    };
+    
+    if (!window.confirm(
+      `Mudar o status de TODOS os ${totalItens} itens da ${numeroOC} para "${statusLabels[novoStatus]}"?\n\n` +
+      `Esta ação não pode ser desfeita facilmente.`
+    )) {
+      return;
+    }
+    
+    setAplicandoStatusMassa(poId);
+    
+    try {
+      const response = await apiPost(`${API}/purchase-orders/${poId}/status-em-massa`, {
+        novo_status: novoStatus
+      });
+      
+      alert(
+        `✅ Status atualizado com sucesso!\n\n` +
+        `• OC: ${response.data.numero_oc}\n` +
+        `• Novo status: ${statusLabels[novoStatus]}\n` +
+        `• Itens atualizados: ${response.data.itens_atualizados} de ${response.data.total_itens}`
+      );
+      
+      // Limpar seleção
+      setNovoStatusMassa(prev => ({ ...prev, [poId]: '' }));
+      
+      // Recarregar dados
+      loadItems();
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      alert('Erro ao atualizar status: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setAplicandoStatusMassa(null);
+    }
+  };
+
   // Toggle "Pronto para Despacho" da OC inteira
   const toggleProntoDespachoOC = async (poId) => {
     const currentValue = ocProntoDespacho[poId] || false;
