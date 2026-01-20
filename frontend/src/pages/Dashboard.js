@@ -4,6 +4,36 @@ import { apiGet, apiPost, apiDelete, API, formatBRL } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import Pagination from '../components/Pagination';
 
+// Helper para calcular status de entrega
+const calcularStatusEntrega = (dataEntrega) => {
+  if (!dataEntrega) return null;
+  
+  try {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
+    const entrega = new Date(dataEntrega + 'T00:00:00');
+    const diffTime = entrega.getTime() - hoje.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    const dataFormatada = entrega.toLocaleDateString('pt-BR');
+    
+    if (diffDays < 0) {
+      return { atrasado: true, dias: Math.abs(diffDays), dataFormatada, cor: '#dc2626', bg: '#fef2f2' };
+    } else if (diffDays === 0) {
+      return { atrasado: false, dias: 0, texto: 'HOJE', dataFormatada, cor: '#f59e0b', bg: '#fffbeb' };
+    } else if (diffDays <= 3) {
+      return { atrasado: false, dias: diffDays, dataFormatada, cor: '#f59e0b', bg: '#fffbeb' };
+    } else if (diffDays <= 7) {
+      return { atrasado: false, dias: diffDays, dataFormatada, cor: '#3b82f6', bg: '#eff6ff' };
+    } else {
+      return { atrasado: false, dias: diffDays, dataFormatada, cor: '#22c55e', bg: '#f0fdf4' };
+    }
+  } catch (e) {
+    return null;
+  }
+};
+
 const Dashboard = () => {
   const { isAdmin } = useAuth();
   const [stats, setStats] = useState(null);
