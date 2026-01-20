@@ -165,6 +165,28 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                         break
                 break
         
+        # Extrair Data de Entrega (formato DD/MM/YYYY)
+        data_entrega = None
+        data_patterns = [
+            r'Data de Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
+            r'Data Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
+            r'Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
+            r'Prazo de Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
+            r'Dt\.\s*Entrega[:\s]*(\d{2}/\d{2}/\d{4})'
+        ]
+        
+        for pattern in data_patterns:
+            data_match = re.search(pattern, full_text, re.IGNORECASE)
+            if data_match:
+                try:
+                    # Converter de DD/MM/YYYY para ISO format
+                    data_str = data_match.group(1)
+                    dia, mes, ano = data_str.split('/')
+                    data_entrega = f"{ano}-{mes}-{dia}"  # ISO format YYYY-MM-DD
+                    break
+                except:
+                    pass
+        
         # ========== PARSER MELHORADO PARA PDFS FIEP ==========
         items = []
         seen_items = set()
