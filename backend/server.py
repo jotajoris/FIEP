@@ -1553,6 +1553,7 @@ async def get_purchase_orders_simple(
         "id": 1,
         "numero_oc": 1,
         "created_at": 1,
+        "data_entrega": 1,  # Data de entrega
         "cnpj_requisitante": 1,
         "items": 1  # Necessário para contagem e filtro
     }).to_list(1000)
