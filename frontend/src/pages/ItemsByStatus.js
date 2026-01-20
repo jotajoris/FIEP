@@ -2743,6 +2743,113 @@ Chave PIX: 46.663.556/0001-69`;
                       </label>
                     </div>
 
+                    {/* ============== SEÇÃO FRETE DE ENVIO EM LOTE ============== */}
+                    {isAdmin() && (
+                      <div style={{ 
+                        marginBottom: '1rem', 
+                        padding: '1rem', 
+                        background: '#fef3c7', 
+                        borderRadius: '8px',
+                        border: '2px solid #f59e0b'
+                      }}>
+                        <h4 style={{ 
+                          margin: '0 0 0.75rem 0', 
+                          fontSize: '1rem', 
+                          fontWeight: '700', 
+                          color: '#92400e',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
+                        }}>
+                          🚚 Frete de Envio (Dividir entre itens)
+                        </h4>
+                        
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                          {/* Botão selecionar/desselecionar todos */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleAllItensParaFrete(oc.po_id, oc.items);
+                            }}
+                            style={{ 
+                              padding: '0.4rem 0.8rem',
+                              background: (itensParaFrete[oc.po_id]?.size || 0) === oc.items.length ? '#f59e0b' : '#e2e8f0',
+                              color: (itensParaFrete[oc.po_id]?.size || 0) === oc.items.length ? 'white' : '#374151',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '0.85rem',
+                              fontWeight: '600'
+                            }}
+                          >
+                            {(itensParaFrete[oc.po_id]?.size || 0) === oc.items.length ? '☑️ Desmarcar Todos' : '☐ Selecionar Todos p/ Frete'}
+                          </button>
+                          
+                          {/* Contador de selecionados */}
+                          <span style={{ fontSize: '0.9rem', color: '#92400e', fontWeight: '600' }}>
+                            🚚 {itensParaFrete[oc.po_id]?.size || 0} de {oc.items.length} itens selecionados
+                          </span>
+                        </div>
+                        
+                        {/* Campo de valor e botão aplicar */}
+                        {(itensParaFrete[oc.po_id]?.size || 0) > 0 && (
+                          <div style={{ 
+                            display: 'flex', 
+                            gap: '0.75rem', 
+                            alignItems: 'center', 
+                            marginTop: '0.75rem',
+                            padding: '0.75rem',
+                            background: 'white',
+                            borderRadius: '8px',
+                            flexWrap: 'wrap'
+                          }}>
+                            <label style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem' }}>
+                              Valor Total do Frete:
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder="R$ 0,00"
+                              value={freteEnvioTotal[oc.po_id] || ''}
+                              onChange={(e) => setFreteEnvioTotal(prev => ({ ...prev, [oc.po_id]: e.target.value }))}
+                              style={{
+                                padding: '0.5rem 0.75rem',
+                                border: '2px solid #f59e0b',
+                                borderRadius: '6px',
+                                fontSize: '1rem',
+                                fontWeight: '600',
+                                width: '150px'
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <span style={{ color: '#6b7280', fontSize: '0.85rem' }}>
+                              ÷ {itensParaFrete[oc.po_id]?.size} itens = <strong>{formatBRL((parseFloat(freteEnvioTotal[oc.po_id] || 0) / (itensParaFrete[oc.po_id]?.size || 1)))}</strong> cada
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                aplicarFreteEnvio(oc.po_id);
+                              }}
+                              disabled={aplicandoFrete === oc.po_id}
+                              style={{
+                                padding: '0.5rem 1rem',
+                                background: aplicandoFrete === oc.po_id ? '#9ca3af' : '#22c55e',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontWeight: '600',
+                                cursor: aplicandoFrete === oc.po_id ? 'wait' : 'pointer',
+                                fontSize: '0.9rem'
+                              }}
+                            >
+                              {aplicandoFrete === oc.po_id ? '⏳ Aplicando...' : '✅ Aplicar Frete'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Seleção de Itens para NF de Venda */}
                     <div style={{ 
                       marginBottom: '1rem', 
