@@ -158,6 +158,7 @@ class PurchaseOrder(BaseModel):
     numero_oc: str
     cliente: str = "FIEP"
     cnpj_requisitante: str = ""
+    data_entrega: Optional[str] = None  # Data de entrega no formato YYYY-MM-DD
     items: List[POItem]
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     created_by: Optional[str] = None
@@ -165,6 +166,7 @@ class PurchaseOrder(BaseModel):
 
 class PurchaseOrderCreate(BaseModel):
     numero_oc: str
+    data_entrega: Optional[str] = None  # Data de entrega no formato YYYY-MM-DD
     items: List[POItem]
     created_by: Optional[str] = None
 
