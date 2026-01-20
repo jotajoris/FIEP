@@ -682,6 +682,7 @@ const Dashboard = () => {
                   <th>Número OC</th>
                   <th>Data Criação</th>
                   <th>Data Entrega</th>
+                  <th>Endereço Entrega</th>
                   <th style={{ textAlign: 'center' }}>Qtd Itens</th>
                   <th style={{ textAlign: 'right' }}>Valor Total</th>
                   <th>Ações</th>
@@ -736,6 +737,20 @@ const Dashboard = () => {
                             </div>
                           );
                         })() : <span style={{ color: '#9ca3af' }}>-</span>}
+                      </td>
+                      <td>
+                        {order.endereco_entrega ? (
+                          <div style={{ 
+                            maxWidth: '200px',
+                            fontSize: '0.8rem',
+                            color: '#374151',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }} title={order.endereco_entrega}>
+                            📍 {order.endereco_entrega}
+                          </div>
+                        ) : <span style={{ color: '#9ca3af' }}>-</span>}
                       </td>
                       <td style={{ textAlign: 'center' }}>
                         <span style={{ 
