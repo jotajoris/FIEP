@@ -1189,7 +1189,7 @@ async def upload_pdf_purchase_order(file: UploadFile = File(...), current_user: 
         po_item = POItem(**item)
         processed_items.append(po_item)
     
-    # Criar OC
+    # Criar OC com data de entrega extraída do PDF
     po = PurchaseOrder(
         numero_oc=oc_data["numero_oc"],
         items=processed_items,
@@ -1198,6 +1198,12 @@ async def upload_pdf_purchase_order(file: UploadFile = File(...), current_user: 
     
     doc = po.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
+    
+    # Adicionar data de entrega e CNPJ do requisitante
+    if oc_data.get("data_entrega"):
+        doc['data_entrega'] = oc_data["data_entrega"]
+    if oc_data.get("cnpj_requisitante"):
+        doc['cnpj_requisitante'] = oc_data["cnpj_requisitante"]
     
     await db.purchase_orders.insert_one(doc)
     
