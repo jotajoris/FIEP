@@ -323,20 +323,87 @@ const PODetails = () => {
               {valorTotal > 0 ? formatBRL(valorTotal) : 'Não informado'}
             </div>
           </div>
-          {/* Endereço de Entrega dentro do grid */}
+          {/* Endereço de Entrega dentro do grid - com edição para admins */}
           <div style={{ gridColumn: 'span 2' }}>
-            <div className="stat-label">📍 Endereço de Entrega</div>
-            <div style={{ 
-              fontSize: '1rem', 
-              fontWeight: '600', 
-              color: po.endereco_entrega ? '#1f2937' : '#9ca3af',
-              background: po.endereco_entrega ? '#f0f9ff' : '#f3f4f6',
-              padding: '0.5rem 0.75rem',
-              borderRadius: '8px',
-              marginTop: '0.25rem'
-            }}>
-              {po.endereco_entrega || 'Endereço não informado'}
+            <div className="stat-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              📍 Endereço de Entrega
+              {isAdmin() && !editandoEndereco && (
+                <button
+                  onClick={() => {
+                    setNovoEndereco(po.endereco_entrega || '');
+                    setEditandoEndereco(true);
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '0.8rem',
+                    color: '#3b82f6',
+                    padding: '0.1rem 0.3rem'
+                  }}
+                  title="Editar endereço"
+                  data-testid="edit-endereco-btn"
+                >
+                  ✏️
+                </button>
+              )}
             </div>
+            {editandoEndereco ? (
+              <div style={{ marginTop: '0.25rem' }}>
+                <textarea
+                  value={novoEndereco}
+                  onChange={(e) => setNovoEndereco(e.target.value)}
+                  placeholder="Digite o endereço de entrega..."
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '8px',
+                    border: '2px solid #3b82f6',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    minHeight: '60px',
+                    resize: 'vertical'
+                  }}
+                  data-testid="endereco-input"
+                />
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <button
+                    onClick={handleSalvarEndereco}
+                    disabled={salvandoEndereco}
+                    className="btn btn-primary"
+                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+                    data-testid="save-endereco-btn"
+                  >
+                    {salvandoEndereco ? 'Salvando...' : '✅ Salvar'}
+                  </button>
+                  <button
+                    onClick={() => setEditandoEndereco(false)}
+                    className="btn"
+                    style={{ 
+                      padding: '0.4rem 0.8rem', 
+                      fontSize: '0.85rem',
+                      background: '#e2e8f0',
+                      color: '#4a5568'
+                    }}
+                    data-testid="cancel-endereco-btn"
+                  >
+                    ❌ Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ 
+                fontSize: '1rem', 
+                fontWeight: '600', 
+                color: po.endereco_entrega ? '#1f2937' : '#9ca3af',
+                background: po.endereco_entrega ? '#f0f9ff' : '#f3f4f6',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '8px',
+                marginTop: '0.25rem'
+              }}>
+                {po.endereco_entrega || 'Endereço não informado'}
+              </div>
+            )}
           </div>
         </div>
         {/* Data de Entrega */}
