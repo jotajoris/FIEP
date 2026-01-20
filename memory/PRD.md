@@ -142,6 +142,10 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 ```
 
 ## Tarefas Concluídas Recentemente
+- [20/01/2026] ✅ **Histórico de Cotações** - Itens pendentes agora mostram cotações anteriores do mesmo código/descrição
+  - Exibe fornecedor, preço, frete e link de compras anteriores
+  - Botão "📜 Cotações Anteriores" em cada item pendente
+  - Facilita reutilização de cotações para itens recorrentes
 - [19/01/2026] ✅ **NF de Venda Parcial** - Permite emitir NF para itens selecionados de uma OC (entregas parciais)
 - [19/01/2026] ✅ **Múltiplas NFs por OC** - Sistema agora suporta várias NFs de venda por OC
 - [19/01/2026] ✅ **Contagem de Itens com NF** - Mostra "X itens prontos, Y restantes" no header da OC
