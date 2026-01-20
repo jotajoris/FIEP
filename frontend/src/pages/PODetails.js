@@ -84,6 +84,9 @@ const PODetails = () => {
   const [novoEndereco, setNovoEndereco] = useState('');
   const [salvandoEndereco, setSalvandoEndereco] = useState(false);
   
+  // Estado para atualização com PDF
+  const [atualizandoPDF, setAtualizandoPDF] = useState(false);
+  
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
