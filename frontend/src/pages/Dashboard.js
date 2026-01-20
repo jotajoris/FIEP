@@ -695,6 +695,32 @@ const Dashboard = () => {
                       )}
                       <td><strong>{order.numero_oc}</strong></td>
                       <td>{new Date(order.created_at).toLocaleDateString('pt-BR')}</td>
+                      <td>
+                        {order.data_entrega ? (() => {
+                          const status = calcularStatusEntrega(order.data_entrega);
+                          if (!status) return '-';
+                          return (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span style={{ fontWeight: '600' }}>{status.dataFormatada}</span>
+                              <span style={{
+                                padding: '0.15rem 0.4rem',
+                                borderRadius: '4px',
+                                fontSize: '0.7rem',
+                                fontWeight: '700',
+                                background: status.cor,
+                                color: 'white'
+                              }}>
+                                {status.atrasado 
+                                  ? `⚠️ -${status.dias}d` 
+                                  : status.dias === 0 
+                                    ? 'HOJE!' 
+                                    : `${status.dias}d`
+                                }
+                              </span>
+                            </div>
+                          );
+                        })() : <span style={{ color: '#9ca3af' }}>-</span>}
+                      </td>
                       <td style={{ textAlign: 'center' }}>
                         <span style={{ 
                           background: '#e2e8f0', 
