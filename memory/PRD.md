@@ -23,22 +23,19 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 2.5.3 (20/01/2026)
+## Versão Atual: 2.5.4 (20/01/2026)
 
 ### Novas Funcionalidades (20/01/2026)
-- ✅ **Frete de Envio em Lote** - Na página "Em Separação", é possível:
-  - Selecionar itens específicos de uma OC para aplicar frete de envio
-  - Informar um valor total de frete que será dividido igualmente entre os itens selecionados
-  - O sistema calcula automaticamente quanto cada item receberá
-  - Checkboxes separados: verde para NF de Venda, laranja para Frete de Envio
-  - Badge "🚚 FRETE" aparece nos itens selecionados
-  - Badge "Frete: R$ X,XX" aparece nos itens que já têm frete cadastrado
-- ✅ **Atualizar OCs com PDF** - Novos recursos para preencher dados faltantes:
-  - Botão "📄 Atualizar com PDF" na página de detalhes de cada OC
-  - Nova aba "🔄 Atualizar OCs" no Painel Admin para atualização em massa
-  - Preserva todos os dados dos itens (status, responsável, NFs, etc.)
-- ✅ **Endereço de Entrega Completo no Dashboard** - Endereços aparecem por inteiro com quebra de linha
-- ✅ **Botão de Edição do Endereço** - Admins podem editar o endereço na página PODetails
+- ✅ **Mudar Status em Massa** - Na página "Em Separação", é possível:
+  - Selecionar um novo status no dropdown (Pendente, Cotado, Comprado, Em Separação, Em Trânsito, Entregue)
+  - Clicar em "Aplicar para X itens" para mudar o status de TODOS os itens da OC de uma vez
+  - Confirmação antes de aplicar para evitar erros
+- ✅ **Frete de Envio em Lote** - Na página "Em Separação":
+  - Selecionar itens específicos para aplicar frete de envio
+  - Informar valor total que será dividido igualmente entre os itens
+  - Checkboxes separados: verde (NF) e laranja (Frete)
+- ✅ **Atualizar OCs com PDF** - Preencher dados faltantes (endereço, data) sem perder progresso
+- ✅ **Endereço de Entrega Completo** - Visível em todo o sistema com edição inline
 - ✅ **Data de Entrega Visível** - Extraída automaticamente do PDF da OC (formato DD/MM/YYYY)
 - ✅ **Contagem Regressiva** - Mostra dias restantes para a entrega
 - ✅ **Badge de ATRASADO** - Etiqueta vermelha quando a data de entrega passou, com contagem de dias em atraso
