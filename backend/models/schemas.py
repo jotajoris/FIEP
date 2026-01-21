@@ -197,6 +197,7 @@ class ItemFullUpdate(BaseModel):
     preco_venda: Optional[float] = None
     no_carrinho: Optional[bool] = None
     observacao: Optional[str] = None
+    quantidade_comprada: Optional[int] = None  # Quantidade efetivamente comprada (pode ser maior que a necessária)
 
 
 class ResponsavelBreakdown(BaseModel):
