@@ -4866,10 +4866,10 @@ async def verificar_estoque_item(codigo_item: str, current_user: dict = Depends(
     Usado para mostrar no item pendente/cotado se há estoque disponível.
     """
     
-    # Buscar todos os itens com esse código que tenham estoque
+    # Buscar todos os itens com esse código
     pos = await db.purchase_orders.find(
         {"items.codigo_item": codigo_item},
-        {"_id": 0, "numero_oc": 1, "items.$": 1}
+        {"_id": 0, "numero_oc": 1, "items": 1}
     ).to_list(5000)
     
     quantidade_total_estoque = 0
@@ -4878,8 +4878,22 @@ async def verificar_estoque_item(codigo_item: str, current_user: dict = Depends(
     for po in pos:
         for item in po.get('items', []):
             if item.get('codigo_item') == codigo_item:
-                quantidade_comprada = item.get('quantidade_comprada')
+                status = item.get('status', 'pendente')
+                
+                # Só considerar itens já comprados
+                if status not in ['comprado', 'em_separacao', 'em_transito', 'entregue']:
+                    continue
+                
                 quantidade_necessaria = item.get('quantidade', 0)
+                
+                # Calcular quantidade comprada
+                quantidade_comprada = item.get('quantidade_comprada')
+                if not quantidade_comprada:
+                    fontes = item.get('fontes_compra', [])
+                    if fontes:
+                        quantidade_comprada = sum(f.get('quantidade', 0) for f in fontes)
+                    else:
+                        quantidade_comprada = 0
                 
                 if quantidade_comprada and quantidade_comprada > quantidade_necessaria:
                     excedente = quantidade_comprada - quantidade_necessaria
