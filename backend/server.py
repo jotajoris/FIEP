@@ -4763,11 +4763,15 @@ async def migrar_enderecos_itens_para_oc(current_user: dict = Depends(require_ad
 @api_router.get("/estoque")
 async def listar_estoque(current_user: dict = Depends(get_current_user)):
     """
-    Lista todos os itens em estoque (quantidade_comprada > quantidade necessária).
+    Lista todos os itens em estoque (quantidade comprada > quantidade necessária).
     Agrupa por código do item e mostra o total disponível em estoque.
+    
+    A quantidade comprada pode vir de:
+    1. Campo quantidade_comprada do item (se preenchido)
+    2. Soma das quantidades das fontes de compra
     """
     
-    # Buscar todos os itens com quantidade_comprada
+    # Buscar todos os itens de todas as OCs
     pos = await db.purchase_orders.find(
         {},
         {"_id": 0, "id": 1, "numero_oc": 1, "items": 1}
@@ -4778,21 +4782,37 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
     
     for po in pos:
         for idx, item in enumerate(po.get('items', [])):
-            quantidade_comprada = item.get('quantidade_comprada')
             quantidade_necessaria = item.get('quantidade', 0)
+            status = item.get('status', 'pendente')
             
-            # Se tem quantidade_comprada e é maior que a necessária
+            # Só considerar itens já comprados (comprado ou posterior)
+            if status not in ['comprado', 'em_separacao', 'em_transito', 'entregue']:
+                continue
+            
+            # Calcular quantidade comprada:
+            # 1. Se tem campo quantidade_comprada, usar ele
+            # 2. Senão, somar quantidades das fontes de compra
+            quantidade_comprada = item.get('quantidade_comprada')
+            
+            if not quantidade_comprada:
+                fontes = item.get('fontes_compra', [])
+                if fontes:
+                    quantidade_comprada = sum(f.get('quantidade', 0) for f in fontes)
+                else:
+                    quantidade_comprada = 0
+            
+            # Se a quantidade comprada é maior que a necessária, tem excedente
             if quantidade_comprada and quantidade_comprada > quantidade_necessaria:
                 excedente = quantidade_comprada - quantidade_necessaria
                 codigo_item = item.get('codigo_item', '')
                 
+                # Pegar informações da fonte de compra (link, fornecedor)
+                fontes = item.get('fontes_compra', [])
+                link_compra = fontes[0].get('link', '') if fontes else ''
+                fornecedor = fontes[0].get('fornecedor', '') if fontes else ''
+                preco_unitario = fontes[0].get('preco_unitario', 0) if fontes else item.get('preco_compra', 0)
+                
                 if codigo_item not in estoque_map:
-                    # Pegar informações da fonte de compra (link, fornecedor)
-                    fontes = item.get('fontes_compra', [])
-                    link_compra = fontes[0].get('link', '') if fontes else ''
-                    fornecedor = fontes[0].get('fornecedor', '') if fontes else ''
-                    preco_unitario = fontes[0].get('preco_unitario', 0) if fontes else item.get('preco_compra', 0)
-                    
                     estoque_map[codigo_item] = {
                         'codigo_item': codigo_item,
                         'descricao': item.get('descricao', ''),
@@ -4823,11 +4843,9 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
                         'data_compra': item.get('data_compra')
                     })
                     # Atualiza link/fornecedor se não tinha
-                    if not estoque_map[codigo_item]['link_compra']:
-                        fontes = item.get('fontes_compra', [])
-                        if fontes:
-                            estoque_map[codigo_item]['link_compra'] = fontes[0].get('link', '')
-                            estoque_map[codigo_item]['fornecedor'] = fontes[0].get('fornecedor', '')
+                    if not estoque_map[codigo_item]['link_compra'] and link_compra:
+                        estoque_map[codigo_item]['link_compra'] = link_compra
+                        estoque_map[codigo_item]['fornecedor'] = fornecedor
     
     # Converter para lista
     estoque_list = list(estoque_map.values())
