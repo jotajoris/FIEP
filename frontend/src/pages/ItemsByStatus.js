@@ -3349,6 +3349,24 @@ Chave PIX: 46.663.556/0001-69`;
                       </Link>
                       {/* Data de Entrega com contagem regressiva */}
                       {item.data_entrega && <DataEntregaBadge dataEntrega={item.data_entrega} compact={true} todosEntregues={status === 'entregue'} />}
+                      
+                      {/* Indicador de Estoque Disponível (só para pendentes e cotados) */}
+                      {(status === 'pendente' || status === 'cotado') && estoqueDisponivel[item.codigo_item] > 0 && (
+                        <span style={{
+                          background: '#10b981',
+                          color: 'white',
+                          padding: '0.25rem 0.6rem',
+                          borderRadius: '12px',
+                          fontSize: '0.75rem',
+                          fontWeight: '700',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          boxShadow: '0 1px 3px rgba(16, 185, 129, 0.3)'
+                        }} data-testid={`estoque-badge-${item.codigo_item}`}>
+                          📦 {estoqueDisponivel[item.codigo_item]} em estoque
+                        </span>
+                      )}
                     </div>
                     <p style={{ color: '#4a5568', marginBottom: '0.5rem' }}>{item.descricao}</p>
                     
