@@ -4850,6 +4850,53 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
     }
 
 
+@api_router.get("/estoque/mapa")
+async def get_estoque_mapa(current_user: dict = Depends(get_current_user)):
+    """
+    Retorna um mapa simplificado de código do item -> quantidade em estoque.
+    Usado pelo frontend para mostrar indicadores de estoque disponível em itens pendentes/cotados.
+    """
+    # Buscar todos os itens de todas as OCs
+    pos = await db.purchase_orders.find(
+        {},
+        {"_id": 0, "items": 1}
+    ).to_list(5000)
+    
+    # Mapa de estoque: codigo_item -> quantidade_estoque
+    estoque_mapa = {}
+    
+    for po in pos:
+        for item in po.get('items', []):
+            quantidade_necessaria = item.get('quantidade', 0)
+            status = item.get('status', 'pendente')
+            
+            # Só considerar itens já comprados (comprado ou posterior)
+            if status not in ['comprado', 'em_separacao', 'em_transito', 'entregue']:
+                continue
+            
+            # Calcular quantidade comprada
+            quantidade_comprada = item.get('quantidade_comprada')
+            
+            if not quantidade_comprada:
+                fontes = item.get('fontes_compra', [])
+                if fontes:
+                    quantidade_comprada = sum(f.get('quantidade', 0) for f in fontes)
+                else:
+                    quantidade_comprada = 0
+            
+            # Se a quantidade comprada é maior que a necessária, tem excedente
+            if quantidade_comprada and quantidade_comprada > quantidade_necessaria:
+                excedente = quantidade_comprada - quantidade_necessaria
+                codigo_item = item.get('codigo_item', '')
+                
+                if codigo_item:
+                    if codigo_item not in estoque_mapa:
+                        estoque_mapa[codigo_item] = 0
+                    estoque_mapa[codigo_item] += excedente
+    
+    return estoque_mapa
+
+
 @api_router.get("/estoque/verificar/{codigo_item}")
 async def verificar_estoque_item(codigo_item: str, current_user: dict = Depends(get_current_user)):
     """
