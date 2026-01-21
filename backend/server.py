@@ -1802,6 +1802,7 @@ async def update_item_status(po_id: str, codigo_item: str, update: ItemStatusUpd
             logger.info(f"Usuário {user_email} (role={user_role}) editando item {codigo_item}")
             
             item['status'] = update.status
+            atualizar_data_compra(item, update.status)  # Atualiza data de compra automaticamente
             
             # Atualizar fontes de compra (todos podem editar)
             if update.fontes_compra is not None:
