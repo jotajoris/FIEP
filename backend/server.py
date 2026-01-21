@@ -1895,35 +1895,8 @@ async def update_item_status(po_id: str, codigo_item: str, update: ItemStatusUpd
                 if update.frete_envio is not None:
                     item['frete_envio'] = update.frete_envio
             
-            # Calcular lucro líquido
-            preco_venda = item.get('preco_venda')
-            quantidade = item.get('quantidade', 0)
-            
-            # Se tem fontes de compra, usar os totais das fontes
-            fontes = item.get('fontes_compra', [])
-            if fontes and len(fontes) > 0:
-                total_custo_compra = sum(fc['quantidade'] * fc['preco_unitario'] for fc in fontes)
-                total_frete_compra = sum(fc.get('frete', 0) for fc in fontes)  # Frete é valor total, não por unidade
-                
-                if preco_venda is not None:
-                    receita_total = preco_venda * quantidade
-                    # Imposto é sempre 11% do valor total de venda
-                    impostos = receita_total * 0.11
-                    frete_envio = item.get('frete_envio', 0) or 0
-                    item['lucro_liquido'] = round(receita_total - total_custo_compra - total_frete_compra - impostos - frete_envio, 2)
-                    # Armazenar o imposto calculado para referência
-                    item['imposto'] = round(impostos, 2)
-            elif item.get('preco_compra') is not None and preco_venda is not None:
-                # Cálculo tradicional
-                receita_total = preco_venda * quantidade
-                custo_total = item['preco_compra'] * quantidade
-                # Imposto é sempre 11% do valor total de venda
-                impostos = receita_total * 0.11
-                frete_compra = item.get('frete_compra', 0) or 0  # Frete é valor total
-                frete_envio = item.get('frete_envio', 0) or 0
-                item['lucro_liquido'] = round(receita_total - custo_total - impostos - frete_compra - frete_envio, 2)
-                # Armazenar o imposto calculado para referência
-                item['imposto'] = round(impostos, 2)
+            # Calcular lucro líquido usando a função centralizada
+            calcular_lucro_item(item)
             
             # Atualizar datas
             now = datetime.now(timezone.utc).isoformat()
