@@ -4806,6 +4806,9 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
                 fornecedor = fontes[0].get('fornecedor', '') if fontes else ''
                 preco_unitario = fontes[0].get('preco_unitario', 0) if fontes else item.get('preco_compra', 0)
                 
+                # Info de onde o estoque foi usado
+                estoque_usado_em = item.get('estoque_usado_em', [])
+                
                 if codigo_item not in estoque_map:
                     estoque_map[codigo_item] = {
                         'codigo_item': codigo_item,
@@ -4823,7 +4826,8 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
                             'quantidade_necessaria': quantidade_necessaria,
                             'quantidade_usada_estoque': quantidade_usada_estoque,
                             'excedente': excedente,
-                            'data_compra': item.get('data_compra')
+                            'data_compra': item.get('data_compra'),
+                            'usado_em': estoque_usado_em  # Para quais OCs foi usado
                         }]
                     }
                 else:
@@ -4836,7 +4840,8 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
                         'quantidade_necessaria': quantidade_necessaria,
                         'quantidade_usada_estoque': quantidade_usada_estoque,
                         'excedente': excedente,
-                        'data_compra': item.get('data_compra')
+                        'data_compra': item.get('data_compra'),
+                        'usado_em': estoque_usado_em  # Para quais OCs foi usado
                     })
                     # Atualiza link/fornecedor se não tinha
                     if not estoque_map[codigo_item]['link_compra'] and link_compra:
