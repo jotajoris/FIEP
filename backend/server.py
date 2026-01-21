@@ -4360,25 +4360,8 @@ async def aplicar_frete_envio_multiplo(
             "frete_envio": frete_por_item
         })
         
-        # Recalcular lucro líquido
-        item = items[idx]
-        valor_unitario_venda = item.get('valor_unitario_venda') or 0
-        quantidade = item.get('quantidade') or 1
-        receita_total = valor_unitario_venda * quantidade
-        
-        # Buscar custo total das fontes de compra
-        fontes = item.get('fontes_compra', [])
-        if fontes:
-            total_custo_compra = sum((f.get('valor_unitario') or 0) * (f.get('quantidade') or 0) for f in fontes)
-            total_frete_compra = sum(f.get('frete_compra') or 0 for f in fontes)
-        else:
-            total_custo_compra = (item.get('valor_unitario_compra') or 0) * quantidade
-            total_frete_compra = item.get('frete_compra') or 0
-        
-        impostos = item.get('impostos') or 0
-        frete_envio = item.get('frete_envio') or 0
-        
-        item['lucro_liquido'] = round(receita_total - total_custo_compra - total_frete_compra - impostos - frete_envio, 2)
+        # Recalcular lucro líquido usando a função centralizada
+        calcular_lucro_item(items[idx])
     
     # Salvar alterações
     await db.purchase_orders.update_one(
