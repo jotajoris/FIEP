@@ -27,7 +27,7 @@ const PlanilhaItens = () => {
   const loadPlanilha = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/planilha-itens`, {
+      const response = await axios.get(`${API}/api/planilha-itens`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDados(response.data);
