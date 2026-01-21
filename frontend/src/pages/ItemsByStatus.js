@@ -1604,9 +1604,9 @@ Chave PIX: 46.663.556/0001-69`;
               <input
                 type="number"
                 min="1"
-                max={qtdDisponivel}
+                max={maxUsar}
                 value={quantidadeUsar}
-                onChange={(e) => setQuantidadeUsar(Math.min(parseInt(e.target.value) || 0, qtdDisponivel))}
+                onChange={(e) => setQuantidadeUsar(Math.min(parseInt(e.target.value) || 0, maxUsar))}
                 style={{
                   padding: '0.75rem',
                   borderRadius: '8px',
@@ -1616,7 +1616,12 @@ Chave PIX: 46.663.556/0001-69`;
                   textAlign: 'center'
                 }}
               />
-              <span style={{ color: '#64748b' }}>de {qtdDisponivel} disponíveis</span>
+              <span style={{ color: '#64748b' }}>
+                de {maxUsar} (máx. que pode usar)
+              </span>
+            </div>
+            <div style={{ fontSize: '0.8rem', color: '#9ca3af', marginTop: '0.5rem' }}>
+              Estoque disponível: {qtdDisponivel} UN | Faltam para o item: {qtdFaltante} UN
             </div>
           </div>
           
