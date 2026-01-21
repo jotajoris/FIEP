@@ -4792,9 +4792,12 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
                 else:
                     quantidade_comprada = 0
             
-            # Se a quantidade comprada é maior que a necessária, tem excedente
-            if quantidade_comprada and quantidade_comprada > quantidade_necessaria:
-                excedente = quantidade_comprada - quantidade_necessaria
+            # Quantidade já usada do estoque
+            quantidade_usada_estoque = item.get('quantidade_usada_estoque', 0)
+            
+            # Se a quantidade comprada é maior que a necessária + já usada, tem excedente
+            if quantidade_comprada and quantidade_comprada > (quantidade_necessaria + quantidade_usada_estoque):
+                excedente = quantidade_comprada - quantidade_necessaria - quantidade_usada_estoque
                 codigo_item = item.get('codigo_item', '')
                 
                 # Pegar informações da fonte de compra (link, fornecedor)
@@ -4818,6 +4821,7 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
                             'po_id': po.get('id'),
                             'quantidade_comprada': quantidade_comprada,
                             'quantidade_necessaria': quantidade_necessaria,
+                            'quantidade_usada_estoque': quantidade_usada_estoque,
                             'excedente': excedente,
                             'data_compra': item.get('data_compra')
                         }]
@@ -4830,6 +4834,7 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
                         'po_id': po.get('id'),
                         'quantidade_comprada': quantidade_comprada,
                         'quantidade_necessaria': quantidade_necessaria,
+                        'quantidade_usada_estoque': quantidade_usada_estoque,
                         'excedente': excedente,
                         'data_compra': item.get('data_compra')
                     })
