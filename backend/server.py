@@ -114,6 +114,58 @@ def atualizar_data_compra(item: dict, novo_status: str) -> None:
         # Remove a data de compra se voltar para pendente ou cotado
         item['data_compra'] = None
 
+
+def calcular_lucro_item(item: dict) -> None:
+    """
+    Calcula o lucro líquido do item usando a QUANTIDADE NECESSÁRIA (não a quantidade comprada).
+    
+    O lucro é calculado apenas sobre o que será vendido (quantidade necessária da OC),
+    mesmo que tenha sido comprado mais (excedente vai para estoque).
+    
+    Fórmula:
+    - Receita = preço_venda × quantidade_necessária
+    - Custo = custo_unitário_médio × quantidade_necessária (ou preço_compra × quantidade)
+    - Impostos = 11% da receita
+    - Lucro = Receita - Custo - Frete_compra_proporcional - Impostos - Frete_envio
+    """
+    preco_venda = item.get('preco_venda')
+    quantidade_necessaria = item.get('quantidade', 0)
+    
+    if not preco_venda or not quantidade_necessaria:
+        return
+    
+    fontes = item.get('fontes_compra', [])
+    receita_total = preco_venda * quantidade_necessaria
+    impostos = receita_total * 0.11
+    item['imposto'] = round(impostos, 2)
+    
+    if fontes and len(fontes) > 0:
+        # Calcular custo médio ponderado das fontes de compra
+        total_quantidade_comprada = sum(fc.get('quantidade', 0) for fc in fontes)
+        total_custo_fontes = sum(fc.get('quantidade', 0) * fc.get('preco_unitario', 0) for fc in fontes)
+        total_frete_fontes = sum(fc.get('frete', 0) for fc in fontes)
+        
+        if total_quantidade_comprada > 0:
+            # Custo unitário médio ponderado
+            custo_unitario_medio = total_custo_fontes / total_quantidade_comprada
+            # Custo apenas da quantidade necessária
+            custo_para_venda = custo_unitario_medio * quantidade_necessaria
+            # Frete proporcional à quantidade necessária
+            frete_proporcional = (total_frete_fontes / total_quantidade_comprada) * quantidade_necessaria
+        else:
+            custo_para_venda = 0
+            frete_proporcional = 0
+        
+        frete_envio = item.get('frete_envio', 0) or 0
+        item['lucro_liquido'] = round(receita_total - custo_para_venda - frete_proporcional - impostos - frete_envio, 2)
+    elif item.get('preco_compra') is not None:
+        # Cálculo tradicional (sem fontes de compra)
+        custo_total = item['preco_compra'] * quantidade_necessaria
+        frete_compra = item.get('frete_compra', 0) or 0
+        frete_envio = item.get('frete_envio', 0) or 0
+        item['lucro_liquido'] = round(receita_total - custo_total - frete_compra - impostos - frete_envio, 2)
+
+
 def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
     """Extrair dados de OC de um PDF"""
     try:
