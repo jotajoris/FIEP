@@ -3328,7 +3328,23 @@ Chave PIX: 46.663.556/0001-69`;
                       }}>
                         <span style={{ color: '#166534', fontWeight: '600' }}>🛒</span>
                         <span style={{ color: '#166534', fontWeight: '600' }}>
-                          Data da Compra: {new Date(item.data_compra + 'T00:00:00').toLocaleDateString('pt-BR')}
+                          Data da Compra: {(() => {
+                            try {
+                              // Tenta parsear diferentes formatos
+                              const dataStr = item.data_compra;
+                              let data;
+                              if (dataStr.includes('T')) {
+                                // Formato ISO
+                                data = new Date(dataStr);
+                              } else {
+                                // Formato YYYY-MM-DD
+                                data = new Date(dataStr + 'T00:00:00');
+                              }
+                              return data.toLocaleDateString('pt-BR');
+                            } catch {
+                              return item.data_compra;
+                            }
+                          })()}
                         </span>
                       </div>
                     )}
