@@ -5118,8 +5118,13 @@ async def usar_estoque(
     if quantidade_disponivel <= 0:
         raise HTTPException(status_code=400, detail="Não há estoque disponível para este item")
     
-    # Limitar a quantidade a usar ao disponível
-    quantidade_efetiva = min(quantidade_usar, quantidade_disponivel)
+    # Limitar a quantidade a usar ao necessário e ao disponível
+    # Não pode usar mais do que o item precisa!
+    quantidade_faltante = quantidade_necessaria - item.get('quantidade_do_estoque', 0)
+    quantidade_efetiva = min(quantidade_usar, quantidade_disponivel, quantidade_faltante)
+    
+    if quantidade_efetiva <= 0:
+        raise HTTPException(status_code=400, detail="Este item já foi totalmente atendido ou não há quantidade faltante")
     
     # Buscar informações do estoque (preço, OC de origem)
     pos_com_estoque = await db.purchase_orders.find(
