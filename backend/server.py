@@ -4310,6 +4310,7 @@ async def atualizar_status_em_massa(
                 status_anterior = item.get('status', 'pendente')
                 if status_anterior != novo_status:
                     item['status'] = novo_status
+                    atualizar_data_compra(item, novo_status)  # Atualiza data de compra automaticamente
                     itens_atualizados += 1
     else:
         # Atualizar todos os itens
@@ -4317,6 +4318,7 @@ async def atualizar_status_em_massa(
             status_anterior = item.get('status', 'pendente')
             if status_anterior != novo_status:
                 item['status'] = novo_status
+                atualizar_data_compra(item, novo_status)  # Atualiza data de compra automaticamente
                 itens_atualizados += 1
     
     # Salvar alterações
