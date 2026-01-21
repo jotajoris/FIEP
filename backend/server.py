@@ -1925,6 +1925,7 @@ async def update_item_by_index_status(
     
     # APLICAR TODAS AS ALTERAÇÕES - SEM RESTRIÇÕES
     item['status'] = update.status
+    atualizar_data_compra(item, update.status)  # Atualiza data de compra automaticamente
     
     # Fontes de compra
     if update.fontes_compra is not None:
