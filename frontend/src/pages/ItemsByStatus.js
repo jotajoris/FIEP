@@ -1448,8 +1448,20 @@ Chave PIX: 46.663.556/0001-69`;
         return;
       }
       
+      // Calcular quanto falta para o item
+      const qtdJaAtendida = item.quantidade_do_estoque || 0;
+      const qtdFaltante = (item.quantidade || 0) - qtdJaAtendida;
+      
+      if (qtdFaltante <= 0) {
+        alert('Este item já foi totalmente atendido.');
+        return;
+      }
+      
+      // Máximo que pode usar: o menor entre disponível e faltante
+      const maxUsar = Math.min(detalhes.total_disponivel, qtdFaltante);
+      
       setEstoqueDetalhes(detalhes);
-      setQuantidadeUsar(Math.min(detalhes.total_disponivel, item.quantidade));
+      setQuantidadeUsar(maxUsar); // Já seta o máximo permitido
       setShowUsarEstoqueModal(item);
     } catch (error) {
       console.error('Erro ao buscar detalhes do estoque:', error);
