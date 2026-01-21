@@ -2165,27 +2165,8 @@ async def update_item_by_index(
     if update.quantidade_comprada is not None:
         item['quantidade_comprada'] = update.quantidade_comprada
     
-    # Recalcular imposto e lucro se tiver preço de venda
-    preco_venda = item.get('preco_venda')
-    quantidade = item.get('quantidade', 0)
-    
-    if preco_venda is not None:
-        receita_total = preco_venda * quantidade
-        impostos = receita_total * 0.11
-        item['imposto'] = round(impostos, 2)
-        
-        # Recalcular lucro se tiver fontes de compra ou preço de compra
-        fontes = item.get('fontes_compra', [])
-        if fontes and len(fontes) > 0:
-            total_custo_compra = sum(fc['quantidade'] * fc['preco_unitario'] for fc in fontes)
-            total_frete_compra = sum(fc.get('frete', 0) for fc in fontes)
-            frete_envio = item.get('frete_envio', 0) or 0
-            item['lucro_liquido'] = round(receita_total - total_custo_compra - total_frete_compra - impostos - frete_envio, 2)
-        elif item.get('preco_compra') is not None:
-            custo_total = item['preco_compra'] * quantidade
-            frete_compra = item.get('frete_compra', 0) or 0
-            frete_envio = item.get('frete_envio', 0) or 0
-            item['lucro_liquido'] = round(receita_total - custo_total - impostos - frete_compra - frete_envio, 2)
+    # Recalcular imposto e lucro usando a função centralizada
+    calcular_lucro_item(item)
     
     await db.purchase_orders.update_one(
         {"id": po_id},
