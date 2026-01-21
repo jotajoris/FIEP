@@ -102,6 +102,18 @@ function AppRoutes() {
           <Layout><OwnerPanel /></Layout>
         </ProtectedRoute>
       } />
+      
+      <Route path="/estoque" element={
+        <ProtectedRoute>
+          <Layout><Estoque /></Layout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/planilha-itens" element={
+        <ProtectedRoute>
+          <Layout><PlanilhaItens /></Layout>
+        </ProtectedRoute>
+      } />
     </Routes>
   );
 }
