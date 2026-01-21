@@ -3591,21 +3591,48 @@ Chave PIX: 46.663.556/0001-69`;
                       {/* Data de Entrega com contagem regressiva */}
                       {item.data_entrega && <DataEntregaBadge dataEntrega={item.data_entrega} compact={true} todosEntregues={status === 'entregue'} />}
                       
-                      {/* Indicador de Estoque Disponível (só para pendentes e cotados) */}
+                      {/* Indicador de Estoque Disponível + Botão Usar (só para pendentes e cotados) */}
                       {(status === 'pendente' || status === 'cotado') && estoqueDisponivel[item.codigo_item] > 0 && (
+                        <button
+                          onClick={() => abrirModalUsarEstoque(item)}
+                          style={{
+                            background: '#10b981',
+                            color: 'white',
+                            padding: '0.25rem 0.6rem',
+                            borderRadius: '12px',
+                            fontSize: '0.75rem',
+                            fontWeight: '700',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                            boxShadow: '0 1px 3px rgba(16, 185, 129, 0.3)',
+                            border: 'none',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => e.target.style.background = '#059669'}
+                          onMouseLeave={(e) => e.target.style.background = '#10b981'}
+                          data-testid={`usar-estoque-btn-${item.codigo_item}`}
+                        >
+                          📦 {estoqueDisponivel[item.codigo_item]} em estoque • Usar
+                        </button>
+                      )}
+                      
+                      {/* Mostrar se foi parcialmente atendido pelo estoque */}
+                      {item.parcialmente_atendido_estoque && (
                         <span style={{
-                          background: '#10b981',
-                          color: 'white',
+                          background: '#fef3c7',
+                          color: '#92400e',
                           padding: '0.25rem 0.6rem',
                           borderRadius: '12px',
                           fontSize: '0.75rem',
-                          fontWeight: '700',
+                          fontWeight: '600',
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '0.25rem',
-                          boxShadow: '0 1px 3px rgba(16, 185, 129, 0.3)'
-                        }} data-testid={`estoque-badge-${item.codigo_item}`}>
-                          📦 {estoqueDisponivel[item.codigo_item]} em estoque
+                          border: '1px solid #f59e0b'
+                        }}>
+                          ⚠️ Parcialmente atendido ({item.quantidade_do_estoque || 0} do estoque, faltam {item.quantidade_faltante || 0})
                         </span>
                       )}
                     </div>
