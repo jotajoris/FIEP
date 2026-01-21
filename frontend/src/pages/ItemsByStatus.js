@@ -4793,6 +4793,9 @@ Chave PIX: 46.663.556/0001-69`;
           </div>
         )}
       </div>
+      
+      {/* Modal de Usar do Estoque */}
+      {renderModalUsarEstoque()}
     </div>
   );
 };
