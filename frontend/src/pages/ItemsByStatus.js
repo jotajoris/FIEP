@@ -199,6 +199,9 @@ const ItemsByStatus = () => {
   const [historicoCotacoes, setHistoricoCotacoes] = useState({});  // {uniqueId: {historico: [], loading: boolean}}
   const [expandedHistorico, setExpandedHistorico] = useState({});  // {uniqueId: boolean} - histórico expandido
 
+  // Estado para mapa de estoque disponível (itens pendentes/cotados)
+  const [estoqueDisponivel, setEstoqueDisponivel] = useState({});  // {codigo_item: quantidade}
+
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
