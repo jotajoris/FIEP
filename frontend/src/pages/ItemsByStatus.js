@@ -1436,6 +1436,241 @@ Chave PIX: 46.663.556/0001-69`;
     }
   };
 
+  // ============== USAR DO ESTOQUE ==============
+  const abrirModalUsarEstoque = async (item) => {
+    try {
+      // Buscar detalhes do estoque disponível
+      const response = await apiGet(`${API}/estoque/detalhes/${item.codigo_item}`);
+      const detalhes = response.data;
+      
+      if (detalhes.total_disponivel <= 0) {
+        alert('Não há estoque disponível para este item.');
+        return;
+      }
+      
+      setEstoqueDetalhes(detalhes);
+      setQuantidadeUsar(Math.min(detalhes.total_disponivel, item.quantidade));
+      setShowUsarEstoqueModal(item);
+    } catch (error) {
+      console.error('Erro ao buscar detalhes do estoque:', error);
+      alert('Erro ao buscar detalhes do estoque.');
+    }
+  };
+
+  const fecharModalUsarEstoque = () => {
+    setShowUsarEstoqueModal(null);
+    setEstoqueDetalhes(null);
+    setQuantidadeUsar(0);
+  };
+
+  const confirmarUsarEstoque = async () => {
+    if (!showUsarEstoqueModal || quantidadeUsar <= 0) return;
+    
+    setUsandoEstoque(true);
+    try {
+      const response = await apiPost(`${API}/estoque/usar`, {
+        po_id: showUsarEstoqueModal.po_id,
+        item_index: showUsarEstoqueModal._itemIndexInPO,
+        quantidade_usar: quantidadeUsar
+      });
+      
+      const resultado = response.data;
+      
+      if (resultado.success) {
+        alert(resultado.mensagem);
+        fecharModalUsarEstoque();
+        loadItems(); // Recarregar lista
+      }
+    } catch (error) {
+      console.error('Erro ao usar estoque:', error);
+      alert('Erro ao usar estoque: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setUsandoEstoque(false);
+    }
+  };
+
+  // Renderiza o Modal de Usar Estoque
+  const renderModalUsarEstoque = () => {
+    if (!showUsarEstoqueModal || !estoqueDetalhes) return null;
+    
+    const item = showUsarEstoqueModal;
+    const qtdNecessaria = item.quantidade || 0;
+    const qtdDisponivel = estoqueDetalhes.total_disponivel || 0;
+    const atendeTudo = quantidadeUsar >= qtdNecessaria;
+    
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0,0,0,0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '16px',
+          padding: '2rem',
+          maxWidth: '600px',
+          width: '90%',
+          maxHeight: '80vh',
+          overflow: 'auto',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+        }}>
+          <h2 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>
+            📦 Usar do Estoque
+          </h2>
+          
+          {/* Info do Item */}
+          <div style={{ 
+            background: '#f8fafc', 
+            padding: '1rem', 
+            borderRadius: '8px',
+            marginBottom: '1.5rem'
+          }}>
+            <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>
+              Código: {item.codigo_item}
+            </div>
+            <div style={{ fontSize: '0.9rem', color: '#64748b' }}>
+              {item.descricao?.substring(0, 100)}...
+            </div>
+            <div style={{ marginTop: '0.5rem', fontWeight: '500' }}>
+              Quantidade necessária: <strong>{qtdNecessaria} UN</strong>
+            </div>
+          </div>
+          
+          {/* Fontes de Estoque */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <h4 style={{ margin: '0 0 0.75rem 0', color: '#475569' }}>
+              Estoque Disponível: <span style={{ color: '#10b981' }}>{qtdDisponivel} UN</span>
+            </h4>
+            <div style={{ 
+              maxHeight: '150px', 
+              overflow: 'auto',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px'
+            }}>
+              {estoqueDetalhes.fontes.map((fonte, idx) => (
+                <div key={idx} style={{
+                  padding: '0.75rem',
+                  borderBottom: idx < estoqueDetalhes.fontes.length - 1 ? '1px solid #e2e8f0' : 'none',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <div>
+                    <div style={{ fontWeight: '500' }}>{fonte.numero_oc}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      {fonte.fornecedor || 'Sem fornecedor'} • {fonte.data_compra || '-'}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: '600', color: '#10b981' }}>
+                      {fonte.quantidade_disponivel} UN
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      {formatBRL(fonte.preco_unitario)}/UN
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Quantidade a usar */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+              Quantidade a usar do estoque:
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <input
+                type="number"
+                min="1"
+                max={qtdDisponivel}
+                value={quantidadeUsar}
+                onChange={(e) => setQuantidadeUsar(Math.min(parseInt(e.target.value) || 0, qtdDisponivel))}
+                style={{
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  border: '2px solid #e2e8f0',
+                  fontSize: '1.1rem',
+                  width: '120px',
+                  textAlign: 'center'
+                }}
+              />
+              <span style={{ color: '#64748b' }}>de {qtdDisponivel} disponíveis</span>
+            </div>
+          </div>
+          
+          {/* Preview do resultado */}
+          <div style={{
+            padding: '1rem',
+            borderRadius: '8px',
+            marginBottom: '1.5rem',
+            background: atendeTudo ? '#dcfce7' : '#fef3c7',
+            border: `2px solid ${atendeTudo ? '#22c55e' : '#f59e0b'}`
+          }}>
+            {atendeTudo ? (
+              <>
+                <div style={{ fontWeight: '600', color: '#166534' }}>
+                  ✅ Atende toda a necessidade
+                </div>
+                <div style={{ fontSize: '0.9rem', color: '#166534', marginTop: '0.25rem' }}>
+                  O item será marcado como "Comprado" (via estoque)
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontWeight: '600', color: '#92400e' }}>
+                  ⚠️ Atende parcialmente ({quantidadeUsar} de {qtdNecessaria})
+                </div>
+                <div style={{ fontSize: '0.9rem', color: '#92400e', marginTop: '0.25rem' }}>
+                  Faltarão {qtdNecessaria - quantidadeUsar} UN para completar a compra
+                </div>
+              </>
+            )}
+          </div>
+          
+          {/* Botões */}
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+            <button
+              onClick={fecharModalUsarEstoque}
+              style={{
+                padding: '0.75rem 1.5rem',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+                background: 'white',
+                cursor: 'pointer',
+                fontWeight: '500'
+              }}
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={confirmarUsarEstoque}
+              disabled={usandoEstoque || quantidadeUsar <= 0}
+              style={{
+                padding: '0.75rem 1.5rem',
+                borderRadius: '8px',
+                border: 'none',
+                background: usandoEstoque ? '#94a3b8' : '#10b981',
+                color: 'white',
+                cursor: usandoEstoque ? 'not-allowed' : 'pointer',
+                fontWeight: '600'
+              }}
+            >
+              {usandoEstoque ? '⏳ Processando...' : '📦 Confirmar Uso do Estoque'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Função para renderizar o conteúdo completo de um item (edição, NF, etc)
   // Usada tanto na visualização normal quanto na agrupada por OC
   const renderItemContent = (item) => {
