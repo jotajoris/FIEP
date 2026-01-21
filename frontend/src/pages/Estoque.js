@@ -22,7 +22,7 @@ const Estoque = () => {
   const loadEstoque = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/estoque`, {
+      const response = await axios.get(`${API}/api/estoque`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setEstoque(response.data.estoque || []);
