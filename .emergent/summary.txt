@@ -1,5 +1,5 @@
 <analysis>**original_problem_statement:**
-The user requested a web platform to manage purchase orders (OCs) from their client, FIEP.
+The user requested a web platform to manage purchase orders (OCs) for their client, FIEP.
 
 **PRODUCT REQUIREMENTS (New in this session are bolded):**
 - Create OCs manually or by uploading single/multiple PDFs.
@@ -26,87 +26,82 @@ The user requested a web platform to manage purchase orders (OCs) from their cli
 - Implement site-wide pagination.
 - Implement a bulk download feature for supplier invoices.
 - Refactor the Sales Invoice (NF de Venda) to be one per OC.
-- **Allow selecting specific items from an OC to be included in a partial Sales Invoice.**
-- **The Observação field should be visible in the item view but only editable within the item's edit form.**
-- **For pending items, display a history of previous quotations (supplier, price, link) if the item was quoted before.**
-- **Extract the delivery date () from OC PDFs.**
-- **Display the delivery date next to the OC number everywhere, with a countdown (e.g., 10 dias restantes) or an overdue warning (e.g., ⚠️ 5 dias em atraso).**
-- **Allow admins to manually edit the delivery date for existing OCs.**
-- **Display the delivery address () in the header alongside the OC number.**
-- **On the Em Separação page, display the progress of supplier invoice uploads (e.g., NF Fornecedor: 3 de 5 itens).**
-- **On the Em Separação page, sort OCs by readiness: 1) OCs with both supplier and sales invoices, 2) OCs with only supplier invoices, 3) OCs with no invoices.**
-- **Ensure all status dropdowns across the application show all six available statuses.**
+- Allow selecting specific items from an OC to be included in a partial Sales Invoice.
+- The Observação field should be visible in the item view but only editable within the item's edit form.
+- For pending items, display a history of previous quotations (supplier, price, link) if the item was quoted before.
+- Extract the delivery date () from OC PDFs.
+- Display the delivery date next to the OC number everywhere, with a countdown or an overdue warning.
+- Allow admins to manually edit the delivery date for existing OCs.
+- **Display the delivery address () in the header alongside the OC number, and ensure this data is at the OC level, not the item level.**
+- **Allow admins to edit the OC's delivery address directly from the UI.**
+- **Allow the full delivery address to be visible on the Dashboard without being truncated.**
+- **Implement a safe way to update an existing OC's data (like address and delivery date) by re-uploading its PDF, without losing item-specific data like status, notes, or assigned user.**
+- **On the Em Separação page, allow selecting specific items to apply a total shipping cost (), which is then divided equally among them.**
+- **On the Em Separação page, allow selecting specific items to change their status in bulk.**
+- **Automatically record the  (purchase date) when an item's status changes to  or a later stage. The date should be removed if the status reverts to  or .**
+- **Add a Quantidade Comprada field to items.**
+- **Create a new Estoque (Stock) page to show items where the quantity purchased exceeds the quantity needed.**
+- **Create a new Planilha de Itens (Item Sheet) page to provide a consolidated view of all items across all OCs, grouped by item code, to track overall purchasing progress.**
+- **When a new OC item appears, the system should indicate if that item is already available in stock.**
 
 **User's preferred language**:
 The user's primary language is **Portuguese (Brazil)**. The next agent MUST respond in Portuguese.
 
 **what currently exists?**
-A full-stack Purchase Order management application. The previous session addressed several user requests, enhancing functionality around partial invoicing, data visibility, and workflow optimization. The application is stable.
-
-Key functionalities implemented in this session:
-- **Partial Invoicing:** Users can now select specific items within an OC and generate a Sales Invoice (NF de Venda) just for them. The system supports multiple partial invoices per OC.
-- **Delivery Date Tracking:** The delivery date is extracted from new PDFs and can be manually set for old OCs. This date is displayed across the app (Dashboard, Item Lists, OC Details) with a dynamic badge showing a countdown or overdue status. The badge correctly shows Delivered instead of Overdue for completed items.
-- **Historical Quotes:** On the Pendente items page, users can click a button to see a history of previous quotes for that same item, including supplier, price, and a direct link to the product.
-- **Observação Field:** The Observação field is now read-only in the main item view and is only editable inside the item's edit form, as requested.
-- **Deployment Readiness:** Critical deployment blockers were resolved by fixing the  file and adding necessary MongoDB indexes to optimize performance.
-- **UI/UX Enhancements:**
-    - The Em Separação page now shows progress for supplier invoices and sorts OCs by their readiness for dispatch.
-    - All status dropdowns throughout the app have been standardized to include all six statuses.
-    - The delivery date editor was improved with a dedicated save button to prevent accidental updates.
+A full-stack Purchase Order management application built with FastAPI and React. The last session added significant new features based on user requests, including:
+-   **Universal Delivery Address Display:** The delivery address is now shown on the Dashboard, OC details page, and item lists. A data migration moved addresses from the item level to the OC level for consistency. Admins can edit this address directly.
+-   **OC Update from PDF:** A safe update mechanism was created. Users can re-upload an OC's PDF (individually or in bulk via the Admin Panel) to refresh data like delivery address and date without losing existing item statuses, notes, or assignments.
+-   **Bulk Actions in Em Separação:**
+    -   Users can now select multiple items within an OC to apply a shared shipping cost ().
+    -   Users can select multiple items to change their status in a single action.
+-   **Automatic Purchase Date:** The system now automatically records and displays the date an item was purchased when its status is updated to  or beyond.
+-   **Stock & Inventory Management (Initial Implementation):**
+    -   A new Estoque (Stock) page was created to track surplus items.
+    -   A new Planilha de Itens (Item Sheet) page was added to give a consolidated view of all items needed across all OCs.
+    -   An item field for Quantidade Comprada was added to the edit form.
 
 **Last working item**:
-- **Last item agent was working:** Implementing the user's request to display the delivery address () in the header of every OC view, alongside the delivery date.
+- **Last item agent was working:** Addressing a multi-part bug report from the user regarding the newly implemented stock management feature. The user reported that (1) stock was not being updated correctly, (2) the profit calculation was wrong for items with surplus purchases, and (3) the UI didn't show available stock for new pending items.
 - **Status:** IN PROGRESS
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** Frontend testing agent. The agent must verify:
-    1.  The delivery address appears next to the OC number on the .
-    2.  The delivery address appears in the item header on the  page (for all statuses).
-    3.  The delivery address appears in the OC header in the Em Separação grouped view.
-    4.  The delivery address appears in the header on the  page.
-- **User Testing Done:** N
+- **Which testing method agent to use?** Backend testing agent. The core issues are in the backend logic: the  aggregation pipeline, the profit calculation within the item update endpoints, and the data returned for pending items.
+- **User Testing Done:** Y
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P0)** Complete the implementation of displaying the delivery address everywhere an OC is shown.
-- **Issue 2: (P2)** Editing duplicate items opens all of them for editing simultaneously. This is a recurring usability bug from a previous session that has not been addressed.
+-   **Issue 1: (P0)** Fix the Stock and Profit Calculation Bugs.
+-   **Issue 2: (P1)** Editing duplicate items opens all of them for editing simultaneously.
 
 **Issues Detail:**
-- **Issue 1: Complete displaying delivery address**
-    - **Attempted fixes:** The agent has started modifying  and  to include the delivery address in the UI. Backend endpoints were also updated.
-    - **Next debug checklist:**
-        1.  Finalize UI changes in , particularly in the grouped OC view ().
-        2.  Verify the address is also shown on the . The agent added the field to the table but did not visually confirm.
-        3.  Build the frontend (yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.) and restart services.
-        4.  Take screenshots of the Dashboard, ItemsByStatus page (e.g., 'Pendente'), and the 'Em Separação' view to confirm the address appears correctly everywhere.
-    - **Why fix this issue and what will be achieved with the fix?** Fulfills a direct user request for better data visibility at a glance.
-    - **Status:** IN PROGRESS
-    - **Is recurring issue?** N
-    - **Should Test frontend/backend/both after fix?** Frontend.
-    - **Blocked on other issue:** None.
+-   **Issue 1: Fix Stock and Profit Calculation Bugs**
+    -   **Attempted fixes:** The agent modified the backend logic to consider the quantity from  for the stock calculation, but this was not sufficient and the user reported the stock was still zero.
+    -   **Next debug checklist:**
+        1.  **Stock is Zero:** Investigate the  endpoint in . The logic likely isn't correctly calculating the surplus or is filtering by the wrong item status. The calculation must be: . The  is the greater of  or the sum of quantities in . This logic should only apply to items in statuses  or later.
+        2.  **Incorrect Profit Calculation:** Find the profit () calculation in  (likely within item update functions). It's probably using the total purchased quantity for its calculation. It must be changed to use the item's required quantity () instead.
+        3.  **Display Available Stock:** This is a feature request tied to the bug. Modify the endpoint that loads items for the  page to also query the new stock collection/logic and attach the available stock count to any item being displayed. Then, in , add a UI element (e.g., a badge) to the item card to show X em estoque if the item status is  or .
+    -   **Why fix this issue and what will be achieved with the fix?** The new stock management feature is unusable until these bugs are fixed. Fixing them will make the feature functional and fulfill the user's core requirement.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Both. Backend for logic, frontend for display.
+    -   **Blocked on other issue:** None.
 
-- **Issue 2: Editing duplicate items opens all of them**
-    - **Attempted fixes:** None in this session. A fix was supposedly applied in a past session but the issue persists.
-    - **Next debug checklist:**
-        1.  After fixing Issue 1, investigate the state management in .
-        2.  The  state is likely being set to a non-unique identifier (like ).
-        3.  The fix is to ensure the  state uses a truly unique ID for each item instance, which seems to be . The agent was already using this for some parts, but it needs to be consistently applied to the edit toggle logic.
-    - **Why fix this issue and what will be achieved with the fix?** This is a long-standing, disruptive usability bug that frustrates the user.
-    - **Status:** NOT STARTED
-    - **Is recurring issue?** Y
-    - **Should Test frontend/backend/both after fix?** Frontend.
-    - **Blocked on other issue:** None.
+-   **Issue 2: Editing duplicate items opens all of them**
+    -   **Attempted fixes:** None in this session. This is a known recurring issue.
+    -   **Next debug checklist:**
+        1.  Investigate the  state management in .
+        2.  The state is likely being set using a non-unique identifier like .
+        3.  Refactor the logic to consistently use the unique  when setting the  state to ensure only the specific item instance is opened for editing.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a long-standing, frustrating usability bug. Fixing it will significantly improve the user experience.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** Frontend.
+    -   **Blocked on other issue:** None.
 
 **In progress Task List**:
-- **Task 1: Finish implementing delivery address display**
-    - **Where to resume:** The file . The agent has already updated the  function and the individual item view. The next steps are to update the grouped OC view, test thoroughly across the app, and ensure consistency.
-    - **What will be achieved with this?** The delivery address for each OC will be clearly visible on the Dashboard, item lists, and OC detail pages, improving logistical clarity.
-    - **Status:** IN PROGRESS
-    - **Should Test frontend/backend/both after fix?** Frontend.
-    - **Blocked on something:** None.
+None. The current focus is on bug fixing.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P1)** Fix the recurring bug where editing duplicate items opens all of them.
+    -   **(P1)** Implement the UI to display available stock on pending/quoted items, once the backend bug is fixed.
 -   **Future Tasks:**
     -   **(P2)** Refactor the monolithic  and  files.
     -   **(P3)** Provide guidance on deploying the application to Hostinger.
@@ -114,96 +109,91 @@ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this comm
     -   **(P3)** Investigate a more reliable, paid Correios API for package tracking.
 
 **Completed work in this session**
-- **Feature:** Implemented partial Sales Invoices (NF de Venda) with item selection and backend support for multiple NFs per OC.
-- **Feature:** Implemented a historical quotation lookup for pending items, showing previous supplier prices and links.
-- **Feature:** Added delivery date extraction from PDFs and display across the app with countdown/overdue badges.
-- **Feature:** Implemented a feature for admins to manually edit the delivery date of existing OCs.
-- **Feature:** Enhanced the Em Separação view to show supplier invoice progress and sort OCs by readiness.
-- **Bug Fix:** The Observação field is now correctly displayed as read-only in the item view and is editable only within the edit form.
-- **Bug Fix:** Corrected a visual glitch where  appeared on the UI.
-- **Bug Fix:** Ensured that delivered items show a Delivered status instead of an Overdue warning.
-- **Bug Fix:** Fixed the Dashboard to correctly display the delivery date column.
-- **Bug Fix:** Standardized all status dropdowns to include every available status.
-- **UX Improvement:** Added a dedicated Save button for editing the delivery date to prevent accidental changes.
-- **Technical Debt:** Resolved critical deployment blockers by correcting the  file and creating necessary MongoDB indexes.
+-   **Feature:** Implemented universal display of the OC delivery address and migrated all existing data to the OC level.
+-   **Feature:** Created an admin feature to edit the delivery address directly on the OC details page.
+-   **Feature:** Implemented a safe Update from PDF feature (single and bulk) to refresh OC data without losing item progress.
+-   **Feature:** Implemented bulk actions on the Em Separação page to apply shipping costs or change status for selected items.
+-   **Feature:** Implemented automatic recording and display of an item's purchase date.
+-   **Feature:** Created the foundational backend and frontend for new Estoque (Stock) and Planilha de Itens (Item Sheet) pages.
+-   **Bug Fix:** Modified the Dashboard to display full, non-truncated addresses.
+-   **Bug Fix:** Fixed a frontend rendering issue in  caused by an unclosed .
+
+**Earlier issues found/mentioned but not fixed**
+-   **Issue 1:** Editing duplicate items opens all instances for editing simultaneously.
+    -   **Debug checklist:** The  state in  must use a unique item identifier () instead of a shared one ().
+    -   **Why to solve this issue and what will be achieved with this?** This is a disruptive usability bug that has been reported multiple times. Fixing it will improve the core user workflow.
+    -   **Should Test frontend/backend/both after fix:** Frontend.
+    -   **Is recurring issue?** Y
 
 **Known issue recurrence from previous fork**
-- **Issue recurrence in previous fork:** Editing duplicate items opens all of them.
-- **Recurrence count:** 3+
-- **Status:** NOT STARTED
+-   **Issue recurrence in previous fork:** Editing duplicate items opens all of them.
+-   **Recurrence count:** 3+
+-   **Status:** NOT STARTED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Backend:** FastAPI, Motor (async MongoDB), Pydantic.
-- **Frontend:** React (Hooks, Context, useMemo), Axios, TailwindCSS.
-- **PDF Parsing:**  and regex to extract structured data, now including delivery dates from item tables.
-- **Date Manipulation:** Using  in Python and  object in JavaScript to calculate countdowns and overdue statuses.
-- **State Management:** Complex state management in React for handling selections (), toggles (), and local edits ().
-- **Dynamic Sorting:** Using  within a  hook in React to reorder OCs based on multiple criteria (NF status).
-- **Database Indexing:** Added indexes on startup in  to improve query performance.
+-   **Backend:** FastAPI, Motor (async MongoDB), Pydantic.
+-   **Frontend:** React (Hooks, Context), Axios, TailwindCSS.
+-   **Data Migration:** A one-time API endpoint was created to migrate data ().
+-   **MongoDB Aggregation Pipelines:** Complex pipelines were used to create the  and  endpoints.
+-   **Complex State Management:** Heavy use of React state in  to manage multiple simultaneous selections for different bulk actions (NF-e, Freight, Status).
 
 **key DB schema**
--   ****:
-    -    (string, format ): New field added to store the delivery date.
-    -    (list of objects): Changed from a single object to a list to support multiple partial invoices. Each object contains .
--   ****:
-    - ,  fields for password reset.
--   ****:
-    - For storing active user sessions.
+-   **** (collection):
+    -   : (string) Field added at the top level.
+    -    (array of objects):
+        -   : (Optional[string]) New field for purchase date.
+        -   : (Optional[int]) New field for total quantity purchased.
 
 **All files of reference**
--   : Heavily modified. New endpoint  for historical quotes,  for date updates. PDF parsing logic updated to extract delivery dates. Endpoints for creating and listing OCs updated to handle .
--   : **The most heavily modified file.** Contains logic for partial NF selection, historical quote display, delivery date badges, supplier NF progress, and OC sorting. This is where the current work is focused.
--   : Modified to add and display the DATA ENTREGA column.
--   : Modified with a new component to allow editing the  of an OC.
--   : Modified to add the delivery date badge and standardize the status dropdown.
--   : Updated  and  models to include the optional  field.
+-   : CRITICALLY modified. Contains all new endpoints for data migration, address editing, PDF updates, bulk actions (freight, status), and the new inventory pages (stock, sheet). Also contains all the logic for automatic purchase dates and the currently buggy stock/profit calculations.
+-   : CRITICALLY modified. Contains all the UI and state logic for the three new bulk selection actions (NF, Freight, Status), the new Quantidade Comprada field in the edit form, and the display of the new .
+-   : Modified to display the OC address correctly and add the Update with PDF and address editing features.
+-   : Modified to add the bulk Update with PDF feature.
+-   : Modified to display the full delivery address.
+-   : New file for displaying stock.
+-   : New file for the consolidated item view.
+-    & : Modified to add routes and navigation links for the new pages.
+-   : Updated , , and other schemas to include the new fields.
 
 **Areas that need refactoring**:
--   : **CRITICAL PRIORITY.** This file is now well over 4000 lines and is extremely difficult to maintain.
--   : **CRITICAL PRIORITY.** This god component has absorbed even more logic. The new  component and sorting logic should be extracted.
+-   : **CRITICAL PRIORITY.** Now approaching 5000 lines, this file is unsustainable. It needs to be broken down into routers by domain (e.g., , , ).
+-   : **CRITICAL PRIORITY.** This component is now responsible for displaying items, editing items, and managing three separate bulk action selection states. Its logic needs to be broken down into custom hooks and smaller, more focused components.
 
 **key api endpoints**
--   **New Endpoints:**
-    -   : Takes  and returns a history of previous quotes.
-    -   : Takes  and updates the delivery date for a specific OC.
--   **Modified Endpoints:**
-    -   : Now accepts an optional  in the body to create a partial invoice.
-    -   : Now requires the  to delete a specific partial invoice.
-    -   , , : All updated to handle the  field.
-    -   : The response objects now include the  field.
+-   : One-time script to migrate addresses.
+-   : Updates the delivery address for a single OC.
+-   : Updates an OC's data from a re-uploaded PDF.
+-   : Applies a shared shipping cost to selected items.
+-   : Changes the status of selected items.
+-   : Returns surplus items for the stock page. (BUGGY)
+-   : Returns a consolidated view of all items.
 
 **Critical Info for New Agent**
--   Your immediate priority is to complete the user's request to display the  in all OC headers. This work is already in progress in .
--   After completing the current task, the highest priority should be fixing the long-standing bug where editing duplicate items opens all of them simultaneously.
--   The user is highly responsive and provides clear feedback. Pay close attention to their screenshots.
--   The monolithic files (, ) are a significant source of technical debt. Propose refactoring them after the immediate user requests are fulfilled.
+-   Your immediate priority is to fix the three interconnected issues from the user's last message: the stock count being zero, the profit calculation being incorrect, and the lack of available stock information on new items. The user is blocked on using the new inventory feature.
+-   Start by debugging the  endpoint in . The logic is flawed.
+-   After fixing the bugs, address the long-standing issue of duplicate items opening for editing simultaneously. This has been requested multiple times and is a major source of user frustration.
+-   The user is highly engaged and provides quick, specific feedback. Expect to iterate rapidly.
 
 **documents and test reports created in this job**
-- /app/memory/PRD.md: Updated with all the newly completed features.
+- /app/memory/PRD.md: Updated multiple times with newly completed features.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **Request:** Implement a historical quotation feature for pending items. (Completed)
-2.  **Feedback:** The historical quote feature is good, but needs to show the purchase link and handle multiple quotes for the same item. (Completed)
-3.  **Request:** Extract and display the delivery date for OCs, showing a countdown and an overdue status. (Completed)
-4.  **Feedback:** How can I add dates to old OCs? (Agent implemented a manual edit feature).
-5.  **Feedback/Bugs:**
-    1. Delivered items still show as overdue.
-    2. The Dashboard doesn't show the delivery date.
-    3. The date editor saves on every click, which is bad UX. (All three fixed).
-6.  **Request:**
-    1. Show the status of supplier invoice uploads (e.g., 3 of 5 items have NF).
-    2. Sort OCs in Em Separação by readiness for dispatch. (Completed).
-7.  **Request:** Ensure all status dropdowns in the app contain all 6 possible statuses. (Completed).
-8.  **Request (LATEST/IN-PROGRESS):** Display the delivery address next to the OC number and delivery date in all views.
-9.  **Pending Clarification:** None. The latest user request is clear.
+1.  **Request:** Add a bulk status change feature for ALL items in an OC.
+2.  **Clarification:** Don't change all items, let me SELECT which items to change the status for. (Completed)
+3.  **Request:** Automatically add a purchase date when an item becomes Comprado and display it. (Completed)
+4.  **Request:** Major feature - Implement a stock system. Add quantity purchased, a Stock page for surplus, and a Planilha page for a consolidated view. (Initial version completed)
+5.  **Bug Report:** Tested the stock feature by buying 20 units of an item that needed 1, but the stock page is empty.
+6.  **Agent Fix Attempt:** Agent adjusts backend logic to check .
+7.  **Bug Report (LATEST/BLOCKER):** User reports three issues: (1) Stock is still zero after the fix. (2) Profit is calculated on all 20 purchased units, not the 1 required unit. (3) The system should show me if an item is available in stock when a new OC for it appears.
+8.  **Pending User Response:** None. The agent was in the process of debugging when the session ended.
 
 **Project Health Check:**
--   **Broken:** NO
+-   **Broken:** The new Stock Management feature is functionally broken due to bugs in the backend logic.
 -   **Mocked:** Forgot Password functionality via Resend (domain not verified).
--   **Technical Debt:** CRITICAL. The  and  files are fragile and hard to maintain.
+-   **Technical Debt:** CRITICAL.  and  have grown significantly more complex and are very difficult to maintain.
 
 **3rd Party Integrations**
 -   **Resend:** For emails.
@@ -215,7 +205,7 @@ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this comm
 -   **Testing agent used after significant changes:** NO
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** []
--   **Known regressions:** None. The agent successfully implemented several features and fixed bugs without introducing new regressions.
+-   **Known regressions:** The new stock feature has critical bugs preventing its use.
 
 **Credentials to test flow:**
 -   **Admin Login (João):**
@@ -226,4 +216,4 @@ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this comm
     -   **Password:** 
 
 **What agent forgot to execute**
-- The agent has not addressed the recurring bug where editing an item that appears multiple times on a page (e.g., same ) causes all instances to open for editing simultaneously. This was noted in the initial handoff and remains a pending issue.</analysis>
+-   The agent did not address the recurring bug where editing an item that appears multiple times on a page causes all instances to open for editing simultaneously. This was noted in the initial handoff summary and ignored throughout the session.</analysis>
