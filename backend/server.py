@@ -1998,23 +1998,8 @@ async def update_item_by_index_status(
     if update.observacao is not None:
         item['observacao'] = update.observacao
     
-    # Calcular lucro
-    preco_venda = item.get('preco_venda')
-    quantidade = item.get('quantidade', 0)
-    if preco_venda and quantidade:
-        fontes = item.get('fontes_compra', [])
-        if fontes:
-            total_custo_compra = sum(fc['quantidade'] * fc['preco_unitario'] for fc in fontes)
-            total_frete_compra = sum(fc.get('frete', 0) for fc in fontes)
-        else:
-            total_custo_compra = (item.get('preco_compra') or 0) * quantidade
-            total_frete_compra = item.get('frete_compra') or 0
-        
-        receita_total = preco_venda * quantidade
-        impostos = receita_total * 0.11
-        frete_envio = item.get('frete_envio') or 0
-        item['lucro_liquido'] = round(receita_total - total_custo_compra - total_frete_compra - impostos - frete_envio, 2)
-        item['imposto'] = round(impostos, 2)
+    # Calcular lucro usando a função centralizada
+    calcular_lucro_item(item)
     
     # Atualizar datas
     now = datetime.now(timezone.utc).isoformat()
