@@ -2171,6 +2171,8 @@ async def update_item_by_index(
         atualizar_data_compra(item, update.status)  # Atualiza data de compra automaticamente
     if update.preco_venda is not None:
         item['preco_venda'] = update.preco_venda
+    if update.quantidade_comprada is not None:
+        item['quantidade_comprada'] = update.quantidade_comprada
     
     # Recalcular imposto e lucro se tiver preço de venda
     preco_venda = item.get('preco_venda')
