@@ -9,6 +9,8 @@ import AdminPanel from './pages/AdminPanel';
 import AllItemsSummary from './pages/AllItemsSummary';
 import ItemsByStatus from './pages/ItemsByStatus';
 import OwnerPanel from './pages/OwnerPanel';
+import Estoque from './pages/Estoque';
+import PlanilhaItens from './pages/PlanilhaItens';
 import Login from './pages/Login';
 import ChangePassword from './pages/ChangePassword';
 import ForgotPassword from './pages/ForgotPassword';
