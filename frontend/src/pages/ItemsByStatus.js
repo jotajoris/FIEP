@@ -1645,10 +1645,10 @@ Chave PIX: 46.663.556/0001-69`;
             ) : (
               <>
                 <div style={{ fontWeight: '600', color: '#92400e' }}>
-                  ⚠️ Atende parcialmente ({quantidadeUsar} de {qtdNecessaria})
+                  ⚠️ Atende parcialmente ({quantidadeUsar} de {qtdFaltante})
                 </div>
                 <div style={{ fontSize: '0.9rem', color: '#92400e', marginTop: '0.25rem' }}>
-                  Faltarão {qtdNecessaria - quantidadeUsar} UN para completar a compra
+                  Faltarão {qtdFaltante - quantidadeUsar} UN para completar a compra
                 </div>
               </>
             )}
