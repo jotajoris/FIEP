@@ -4757,6 +4757,299 @@ async def migrar_enderecos_itens_para_oc(current_user: dict = Depends(require_ad
     }
 
 
+# ============== ESTOQUE ==============
+@api_router.get("/estoque")
+async def listar_estoque(current_user: dict = Depends(get_current_user)):
+    """
+    Lista todos os itens em estoque (quantidade_comprada > quantidade necessária).
+    Agrupa por código do item e mostra o total disponível em estoque.
+    """
+    
+    # Buscar todos os itens com quantidade_comprada
+    pos = await db.purchase_orders.find(
+        {},
+        {"_id": 0, "id": 1, "numero_oc": 1, "items": 1}
+    ).to_list(5000)
+    
+    # Mapa de estoque: codigo_item -> {info do estoque}
+    estoque_map = {}
+    
+    for po in pos:
+        for idx, item in enumerate(po.get('items', [])):
+            quantidade_comprada = item.get('quantidade_comprada')
+            quantidade_necessaria = item.get('quantidade', 0)
+            
+            # Se tem quantidade_comprada e é maior que a necessária
+            if quantidade_comprada and quantidade_comprada > quantidade_necessaria:
+                excedente = quantidade_comprada - quantidade_necessaria
+                codigo_item = item.get('codigo_item', '')
+                
+                if codigo_item not in estoque_map:
+                    # Pegar informações da fonte de compra (link, fornecedor)
+                    fontes = item.get('fontes_compra', [])
+                    link_compra = fontes[0].get('link', '') if fontes else ''
+                    fornecedor = fontes[0].get('fornecedor', '') if fontes else ''
+                    preco_unitario = fontes[0].get('preco_unitario', 0) if fontes else item.get('preco_compra', 0)
+                    
+                    estoque_map[codigo_item] = {
+                        'codigo_item': codigo_item,
+                        'descricao': item.get('descricao', ''),
+                        'marca_modelo': item.get('marca_modelo', ''),
+                        'unidade': item.get('unidade', 'UN'),
+                        'quantidade_estoque': excedente,
+                        'link_compra': link_compra,
+                        'fornecedor': fornecedor,
+                        'preco_unitario': preco_unitario,
+                        'ocs_origem': [{
+                            'numero_oc': po.get('numero_oc'),
+                            'po_id': po.get('id'),
+                            'quantidade_comprada': quantidade_comprada,
+                            'quantidade_necessaria': quantidade_necessaria,
+                            'excedente': excedente,
+                            'data_compra': item.get('data_compra')
+                        }]
+                    }
+                else:
+                    # Soma ao estoque existente
+                    estoque_map[codigo_item]['quantidade_estoque'] += excedente
+                    estoque_map[codigo_item]['ocs_origem'].append({
+                        'numero_oc': po.get('numero_oc'),
+                        'po_id': po.get('id'),
+                        'quantidade_comprada': quantidade_comprada,
+                        'quantidade_necessaria': quantidade_necessaria,
+                        'excedente': excedente,
+                        'data_compra': item.get('data_compra')
+                    })
+                    # Atualiza link/fornecedor se não tinha
+                    if not estoque_map[codigo_item]['link_compra']:
+                        fontes = item.get('fontes_compra', [])
+                        if fontes:
+                            estoque_map[codigo_item]['link_compra'] = fontes[0].get('link', '')
+                            estoque_map[codigo_item]['fornecedor'] = fontes[0].get('fornecedor', '')
+    
+    # Converter para lista
+    estoque_list = list(estoque_map.values())
+    
+    # Ordenar por quantidade em estoque (maior primeiro)
+    estoque_list.sort(key=lambda x: x['quantidade_estoque'], reverse=True)
+    
+    return {
+        "total_itens_diferentes": len(estoque_list),
+        "estoque": estoque_list
+    }
+
+
+@api_router.get("/estoque/verificar/{codigo_item}")
+async def verificar_estoque_item(codigo_item: str, current_user: dict = Depends(get_current_user)):
+    """
+    Verifica se um item específico tem quantidade em estoque.
+    Usado para mostrar no item pendente/cotado se há estoque disponível.
+    """
+    
+    # Buscar todos os itens com esse código que tenham estoque
+    pos = await db.purchase_orders.find(
+        {"items.codigo_item": codigo_item},
+        {"_id": 0, "numero_oc": 1, "items.$": 1}
+    ).to_list(5000)
+    
+    quantidade_total_estoque = 0
+    detalhes = []
+    
+    for po in pos:
+        for item in po.get('items', []):
+            if item.get('codigo_item') == codigo_item:
+                quantidade_comprada = item.get('quantidade_comprada')
+                quantidade_necessaria = item.get('quantidade', 0)
+                
+                if quantidade_comprada and quantidade_comprada > quantidade_necessaria:
+                    excedente = quantidade_comprada - quantidade_necessaria
+                    quantidade_total_estoque += excedente
+                    detalhes.append({
+                        'numero_oc': po.get('numero_oc'),
+                        'excedente': excedente
+                    })
+    
+    return {
+        "codigo_item": codigo_item,
+        "em_estoque": quantidade_total_estoque > 0,
+        "quantidade_disponivel": quantidade_total_estoque,
+        "detalhes": detalhes
+    }
+
+
+# ============== PLANILHA DE ITENS CONSOLIDADA ==============
+@api_router.get("/planilha-itens")
+async def listar_planilha_itens(current_user: dict = Depends(get_current_user)):
+    """
+    Retorna uma visão consolidada de todos os itens por código.
+    Agrupa por código_item e mostra:
+    - Total necessário (soma de todas as OCs)
+    - Total já comprado (itens com status comprado ou posterior)
+    - Diferença (quanto ainda falta comprar)
+    - Detalhes de cada ocorrência (lote, responsável, valor, OC)
+    """
+    
+    # Buscar todos os itens de todas as OCs
+    pos = await db.purchase_orders.find(
+        {},
+        {"_id": 0, "id": 1, "numero_oc": 1, "items": 1}
+    ).to_list(5000)
+    
+    # Mapa: codigo_item -> {info consolidada}
+    itens_map = {}
+    status_comprado_ou_adiante = ['comprado', 'em_separacao', 'em_transito', 'entregue']
+    
+    for po in pos:
+        for idx, item in enumerate(po.get('items', [])):
+            codigo_item = item.get('codigo_item', '')
+            if not codigo_item:
+                continue
+            
+            quantidade = item.get('quantidade', 0)
+            status = item.get('status', 'pendente')
+            ja_comprado = status in status_comprado_ou_adiante
+            
+            # Pegar info das fontes de compra
+            fontes = item.get('fontes_compra', [])
+            preco_unitario = fontes[0].get('preco_unitario', 0) if fontes else item.get('preco_compra', 0)
+            
+            ocorrencia = {
+                'numero_oc': po.get('numero_oc'),
+                'po_id': po.get('id'),
+                'lote': item.get('lote', ''),
+                'responsavel': item.get('responsavel', ''),
+                'marca_modelo': item.get('marca_modelo', ''),
+                'preco_unitario': preco_unitario,
+                'quantidade': quantidade,
+                'status': status,
+                'ja_comprado': ja_comprado,
+                'quantidade_comprada': item.get('quantidade_comprada'),
+                'data_compra': item.get('data_compra')
+            }
+            
+            if codigo_item not in itens_map:
+                itens_map[codigo_item] = {
+                    'codigo_item': codigo_item,
+                    'descricao': item.get('descricao', ''),
+                    'unidade': item.get('unidade', 'UN'),
+                    'quantidade_total_necessaria': quantidade,
+                    'quantidade_total_comprada': quantidade if ja_comprado else 0,
+                    'quantidade_faltante': 0 if ja_comprado else quantidade,
+                    'ocorrencias': [ocorrencia],
+                    'lotes_unicos': set([item.get('lote', '')]),
+                    'responsaveis_unicos': set([item.get('responsavel', '')]),
+                    'marcas_unicas': set([item.get('marca_modelo', '')])
+                }
+            else:
+                itens_map[codigo_item]['quantidade_total_necessaria'] += quantidade
+                if ja_comprado:
+                    itens_map[codigo_item]['quantidade_total_comprada'] += quantidade
+                else:
+                    itens_map[codigo_item]['quantidade_faltante'] += quantidade
+                itens_map[codigo_item]['ocorrencias'].append(ocorrencia)
+                itens_map[codigo_item]['lotes_unicos'].add(item.get('lote', ''))
+                itens_map[codigo_item]['responsaveis_unicos'].add(item.get('responsavel', ''))
+                itens_map[codigo_item]['marcas_unicas'].add(item.get('marca_modelo', ''))
+    
+    # Converter sets para listas e calcular estatísticas
+    resultado = []
+    for codigo, dados in itens_map.items():
+        dados['lotes'] = sorted([l for l in dados['lotes_unicos'] if l])
+        dados['responsaveis'] = sorted([r for r in dados['responsaveis_unicos'] if r])
+        dados['marcas'] = sorted([m for m in dados['marcas_unicas'] if m])
+        del dados['lotes_unicos']
+        del dados['responsaveis_unicos']
+        del dados['marcas_unicas']
+        
+        # Ordenar ocorrências por lote
+        dados['ocorrencias'].sort(key=lambda x: x.get('lote', ''))
+        
+        resultado.append(dados)
+    
+    # Ordenar por quantidade faltante (maior primeiro)
+    resultado.sort(key=lambda x: x['quantidade_faltante'], reverse=True)
+    
+    # Estatísticas gerais
+    total_itens_diferentes = len(resultado)
+    total_quantidade_necessaria = sum(r['quantidade_total_necessaria'] for r in resultado)
+    total_quantidade_comprada = sum(r['quantidade_total_comprada'] for r in resultado)
+    total_quantidade_faltante = sum(r['quantidade_faltante'] for r in resultado)
+    
+    return {
+        "estatisticas": {
+            "total_itens_diferentes": total_itens_diferentes,
+            "total_quantidade_necessaria": total_quantidade_necessaria,
+            "total_quantidade_comprada": total_quantidade_comprada,
+            "total_quantidade_faltante": total_quantidade_faltante,
+            "percentual_comprado": round((total_quantidade_comprada / total_quantidade_necessaria * 100) if total_quantidade_necessaria > 0 else 0, 1)
+        },
+        "itens": resultado
+    }
+
+
+# ============== USAR ESTOQUE ==============
+@api_router.post("/estoque/usar")
+async def usar_estoque(
+    data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Registra o uso de estoque para um item pendente.
+    Reduz a quantidade do estoque e marca o item como parcialmente/totalmente atendido.
+    
+    Body:
+    {
+        "po_id": "...",
+        "item_index": 0,
+        "quantidade_do_estoque": 10
+    }
+    """
+    
+    po_id = data.get('po_id')
+    item_index = data.get('item_index')
+    quantidade_do_estoque = data.get('quantidade_do_estoque', 0)
+    
+    if not po_id or item_index is None or quantidade_do_estoque <= 0:
+        raise HTTPException(status_code=400, detail="Dados inválidos")
+    
+    # Buscar OC
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not po:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    if item_index < 0 or item_index >= len(po.get('items', [])):
+        raise HTTPException(status_code=400, detail="Índice de item inválido")
+    
+    item = po['items'][item_index]
+    codigo_item = item.get('codigo_item')
+    
+    # Verificar estoque disponível
+    estoque_response = await verificar_estoque_item(codigo_item, current_user)
+    if estoque_response['quantidade_disponivel'] < quantidade_do_estoque:
+        raise HTTPException(status_code=400, detail=f"Estoque insuficiente. Disponível: {estoque_response['quantidade_disponivel']}")
+    
+    # Registrar uso do estoque no item
+    item['quantidade_do_estoque'] = quantidade_do_estoque
+    item['estoque_utilizado'] = True
+    
+    # Se a quantidade do estoque atende toda a necessidade, muda status
+    if quantidade_do_estoque >= item.get('quantidade', 0):
+        item['status'] = 'comprado'
+        atualizar_data_compra(item, 'comprado')
+    
+    # Salvar
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    return {
+        "success": True,
+        "codigo_item": codigo_item,
+        "quantidade_usada": quantidade_do_estoque
+    }
+
+
 @app.on_event("startup")
 async def startup_event():
     """Iniciar job de verificação de rastreios e criar índices no MongoDB"""
