@@ -167,21 +167,43 @@ const Estoque = () => {
                     ) : '-'}
                   </td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                      {item.ocs_origem?.slice(0, 3).map((oc, i) => (
-                        <Link 
-                          key={i}
-                          to={`/po/${oc.po_id}`}
-                          style={{ fontSize: '0.8rem', color: '#667eea' }}
-                        >
-                          {oc.numero_oc}
-                        </Link>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {item.ocs_origem?.map((oc, i) => (
+                        <div key={i} style={{ 
+                          fontSize: '0.8rem', 
+                          padding: '0.5rem',
+                          background: '#f0f9ff',
+                          borderRadius: '6px',
+                          border: '1px solid #bae6fd'
+                        }}>
+                          <Link 
+                            to={`/po/${oc.po_id}`}
+                            style={{ color: '#0369a1', fontWeight: '600' }}
+                          >
+                            {oc.numero_oc}
+                          </Link>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
+                            Comprado: {oc.quantidade_comprada} | Usado: {oc.quantidade_necessaria} | Estoque: {oc.excedente}
+                          </div>
+                          {oc.usado_em && oc.usado_em.length > 0 && (
+                            <div style={{ 
+                              marginTop: '0.5rem', 
+                              padding: '0.4rem',
+                              background: '#fef3c7',
+                              borderRadius: '4px',
+                              fontSize: '0.7rem',
+                              color: '#92400e'
+                            }}>
+                              <strong>Usado em:</strong>
+                              {oc.usado_em.map((uso, j) => (
+                                <div key={j}>
+                                  📦 {uso.quantidade} UN → {uso.numero_oc} ({uso.data})
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       ))}
-                      {item.ocs_origem?.length > 3 && (
-                        <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-                          +{item.ocs_origem.length - 3} mais
-                        </span>
-                      )}
                     </div>
                   </td>
                 </tr>
