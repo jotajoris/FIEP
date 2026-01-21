@@ -202,6 +202,12 @@ const ItemsByStatus = () => {
   // Estado para mapa de estoque disponível (itens pendentes/cotados)
   const [estoqueDisponivel, setEstoqueDisponivel] = useState({});  // {codigo_item: quantidade}
 
+  // Estados para modal "Usar do Estoque"
+  const [showUsarEstoqueModal, setShowUsarEstoqueModal] = useState(null);  // item para usar estoque
+  const [estoqueDetalhes, setEstoqueDetalhes] = useState(null);  // detalhes do estoque para o modal
+  const [quantidadeUsar, setQuantidadeUsar] = useState(0);  // quantidade a usar
+  const [usandoEstoque, setUsandoEstoque] = useState(false);  // loading
+
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
