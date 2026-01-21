@@ -772,6 +772,7 @@ async def debug_update(
     
     # APLICAR TODAS AS ALTERAÇÕES SEM RESTRIÇÃO
     item['status'] = update.status
+    atualizar_data_compra(item, update.status)  # Atualiza data de compra automaticamente
     
     if update.fontes_compra is not None:
         item['fontes_compra'] = [fc.model_dump() for fc in update.fontes_compra]
