@@ -97,6 +97,23 @@ async def health_check():
 def get_responsible_by_lot(lot_number: int) -> str:
     return LOT_TO_OWNER.get(lot_number, "Não atribuído")
 
+def atualizar_data_compra(item: dict, novo_status: str) -> None:
+    """
+    Atualiza a data de compra do item automaticamente:
+    - Se mudar para comprado/em_separacao/em_transito/entregue: salva a data atual (se não existir)
+    - Se voltar para pendente/cotado: remove a data de compra
+    """
+    status_comprado_ou_adiante = ['comprado', 'em_separacao', 'em_transito', 'entregue']
+    status_antes_compra = ['pendente', 'cotado']
+    
+    if novo_status in status_comprado_ou_adiante:
+        # Se ainda não tem data de compra, salva a data atual
+        if not item.get('data_compra'):
+            item['data_compra'] = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    elif novo_status in status_antes_compra:
+        # Remove a data de compra se voltar para pendente ou cotado
+        item['data_compra'] = None
+
 def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
     """Extrair dados de OC de um PDF"""
     try:
