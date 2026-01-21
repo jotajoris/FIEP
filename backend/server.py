@@ -5066,25 +5066,29 @@ async def usar_estoque(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Registra o uso de estoque para um item pendente.
-    Reduz a quantidade do estoque e marca o item como parcialmente/totalmente atendido.
+    Usa itens do estoque para atender um item pendente/cotado.
+    
+    - Se a quantidade do estoque atende 100%: muda para "Comprado"
+    - Se atende parcialmente: mantém status + marca como "parcialmente atendido"
+    - Registra o preço original do estoque
+    - Registra de qual OC veio o estoque
     
     Body:
     {
         "po_id": "...",
         "item_index": 0,
-        "quantidade_do_estoque": 10
+        "quantidade_usar": 10
     }
     """
     
     po_id = data.get('po_id')
     item_index = data.get('item_index')
-    quantidade_do_estoque = data.get('quantidade_do_estoque', 0)
+    quantidade_usar = data.get('quantidade_usar', 0)
     
-    if not po_id or item_index is None or quantidade_do_estoque <= 0:
+    if not po_id or item_index is None or quantidade_usar <= 0:
         raise HTTPException(status_code=400, detail="Dados inválidos")
     
-    # Buscar OC
+    # Buscar OC destino
     po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
     if not po:
         raise HTTPException(status_code=404, detail="OC não encontrada")
@@ -5094,22 +5098,160 @@ async def usar_estoque(
     
     item = po['items'][item_index]
     codigo_item = item.get('codigo_item')
+    quantidade_necessaria = item.get('quantidade', 0)
     
-    # Verificar estoque disponível
+    # Verificar estoque disponível e buscar detalhes
     estoque_response = await verificar_estoque_item(codigo_item, current_user)
-    if estoque_response['quantidade_disponivel'] < quantidade_do_estoque:
-        raise HTTPException(status_code=400, detail=f"Estoque insuficiente. Disponível: {estoque_response['quantidade_disponivel']}")
+    quantidade_disponivel = estoque_response.get('quantidade_disponivel', 0)
     
-    # Registrar uso do estoque no item
-    item['quantidade_do_estoque'] = quantidade_do_estoque
-    item['estoque_utilizado'] = True
+    if quantidade_disponivel <= 0:
+        raise HTTPException(status_code=400, detail="Não há estoque disponível para este item")
     
-    # Se a quantidade do estoque atende toda a necessidade, muda status
-    if quantidade_do_estoque >= item.get('quantidade', 0):
+    # Limitar a quantidade a usar ao disponível
+    quantidade_efetiva = min(quantidade_usar, quantidade_disponivel)
+    
+    # Buscar informações do estoque (preço, OC de origem)
+    pos_com_estoque = await db.purchase_orders.find(
+        {"items.codigo_item": codigo_item},
+        {"_id": 0, "id": 1, "numero_oc": 1, "items": 1}
+    ).to_list(1000)
+    
+    # Encontrar as OCs que têm excedente deste item
+    fontes_estoque = []
+    for po_origem in pos_com_estoque:
+        for idx, item_origem in enumerate(po_origem.get('items', [])):
+            if item_origem.get('codigo_item') != codigo_item:
+                continue
+            
+            status_origem = item_origem.get('status', 'pendente')
+            if status_origem not in ['comprado', 'em_separacao', 'em_transito', 'entregue']:
+                continue
+            
+            # Calcular quantidade comprada
+            qtd_comprada = item_origem.get('quantidade_comprada')
+            if not qtd_comprada:
+                fontes = item_origem.get('fontes_compra', [])
+                if fontes:
+                    qtd_comprada = sum(f.get('quantidade', 0) for f in fontes)
+                else:
+                    qtd_comprada = 0
+            
+            qtd_necessaria_origem = item_origem.get('quantidade', 0)
+            
+            # Já usado anteriormente
+            qtd_ja_usada = item_origem.get('quantidade_usada_estoque', 0)
+            
+            # Excedente disponível
+            excedente = qtd_comprada - qtd_necessaria_origem - qtd_ja_usada
+            
+            if excedente > 0:
+                # Pegar preço unitário
+                fontes = item_origem.get('fontes_compra', [])
+                if fontes:
+                    preco_unitario = fontes[0].get('preco_unitario', 0)
+                else:
+                    preco_unitario = item_origem.get('preco_compra', 0)
+                
+                fontes_estoque.append({
+                    'po_id': po_origem.get('id'),
+                    'numero_oc': po_origem.get('numero_oc'),
+                    'item_index': idx,
+                    'excedente_disponivel': excedente,
+                    'preco_unitario': preco_unitario
+                })
+    
+    if not fontes_estoque:
+        raise HTTPException(status_code=400, detail="Estoque não encontrado")
+    
+    # Usar o estoque das fontes disponíveis
+    quantidade_restante = quantidade_efetiva
+    ocs_utilizadas = []
+    preco_medio_ponderado = 0
+    total_usado = 0
+    
+    for fonte in fontes_estoque:
+        if quantidade_restante <= 0:
+            break
+        
+        qtd_usar_desta_fonte = min(quantidade_restante, fonte['excedente_disponivel'])
+        
+        # Registrar uso na OC de origem
+        po_origem = await db.purchase_orders.find_one({"id": fonte['po_id']}, {"_id": 0})
+        if po_origem:
+            item_origem = po_origem['items'][fonte['item_index']]
+            qtd_ja_usada = item_origem.get('quantidade_usada_estoque', 0)
+            item_origem['quantidade_usada_estoque'] = qtd_ja_usada + qtd_usar_desta_fonte
+            
+            # Registrar para quais OCs foi usado
+            if 'estoque_usado_em' not in item_origem:
+                item_origem['estoque_usado_em'] = []
+            item_origem['estoque_usado_em'].append({
+                'po_id': po_id,
+                'numero_oc': po.get('numero_oc'),
+                'quantidade': qtd_usar_desta_fonte,
+                'data': datetime.now(timezone.utc).strftime('%Y-%m-%d')
+            })
+            
+            await db.purchase_orders.update_one(
+                {"id": fonte['po_id']},
+                {"$set": {"items": po_origem['items']}}
+            )
+        
+        ocs_utilizadas.append({
+            'numero_oc': fonte['numero_oc'],
+            'quantidade': qtd_usar_desta_fonte,
+            'preco_unitario': fonte['preco_unitario']
+        })
+        
+        preco_medio_ponderado += fonte['preco_unitario'] * qtd_usar_desta_fonte
+        total_usado += qtd_usar_desta_fonte
+        quantidade_restante -= qtd_usar_desta_fonte
+    
+    # Calcular preço médio
+    preco_medio = preco_medio_ponderado / total_usado if total_usado > 0 else 0
+    
+    # Atualizar item destino
+    quantidade_anterior_estoque = item.get('quantidade_do_estoque', 0)
+    item['quantidade_do_estoque'] = quantidade_anterior_estoque + total_usado
+    item['preco_estoque_unitario'] = preco_medio
+    
+    # Registrar origem do estoque
+    if 'estoque_origem' not in item:
+        item['estoque_origem'] = []
+    item['estoque_origem'].extend(ocs_utilizadas)
+    
+    # Verificar se atende toda a necessidade
+    quantidade_total_atendida = item.get('quantidade_do_estoque', 0)
+    
+    if quantidade_total_atendida >= quantidade_necessaria:
+        # Atende 100% - mudar para Comprado
         item['status'] = 'comprado'
+        item['atendido_por_estoque'] = True
         atualizar_data_compra(item, 'comprado')
+        
+        # Adicionar fonte de compra com preço do estoque
+        if 'fontes_compra' not in item or not item['fontes_compra']:
+            item['fontes_compra'] = []
+        
+        item['fontes_compra'].append({
+            'id': str(uuid.uuid4()),
+            'quantidade': quantidade_necessaria,
+            'preco_unitario': preco_medio,
+            'frete': 0,
+            'link': '',
+            'fornecedor': 'ESTOQUE INTERNO'
+        })
+        
+        # Recalcular lucro
+        calcular_lucro_item(item)
+        mensagem = f"Item totalmente atendido pelo estoque ({total_usado} UN)"
+    else:
+        # Atende parcialmente
+        item['parcialmente_atendido_estoque'] = True
+        item['quantidade_faltante'] = quantidade_necessaria - quantidade_total_atendida
+        mensagem = f"Item parcialmente atendido pelo estoque ({total_usado} UN). Faltam {item['quantidade_faltante']} UN"
     
-    # Salvar
+    # Salvar item destino
     await db.purchase_orders.update_one(
         {"id": po_id},
         {"$set": {"items": po['items']}}
@@ -5118,7 +5260,77 @@ async def usar_estoque(
     return {
         "success": True,
         "codigo_item": codigo_item,
-        "quantidade_usada": quantidade_do_estoque
+        "quantidade_usada": total_usado,
+        "quantidade_total_atendida": quantidade_total_atendida,
+        "quantidade_necessaria": quantidade_necessaria,
+        "atendido_totalmente": quantidade_total_atendida >= quantidade_necessaria,
+        "preco_unitario_estoque": round(preco_medio, 2),
+        "ocs_origem": ocs_utilizadas,
+        "mensagem": mensagem
+    }
+
+
+@api_router.get("/estoque/detalhes/{codigo_item}")
+async def get_estoque_detalhes(codigo_item: str, current_user: dict = Depends(get_current_user)):
+    """
+    Retorna detalhes do estoque disponível para um item específico.
+    Usado no modal de "Usar do Estoque" para mostrar de onde vem e o preço.
+    """
+    # Buscar todas as OCs com este item
+    pos = await db.purchase_orders.find(
+        {"items.codigo_item": codigo_item},
+        {"_id": 0, "id": 1, "numero_oc": 1, "items": 1}
+    ).to_list(1000)
+    
+    fontes = []
+    total_disponivel = 0
+    
+    for po in pos:
+        for idx, item in enumerate(po.get('items', [])):
+            if item.get('codigo_item') != codigo_item:
+                continue
+            
+            status = item.get('status', 'pendente')
+            if status not in ['comprado', 'em_separacao', 'em_transito', 'entregue']:
+                continue
+            
+            # Calcular quantidade comprada
+            qtd_comprada = item.get('quantidade_comprada')
+            if not qtd_comprada:
+                fontes_compra = item.get('fontes_compra', [])
+                if fontes_compra:
+                    qtd_comprada = sum(f.get('quantidade', 0) for f in fontes_compra)
+                else:
+                    qtd_comprada = 0
+            
+            qtd_necessaria = item.get('quantidade', 0)
+            qtd_ja_usada = item.get('quantidade_usada_estoque', 0)
+            
+            excedente = qtd_comprada - qtd_necessaria - qtd_ja_usada
+            
+            if excedente > 0:
+                # Pegar preço unitário
+                fontes_compra = item.get('fontes_compra', [])
+                if fontes_compra:
+                    preco = fontes_compra[0].get('preco_unitario', 0)
+                    fornecedor = fontes_compra[0].get('fornecedor', '')
+                else:
+                    preco = item.get('preco_compra', 0)
+                    fornecedor = ''
+                
+                fontes.append({
+                    'numero_oc': po.get('numero_oc'),
+                    'quantidade_disponivel': excedente,
+                    'preco_unitario': preco,
+                    'fornecedor': fornecedor,
+                    'data_compra': item.get('data_compra')
+                })
+                total_disponivel += excedente
+    
+    return {
+        "codigo_item": codigo_item,
+        "total_disponivel": total_disponivel,
+        "fontes": fontes
     }
 
 
