@@ -2168,6 +2168,7 @@ async def update_item_by_index(
         item['marca_modelo'] = update.marca_modelo
     if update.status is not None:
         item['status'] = update.status
+        atualizar_data_compra(item, update.status)  # Atualiza data de compra automaticamente
     if update.preco_venda is not None:
         item['preco_venda'] = update.preco_venda
     
