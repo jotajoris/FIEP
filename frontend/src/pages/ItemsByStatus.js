@@ -3313,6 +3313,26 @@ Chave PIX: 46.663.556/0001-69`;
                       </div>
                     )}
                     
+                    {/* Data da Compra (aparece para itens comprados ou adiante) */}
+                    {item.data_compra && ['comprado', 'em_separacao', 'em_transito', 'entregue'].includes(status) && (
+                      <div style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem', 
+                        marginBottom: '0.5rem',
+                        fontSize: '0.85rem',
+                        background: '#dcfce7',
+                        padding: '0.4rem 0.6rem',
+                        borderRadius: '6px',
+                        border: '1px solid #86efac'
+                      }}>
+                        <span style={{ color: '#166534', fontWeight: '600' }}>🛒</span>
+                        <span style={{ color: '#166534', fontWeight: '600' }}>
+                          Data da Compra: {new Date(item.data_compra + 'T00:00:00').toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    )}
+                    
                     <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.9rem', color: '#718096' }}>
                       <span><strong>Responsável:</strong> <strong style={{ color: '#667eea' }}>{item.responsavel}</strong></span>
                       <span><strong>Quantidade:</strong> {item.quantidade} {item.unidade}</span>
