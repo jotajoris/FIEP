@@ -670,6 +670,7 @@ const ItemsByStatus = () => {
         imposto: formData.imposto ? parseFloat(formData.imposto) : null,
         frete_envio: formData.frete_envio ? parseFloat(formData.frete_envio) : null,
         observacao: formData.observacao || '',  // Salvar observação
+        quantidade_comprada: formData.quantidade_comprada ? parseInt(formData.quantidade_comprada) : null,  // Quantidade efetivamente comprada
         fontes_compra: formData.fontes_compra.map(fc => ({
           id: fc.id,
           quantidade: parseInt(fc.quantidade) || 0,
