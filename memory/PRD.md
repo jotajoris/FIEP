@@ -23,18 +23,30 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 2.5.5 (21/01/2026)
+## Versão Atual: 2.6.0 (21/01/2026)
 
 ### Novas Funcionalidades (21/01/2026)
-- ✅ **Data de Compra Automática** - Quando um item muda para status "comprado" (ou posterior):
-  - A data atual é salva automaticamente como "data_compra"
-  - Badge verde aparece: "🛒 Data da Compra: DD/MM/YYYY"
-  - Se o item voltar para "pendente" ou "cotado", a data é removida automaticamente
-- ✅ **Mudar Status de Itens Selecionados** - Na página "Em Separação":
-  - Checkbox roxo 🔄 para selecionar itens para mudança de status
-  - Botão "Selecionar Todos p/ Status"
-  - Dropdown para escolher o novo status
-  - Aplica apenas nos itens selecionados
+- ✅ **Nova Aba "📦 Estoque"** - Mostra todos os itens comprados em quantidade maior que a necessária:
+  - Código do item, descrição, marca/modelo
+  - Quantidade disponível em estoque (excedente)
+  - Link de compra, fornecedor, preço unitário
+  - Origem (OCs de onde veio o excedente)
+  - Busca por código, descrição, marca ou fornecedor
+
+- ✅ **Nova Aba "📋 Planilha de Itens"** - Visão consolidada de TODOS os itens por código:
+  - Estatísticas: Itens diferentes, Qtd. Total Necessária, Qtd. Já Comprada, Qtd. Faltante, % Comprado
+  - Filtros: Todos, ⚠️ Faltantes, ✅ Completos
+  - Tabela com: Código, Descrição, Lotes, Responsáveis, Marcas, Qtd. Total, Comprado, Faltante
+  - Expandir detalhes para ver cada OC que tem aquele item (lote, responsável, preço, status)
+  - Paginação
+
+- ✅ **Campo "Quantidade Comprada"** na edição de itens:
+  - Aparece para itens cotados ou com status posterior
+  - Permite informar se comprou mais do que o necessário (ex: kit maior)
+  - Mostra cálculo do excedente que irá para o estoque
+  - Excedente aparece automaticamente na página de Estoque
+
+- ✅ **Data de Compra Automática** - Salva automaticamente quando o item muda para "comprado"
 - ✅ **Frete de Envio em Lote** - Na página "Em Separação":
   - Selecionar itens específicos para aplicar frete de envio
   - Informar valor total que será dividido igualmente entre os itens
