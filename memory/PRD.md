@@ -23,7 +23,21 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 2.6.0 (21/01/2026)
+## Versão Atual: 2.7.0 (21/01/2026)
+
+### Correções de Bugs do Sistema de Estoque (21/01/2026)
+- ✅ **Bug #1: Estoque zerado** - Corrigido. Página de Estoque agora mostra corretamente itens com quantidade comprada > necessária
+- ✅ **Bug #2: Cálculo de lucro incorreto** - Corrigido. O lucro agora é calculado usando a quantidade NECESSÁRIA (da OC), não a quantidade comprada
+  - Antes: Item com 20 unidades compradas e 1 necessária calculava lucro sobre as 20 unidades = PREJUÍZO
+  - Depois: Lucro calculado sobre 1 unidade necessária = LUCRO correto
+  - Nova função `calcular_lucro_item()` centraliza o cálculo em todo o sistema
+  - Endpoint de migração `/api/admin/recalcular-lucros` para corrigir dados históricos
+- ✅ **Bug #3: Indicador de estoque** - Implementado. Itens pendentes/cotados mostram badge "📦 X em estoque" quando já existe estoque disponível
+  - Novo endpoint `/api/estoque/mapa` retorna mapa de código do item → quantidade em estoque
+  - Frontend carrega o mapa ao visualizar itens pendentes ou cotados
+- ✅ **Bug: URLs incorretas** - Corrigido em Estoque.js e PlanilhaItens.js (adicionado prefixo /api)
+
+### Versão Anterior: 2.6.0
 
 ### Novas Funcionalidades (21/01/2026)
 - ✅ **Nova Aba "📦 Estoque"** - Mostra todos os itens comprados em quantidade maior que a necessária:
