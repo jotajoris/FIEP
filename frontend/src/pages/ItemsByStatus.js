@@ -226,7 +226,19 @@ const ItemsByStatus = () => {
     setLoading(true);
     setError(null);
     try {
+      // Carregar itens
       const response = await apiGet(`${API}/purchase-orders?limit=0`);
+      
+      // Para itens pendentes ou cotados, carregar também o mapa de estoque disponível
+      if (status === 'pendente' || status === 'cotado') {
+        try {
+          const estoqueResponse = await apiGet(`${API}/estoque/mapa`);
+          setEstoqueDisponivel(estoqueResponse.data || {});
+        } catch (err) {
+          console.warn('Erro ao carregar mapa de estoque:', err);
+          setEstoqueDisponivel({});
+        }
+      }
       
       // O endpoint retorna {data: [...], total: ..., page: ...}
       const purchaseOrders = response.data.data || response.data || [];
