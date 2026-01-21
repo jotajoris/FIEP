@@ -138,6 +138,7 @@ class POItem(BaseModel):
     frete_envio: Optional[float] = None
     lucro_liquido: Optional[float] = None
     fontes_compra: List[FonteCompra] = []
+    quantidade_comprada: Optional[int] = None  # Quantidade efetivamente comprada (pode ser maior que a necessária)
     data_cotacao: Optional[datetime] = None
     data_compra: Optional[datetime] = None
     data_envio: Optional[datetime] = None
