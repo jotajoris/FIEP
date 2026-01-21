@@ -2048,7 +2048,7 @@ async def mover_carrinho_para_comprado(
                     item = po['items'][item_index]
                     item['status'] = 'comprado'
                     item['no_carrinho'] = False
-                    item['data_compra'] = now
+                    atualizar_data_compra(item, 'comprado')  # Usa a função padronizada
                     updated_count += 1
                 else:
                     errors.append(f"Índice {item_index} inválido na OC {po_id}")
