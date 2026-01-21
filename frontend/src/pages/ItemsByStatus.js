@@ -1541,9 +1541,20 @@ Chave PIX: 46.663.556/0001-69`;
             <div style={{ fontSize: '0.9rem', color: '#64748b' }}>
               {item.descricao?.substring(0, 100)}...
             </div>
-            <div style={{ marginTop: '0.5rem', fontWeight: '500' }}>
-              Quantidade necessária: <strong>{qtdNecessaria} UN</strong>
+            <div style={{ marginTop: '0.5rem' }}>
+              <span style={{ fontWeight: '500' }}>Quantidade necessária: </span>
+              <strong>{qtdNecessaria} UN</strong>
+              {qtdJaAtendida > 0 && (
+                <span style={{ color: '#059669', marginLeft: '0.5rem' }}>
+                  (já atendido: {qtdJaAtendida} UN)
+                </span>
+              )}
             </div>
+            {qtdFaltante > 0 && qtdFaltante < qtdNecessaria && (
+              <div style={{ marginTop: '0.25rem', color: '#f59e0b', fontWeight: '500' }}>
+                ⚠️ Faltam: {qtdFaltante} UN
+              </div>
+            )}
           </div>
           
           {/* Fontes de Estoque */}
