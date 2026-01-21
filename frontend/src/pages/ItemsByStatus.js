@@ -1998,6 +1998,46 @@ Chave PIX: 46.663.556/0001-69`;
           </div>
         </div>
 
+        {/* Campo de Quantidade Comprada - para itens cotados ou comprados */}
+        {['cotado', 'comprado', 'em_separacao', 'em_transito', 'entregue'].includes(formData.status) && (
+          <div style={{ borderTop: '2px solid #e2e8f0', paddingTop: '1rem', marginTop: '1rem' }}>
+            <div className="form-group">
+              <label className="form-label" style={{ fontSize: '1rem', fontWeight: '600', color: '#059669' }}>
+                🛒 Quantidade Efetivamente Comprada
+              </label>
+              <p style={{ fontSize: '0.85rem', color: '#6b7280', margin: '0 0 0.5rem 0' }}>
+                Se comprou mais do que o necessário (ex: kit com mais unidades), informe aqui. O excedente vai para o estoque.
+                <br />
+                <strong>Quantidade pedida na OC: {item.quantidade} {item.unidade}</strong>
+              </p>
+              <input
+                type="number"
+                className="form-input"
+                value={formData.quantidade_comprada || ''}
+                onChange={(e) => setFormData({ ...formData, quantidade_comprada: e.target.value })}
+                placeholder={`Ex: ${item.quantidade} (ou mais se comprou kit maior)`}
+                style={{ 
+                  maxWidth: '200px',
+                  border: formData.quantidade_comprada && parseInt(formData.quantidade_comprada) > item.quantidade ? '2px solid #22c55e' : undefined
+                }}
+              />
+              {formData.quantidade_comprada && parseInt(formData.quantidade_comprada) > item.quantidade && (
+                <div style={{ 
+                  marginTop: '0.5rem', 
+                  padding: '0.5rem', 
+                  background: '#dcfce7', 
+                  borderRadius: '6px',
+                  color: '#166534',
+                  fontSize: '0.9rem',
+                  fontWeight: '600'
+                }}>
+                  📦 Excedente para estoque: {parseInt(formData.quantidade_comprada) - item.quantidade} {item.unidade}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Fontes de Compra */}
         <div style={{ borderTop: '2px solid #e2e8f0', paddingTop: '1rem', marginTop: '1rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
