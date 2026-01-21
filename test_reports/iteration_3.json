@@ -1,0 +1,100 @@
+{
+  "summary": "Completed testing of 3 bug fixes in FIEP OC estoque system. All 13 backend tests passed. Frontend UI tests confirmed Estoque page and PlanilhaItens page working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_estoque_bugs.py",
+    "/app/test_reports/pytest/pytest_results_estoque.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/tests/test_estoque_bugs.py"
+  ],
+  "success_rate": {
+    "backend": "100% (13/13 tests passed)",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "admin": {"email": "projetos.onsolucoes@gmail.com", "password": "on123456"}
+  },
+  "seed_data_creation": "Used existing OC: ID=c885f4bb-fc52-44f4-b064-1503707b994a, numero_oc=OC-2.118938, Item codigo=114641",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Estoque bug fixes verified. Test file /app/tests/test_estoque_bugs.py covers: estoque endpoint, estoque/mapa endpoint, lucro calculation with quantidade_necessaria, and planilha-itens endpoint. Test data: OC ID=c885f4bb-fc52-44f4-b064-1503707b994a, item 114641 with 20 units purchased but only 1 needed, resulting in 19 units in stock and lucro of R$ 1,532.58.",
+  "bugs_verified": {
+    "bug_1_estoque_zerado": {
+      "status": "FIXED",
+      "description": "Estoque page now correctly shows items with quantidade_comprada > quantidade_necessaria",
+      "verification": "Item 114641 shows 19 units in stock (20 compradas - 1 necessária = 19)",
+      "endpoint": "GET /api/estoque"
+    },
+    "bug_2_lucro_incorreto": {
+      "status": "FIXED",
+      "description": "Lucro calculation now uses quantidade_necessaria instead of quantidade_comprada",
+      "verification": "Item 114641 lucro is R$ 1,532.58 (positive, not -R$ 104,867.42)",
+      "function": "calcular_lucro_item() in server.py line 118"
+    },
+    "bug_3_indicador_estoque": {
+      "status": "FIXED",
+      "description": "Endpoint /api/estoque/mapa returns map of codigo_item -> quantidade_estoque for frontend indicator",
+      "verification": "Endpoint returns {\"114641\": 19}",
+      "endpoint": "GET /api/estoque/mapa"
+    }
+  },
+  "test_results": {
+    "backend_tests": {
+      "total": 13,
+      "passed": 13,
+      "failed": 0,
+      "test_classes": [
+        "TestEstoqueEndpoint - 4 tests (endpoint returns 200, has items, item 114641 exists with 19 units, has origin OC)",
+        "TestEstoqueMapaEndpoint - 3 tests (returns 200, returns dict, has item 114641 with 19 units)",
+        "TestLucroCalculation - 4 tests (get OC, lucro is positive, lucro is ~R$ 1532.58, uses quantidade_necessaria)",
+        "TestPlanilhaItensEndpoint - 2 tests (returns 200, has statistics)"
+      ]
+    },
+    "frontend_tests": {
+      "estoque_page": {
+        "page_loads": true,
+        "item_114641_displayed": true,
+        "quantity_19_shown": true,
+        "origin_oc_link": true,
+        "total_items_badge": true
+      },
+      "planilha_itens_page": {
+        "page_loads": true,
+        "statistics_cards": true,
+        "search_input": true,
+        "filter_buttons": true
+      },
+      "items_pendente_page": {
+        "page_loads": true,
+        "estoque_indicator_logic": "Verified - indicator shows when pending item has stock available (item 114641 not in pending status so no indicator shown, which is correct)"
+      }
+    }
+  },
+  "lucro_calculation_verification": {
+    "item": "114641",
+    "oc": "OC-2.118938",
+    "preco_venda": 8014.14,
+    "quantidade_necessaria": 1,
+    "quantidade_comprada": 20,
+    "custo_unitario": 5600,
+    "formula": "Receita - Custo - Frete - Impostos",
+    "calculation": {
+      "receita": "8014.14 × 1 = 8014.14",
+      "custo": "5600 × 1 = 5600",
+      "impostos": "8014.14 × 0.11 = 881.56",
+      "lucro": "8014.14 - 5600 - 0 - 881.56 = 1532.58"
+    },
+    "result": "R$ 1,532.58 (correct, not negative)"
+  }
+}
