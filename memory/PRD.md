@@ -23,13 +23,18 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 2.5.4 (20/01/2026)
+## Versão Atual: 2.5.5 (21/01/2026)
 
-### Novas Funcionalidades (20/01/2026)
-- ✅ **Mudar Status em Massa** - Na página "Em Separação", é possível:
-  - Selecionar um novo status no dropdown (Pendente, Cotado, Comprado, Em Separação, Em Trânsito, Entregue)
-  - Clicar em "Aplicar para X itens" para mudar o status de TODOS os itens da OC de uma vez
-  - Confirmação antes de aplicar para evitar erros
+### Novas Funcionalidades (21/01/2026)
+- ✅ **Data de Compra Automática** - Quando um item muda para status "comprado" (ou posterior):
+  - A data atual é salva automaticamente como "data_compra"
+  - Badge verde aparece: "🛒 Data da Compra: DD/MM/YYYY"
+  - Se o item voltar para "pendente" ou "cotado", a data é removida automaticamente
+- ✅ **Mudar Status de Itens Selecionados** - Na página "Em Separação":
+  - Checkbox roxo 🔄 para selecionar itens para mudança de status
+  - Botão "Selecionar Todos p/ Status"
+  - Dropdown para escolher o novo status
+  - Aplica apenas nos itens selecionados
 - ✅ **Frete de Envio em Lote** - Na página "Em Separação":
   - Selecionar itens específicos para aplicar frete de envio
   - Informar valor total que será dividido igualmente entre os itens
