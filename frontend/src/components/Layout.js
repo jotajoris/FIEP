@@ -121,6 +121,16 @@ const Layout = ({ children }) => {
                 </li>
               </>
             )}
+            <li>
+              <Link to="/estoque" className={`nav-link ${isActive('/estoque')}`} data-testid="nav-estoque">
+                📦 Estoque
+              </Link>
+            </li>
+            <li>
+              <Link to="/planilha-itens" className={`nav-link ${isActive('/planilha-itens')}`} data-testid="nav-planilha">
+                📋 Planilha
+              </Link>
+            </li>
             {user?.owner_name && (
               <li>
                 <Link to={`/owner/${user.owner_name}`} className={`nav-link ${isActive(`/owner/${user.owner_name}`)}`} data-testid="nav-my-items">
