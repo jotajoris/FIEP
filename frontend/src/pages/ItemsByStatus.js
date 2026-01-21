@@ -1495,8 +1495,11 @@ Chave PIX: 46.663.556/0001-69`;
     
     const item = showUsarEstoqueModal;
     const qtdNecessaria = item.quantidade || 0;
+    const qtdJaAtendida = item.quantidade_do_estoque || 0;
+    const qtdFaltante = qtdNecessaria - qtdJaAtendida;
     const qtdDisponivel = estoqueDetalhes.total_disponivel || 0;
-    const atendeTudo = quantidadeUsar >= qtdNecessaria;
+    const maxUsar = Math.min(qtdDisponivel, qtdFaltante); // Não pode usar mais do que precisa
+    const atendeTudo = quantidadeUsar >= qtdFaltante;
     
     return (
       <div style={{
