@@ -4714,6 +4714,42 @@ async def migrar_enderecos_itens_para_oc(current_user: dict = Depends(require_ad
     }
 
 
+@api_router.post("/admin/recalcular-lucros")
+async def recalcular_lucros_todos_itens(current_user: dict = Depends(require_admin)):
+    """
+    Endpoint de migração para recalcular o lucro de todos os itens.
+    Usa a nova fórmula que considera apenas a quantidade necessária, não a quantidade comprada.
+    """
+    pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(5000)
+    
+    itens_recalculados = 0
+    ocs_atualizadas = 0
+    
+    for po in pos:
+        items_modified = False
+        for item in po.get('items', []):
+            old_lucro = item.get('lucro_liquido')
+            calcular_lucro_item(item)
+            new_lucro = item.get('lucro_liquido')
+            
+            if old_lucro != new_lucro:
+                itens_recalculados += 1
+                items_modified = True
+        
+        if items_modified:
+            await db.purchase_orders.update_one(
+                {"id": po['id']},
+                {"$set": {"items": po['items']}}
+            )
+            ocs_atualizadas += 1
+    
+    return {
+        "success": True,
+        "itens_recalculados": itens_recalculados,
+        "ocs_atualizadas": ocs_atualizadas
+    }
+
+
 # ============== ESTOQUE ==============
 @api_router.get("/estoque")
 async def listar_estoque(current_user: dict = Depends(get_current_user)):
