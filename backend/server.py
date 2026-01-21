@@ -4941,8 +4941,11 @@ async def verificar_estoque_item(codigo_item: str, current_user: dict = Depends(
                     else:
                         quantidade_comprada = 0
                 
-                if quantidade_comprada and quantidade_comprada > quantidade_necessaria:
-                    excedente = quantidade_comprada - quantidade_necessaria
+                # Quantidade já usada do estoque
+                quantidade_usada_estoque = item.get('quantidade_usada_estoque', 0)
+                
+                if quantidade_comprada and quantidade_comprada > (quantidade_necessaria + quantidade_usada_estoque):
+                    excedente = quantidade_comprada - quantidade_necessaria - quantidade_usada_estoque
                     quantidade_total_estoque += excedente
                     detalhes.append({
                         'numero_oc': po.get('numero_oc'),
