@@ -4986,7 +4986,6 @@ async def get_estoque_mapa(current_user: dict = Depends(get_current_user)):
                 quantidade_comprada = sum(f.get('quantidade', 0) for f in fontes)
             else:
                 quantidade_comprada = item.get('quantidade_comprada', 0)
-                    quantidade_comprada = 0
             
             # Quantidade já usada do estoque
             quantidade_usada_estoque = item.get('quantidade_usada_estoque', 0)
