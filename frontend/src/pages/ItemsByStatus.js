@@ -3995,7 +3995,7 @@ Chave PIX: 46.663.556/0001-69`;
                             <div 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setImagemExpandida(`${API}${group.imagem_url}`);
+                                setImagemExpandida(`${BACKEND_URL}${group.imagem_url}`);
                               }}
                               style={{ 
                                 width: '40px', 
