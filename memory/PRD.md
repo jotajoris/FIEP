@@ -40,6 +40,25 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 - ✅ **Coleção MongoDB**: `limites_contrato` armazena os dados importados
 - ✅ **Fallback inteligente**: Se não houver limites importados, usa total do banco de dados
 
+### 📋 Página de Planilha Reformulada (22/01/2026)
+- ✅ **Novo endpoint**: `GET /api/planilha-contrato` - Cruza limites do contrato com dados das OCs
+- ✅ **Mostra TODOS os itens do contrato FIEP** (1385 itens da planilha importada)
+- ✅ **Badge "📊 Contrato FIEP"** no cabeçalho quando usando dados importados
+- ✅ **Estatísticas baseadas no contrato:**
+  - Itens Diferentes (total de códigos do contrato)
+  - Qtd. Total Contrato (soma de todas as quantidades máximas)
+  - Qtd. Já Comprada
+  - Qtd. Faltante (contrato - comprada)
+  - % Comprado
+- ✅ **Novos filtros:**
+  - 📦 Com OC - Itens que já têm OC no sistema
+  - ⏳ Sem OC - Itens do contrato que ainda não têm OC
+  - ⚠️ Faltantes - Itens com quantidade faltante > 0
+  - ✅ Completos - Itens com quantidade faltante = 0
+- ✅ **Coluna "Qtd. Contrato"** destacada em roxo
+- ✅ **Indicador visual "SEM OC"** em cinza para itens sem OC
+- ✅ **Itens sem OC** mostram descrição em itálico e campos vazios
+
 ---
 
 ### Versão 3.0.0 (22/01/2026)
