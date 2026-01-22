@@ -34,54 +34,57 @@ The user requested a web platform to manage purchase orders (OCs) for their clie
 - A Quantidade Comprada field for items.
 - A new Estoque (Stock) page for surplus items and a Planilha de Itens (Item Sheet) for a consolidated view.
 - Indicate if a new OC item is already available in stock.
-- **Implement a Use from Stock feature for pending items.**
-    - **Use the original purchase price for cost calculation.**
-    - **If stock fully covers the need, change the item's status to .**
-    - **If partially covered, create a partial purchase record and leave the remaining quantity as .**
-    - **Record which OC the stock was used for.**
-- **Allow uploading images for items via drag-and-drop, with a thumbnail view and a popup for the full image.**
-- **On the Pendentes tab, group items with the same code from different OCs to allow for bulk quoting.**
-- **When quoting an item, display the total quantity needed for that item across all OCs.**
-- **On the Estoque page, allow admins to manually edit or delete stock entries.**
-- **On the Estoque page, allow manually adding items to stock by searching for their code.**
+- Implement a Use from Stock feature for pending items.
+- Allow uploading images for items via drag-and-drop, with a thumbnail view and a popup for the full image.
+- **On the Pendentes tab, group items with the same code from different OCs to allow for bulk quoting and editing.**
+- **On the Pendentes tab, when quoting an item, display the total quantity needed for that item across all OCs.**
+- On the Estoque page, allow admins to manually edit or delete stock entries.
+- On the Estoque page, allow manually adding items to stock by searching for their code.
+- **Display item images (as thumbnails) and key details (Brand/Model, Delivery Address) in the grouped view.**
+- **Add a Frete (Shipping) field to the bulk and individual quoting forms in the grouped view.**
+- **Clicking the image thumbnail in the grouped view header should allow uploading a new image.**
+- **Implement a system to import and use a separate Excel spreadsheet as the single source of truth for the Total Contract Quantity for each item, to be displayed on the UI.**
 
 **User's preferred language**:
 The user's primary language is **Portuguese (Brazil)**. The next agent MUST respond in Portuguese.
 
 **what currently exists?**
-A full-stack Purchase Order management application (FastAPI + React) with core features for creating, tracking, and managing OCs. The application includes user roles, PDF parsing, status tracking, and a dashboard. The last sessions focused heavily on building out a stock management system. This system can track surplus items from purchases, and the user can now use this available stock to fulfill new item requirements. A UI for managing and viewing stock was also built, along with admin controls for editing and deleting stock entries. However, the logic for calculating and debiting stock has been a persistent source of bugs.
+A full-stack Purchase Order management application (FastAPI + React). A critical bug in the stock management system was fixed in this session, and the system is now stable. Major new features were implemented on the Pendentes (Pending) page, including a grouped view that consolidates items by code across multiple OCs. This view allows for inline and bulk quoting (including price, supplier, link, and shipping). A feature for uploading and viewing item images (thumbnails with popups) was also added. The UI for these features has gone through several iterations based on user feedback. The application can now read an external Excel file, but the logic to store and use this data is still in progress.
 
 **Last working item**:
-- **Last item agent was working:** The agent was fixing a recurring bug where the stock quantity was miscalculated. The user reported that after resetting a test and buying 10 units of an item that needed 1 (which should result in 9 units in stock), the system showed only 7. The agent identified that old stock usage data () was not being cleared from the source OC item when the destination OC item was reverted to Pendente, causing the calculation to be off (10 purchased - 1 needed - 2 (stale usage) = 7).
+- **Last item agent was working:** The agent was implementing a major new requirement to use an external Excel file as the source of truth for the total contract quantity for each item. The user wants this value (from Column H, Quantidade Máxima in their spreadsheet) to be displayed, rather than the total quantity currently present in the app's database. The agent successfully analyzed the spreadsheet, created a backend endpoint () to parse it, and fixed a related UI bug where clicking the image upload icon in the grouped view was not working correctly. The implementation was paused before the frontend could be updated to use this new system.
 - **Status:** IN PROGRESS
-- **Agent Testing Done:** Y (The agent created a temporary admin endpoint  to manually clear the stale data, which successfully corrected the stock count to 9. However, a permanent, automated solution has not been implemented.)
-- **Which testing method agent to use?** Both. A backend testing agent should be used to create tests that simulate the status change flow (e.g.,  ->  -> ) and verify that all related fields (, , ) are correctly reset. A frontend testing agent should then verify that the UI reflects these changes accurately.
-- **User Testing Done:** Y (The user discovered and reported the bug).
+- **Agent Testing Done:** N
+- **Which testing method agent to use?** both. A backend test should verify that the Excel file is correctly parsed and that the quantidade_maxima values are stored in a new MongoDB collection. A frontend test should verify that an admin can upload the file and that the UI correctly fetches and displays the new total contract quantity in the appropriate badges.
+- **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P0)** Stock calculation is incorrect due to stale data.
+- **Issue 1: (P0)** Implement the Total Contract Quantity from the external Excel file.
 - **Issue 2: (P1)** Editing duplicate items opens all of them for editing simultaneously.
 
 **Issues Detail:**
-- **Issue 1: Stock calculation is incorrect due to stale data**
-    - **Attempted fixes:** The agent created a manual admin endpoint () to wipe the slate clean. This confirms the diagnosis but is not a real fix. The core logic that updates item statuses does not clean up related stock usage fields when an item is reverted to /.
+- **Issue 1: Implement the Total Contract Quantity from the external Excel file**
+    - **Attempted fixes:** The agent has created the backend endpoint  in  to receive and parse the Excel file using . It also fixed a bug preventing image uploads from the grouped view header. The work was paused before this new data could be stored in the database or displayed on the frontend.
     - **Next debug checklist:**
-        1.  Modify the backend endpoints responsible for changing an item's status (e.g., ,  in ).
-        2.  When an item's status is changed *back* to  or , the logic must also find the corresponding source OC item (from ) and decrement its  value.
-        3.  The logic must also clear the  flag and  entry related to ESTOQUE INTERNO on the item being reverted.
-        4.  Create a button on the Estoque page UI that calls the temporary admin endpoint as a stop-gap for the user to self-correct any existing data corruption while the permanent fix is being built.
-    - **Why fix this issue and what will be achieved with the fix?** This is the core blocker for the entire stock management feature. Without accurate accounting, the feature is unusable and actively corrupts data.
+        1.  In , complete the  endpoint:
+            -   Create a new MongoDB collection (e.g., ).
+            -   Iterate through the parsed Excel rows, and for each item code,  with  the  from Column H.
+        2.  Create a new endpoint (e.g., ) to return a dictionary of .
+        3.  In , fetch data from this new endpoint.
+        4.  Update the state  with this new data.
+        5.  Add a button to the UI (e.g., on the Admin page or Estoque page) for an admin to upload the  file.
+    - **Why fix this issue and what will be achieved with the fix?** This is a critical requirement from the user. It will ensure the UI displays the correct total contract potential for each item, aligning the application with the user's external business data.
     - **Status:** IN PROGRESS
-    - **Is recurring issue?** Y
+    - **Is recurring issue?** N
     - **Should Test frontend/backend/both after fix?** Both.
     - **Blocked on other issue:** None.
 
 - **Issue 2: Editing duplicate items opens all of them**
-    - **Attempted fixes:** None in this session. The agent confirmed the code uses , but a deeper investigation is needed.
+    - **Attempted fixes:** None in this session. This issue was deprioritized in favor of new features.
     - **Next debug checklist:**
         1.  Investigate state management in .
-        2.  While  uses , the state for the *form data itself* might be shared or incorrectly keyed, causing all instances to show the same form.
-        3.  Ensure that when  is called, the form data state ( or similar) is initialized specifically for .
+        2.  While  uses , the state for the form data itself ( or similar) might be shared or incorrectly keyed, causing all instances to show the same form.
+        3.  Ensure that when  is called, the form data state is initialized specifically for .
     - **Why fix this issue and what will be achieved with the fix?** This is a long-standing, frustrating usability bug. Fixing it will significantly improve the user experience.
     - **Status:** NOT STARTED
     - **Is recurring issue?** Y
@@ -89,113 +92,111 @@ A full-stack Purchase Order management application (FastAPI + React) with core f
     - **Blocked on other issue:** None.
 
 **In progress Task List**:
-None. The focus is on fixing the critical stock bug.
+- **Task 1: (P0)** Complete the Total Contract Quantity Feature
+    - **Where to resume:** Implement the frontend component for uploading the Excel file and update the logic in  to fetch and display the contract limits from the new backend endpoint. The backend endpoint itself needs to be completed to save the data to MongoDB.
+    - **What will be achieved with this?** The UI will display the correct total quantities as defined in the user's external contract spreadsheet.
+    - **Status:** IN PROGRESS
+    - **Should Test frontend/backend/both after fix?** Both.
+    - **Blocked on something:** None.
 
 **Upcoming and Future Tasks**
-- **Upcoming Tasks:**
-    - **(P0)** Group identical pending items for bulk quoting.
-    - **(P0)** Allow uploading images for items.
-    - **(P1)** Show total quantity needed for an item on the quoting screen.
 - **Future Tasks:**
-    - **(P2)** Refactor the monolithic  and  files.
-    - **(P3)** Provide guidance on deploying the application to Hostinger.
-    - **(P3)** Guide the user on verifying their Resend domain.
-    - **(P3)** Investigate a more reliable, paid Correios API for package tracking.
+    - (P2) Refactor the monolithic  and  files.
+    - (P3) Provide guidance on deploying the application to Hostinger.
+    - (P3) Guide the user on verifying their Resend domain.
+    - (P3) Investigate a more reliable, paid Correios API for package tracking.
 
 **Completed work in this session**
-- **Feature:** Implemented the Use from Stock feature, including the backend endpoint () and a frontend modal in .
-- **Feature:** Added admin controls to the Estoque page to edit quantities, delete stock origins, and manually add new items to stock.
-- **Bug Fix:** Corrected the profit calculation logic to use the item's required quantity, not the total purchased quantity, and created a migration endpoint to fix historical data.
-- **Bug Fix:** Fixed the initial bug where the stock page was empty.
-- **Bug Fix:** Corrected multiple logical flaws in the stock calculation (, , etc.) to prioritize  over the  field and to exclude items attended by stock from generating new surplus.
-- **Bug Fix:** Fixed a bug in the Use from Stock modal that allowed using more stock than required by the item.
-- **Bug Fix:** Fixed a bug where the Use from Stock modal would incorrectly claim an item was already fulfilled if its status had been reverted from Comprado back to Pendente.
-- **UI Improvement:** The Estoque page now details how many units from a stock source have been used and for which OCs.
-- **UI Improvement:** Added an indicator on pending/quoted items to show how many units of that item are available in stock.
+- **Bug Fix (P0):** Corrected the critical stock calculation bug. The application now correctly handles reverting an item's status (e.g., from  to ) by automatically returning the used stock to the available pool. A migration endpoint was created to fix previously corrupted data.
+- **Feature:** Implemented item image uploads, including a drag-and-drop UI, a thumbnail preview next to the Edit button, and a popup modal for the full image.
+- **Feature:** Implemented a grouped view on the pending items page, which consolidates all items with the same code, showing total quantity and a breakdown by OC.
+- **Feature:** Implemented inline and bulk quoting within the grouped view, with a form to apply price, supplier, link, and shipping cost to one or all items in a group.
+- **UI/UX Improvements:** Made numerous UI adjustments based on user feedback, including thumbnail size, badge visibility, and adding more details (brand/model, address) to the grouped view.
+- **Bug Fix:** Fixed an issue where image URLs were being constructed with a duplicate  prefix, preventing images from loading.
+- **Bug Fix:** Fixed an issue where clicking the image upload icon in the grouped view header would expand the item list instead of opening the file dialog.
 
 **Earlier issues found/mentioned but not fixed**
 - **Issue 1:** Editing duplicate items opens all instances for editing simultaneously. (See All Pending/In progress Issue list for details).
 
 **Known issue recurrence from previous fork**
 - **Issue recurrence in previous fork:** Editing duplicate items opens all of them.
-- **Recurrence count:** 4+
+- **Recurrence count:** 5+
 - **Status:** NOT STARTED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Backend:** FastAPI, Motor (async MongoDB), Pydantic.
-- **Frontend:** React (Hooks), Axios, TailwindCSS.
-- **Complex Stock Logic:** The core of the recent work. Involves MongoDB aggregation pipelines and intricate cross-document updates to track stock generation, usage, and depletion. The logic relies on fields like , , , and .
-- **Data Corruption & Manual Fixes:** The complexity of the stock logic has led to data inconsistencies, requiring the creation of one-off admin endpoints for correction (e.g., , ).
+- **Backend:** FastAPI, Motor (async MongoDB), Pydantic,  (for Excel parsing).
+- **Frontend:** React (Hooks, useMemo), Axios, TailwindCSS.
+- **Complex UI State:**  now manages multiple view modes (, ), inline editing forms, group editing forms, and image upload state.
+- **External Data Source:** A new concept of using an external Excel file as the source of truth for contract limits, separate from the transactional data in the main database.
 
 **key DB schema**
 - **** (collection):
     -  (array of objects):
-        - : (Optional[int]) Total quantity purchased. Often overridden by .
-        - : (Optional[Array]) Detailed list of purchase sources.
-        - ****: (Optional[int]) Tracks how many units from *this item's surplus* have been used by other OCs.
-        - ****: (Optional[Array]) A log of which OCs used stock from this item. 
-        - ****: (Optional[bool]) Flag indicating this item's need was fulfilled from stock, so it doesn't generate its own surplus.
-        - ****: (Optional[int]) Tracks how many units *this item received* from the stock.
+        - : (Optional[str]) Path to the item's image.
+        - : (Optional[str]) Filename of the item's image.
+        - : (int) Tracks usage of this item's surplus.
+        - : (Array) Logs which OCs used stock from this item.
+        - : (bool) Flag if fulfilled from stock.
+- **** (collection, **PROPOSED**):
+    - : (str, index)
+    - : (int)
 
 **All files of reference**
-- : CRITICAL. All backend logic for stock calculation, usage, editing, and bug fixing resides here. Multiple new endpoints were added.
-- : CRITICAL. Contains the UI and logic for the Use from Stock feature, including the trigger button and the interaction modal.
-- : CRITICAL. Contains the UI for displaying the stock, and the modals for editing quantities, deleting stock origins, and adding new items to stock manually.
-- : Updated with the new Use from Stock feature.
+- : CRITICAL. Contains all backend logic. New endpoints for stock correction, image upload/serving, and the start of the Excel import logic were added.
+- : CRITICAL. Contains all the new UI/UX for image uploads, the grouped view, and bulk/inline quoting.
+- : Modified to export  to fix an image path issue.
+- : Updated with completed features.
+- : The user-provided Excel file that is the source of truth for contract limits.
 
 **Areas that need refactoring**:
-- : **CRITICAL PRIORITY.** This file has become even larger and more complex. The stock logic is spread across multiple endpoints and is very difficult to reason about. It must be broken down into separate router files (, , etc.).
-- : **CRITICAL PRIORITY.** This component manages an enormous amount of state for item display, editing, bulk actions, and now the Use from Stock modal. It should be decomposed into custom hooks and smaller components.
+- : **CRITICAL PRIORITY.** This file is now approaching 6000 lines and is extremely difficult to maintain. It must be broken down.
+- : **CRITICAL PRIORITY.** This component is also a monolith, handling logic for multiple views, complex state, API calls, and multiple forms. It should be decomposed into custom hooks and smaller, specialized components.
 
 **key api endpoints**
-- : Uses available stock to fulfill an item's need.
-- : Manually edits the  of a stock source item.
-- : Deletes a purchase source from an item, effectively removing it from stock.
-- : Gets detailed stock availability for a specific item code.
-- : **Temporary endpoint** to clear all stock usage data for debugging.
-- : Main endpoint to list all items currently in stock. (Heavily modified).
-- : Returns a simple map of . (Heavily modified).
+- : One-time migration to fix inconsistent stock data.
+- : Uploads an image for a specific item.
+- : Deletes an image for a specific item.
+- : Serves an uploaded item image.
+- : **(In Progress)** Endpoint to upload and parse the Excel file with contract limits.
 
 **Critical Info for New Agent**
-- **Your immediate and highest priority is to create a permanent fix for the stock calculation bug.** The current fix is a manual admin endpoint. You need to build the logic into the status update flow to automatically and correctly reverse stock usage when an item's status is reverted (e.g., from Comprado back to Pendente). Without this, the user will constantly face data corruption.
-- After fixing the stock bug, the user's next priorities are: (1) Grouping identical pending items, (2) Adding item image uploads, (3) Showing total item needs on the quote screen. Address these in order.
-- The user is very hands-on and tests features immediately. Expect rapid feedback and bug reports. Be prepared to debug complex data states.
+- **Your immediate task is to finish the Total Contract Quantity feature.** The user wants the quantity shown in the purple Planilha badge to come from an external Excel file they provided, not the sum of items in the database. You need to complete the backend endpoint  to save the parsed data to a new MongoDB collection, create another endpoint to fetch this data, and then update the frontend to use it.
+- **Do not be confused by the Total Planilha count.** The agent correctly implemented a feature to show the total from all OCs in the database. However, the user's requirement has evolved. The truth is now the external Excel file.
+- The long-standing bug where editing duplicate items opens all of them still exists and should be addressed after the P0 task is complete.
 
 **documents and test reports created in this job**
 - 
 - 
+- 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Bug):** The Use from Stock modal says an item is já foi totalmente atendido even after I move it back to pendente.
-2.  **User (Request):** I need buttons to edit and delete items from the stock page.
-3.  **Agent (Fix):** Implemented edit/delete buttons and fixed the modal bug.
-4.  **User (Bug):** I bought 10 units of an item needing 1, but it's not showing up in stock.
-5.  **Agent (Fix):** Fixed the stock calculation logic to correctly prioritize purchase sources (). Implemented a more advanced stock editing/adding UI.
-6.  **User (Bug):** The item is in stock, but when I click to use it, the modal says Não há estoque disponível.
-7.  **Agent (Fix):** Fixed another logic error in the  endpoint that was causing the discrepancy.
-8.  **User (Bug):** When I use stock, it isn't being debited correctly. Example: stock was 9, I used 2, it should be 7, but it's still 9.
-9.  **Agent (Fix):** Added an  flag to prevent items that *receive* stock from also generating *new* stock, which fixed the debiting logic.
-10. **User (Bug - LATEST/BLOCKER):** The stock calculation is wrong again. I reset the test, bought 10 for an item needing 1 (should be 9 in stock). The stock shows only 7, because it's incorrectly counting 2 units that were used in a previous test that I already reverted.
+1.  **User (Feedback):** Image preview is not working and the edit button in the grouped view is broken.
+2.  **User (Feedback):** Wants inline editing within the grouped view (Cotar Todos) and a larger image thumbnail.
+3.  **User (Feedback):** Image still missing in the grouped view, brand/model/address details are missing, and Total Planilha count is wrong (showing 62 instead of 140 from their Excel sheet).
+4.  **User (Feedback):** Wants Frete (shipping) added to the group quoting forms. Reiterates the Total Planilha issue.
+5.  **User (Feedback, LATEST/BLOCKER):** Provides the Excel sheet. Clarifies that Total Planilha must come from Quantidade Máxima (Column H) in that sheet. Also reports that clicking the image icon in the grouped view doesn't work for uploads.
+6.  **Agent (Acknowledgement):** Confirms understanding of the Excel sheet requirement.
+7.  **User (Instruction):** Tells the agent to continue and that they will fork later.
 
 **Project Health Check:**
-- **Broken:** The stock management feature is functionally broken and corrupts its own data over time because it lacks logic to handle status reversions.
+- **Broken:** The Total Planilha feature does not meet the user's latest requirement, as it reads from the database instead of the specified Excel file.
 - **Mocked:** Forgot Password functionality via Resend (domain not verified).
-- **Technical Debt:** CRITICAL.  is now a massive, fragile monolith. The stock logic is convoluted and spread across numerous endpoints, making it extremely bug-prone.
+- **Technical Debt:** CRITICAL.  and  have grown significantly, making them fragile and hard to debug. Refactoring is urgently needed but has been consistently postponed for new features.
 
 **3rd Party Integrations**
 - **Resend:** For emails.
 - **PyMuPDF:** For parsing PDFs.
-- **SeuRastreio API:** For package tracking (inactive).
 - **APScheduler:** For background jobs.
+- **openpyxl:** For parsing  files.
 
 **Testing status**
-- **Testing agent used after significant changes:** YES, an initial suite of 13 tests was created and passed, but it did not cover the complex edge cases of reverting item statuses, which later caused bugs.
+- **Testing agent used after significant changes:** YES. The agent used the testing agent successfully to validate the P0 stock bug fix and the initial implementation of the image upload/grouping features.
 - **Troubleshoot agent used after agent stuck in loop:** NO
-- **Test files created:** 
-- **Known regressions:** The stock calculation logic regressed multiple times as new complexity was added.
+- **Test files created:** , 
+- **Known regressions:** None in this session; the major bug was fixed.
 
 **Credentials to test flow:**
 - **Admin Login (João):**
@@ -206,5 +207,4 @@ None. The focus is on fixing the critical stock bug.
     - **Password:** 
 
 **What agent forgot to execute**
-- The agent failed to implement a permanent, automated solution for the stock data corruption issue. Instead, they created a manual admin endpoint () as a temporary patch, leaving the underlying logical flaw in place.
-- The long-standing P1 bug of duplicate items opening for editing was not addressed.</analysis>
+- The agent has consistently deferred fixing the P1 bug where editing duplicate items opens all instances simultaneously, despite it being a recurring issue from a previous fork. New feature requests have taken priority.</analysis>
