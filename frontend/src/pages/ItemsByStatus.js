@@ -4336,7 +4336,7 @@ Chave PIX: 46.663.556/0001-69`;
                                   }}
                                   style={{
                                     padding: '0.4rem 0.8rem',
-                                    background: '#667eea',
+                                    background: status === 'cotado' ? '#3b82f6' : '#667eea',
                                     color: 'white',
                                     border: 'none',
                                     borderRadius: '6px',
@@ -4344,7 +4344,7 @@ Chave PIX: 46.663.556/0001-69`;
                                     cursor: 'pointer'
                                   }}
                                 >
-                                  ✏️ Cotar
+                                  {status === 'cotado' ? '🛒 Comprar' : '✏️ Cotar'}
                                 </button>
                               )}
                             </div>
