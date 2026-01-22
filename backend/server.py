@@ -5261,6 +5261,10 @@ async def usar_estoque(
             if status_origem not in ['comprado', 'em_separacao', 'em_transito', 'entregue']:
                 continue
             
+            # IMPORTANTE: Itens que foram atendidos pelo estoque não geram excedente
+            if item_origem.get('atendido_por_estoque'):
+                continue
+            
             # Calcular quantidade comprada: PRIORIZAR fontes_compra (mais preciso)
             fontes = item_origem.get('fontes_compra', [])
             if fontes:
