@@ -485,6 +485,58 @@ const ItemsByStatus = () => {
     return filtered;
   }, [items, showOnlyMine, user?.owner_name, filterFornecedor, filterResponsavel, searchCodigo, searchOC, searchDescricao, searchMarca, searchLink]);
 
+  // ====== AGRUPAMENTO POR CÓDIGO (para pendentes) ======
+  const itemsGroupedByCode = useMemo(() => {
+    if (status !== 'pendente' || viewMode !== 'grouped') return [];
+    
+    const grouped = {};
+    
+    displayItems.forEach(item => {
+      const codigo = item.codigo_item;
+      if (!grouped[codigo]) {
+        grouped[codigo] = {
+          codigo_item: codigo,
+          descricao: item.descricao,
+          marca_modelo: item.marca_modelo,
+          unidade: item.unidade || 'UN',
+          items: [],
+          total_quantidade: 0,
+          estoqueDisponivel: estoqueDisponivel[codigo] || 0,
+          imagem_url: item.imagem_url  // Pegar imagem do primeiro item
+        };
+      }
+      grouped[codigo].items.push(item);
+      grouped[codigo].total_quantidade += item.quantidade || 0;
+      // Atualizar imagem se não tinha
+      if (!grouped[codigo].imagem_url && item.imagem_url) {
+        grouped[codigo].imagem_url = item.imagem_url;
+      }
+    });
+    
+    // Converter para array e ordenar por quantidade total (maior primeiro)
+    return Object.values(grouped).sort((a, b) => {
+      // Primeiro, itens que aparecem em múltiplas OCs
+      if (a.items.length !== b.items.length) {
+        return b.items.length - a.items.length;
+      }
+      // Depois por quantidade total
+      return b.total_quantidade - a.total_quantidade;
+    });
+  }, [displayItems, status, viewMode, estoqueDisponivel]);
+
+  // Total da planilha para cada código (para mostrar ao cotar)
+  const totalPlanilhaPorCodigo = useMemo(() => {
+    const totais = {};
+    items.forEach(item => {
+      const codigo = item.codigo_item;
+      if (!totais[codigo]) {
+        totais[codigo] = 0;
+      }
+      totais[codigo] += item.quantidade || 0;
+    });
+    return totais;
+  }, [items]);
+
   // Itens paginados
   const paginatedItems = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
