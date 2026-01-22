@@ -4114,8 +4114,8 @@ Chave PIX: 46.663.556/0001-69`;
                         </button>
                       )}
                       
-                      {/* Total na Planilha (só para pendentes) */}
-                      {status === 'pendente' && totalPlanilhaPorCodigo[item.codigo_item] && totalPlanilhaPorCodigo[item.codigo_item] > item.quantidade && (
+                      {/* Total na Planilha (sempre para pendentes) */}
+                      {status === 'pendente' && totalPlanilhaPorCodigo[item.codigo_item] && (
                         <span 
                           style={{
                             background: '#8b5cf6',
