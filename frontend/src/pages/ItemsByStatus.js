@@ -4423,7 +4423,7 @@ Chave PIX: 46.663.556/0001-69`;
                       )}
                       
                       {/* Total na Planilha (sempre para pendentes) */}
-                      {status === 'pendente' && totalPlanilhaPorCodigo[item.codigo_item] && (
+                      {status === 'pendente' && totalPlanilhaReal[item.codigo_item] && (
                         <span 
                           style={{
                             background: '#8b5cf6',
@@ -4436,10 +4436,10 @@ Chave PIX: 46.663.556/0001-69`;
                             alignItems: 'center',
                             gap: '0.25rem'
                           }}
-                          title={`Este item aparece em outras OCs. O total na planilha é ${totalPlanilhaPorCodigo[item.codigo_item]} ${item.unidade || 'UN'}`}
+                          title={`Quantidade total deste item em TODAS as OCs do sistema (todos os status)`}
                           data-testid={`total-planilha-${item.codigo_item}`}
                         >
-                          📊 Total Planilha: {totalPlanilhaPorCodigo[item.codigo_item]} {item.unidade || 'UN'}
+                          📊 Total Planilha: {totalPlanilhaReal[item.codigo_item]} {item.unidade || 'UN'}
                         </span>
                       )}
                       
