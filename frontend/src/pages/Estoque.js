@@ -238,15 +238,54 @@ const Estoque = () => {
                           borderRadius: '6px',
                           border: '1px solid #bae6fd'
                         }}>
-                          <Link 
-                            to={`/po/${oc.po_id}`}
-                            style={{ color: '#0369a1', fontWeight: '600' }}
-                          >
-                            {oc.numero_oc}
-                          </Link>
-                          <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
-                            Comprado: {oc.quantidade_comprada} | Usado: {oc.quantidade_necessaria} | Estoque: {oc.excedente}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                            <Link 
+                              to={`/po/${oc.po_id}`}
+                              style={{ color: '#0369a1', fontWeight: '600' }}
+                            >
+                              {oc.numero_oc}
+                            </Link>
+                            <div style={{ display: 'flex', gap: '0.25rem' }}>
+                              <button
+                                onClick={() => abrirEdicao(oc)}
+                                style={{
+                                  background: '#f59e0b',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  padding: '0.2rem 0.4rem',
+                                  fontSize: '0.7rem',
+                                  cursor: 'pointer'
+                                }}
+                                title="Editar quantidade"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                onClick={() => handleLimparEstoque(oc.po_id, oc.item_index, oc.numero_oc)}
+                                style={{
+                                  background: '#ef4444',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  padding: '0.2rem 0.4rem',
+                                  fontSize: '0.7rem',
+                                  cursor: 'pointer'
+                                }}
+                                title="Remover excedente"
+                              >
+                                🗑️
+                              </button>
+                            </div>
                           </div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                            Comprado: {oc.quantidade_comprada} | Necessário: {oc.quantidade_necessaria} | Estoque: {oc.excedente}
+                          </div>
+                          {oc.quantidade_usada_estoque > 0 && (
+                            <div style={{ fontSize: '0.7rem', color: '#059669', marginTop: '0.25rem' }}>
+                              ✅ {oc.quantidade_usada_estoque} UN já usados de outras OCs
+                            </div>
+                          )}
                           {oc.usado_em && oc.usado_em.length > 0 && (
                             <div style={{ 
                               marginTop: '0.5rem', 
@@ -272,6 +311,91 @@ const Estoque = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+      
+      {/* Modal de Edição de Estoque */}
+      {editingOC && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            width: '90%',
+            maxWidth: '400px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+          }}>
+            <h3 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>
+              ✏️ Editar Estoque
+            </h3>
+            
+            <div style={{ marginBottom: '1rem' }}>
+              <strong>{editingOC.numero_oc}</strong>
+            </div>
+            
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                Quantidade Comprada:
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={novaQuantidade}
+                onChange={(e) => setNovaQuantidade(parseInt(e.target.value) || 0)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  border: '2px solid #e2e8f0',
+                  fontSize: '1rem'
+                }}
+              />
+              <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>
+                Valor atual: {editingOC.quantidade_comprada}
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setEditingOC(null)}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  border: '1px solid #e2e8f0',
+                  background: 'white',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleAjustarEstoque}
+                disabled={salvando}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  border: 'none',
+                  background: salvando ? '#94a3b8' : '#10b981',
+                  color: 'white',
+                  cursor: salvando ? 'not-allowed' : 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                {salvando ? 'Salvando...' : 'Salvar'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
