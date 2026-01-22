@@ -4310,7 +4310,7 @@ Chave PIX: 46.663.556/0001-69`;
                                 borderRadius: '6px',
                                 border: '1px solid #fcd34d'
                               }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem', marginBottom: '0.75rem' }}>
                                   <div>
                                     <label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#374151' }}>Preço Unit.</label>
                                     <input
@@ -4318,6 +4318,18 @@ Chave PIX: 46.663.556/0001-69`;
                                       step="0.01"
                                       value={groupFormData.preco_unitario}
                                       onChange={(e) => setGroupFormData({...groupFormData, preco_unitario: e.target.value})}
+                                      onClick={(e) => e.stopPropagation()}
+                                      style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '0.85rem' }}
+                                      placeholder="0,00"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#374151' }}>Frete</label>
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      value={groupFormData.frete}
+                                      onChange={(e) => setGroupFormData({...groupFormData, frete: e.target.value})}
                                       onClick={(e) => e.stopPropagation()}
                                       style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '0.85rem' }}
                                       placeholder="0,00"
