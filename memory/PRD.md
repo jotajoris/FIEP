@@ -23,7 +23,22 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 2.8.0 (22/01/2026)
+## Versão Atual: 2.9.0 (22/01/2026)
+
+### 🐛 Correção Crítica P0 - Reversão de Estoque (22/01/2026)
+- ✅ **Bug corrigido**: Quando um item era revertido de "Comprado" para "Pendente", os campos `quantidade_usada_estoque` e `estoque_usado_em` da OC de origem NÃO eram limpos, causando corrupção de dados no cálculo do estoque
+- ✅ **Solução implementada**:
+  - Nova função `reverter_uso_estoque()` no backend (`server.py` linhas ~97-193)
+  - Chamada automaticamente em TODOS os endpoints de atualização de status quando item volta para `pendente` ou `cotado`
+  - Endpoints atualizados: `update_item_status`, `update_item_by_index_status`, `update_item_by_index`, `atualizar_status_em_massa`
+- ✅ **Novo endpoint de migração**: `POST /api/admin/limpar-dados-estoque-inconsistentes`
+  - Corrige dados legados em itens que estão pendentes/cotados mas ainda têm dados de uso de estoque
+- ✅ **Novo botão na UI**: "🔧 Corrigir Dados" na página de Estoque (cor amarela)
+  - Chama o endpoint de migração para admins limparem dados inconsistentes
+- ✅ **Testes automatizados**: 14 testes criados em `/app/tests/test_estoque_reverter_bug.py`
+  - Todos passando com 100% de sucesso
+
+### Versão 2.8.0 (22/01/2026)
 
 ### Funcionalidade "Usar do Estoque" (22/01/2026)
 - ✅ **Botão "📦 X em estoque • Usar"** em itens pendentes/cotados que têm estoque disponível
