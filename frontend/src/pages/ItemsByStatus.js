@@ -4538,8 +4538,8 @@ Chave PIX: 46.663.556/0001-69`;
                         </button>
                       )}
                       
-                      {/* Total na Planilha (sempre para pendentes) */}
-                      {status === 'pendente' && (limitesContrato[item.codigo_item] || totalPlanilhaReal[item.codigo_item]) && (
+                      {/* Total na Planilha (para pendentes e cotados) */}
+                      {(status === 'pendente' || status === 'cotado') && (limitesContrato[item.codigo_item] || totalPlanilhaReal[item.codigo_item]) && (
                         <span 
                           style={{
                             background: limitesContrato[item.codigo_item] ? '#7c3aed' : '#8b5cf6',
