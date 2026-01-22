@@ -208,6 +208,11 @@ const ItemsByStatus = () => {
   const [quantidadeUsar, setQuantidadeUsar] = useState(0);  // quantidade a usar
   const [usandoEstoque, setUsandoEstoque] = useState(false);  // loading
 
+  // Estados para upload de imagem
+  const [uploadingImage, setUploadingImage] = useState(null);  // _uniqueId do item com upload em andamento
+  const [imagemExpandida, setImagemExpandida] = useState(null);  // URL da imagem para popup expandido
+  const [dragOver, setDragOver] = useState(null);  // _uniqueId do item com drag over
+
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
