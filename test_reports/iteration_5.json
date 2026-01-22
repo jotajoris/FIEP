@@ -1,0 +1,141 @@
+{
+  "summary": "Testing completed for 3 new features: 1) Image upload for items via drag-and-drop, 2) Group pending items by code, 3) Show total planilha when quoting. All 11 backend tests passed. Frontend UI tests confirmed all features working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_new_features.py",
+    "/app/test_reports/pytest/pytest_results_new_features.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/tests/test_new_features.py"
+  ],
+  "success_rate": {
+    "backend": "100% (11/11 tests passed)",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "admin": {"email": "projetos.onsolucoes@gmail.com", "password": "on123456"}
+  },
+  "seed_data_creation": "Used existing test data: OC-2.118938 (po_id: c885f4bb-fc52-44f4-b064-1503707b994a) with item 114641",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All 3 new features verified working: 1) Image upload endpoint POST /api/purchase-orders/{po_id}/items/by-index/{item_index}/imagem works with multipart/form-data, 2) Grouped view on pending items page shows items grouped by codigo_item with total quantities, 3) Total Planilha badge shows total quantity across all OCs for each item code.",
+  "features_tested": {
+    "feature_1_image_upload": {
+      "status": "WORKING",
+      "description": "Upload de imagem para itens via drag-and-drop",
+      "endpoints_tested": [
+        "POST /api/purchase-orders/{po_id}/items/by-index/{item_index}/imagem - Upload image",
+        "GET /api/item-images/{filename} - Serve image",
+        "DELETE /api/purchase-orders/{po_id}/items/by-index/{item_index}/imagem - Delete image"
+      ],
+      "ui_elements_verified": [
+        "Drag-and-drop area with text 'Arraste ou clique para adicionar imagem'",
+        "File input for image upload",
+        "Image thumbnail display",
+        "Delete image button"
+      ],
+      "storage_location": "/app/backend/uploads/item_images"
+    },
+    "feature_2_group_by_code": {
+      "status": "WORKING",
+      "description": "Agrupar itens pendentes por código",
+      "ui_elements_verified": [
+        "Button 'Agrupar por Código' visible on pending items page",
+        "Button changes to 'Agrupado ✓' when active",
+        "Grouped view shows items with same codigo_item from different OCs together",
+        "Badge showing number of OCs (e.g., '4 OCs')",
+        "Badge showing total quantity (e.g., 'Total: 62 UN')"
+      ],
+      "frontend_implementation": {
+        "state": "viewMode ('normal' or 'grouped')",
+        "memo": "itemsGroupedByCode - groups displayItems by codigo_item"
+      }
+    },
+    "feature_3_total_planilha": {
+      "status": "WORKING",
+      "description": "Mostrar total da planilha quando for cotar",
+      "ui_elements_verified": [
+        "Badge 'Total Planilha' visible for items appearing in multiple OCs",
+        "Shows total quantity across all OCs for that item code"
+      ],
+      "frontend_implementation": {
+        "memo": "totalPlanilhaPorCodigo - calculates sum of quantities per codigo_item"
+      }
+    },
+    "feature_4_image_in_estoque": {
+      "status": "WORKING",
+      "description": "Link 'Ver Imagem' na página de Estoque",
+      "ui_elements_verified": [
+        "Column 'IMAGEM' in Estoque table",
+        "Link 'Ver Imagem' when item has image",
+        "Shows '-' when no image"
+      ],
+      "api_field": "imagem_url included in /api/estoque response"
+    },
+    "feature_5_image_in_planilha": {
+      "status": "WORKING",
+      "description": "Link 'Ver' na página de Planilha",
+      "ui_elements_verified": [
+        "Column 'IMAGEM' in Planilha table",
+        "Link 'Ver' when item has image",
+        "Shows '-' when no image"
+      ],
+      "api_field": "imagem_url included in /api/planilha-itens response"
+    }
+  },
+  "test_results": {
+    "backend_tests": {
+      "total": 11,
+      "passed": 11,
+      "failed": 0,
+      "test_classes": [
+        "TestImageUploadEndpoint - 5 tests (upload, get, delete, invalid type rejection)",
+        "TestEstoqueImageUrl - 1 test (imagem_url field in response)",
+        "TestPlanilhaItensImageUrl - 1 test (imagem_url field in response)",
+        "TestPendingItemsEndpoint - 2 tests (items have codigo_item for grouping)",
+        "TestItemStatusEndpoint - 1 test (get items by status)",
+        "TestImageServing - 1 test (404 for non-existent image)"
+      ]
+    },
+    "frontend_tests": {
+      "pending_items_page": {
+        "page_loads": true,
+        "agrupar_button_visible": true,
+        "agrupar_button_clickable": true,
+        "grouped_view_works": true,
+        "drag_drop_area_visible": true,
+        "file_input_present": true,
+        "total_planilha_badge_visible": true
+      },
+      "estoque_page": {
+        "page_loads": true,
+        "imagem_column_visible": true,
+        "data_testid_present": true
+      },
+      "planilha_page": {
+        "page_loads": true,
+        "imagem_column_visible": true,
+        "data_testid_present": true
+      }
+    }
+  },
+  "test_data": {
+    "test_po": {
+      "numero_oc": "OC-2.118938",
+      "po_id": "c885f4bb-fc52-44f4-b064-1503707b994a",
+      "item_index": 0,
+      "item_codigo": "114641"
+    },
+    "uploads_directory": "/app/backend/uploads/item_images"
+  }
+}
