@@ -97,6 +97,116 @@ async def health_check():
 def get_responsible_by_lot(lot_number: int) -> str:
     return LOT_TO_OWNER.get(lot_number, "Não atribuído")
 
+
+async def reverter_uso_estoque(item: dict, po_id: str, numero_oc: str) -> dict:
+    """
+    Reverte o uso de estoque quando um item é movido de volta para pendente/cotado.
+    
+    Esta função:
+    1. Verifica se o item usou estoque (via estoque_origem)
+    2. Para cada fonte de estoque, decrementa a quantidade_usada_estoque
+    3. Remove a entrada em estoque_usado_em da OC de origem
+    4. Limpa os campos de estoque do item atual
+    
+    Retorna um dict com informações sobre o que foi revertido.
+    """
+    resultado = {
+        'estoque_revertido': False,
+        'quantidade_revertida': 0,
+        'fontes_revertidas': []
+    }
+    
+    estoque_origem = item.get('estoque_origem', [])
+    if not estoque_origem:
+        # Não usou estoque, apenas limpar campos por segurança
+        item['quantidade_do_estoque'] = 0
+        item['estoque_origem'] = []
+        item['parcialmente_atendido_estoque'] = False
+        item['atendido_por_estoque'] = False
+        # Remover fonte de compra "ESTOQUE INTERNO" se existir
+        if item.get('fontes_compra'):
+            item['fontes_compra'] = [
+                fc for fc in item['fontes_compra'] 
+                if fc.get('fornecedor') != 'ESTOQUE INTERNO'
+            ]
+        return resultado
+    
+    logger.info(f"Revertendo uso de estoque para item no po_id={po_id}, estoque_origem={estoque_origem}")
+    
+    # Processar cada fonte de estoque
+    for fonte in estoque_origem:
+        numero_oc_origem = fonte.get('numero_oc')
+        quantidade_usada = fonte.get('quantidade', 0)
+        
+        if not numero_oc_origem or quantidade_usada <= 0:
+            continue
+        
+        # Encontrar a OC de origem
+        po_origem = await db.purchase_orders.find_one(
+            {"numero_oc": numero_oc_origem},
+            {"_id": 0}
+        )
+        
+        if not po_origem:
+            logger.warning(f"OC de origem {numero_oc_origem} não encontrada para reverter estoque")
+            continue
+        
+        # Encontrar o item com o mesmo código na OC de origem
+        codigo_item = item.get('codigo_item')
+        item_origem_atualizado = False
+        
+        for item_origem in po_origem.get('items', []):
+            if item_origem.get('codigo_item') != codigo_item:
+                continue
+            
+            # Decrementar quantidade_usada_estoque
+            qtd_usada_atual = item_origem.get('quantidade_usada_estoque', 0)
+            nova_qtd_usada = max(0, qtd_usada_atual - quantidade_usada)
+            item_origem['quantidade_usada_estoque'] = nova_qtd_usada
+            
+            # Remover entrada em estoque_usado_em que corresponde a esta OC destino
+            estoque_usado_em = item_origem.get('estoque_usado_em', [])
+            item_origem['estoque_usado_em'] = [
+                uso for uso in estoque_usado_em 
+                if uso.get('po_id') != po_id
+            ]
+            
+            item_origem_atualizado = True
+            logger.info(f"Revertido {quantidade_usada} UN do estoque na OC {numero_oc_origem}, nova qtd_usada={nova_qtd_usada}")
+            break
+        
+        if item_origem_atualizado:
+            # Salvar a OC de origem atualizada
+            await db.purchase_orders.update_one(
+                {"id": po_origem['id']},
+                {"$set": {"items": po_origem['items']}}
+            )
+            
+            resultado['fontes_revertidas'].append({
+                'numero_oc': numero_oc_origem,
+                'quantidade': quantidade_usada
+            })
+            resultado['quantidade_revertida'] += quantidade_usada
+    
+    # Limpar campos de estoque do item atual
+    item['quantidade_do_estoque'] = 0
+    item['estoque_origem'] = []
+    item['parcialmente_atendido_estoque'] = False
+    item['atendido_por_estoque'] = False
+    item['preco_estoque_unitario'] = None
+    
+    # Remover fonte de compra "ESTOQUE INTERNO" se existir
+    if item.get('fontes_compra'):
+        item['fontes_compra'] = [
+            fc for fc in item['fontes_compra'] 
+            if fc.get('fornecedor') != 'ESTOQUE INTERNO'
+        ]
+    
+    resultado['estoque_revertido'] = len(resultado['fontes_revertidas']) > 0
+    
+    return resultado
+
+
 def atualizar_data_compra(item: dict, novo_status: str) -> None:
     """
     Atualiza a data de compra do item automaticamente:
