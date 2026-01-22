@@ -1,6 +1,7 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File, Body
 from fastapi.security import HTTPBearer
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -8,6 +9,8 @@ import os
 import logging
 import asyncio
 from pathlib import Path
+import base64
+import shutil
 
 # Configure logging FIRST - before any logger usage
 logging.basicConfig(
