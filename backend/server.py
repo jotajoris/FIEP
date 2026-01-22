@@ -4822,6 +4822,7 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
                         'ocs_origem': [{
                             'numero_oc': po.get('numero_oc'),
                             'po_id': po.get('id'),
+                            'item_index': idx,  # Índice do item na OC
                             'quantidade_comprada': quantidade_comprada,
                             'quantidade_necessaria': quantidade_necessaria,
                             'quantidade_usada_estoque': quantidade_usada_estoque,
@@ -4836,6 +4837,7 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
                     estoque_map[codigo_item]['ocs_origem'].append({
                         'numero_oc': po.get('numero_oc'),
                         'po_id': po.get('id'),
+                        'item_index': idx,  # Índice do item na OC
                         'quantidade_comprada': quantidade_comprada,
                         'quantidade_necessaria': quantidade_necessaria,
                         'quantidade_usada_estoque': quantidade_usada_estoque,
