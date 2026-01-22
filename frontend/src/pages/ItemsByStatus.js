@@ -971,9 +971,12 @@ const ItemsByStatus = () => {
       // O backend agora atualiza automaticamente TODOS os itens com o mesmo código
       // Não é mais necessário propagar manualmente
       
+      // Atualizar timestamp de cache ANTES de recarregar para forçar refresh das imagens
+      setImageCacheTimestamp(Date.now());
+      
       // Recarregar mapa de imagens e itens
-      loadImagensItens();
-      loadItems();
+      await loadImagensItens();
+      await loadItems();
       
       alert(`✅ Imagem salva com sucesso!\n\nA imagem foi vinculada ao código ${item.codigo_item} e aparecerá automaticamente em todas as OCs.`);
     } catch (error) {
