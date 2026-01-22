@@ -4040,6 +4040,15 @@ Chave PIX: 46.663.556/0001-69`;
                             </div>
                           ) : (
                             <div 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Abrir seletor de arquivo para o primeiro item do grupo
+                                const firstItem = group.items[0];
+                                if (firstItem) {
+                                  const inputId = `img-input-group-${group.codigo_item}`;
+                                  document.getElementById(inputId)?.click();
+                                }
+                              }}
                               style={{ 
                                 width: '80px', 
                                 height: '80px', 
@@ -4049,12 +4058,29 @@ Chave PIX: 46.663.556/0001-69`;
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                flexShrink: 0
+                                flexShrink: 0,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
                               }}
+                              onMouseEnter={(e) => e.target.style.borderColor = '#3b82f6'}
+                              onMouseLeave={(e) => e.target.style.borderColor = '#cbd5e1'}
                             >
                               <span style={{ fontSize: '2rem', color: '#94a3b8' }}>📷</span>
                             </div>
                           )}
+                          {/* Input file escondido para upload no grupo */}
+                          <input
+                            id={`img-input-group-${group.codigo_item}`}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            onChange={(e) => {
+                              const firstItem = group.items[0];
+                              if (firstItem && e.target.files[0]) {
+                                handleImageUpload(firstItem, e.target.files[0]);
+                              }
+                            }}
+                            style={{ display: 'none' }}
+                          />
                         </div>
                         
                         <p style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
