@@ -1,0 +1,146 @@
+# Arquitetura de Refatoração do Backend FIEP OC
+
+## Estado Atual (Antes da Refatoração)
+
+O arquivo `server.py` possui ~6300 linhas contendo toda a lógica do sistema.
+
+## Estrutura de Diretórios Alvo
+
+```
+/app/backend/
+├── server.py                 # Entry point - apenas config e import de routers
+├── config.py                 # ✅ Configurações centralizadas
+├── auth.py                   # ✅ Autenticação JWT
+├── models/
+│   ├── __init__.py           # ✅ Re-exports
+│   └── schemas.py            # ✅ Pydantic models
+├── routes/
+│   ├── __init__.py
+│   ├── auth_routes.py        # ✅ Rotas de autenticação
+│   ├── item_routes.py        # ✅ Rotas de atualização de itens
+│   ├── rastreio_routes.py    # ✅ Rotas de rastreamento Correios
+│   ├── po_routes.py          # 🔄 Rotas de Purchase Orders (CRUD)
+│   ├── estoque_routes.py     # 🔄 Rotas de estoque
+│   ├── planilha_routes.py    # 🔄 Rotas de planilha de itens
+│   ├── nf_routes.py          # 🔄 Rotas de notas fiscais
+│   ├── admin_routes.py       # 🔄 Rotas administrativas (comissões, backup)
+│   └── notificacao_routes.py # 🔄 Rotas de notificações
+├── services/
+│   ├── __init__.py
+│   ├── email_service.py      # ✅ Serviço de envio de emails
+│   ├── pdf_service.py        # ✅ Extração de PDFs
+│   ├── estoque_service.py    # 🔄 Lógica de estoque
+│   └── rastreio_service.py   # 🔄 Lógica de rastreamento
+└── utils/
+    ├── __init__.py
+    ├── config.py             # ✅ Re-exports de config.py
+    └── database.py           # ✅ Conexão MongoDB
+```
+
+## Legendas
+- ✅ Implementado
+- 🔄 Pendente/Parcial
+
+## Módulos a Extrair do server.py
+
+### 1. po_routes.py (~1500 linhas)
+- `POST /purchase-orders/preview-pdf`
+- `POST /purchase-orders/upload-pdf`
+- `POST /purchase-orders/upload-multiple-pdfs`
+- `GET /purchase-orders/check-duplicate/{numero_oc}`
+- `POST /purchase-orders` (create)
+- `GET /purchase-orders` (list)
+- `GET /purchase-orders/list/simple`
+- `GET /purchase-orders/{po_id}`
+- `DELETE /purchase-orders/{po_id}`
+- `PUT /purchase-orders/{po_id}`
+- `PATCH /purchase-orders/{po_id}/data-entrega`
+
+### 2. estoque_routes.py (~800 linhas)
+- `GET /estoque`
+- `GET /estoque/mapa`
+- `GET /estoque/detalhes/{codigo_item}`
+- `POST /estoque/usar`
+- `PATCH /estoque/ajustar`
+- `DELETE /estoque/limpar/{po_id}/{item_index}`
+- `POST /estoque/resetar-uso/{po_id}/{item_index}`
+- `POST /admin/limpar-dados-estoque-inconsistentes`
+
+### 3. planilha_routes.py (~400 linhas)
+- `GET /planilha-itens`
+- `GET /planilha-contrato`
+- `GET /limites-contrato`
+- `GET /limites-contrato/mapa`
+- `POST /admin/importar-limites-contrato`
+
+### 4. nf_routes.py (~600 linhas)
+- Rotas de Notas Fiscais de Fornecedor
+- Rotas de NF de Venda da OC
+- Upload de arquivos XML/PDF
+- Extração de NCM
+
+### 5. admin_routes.py (~500 linhas)
+- `GET /admin/summary`
+- `GET /backup/export`
+- `POST /backup/restore`
+- `POST /backup/restore-data`
+- `GET/POST/PUT/DELETE /admin/commission-payments`
+- `POST /purchase-orders/fix-responsaveis`
+- `POST /purchase-orders/normalize-fornecedores`
+
+### 6. notificacao_routes.py (~150 linhas)
+- `GET /notificacoes`
+- `PATCH /notificacoes/{id}/marcar-lida`
+- `POST /notificacoes/marcar-todas-lidas`
+
+## Dependências Entre Módulos
+
+```
+server.py
+  └── routes/
+        ├── auth_routes.py → auth.py, services/email_service.py
+        ├── po_routes.py → services/pdf_service.py, config.py
+        ├── item_routes.py → config.py (TAX_PERCENTAGE)
+        ├── rastreio_routes.py → (httpx)
+        ├── estoque_routes.py → reverter_uso_estoque (função)
+        └── planilha_routes.py → config.py
+```
+
+## Funções Helper a Extrair para services/
+
+### estoque_service.py
+- `reverter_uso_estoque(item, po_id, numero_oc)` - Reverte uso de estoque quando item volta para pendente
+
+### pdf_service.py (já existe)
+- `extract_oc_from_pdf(pdf_bytes)` - Extrai dados de OC do PDF
+- `extract_data_entrega_from_pdf(pdf_bytes)` - Extrai data de entrega do PDF
+
+## Prioridade de Refatoração
+
+1. **Alta** - Módulos já implementados precisam ser usados no server.py
+2. **Média** - po_routes.py e estoque_routes.py (maior volume de código)
+3. **Baixa** - admin_routes.py, nf_routes.py (menos alterados)
+
+## Como Integrar Novos Módulos
+
+```python
+# server.py
+from routes.auth_routes import router as auth_router
+from routes.item_routes import router as item_router
+from routes.rastreio_routes import router as rastreio_router
+# ...
+
+api_router.include_router(auth_router)
+api_router.include_router(item_router)
+api_router.include_router(rastreio_router)
+```
+
+## Notas Importantes
+
+1. Os módulos em `routes/` já existentes (auth_routes.py, item_routes.py) NÃO estão sendo usados no server.py atual
+2. O server.py contém código duplicado com os módulos
+3. A função `reverter_uso_estoque` precisa ser movida para um service antes de ser importada em estoque_routes.py
+4. APScheduler (background tasks) deve permanecer em server.py
+
+---
+Última atualização: 22/01/2026
