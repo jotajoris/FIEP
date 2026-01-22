@@ -1057,8 +1057,6 @@ const ItemsByStatus = () => {
   };
   
   const saveGroupEdit = async (items) => {
-    const token = localStorage.getItem('token');
-    
     try {
       // Se é edição individual, só salvar um item
       const itemsToSave = groupEditMode === 'individual' 
