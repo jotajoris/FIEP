@@ -5816,6 +5816,8 @@ Chave PIX: 46.663.556/0001-69`;
                               <span style={{ fontSize: '2rem', color: '#94a3b8' }}>📷</span>
                             )}
                           </div>
+                            );
+                          })()}
                           <input
                             id={`img-input-${item._uniqueId}`}
                             type="file"
