@@ -3988,8 +3988,11 @@ async def upload_item_image(
     Aceita: JPEG, PNG, WebP, GIF (máx 5MB)
     A imagem é salva no servidor e a URL é armazenada no item.
     """
+    logger.info(f"Upload de imagem recebido: po_id={po_id}, item_index={item_index}, filename={file.filename}, content_type={file.content_type}")
+    
     # Verificar tipo de arquivo
     if file.content_type not in ALLOWED_IMAGE_TYPES:
+        logger.warning(f"Tipo de arquivo rejeitado: {file.content_type}")
         raise HTTPException(
             status_code=400, 
             detail=f"Tipo de arquivo não permitido. Use: {', '.join(ALLOWED_IMAGE_TYPES)}"
@@ -3997,6 +4000,7 @@ async def upload_item_image(
     
     # Ler arquivo
     contents = await file.read()
+    logger.info(f"Arquivo lido: {len(contents)} bytes")
     
     # Verificar tamanho
     if len(contents) > MAX_IMAGE_SIZE:
