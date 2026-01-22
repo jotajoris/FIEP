@@ -5278,14 +5278,95 @@ Chave PIX: 46.663.556/0001-69`;
                         
                         {status !== 'cotado' && <div></div>}
 
-                        <button 
-                          onClick={() => startEdit(item)} 
-                          className="btn btn-secondary" 
-                          style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} 
-                          data-testid={`edit-item-${item._uniqueId}`}
-                        >
-                          Editar
-                        </button>
+                        {/* ===== ÁREA DE IMAGEM + BOTÃO EDITAR ===== */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          {/* Miniatura de Imagem ou Botão Upload */}
+                          <div 
+                            style={{ 
+                              width: '60px', 
+                              height: '60px', 
+                              borderRadius: '8px',
+                              border: item.imagem_url ? '2px solid #22c55e' : '2px dashed #cbd5e1',
+                              background: dragOver === item._uniqueId ? '#dbeafe' : (item.imagem_url ? 'transparent' : '#f8fafc'),
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              overflow: 'hidden',
+                              position: 'relative',
+                              transition: 'all 0.2s'
+                            }}
+                            onDragOver={(e) => handleDragOver(e, item._uniqueId)}
+                            onDragLeave={handleDragLeave}
+                            onDrop={(e) => handleDrop(e, item)}
+                            onClick={() => {
+                              if (item.imagem_url) {
+                                setImagemExpandida(`${API}${item.imagem_url}`);
+                              } else {
+                                document.getElementById(`img-input-${item._uniqueId}`).click();
+                              }
+                            }}
+                            data-testid={`image-zone-${item.codigo_item}`}
+                          >
+                            {item.imagem_url ? (
+                              <>
+                                <img 
+                                  src={`${API}${item.imagem_url}`} 
+                                  alt={`Imagem ${item.codigo_item}`}
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                  data-testid={`image-thumbnail-${item.codigo_item}`}
+                                />
+                                {/* Botão remover no canto */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteImage(item);
+                                  }}
+                                  style={{
+                                    position: 'absolute',
+                                    top: '-6px',
+                                    right: '-6px',
+                                    width: '20px',
+                                    height: '20px',
+                                    borderRadius: '50%',
+                                    background: '#ef4444',
+                                    color: 'white',
+                                    border: 'none',
+                                    fontSize: '0.7rem',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
+                                  data-testid={`delete-image-btn-${item.codigo_item}`}
+                                >
+                                  ✕
+                                </button>
+                              </>
+                            ) : uploadingImage === item._uniqueId ? (
+                              <span style={{ fontSize: '0.7rem', color: '#64748b' }}>⏳</span>
+                            ) : (
+                              <span style={{ fontSize: '1.5rem', color: '#94a3b8' }}>📷</span>
+                            )}
+                          </div>
+                          <input
+                            id={`img-input-${item._uniqueId}`}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            onChange={(e) => handleImageUpload(item, e.target.files[0])}
+                            style={{ display: 'none' }}
+                            disabled={uploadingImage === item._uniqueId}
+                          />
+                          
+                          <button 
+                            onClick={() => startEdit(item)} 
+                            className="btn btn-secondary" 
+                            style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} 
+                            data-testid={`edit-item-${item._uniqueId}`}
+                          >
+                            Editar
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
