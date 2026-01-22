@@ -123,6 +123,7 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <UpdateNotification />
         <AppRoutes />
       </BrowserRouter>
     </AuthProvider>
