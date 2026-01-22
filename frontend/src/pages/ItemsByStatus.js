@@ -4014,7 +4014,11 @@ Chave PIX: 46.663.556/0001-69`;
                                 )}
                               </div>
                               <button
-                                onClick={() => startEdit(item)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setViewMode('normal');  // Voltar para visualização normal
+                                  setTimeout(() => startEdit(item), 100);  // Editar após mudar view
+                                }}
                                 style={{
                                   padding: '0.4rem 0.8rem',
                                   background: '#667eea',
