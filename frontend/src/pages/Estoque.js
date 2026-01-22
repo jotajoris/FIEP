@@ -284,6 +284,25 @@ const Estoque = () => {
           >
             ➕ Adicionar ao Estoque
           </button>
+          <button
+            onClick={handleLimparDadosInconsistentes}
+            data-testid="btn-limpar-inconsistentes"
+            style={{
+              background: '#f59e0b',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1.25rem',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+            title="Corrige dados de estoque em itens pendentes/cotados"
+          >
+            🔧 Corrigir Dados
+          </button>
           <div style={{ 
             background: '#dcfce7', 
             padding: '1rem 1.5rem', 
