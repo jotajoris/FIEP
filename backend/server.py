@@ -3965,6 +3965,141 @@ async def update_endereco_entrega_v2(
     
     return {"success": True, "message": "Endereço atualizado com sucesso"}
 
+
+# ============== ENDPOINTS DE IMAGEM DE ITEM ==============
+
+UPLOAD_DIR = Path(__file__).parent / "uploads" / "item_images"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+# Tipos de imagem permitidos
+ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
+
+
+@api_router.post("/purchase-orders/{po_id}/items/by-index/{item_index}/imagem")
+async def upload_item_image(
+    po_id: str,
+    item_index: int,
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Upload de imagem para um item.
+    Aceita: JPEG, PNG, WebP, GIF (máx 5MB)
+    A imagem é salva no servidor e a URL é armazenada no item.
+    """
+    # Verificar tipo de arquivo
+    if file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Tipo de arquivo não permitido. Use: {', '.join(ALLOWED_IMAGE_TYPES)}"
+        )
+    
+    # Ler arquivo
+    contents = await file.read()
+    
+    # Verificar tamanho
+    if len(contents) > MAX_IMAGE_SIZE:
+        raise HTTPException(status_code=400, detail="Arquivo muito grande. Máximo: 5MB")
+    
+    # Buscar OC
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not po:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    if item_index < 0 or item_index >= len(po['items']):
+        raise HTTPException(status_code=404, detail="Índice de item inválido")
+    
+    item = po['items'][item_index]
+    codigo_item = item.get('codigo_item', 'unknown')
+    
+    # Gerar nome único para o arquivo
+    ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+    unique_id = str(uuid.uuid4())[:8]
+    filename = f"{codigo_item}_{unique_id}.{ext}"
+    filepath = UPLOAD_DIR / filename
+    
+    # Salvar arquivo
+    with open(filepath, "wb") as f:
+        f.write(contents)
+    
+    # Atualizar item com URL da imagem
+    imagem_url = f"/api/item-images/{filename}"
+    item['imagem_url'] = imagem_url
+    item['imagem_filename'] = filename
+    
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    logger.info(f"Imagem salva para item {codigo_item}: {filename}")
+    
+    return {
+        "success": True,
+        "imagem_url": imagem_url,
+        "filename": filename,
+        "message": "Imagem enviada com sucesso"
+    }
+
+
+@api_router.delete("/purchase-orders/{po_id}/items/by-index/{item_index}/imagem")
+async def delete_item_image(
+    po_id: str,
+    item_index: int,
+    current_user: dict = Depends(get_current_user)
+):
+    """Remove a imagem de um item"""
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not po:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    if item_index < 0 or item_index >= len(po['items']):
+        raise HTTPException(status_code=404, detail="Índice de item inválido")
+    
+    item = po['items'][item_index]
+    
+    # Remover arquivo físico se existir
+    filename = item.get('imagem_filename')
+    if filename:
+        filepath = UPLOAD_DIR / filename
+        if filepath.exists():
+            filepath.unlink()
+    
+    # Limpar campos de imagem
+    item['imagem_url'] = None
+    item['imagem_filename'] = None
+    
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    return {"success": True, "message": "Imagem removida com sucesso"}
+
+
+@api_router.get("/item-images/{filename}")
+async def get_item_image(filename: str):
+    """Servir imagem de item"""
+    filepath = UPLOAD_DIR / filename
+    
+    if not filepath.exists():
+        raise HTTPException(status_code=404, detail="Imagem não encontrada")
+    
+    # Determinar content type
+    ext = filename.split('.')[-1].lower()
+    content_types = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'webp': 'image/webp',
+        'gif': 'image/gif'
+    }
+    content_type = content_types.get(ext, 'image/jpeg')
+    
+    return FileResponse(filepath, media_type=content_type)
+
+
 # ============== ENDPOINTS ADMIN - COMISSÕES E NOTAS FISCAIS ==============
 
 class ComissaoUpdate(BaseModel):
