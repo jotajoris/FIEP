@@ -5037,6 +5037,10 @@ async def verificar_estoque_item(codigo_item: str, current_user: dict = Depends(
                 if status not in ['comprado', 'em_separacao', 'em_transito', 'entregue']:
                     continue
                 
+                # IMPORTANTE: Itens que foram atendidos pelo estoque não geram excedente
+                if item.get('atendido_por_estoque'):
+                    continue
+                
                 quantidade_necessaria = item.get('quantidade', 0)
                 
                 # Calcular quantidade comprada: priorizar fontes de compra
