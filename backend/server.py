@@ -2277,6 +2277,7 @@ async def update_item_by_index(
         raise HTTPException(status_code=404, detail="Índice de item inválido")
     
     item = po['items'][item_index]
+    status_anterior = item.get('status', 'pendente')
     
     # Atualizar campos se fornecidos
     if update.descricao is not None:
@@ -2292,6 +2293,16 @@ async def update_item_by_index(
     if update.marca_modelo is not None:
         item['marca_modelo'] = update.marca_modelo
     if update.status is not None:
+        # VERIFICAR SE PRECISA REVERTER USO DE ESTOQUE
+        status_antes_compra = ['pendente', 'cotado']
+        status_apos_compra = ['comprado', 'em_separacao', 'em_transito', 'entregue']
+        
+        if update.status in status_antes_compra and status_anterior in status_apos_compra:
+            if item.get('estoque_origem') or item.get('atendido_por_estoque'):
+                logger.info(f"Item voltando para {update.status} via full update, revertendo uso de estoque...")
+                resultado_reversao = await reverter_uso_estoque(item, po_id, po.get('numero_oc', ''))
+                logger.info(f"Resultado da reversão de estoque: {resultado_reversao}")
+        
         item['status'] = update.status
         atualizar_data_compra(item, update.status)  # Atualiza data de compra automaticamente
     if update.preco_venda is not None:
