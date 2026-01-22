@@ -4860,6 +4860,104 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
     }
 
 
+@api_router.patch("/estoque/ajustar")
+async def ajustar_estoque(
+    data: dict,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Ajusta manualmente a quantidade de estoque de um item em uma OC específica.
+    Usado para corrigir erros de contagem.
+    
+    Body:
+    {
+        "po_id": "...",
+        "item_index": 0,
+        "nova_quantidade_comprada": 15  // Nova quantidade total comprada
+    }
+    """
+    po_id = data.get('po_id')
+    item_index = data.get('item_index')
+    nova_qtd = data.get('nova_quantidade_comprada')
+    
+    if not po_id or item_index is None or nova_qtd is None:
+        raise HTTPException(status_code=400, detail="Dados inválidos")
+    
+    # Buscar OC
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not po:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    if item_index < 0 or item_index >= len(po.get('items', [])):
+        raise HTTPException(status_code=400, detail="Índice de item inválido")
+    
+    item = po['items'][item_index]
+    
+    # Atualizar quantidade comprada
+    item['quantidade_comprada'] = nova_qtd
+    
+    # Se tem fontes de compra, ajustar a primeira fonte
+    fontes = item.get('fontes_compra', [])
+    if fontes and len(fontes) > 0:
+        fontes[0]['quantidade'] = nova_qtd
+    
+    # Salvar
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    return {
+        "success": True,
+        "mensagem": f"Quantidade de estoque ajustada para {nova_qtd}"
+    }
+
+
+@api_router.delete("/estoque/limpar/{po_id}/{item_index}")
+async def limpar_estoque(
+    po_id: str,
+    item_index: int,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Remove o excedente de estoque de um item específico.
+    Define a quantidade comprada igual à quantidade necessária.
+    """
+    # Buscar OC
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not po:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    if item_index < 0 or item_index >= len(po.get('items', [])):
+        raise HTTPException(status_code=400, detail="Índice de item inválido")
+    
+    item = po['items'][item_index]
+    quantidade_necessaria = item.get('quantidade', 0)
+    
+    # Definir quantidade comprada igual à necessária (remove excedente)
+    item['quantidade_comprada'] = quantidade_necessaria
+    item['quantidade_usada_estoque'] = 0  # Resetar uso
+    item['estoque_usado_em'] = []  # Limpar histórico de uso
+    
+    # Se tem fontes de compra, ajustar
+    fontes = item.get('fontes_compra', [])
+    if fontes and len(fontes) > 0:
+        fontes[0]['quantidade'] = quantidade_necessaria
+        # Remover fontes extras se houver
+        item['fontes_compra'] = [fontes[0]]
+    
+    # Salvar
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    return {
+        "success": True,
+        "mensagem": f"Estoque limpo. Quantidade definida para {quantidade_necessaria}"
+    }
+
+
 @api_router.get("/estoque/mapa")
 async def get_estoque_mapa(current_user: dict = Depends(get_current_user)):
     """
