@@ -5774,7 +5774,7 @@ Chave PIX: 46.663.556/0001-69`;
                             onDrop={(e) => handleDrop(e, item)}
                             onClick={() => {
                               if (imagemUrl) {
-                                setImagemExpandida(`${BACKEND_URL}${imagemUrl}`);
+                                setImagemExpandida(`${BACKEND_URL}${imagemUrl}?t=${imageCacheTimestamp}`);
                               } else {
                                 document.getElementById(`img-input-${item._uniqueId}`).click();
                               }
