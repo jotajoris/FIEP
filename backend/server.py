@@ -5146,10 +5146,12 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
                         'data_compra': item.get('data_compra'),
                         'usado_em': estoque_usado_em  # Para quais OCs foi usado
                     })
-                    # Atualiza link/fornecedor se não tinha
+                    # Atualiza link/fornecedor/imagem se não tinha
                     if not estoque_map[codigo_item]['link_compra'] and link_compra:
                         estoque_map[codigo_item]['link_compra'] = link_compra
                         estoque_map[codigo_item]['fornecedor'] = fornecedor
+                    if not estoque_map[codigo_item].get('imagem_url') and item.get('imagem_url'):
+                        estoque_map[codigo_item]['imagem_url'] = item.get('imagem_url')
     
     # Converter para lista
     estoque_list = list(estoque_map.values())
