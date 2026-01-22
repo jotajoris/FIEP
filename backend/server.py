@@ -4985,6 +4985,10 @@ async def get_estoque_mapa(current_user: dict = Depends(get_current_user)):
             if status not in ['comprado', 'em_separacao', 'em_transito', 'entregue']:
                 continue
             
+            # IMPORTANTE: Itens que foram atendidos pelo estoque não geram novo excedente
+            if item.get('atendido_por_estoque'):
+                continue
+            
             # Calcular quantidade comprada: priorizar fontes de compra
             fontes = item.get('fontes_compra', [])
             if fontes:
