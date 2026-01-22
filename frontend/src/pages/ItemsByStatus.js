@@ -5596,7 +5596,7 @@ Chave PIX: 46.663.556/0001-69`;
                             onDrop={(e) => handleDrop(e, item)}
                             onClick={() => {
                               if (item.imagem_url) {
-                                setImagemExpandida(`${API}${item.imagem_url}`);
+                                setImagemExpandida(`${BACKEND_URL}${item.imagem_url}`);
                               } else {
                                 document.getElementById(`img-input-${item._uniqueId}`).click();
                               }
