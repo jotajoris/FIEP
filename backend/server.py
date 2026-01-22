@@ -4780,6 +4780,11 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
             if status not in ['comprado', 'em_separacao', 'em_transito', 'entregue']:
                 continue
             
+            # IMPORTANTE: Itens que foram atendidos pelo estoque não geram novo excedente
+            # Eles apenas consumiram do estoque de outro item
+            if item.get('atendido_por_estoque'):
+                continue
+            
             # Calcular quantidade comprada:
             # Prioridade: somar quantidades das fontes de compra (mais preciso)
             # Se não tem fontes, usar o campo quantidade_comprada
