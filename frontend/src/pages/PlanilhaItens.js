@@ -354,24 +354,28 @@ const PlanilhaItens = () => {
                       {item.quantidade_contrato || item.quantidade_total_necessaria} {item.unidade}
                     </span>
                   </td>
-                  <td style={{ padding: '1rem', textAlign: 'center' }}>
+                  <td style={{ padding: '1rem', textAlign: 'center', minWidth: '90px' }}>
                     <span style={{
                       background: item.quantidade_comprada > 0 ? '#22c55e' : '#e2e8f0',
                       color: item.quantidade_comprada > 0 ? 'white' : '#6b7280',
                       padding: '0.25rem 0.5rem',
                       borderRadius: '12px',
-                      fontWeight: '600'
+                      fontWeight: '600',
+                      whiteSpace: 'nowrap',
+                      display: 'inline-block'
                     }}>
                       {item.quantidade_comprada || item.quantidade_total_comprada || 0}
                     </span>
                   </td>
-                  <td style={{ padding: '1rem', textAlign: 'center' }}>
+                  <td style={{ padding: '1rem', textAlign: 'center', minWidth: '90px' }}>
                     <span style={{
                       background: item.quantidade_faltante > 0 ? '#ef4444' : '#22c55e',
                       color: 'white',
                       padding: '0.25rem 0.5rem',
                       borderRadius: '12px',
-                      fontWeight: '600'
+                      fontWeight: '600',
+                      whiteSpace: 'nowrap',
+                      display: 'inline-block'
                     }}>
                       {item.quantidade_faltante > 0 ? item.quantidade_faltante : '✓'}
                     </span>
