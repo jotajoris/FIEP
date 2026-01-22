@@ -530,6 +530,222 @@ const Estoque = () => {
                 {salvando ? 'Salvando...' : 'Salvar'}
               </button>
             </div>
+            
+            {/* Preview do novo estoque */}
+            {novaQuantidade !== editingOC.quantidade_comprada && (
+              <div style={{
+                marginTop: '1rem',
+                padding: '0.75rem',
+                background: '#f0f9ff',
+                borderRadius: '8px',
+                fontSize: '0.85rem'
+              }}>
+                <div>Quantidade necessária: <strong>{editingOC.quantidade_necessaria}</strong></div>
+                <div>Nova quantidade comprada: <strong>{novaQuantidade}</strong></div>
+                <div style={{ 
+                  marginTop: '0.5rem',
+                  color: novaQuantidade > editingOC.quantidade_necessaria ? '#059669' : '#f59e0b'
+                }}>
+                  {novaQuantidade > editingOC.quantidade_necessaria 
+                    ? `✅ Novo estoque: ${novaQuantidade - editingOC.quantidade_necessaria} UN`
+                    : `⚠️ Sem excedente para estoque`
+                  }
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* Modal de Adicionar ao Estoque */}
+      {showAddModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            padding: '2rem',
+            width: '90%',
+            maxWidth: '500px',
+            maxHeight: '80vh',
+            overflow: 'auto',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+          }}>
+            <h2 style={{ margin: '0 0 1.5rem 0', color: '#1e293b' }}>
+              ➕ Adicionar ao Estoque
+            </h2>
+            
+            {/* Busca por código */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                Código do Item:
+              </label>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input
+                  type="text"
+                  value={codigoBusca}
+                  onChange={(e) => setCodigoBusca(e.target.value.toUpperCase())}
+                  placeholder="Digite o código do item"
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    border: '2px solid #e2e8f0',
+                    fontSize: '1rem'
+                  }}
+                  onKeyPress={(e) => e.key === 'Enter' && buscarItem()}
+                />
+                <button
+                  onClick={buscarItem}
+                  disabled={buscando || !codigoBusca.trim()}
+                  style={{
+                    padding: '0.75rem 1.25rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: buscando ? '#94a3b8' : '#3b82f6',
+                    color: 'white',
+                    cursor: buscando ? 'not-allowed' : 'pointer',
+                    fontWeight: '600'
+                  }}
+                >
+                  {buscando ? '🔄' : '🔍 Buscar'}
+                </button>
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.5rem' }}>
+                O item deve estar em status "Comprado" ou superior para aparecer no estoque
+              </div>
+            </div>
+            
+            {/* Item encontrado */}
+            {itemEncontrado && (
+              <div style={{ 
+                background: '#f0fdf4', 
+                padding: '1rem', 
+                borderRadius: '8px',
+                marginBottom: '1.5rem',
+                border: '2px solid #22c55e'
+              }}>
+                <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>
+                  ✅ Item encontrado:
+                </div>
+                <div style={{ fontSize: '0.9rem', color: '#374151' }}>
+                  <strong>Código:</strong> {itemEncontrado.codigo_item}<br />
+                  <strong>Descrição:</strong> {itemEncontrado.descricao?.substring(0, 80)}...<br />
+                  <strong>OC:</strong> {itemEncontrado.numero_oc}<br />
+                  <strong>Status:</strong> {itemEncontrado.status}
+                </div>
+                
+                {/* Quantidade a adicionar */}
+                <div style={{ marginTop: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Quantidade a adicionar:
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={addQuantidade}
+                    onChange={(e) => setAddQuantidade(parseInt(e.target.value) || 0)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      borderRadius: '8px',
+                      border: '2px solid #e2e8f0',
+                      fontSize: '1rem'
+                    }}
+                  />
+                </div>
+                
+                {/* Preço unitário */}
+                <div style={{ marginTop: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Preço unitário (R$):
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={addPreco}
+                    onChange={(e) => setAddPreco(parseFloat(e.target.value) || 0)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      borderRadius: '8px',
+                      border: '2px solid #e2e8f0',
+                      fontSize: '1rem'
+                    }}
+                  />
+                </div>
+                
+                {/* Fornecedor */}
+                <div style={{ marginTop: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Fornecedor/Origem:
+                  </label>
+                  <input
+                    type="text"
+                    value={addFornecedor}
+                    onChange={(e) => setAddFornecedor(e.target.value.toUpperCase())}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      borderRadius: '8px',
+                      border: '2px solid #e2e8f0',
+                      fontSize: '1rem'
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+            
+            {/* Botões */}
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowAddModal(false);
+                  setCodigoBusca('');
+                  setItemEncontrado(null);
+                  setAddQuantidade(0);
+                  setAddPreco(0);
+                }}
+                style={{
+                  padding: '0.75rem 1.25rem',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  background: 'white',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                Cancelar
+              </button>
+              {itemEncontrado && (
+                <button
+                  onClick={adicionarAoEstoque}
+                  disabled={salvando || addQuantidade <= 0}
+                  style={{
+                    padding: '0.75rem 1.25rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: salvando || addQuantidade <= 0 ? '#94a3b8' : '#10b981',
+                    color: 'white',
+                    cursor: salvando || addQuantidade <= 0 ? 'not-allowed' : 'pointer',
+                    fontWeight: '600'
+                  }}
+                >
+                  {salvando ? '⏳ Adicionando...' : '✅ Adicionar ao Estoque'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
