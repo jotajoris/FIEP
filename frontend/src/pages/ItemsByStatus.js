@@ -982,7 +982,7 @@ const ItemsByStatus = () => {
   };
   
   const handleDeleteImage = async (item) => {
-    if (!window.confirm('Remover imagem deste item?')) return;
+    if (!window.confirm(`Remover imagem do item ${item.codigo_item}?\n\nA imagem será removida de TODAS as OCs com este código.`)) return;
     
     setUploadingImage(item._uniqueId);
     
@@ -1003,6 +1003,8 @@ const ItemsByStatus = () => {
         throw new Error(error.detail || 'Erro ao remover imagem');
       }
       
+      // Recarregar mapa de imagens e itens
+      loadImagensItens();
       loadItems();
     } catch (error) {
       console.error('Erro ao remover imagem:', error);
