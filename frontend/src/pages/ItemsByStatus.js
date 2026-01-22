@@ -5285,8 +5285,8 @@ Chave PIX: 46.663.556/0001-69`;
                           {/* Miniatura de Imagem ou Botão Upload */}
                           <div 
                             style={{ 
-                              width: '60px', 
-                              height: '60px', 
+                              width: '80px', 
+                              height: '80px', 
                               borderRadius: '8px',
                               border: item.imagem_url ? '2px solid #22c55e' : '2px dashed #cbd5e1',
                               background: dragOver === item._uniqueId ? '#dbeafe' : (item.imagem_url ? 'transparent' : '#f8fafc'),
@@ -5316,6 +5316,10 @@ Chave PIX: 46.663.556/0001-69`;
                                   src={`${API}${item.imagem_url}`} 
                                   alt={`Imagem ${item.codigo_item}`}
                                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.parentElement.innerHTML = '<span style="font-size: 1.5rem; color: #ef4444;">⚠️</span>';
+                                  }}
                                   data-testid={`image-thumbnail-${item.codigo_item}`}
                                 />
                                 {/* Botão remover no canto */}
@@ -5328,17 +5332,18 @@ Chave PIX: 46.663.556/0001-69`;
                                     position: 'absolute',
                                     top: '-6px',
                                     right: '-6px',
-                                    width: '20px',
-                                    height: '20px',
+                                    width: '22px',
+                                    height: '22px',
                                     borderRadius: '50%',
                                     background: '#ef4444',
                                     color: 'white',
-                                    border: 'none',
+                                    border: '2px solid white',
                                     fontSize: '0.7rem',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent: 'center'
+                                    justifyContent: 'center',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                                   }}
                                   data-testid={`delete-image-btn-${item.codigo_item}`}
                                 >
@@ -5346,9 +5351,9 @@ Chave PIX: 46.663.556/0001-69`;
                                 </button>
                               </>
                             ) : uploadingImage === item._uniqueId ? (
-                              <span style={{ fontSize: '0.7rem', color: '#64748b' }}>⏳</span>
+                              <span style={{ fontSize: '0.8rem', color: '#64748b' }}>⏳</span>
                             ) : (
-                              <span style={{ fontSize: '1.5rem', color: '#94a3b8' }}>📷</span>
+                              <span style={{ fontSize: '2rem', color: '#94a3b8' }}>📷</span>
                             )}
                           </div>
                           <input
