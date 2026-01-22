@@ -200,12 +200,14 @@ const Estoque = () => {
   };
 
   // Abrir modal de edição
-  const abrirEdicao = (oc) => {
+  const abrirEdicao = (oc, codigoItem) => {
     setEditingOC({
       po_id: oc.po_id,
       item_index: oc.item_index,
       numero_oc: oc.numero_oc,
-      quantidade_comprada: oc.quantidade_comprada
+      quantidade_comprada: oc.quantidade_comprada,
+      quantidade_necessaria: oc.quantidade_necessaria,
+      codigo_item: codigoItem
     });
     setNovaQuantidade(oc.quantidade_comprada);
   };
