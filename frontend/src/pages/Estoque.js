@@ -382,7 +382,7 @@ const Estoque = () => {
                             </Link>
                             <div style={{ display: 'flex', gap: '0.25rem' }}>
                               <button
-                                onClick={() => abrirEdicao(oc)}
+                                onClick={() => abrirEdicao(oc, item.codigo_item)}
                                 style={{
                                   background: '#f59e0b',
                                   color: 'white',
