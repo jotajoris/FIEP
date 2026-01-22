@@ -26,6 +26,7 @@ db = client[os.environ['DB_NAME']]
 # Resend (email)
 RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
 SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'onboarding@resend.dev')
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
 
 # Mapeamento de lotes para responsáveis
 LOT_ASSIGNMENTS = {
@@ -71,7 +72,15 @@ INITIAL_USERS = [
 
 DEFAULT_PASSWORD = "on123456"
 
+# Status de itens que são considerados "comprados"
+STATUS_COMPRADO_OU_ADIANTE = ['comprado', 'em_separacao', 'em_transito', 'entregue']
+
 
 def get_responsible_by_lot(lot_number: int) -> str:
     """Retorna o responsável baseado no número do lote"""
     return LOT_TO_OWNER.get(lot_number, "Não atribuído")
+
+
+def get_logger(name: str = __name__):
+    """Retorna um logger configurado"""
+    return logging.getLogger(name)
