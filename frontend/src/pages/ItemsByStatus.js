@@ -957,6 +957,80 @@ const ItemsByStatus = () => {
     }
   };
   
+  // ================== FUNÇÕES DE EDIÇÃO EM GRUPO ==================
+  
+  const startGroupEdit = (codigoItem, mode = 'individual', item = null) => {
+    setEditingGroupCode(codigoItem);
+    setGroupEditMode(mode);
+    setEditingGroupItem(item ? item._uniqueId : null);
+    
+    if (mode === 'individual' && item) {
+      // Preencher com dados do item individual
+      setGroupFormData({
+        preco_unitario: item.fontes_compra?.[0]?.preco_unitario || '',
+        fornecedor: item.fontes_compra?.[0]?.fornecedor || '',
+        link: item.fontes_compra?.[0]?.link || ''
+      });
+    } else {
+      // Limpar para edição em grupo
+      setGroupFormData({
+        preco_unitario: '',
+        fornecedor: '',
+        link: ''
+      });
+    }
+  };
+  
+  const cancelGroupEdit = () => {
+    setEditingGroupCode(null);
+    setGroupEditMode('individual');
+    setEditingGroupItem(null);
+    setGroupFormData({ preco_unitario: '', fornecedor: '', link: '' });
+  };
+  
+  const saveGroupEdit = async (items) => {
+    const token = localStorage.getItem('token');
+    
+    try {
+      // Se é edição individual, só salvar um item
+      const itemsToSave = groupEditMode === 'individual' 
+        ? items.filter(i => i._uniqueId === editingGroupItem)
+        : items;
+      
+      for (const item of itemsToSave) {
+        const fontesCompra = [{
+          quantidade: item.quantidade || 1,
+          preco_unitario: parseFloat(groupFormData.preco_unitario) || 0,
+          frete: 0,
+          link: groupFormData.link || '',
+          fornecedor: groupFormData.fornecedor || ''
+        }];
+        
+        await axios.patch(
+          `${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}`,
+          {
+            status: 'cotado',
+            fontes_compra: fontesCompra
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
+      
+      cancelGroupEdit();
+      loadItems();
+      
+      const msg = groupEditMode === 'all' 
+        ? `${itemsToSave.length} item(ns) cotados com sucesso!`
+        : 'Item cotado com sucesso!';
+      alert(msg);
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      alert('Erro ao salvar: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+  
+  // ================== FIM FUNÇÕES DE EDIÇÃO EM GRUPO ==================
+  
   const handleDragOver = (e, itemId) => {
     e.preventDefault();
     e.stopPropagation();
