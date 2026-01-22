@@ -240,6 +240,9 @@ const ItemsByStatus = () => {
   
   // Mapa de imagens por código de item
   const [imagensItens, setImagensItens] = useState({});
+  
+  // Timestamp de cache para forçar reload de imagens - atualizado apenas após upload/delete
+  const [imageCacheTimestamp, setImageCacheTimestamp] = useState(Date.now());
 
   const statusLabels = {
     'pendente': 'Pendentes',
