@@ -909,7 +909,7 @@ const ItemsByStatus = () => {
 
   // ================== FUNÇÕES DE UPLOAD DE IMAGEM ==================
   
-  const handleImageUpload = async (item, file) => {
+  const handleImageUpload = async (item, file, groupItems = null) => {
     if (!file) return;
     
     // Validar tipo
@@ -948,7 +948,38 @@ const ItemsByStatus = () => {
         throw new Error(error.detail || 'Erro ao enviar imagem');
       }
       
-      await response.json();
+      const result = await response.json();
+      
+      // Se tiver groupItems, propagar a imagem para todos os outros itens do grupo
+      if (groupItems && groupItems.length > 1 && result.imagem_url) {
+        console.log(`Propagando imagem para ${groupItems.length - 1} outros itens do grupo`);
+        
+        for (const groupItem of groupItems) {
+          // Pular o item que já recebeu a imagem
+          if (groupItem._uniqueId === item._uniqueId) continue;
+          
+          try {
+            // Copiar a imagem para os outros itens usando PATCH
+            await fetch(
+              `${API}/purchase-orders/${groupItem.po_id}/items/by-index/${groupItem._itemIndexInPO}/copiar-imagem`,
+              {
+                method: 'PATCH',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  imagem_url: result.imagem_url,
+                  imagem_filename: result.filename
+                })
+              }
+            );
+          } catch (err) {
+            console.warn(`Erro ao propagar imagem para item ${groupItem._uniqueId}:`, err);
+          }
+        }
+      }
+      
       loadItems();
     } catch (error) {
       console.error('Erro ao enviar imagem:', error);
