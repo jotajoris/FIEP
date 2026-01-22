@@ -5248,14 +5248,12 @@ async def usar_estoque(
             if status_origem not in ['comprado', 'em_separacao', 'em_transito', 'entregue']:
                 continue
             
-            # Calcular quantidade comprada
-            qtd_comprada = item_origem.get('quantidade_comprada')
-            if not qtd_comprada:
-                fontes = item_origem.get('fontes_compra', [])
-                if fontes:
-                    qtd_comprada = sum(f.get('quantidade', 0) for f in fontes)
-                else:
-                    qtd_comprada = 0
+            # Calcular quantidade comprada: PRIORIZAR fontes_compra (mais preciso)
+            fontes = item_origem.get('fontes_compra', [])
+            if fontes:
+                qtd_comprada = sum(f.get('quantidade', 0) for f in fontes)
+            else:
+                qtd_comprada = item_origem.get('quantidade_comprada', 0)
             
             qtd_necessaria_origem = item_origem.get('quantidade', 0)
             
@@ -5267,7 +5265,6 @@ async def usar_estoque(
             
             if excedente > 0:
                 # Pegar preço unitário
-                fontes = item_origem.get('fontes_compra', [])
                 if fontes:
                     preco_unitario = fontes[0].get('preco_unitario', 0)
                 else:
