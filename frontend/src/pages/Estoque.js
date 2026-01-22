@@ -14,6 +14,11 @@ const Estoque = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [totalItens, setTotalItens] = useState(0);
+  
+  // Estados para edição
+  const [editingOC, setEditingOC] = useState(null); // {po_id, item_index, quantidade_atual}
+  const [novaQuantidade, setNovaQuantidade] = useState(0);
+  const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
     loadEstoque();
@@ -32,6 +37,63 @@ const Estoque = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Ajustar quantidade de estoque
+  const handleAjustarEstoque = async () => {
+    if (!editingOC) return;
+    
+    setSalvando(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/api/estoque/ajustar`, {
+        po_id: editingOC.po_id,
+        item_index: editingOC.item_index,
+        nova_quantidade_comprada: novaQuantidade
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      alert('Estoque ajustado com sucesso!');
+      setEditingOC(null);
+      loadEstoque();
+    } catch (error) {
+      console.error('Erro ao ajustar estoque:', error);
+      alert('Erro ao ajustar estoque: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  // Limpar estoque de uma OC
+  const handleLimparEstoque = async (po_id, item_index, numero_oc) => {
+    if (!window.confirm(`Tem certeza que deseja remover o excedente de estoque da ${numero_oc}? A quantidade comprada será igualada à necessária.`)) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/api/estoque/limpar/${po_id}/${item_index}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      alert('Estoque limpo com sucesso!');
+      loadEstoque();
+    } catch (error) {
+      console.error('Erro ao limpar estoque:', error);
+      alert('Erro ao limpar estoque: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  // Abrir modal de edição
+  const abrirEdicao = (oc) => {
+    setEditingOC({
+      po_id: oc.po_id,
+      item_index: oc.item_index,
+      numero_oc: oc.numero_oc,
+      quantidade_comprada: oc.quantidade_comprada
+    });
+    setNovaQuantidade(oc.quantidade_comprada);
   };
 
   // Filtrar por busca
