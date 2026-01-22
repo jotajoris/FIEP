@@ -5425,6 +5425,10 @@ async def get_estoque_detalhes(codigo_item: str, current_user: dict = Depends(ge
             if status not in ['comprado', 'em_separacao', 'em_transito', 'entregue']:
                 continue
             
+            # IMPORTANTE: Itens que foram atendidos pelo estoque não geram excedente
+            if item.get('atendido_por_estoque'):
+                continue
+            
             # Calcular quantidade comprada: PRIORIZAR fontes_compra (mais preciso)
             fontes_compra = item.get('fontes_compra', [])
             if fontes_compra:
