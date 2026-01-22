@@ -4539,10 +4539,10 @@ Chave PIX: 46.663.556/0001-69`;
                       )}
                       
                       {/* Total na Planilha (sempre para pendentes) */}
-                      {status === 'pendente' && totalPlanilhaReal[item.codigo_item] && (
+                      {status === 'pendente' && (limitesContrato[item.codigo_item] || totalPlanilhaReal[item.codigo_item]) && (
                         <span 
                           style={{
-                            background: '#8b5cf6',
+                            background: limitesContrato[item.codigo_item] ? '#7c3aed' : '#8b5cf6',
                             color: 'white',
                             padding: '0.25rem 0.6rem',
                             borderRadius: '12px',
@@ -4552,10 +4552,12 @@ Chave PIX: 46.663.556/0001-69`;
                             alignItems: 'center',
                             gap: '0.25rem'
                           }}
-                          title={`Quantidade total deste item em TODAS as OCs do sistema (todos os status)`}
+                          title={limitesContrato[item.codigo_item] 
+                            ? `Quantidade máxima do contrato FIEP (importada da planilha)` 
+                            : `Quantidade total deste item em TODAS as OCs do sistema (todos os status)`}
                           data-testid={`total-planilha-${item.codigo_item}`}
                         >
-                          📊 Total Planilha: {totalPlanilhaReal[item.codigo_item]} {item.unidade || 'UN'}
+                          📊 {limitesContrato[item.codigo_item] ? 'Contrato' : 'Total Planilha'}: {limitesContrato[item.codigo_item] || totalPlanilhaReal[item.codigo_item]} {item.unidade || 'UN'}
                         </span>
                       )}
                       
