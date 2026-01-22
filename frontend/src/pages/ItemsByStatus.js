@@ -4057,22 +4057,143 @@ Chave PIX: 46.663.556/0001-69`;
                       borderTop: '1px solid #e5e7eb',
                       background: 'white'
                     }}>
-                      <h4 style={{ margin: '0 0 1rem 0', color: '#4b5563' }}>
-                        Detalhes por OC:
-                      </h4>
+                      {/* Barra de ações do grupo */}
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        marginBottom: '1rem',
+                        padding: '0.75rem',
+                        background: '#f0f9ff',
+                        borderRadius: '8px'
+                      }}>
+                        <h4 style={{ margin: 0, color: '#4b5563' }}>
+                          Detalhes por OC ({group.items.length} itens)
+                        </h4>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startGroupEdit(group.codigo_item, 'all');
+                          }}
+                          style={{
+                            padding: '0.5rem 1rem',
+                            background: '#22c55e',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                          }}
+                        >
+                          🚀 Cotar Todos ({group.total_quantidade} {group.unidade})
+                        </button>
+                      </div>
+                      
+                      {/* Formulário de edição em grupo (Cotar Todos) */}
+                      {editingGroupCode === group.codigo_item && groupEditMode === 'all' && (
+                        <div style={{ 
+                          padding: '1rem', 
+                          background: '#ecfdf5', 
+                          borderRadius: '8px',
+                          marginBottom: '1rem',
+                          border: '2px solid #22c55e'
+                        }}>
+                          <h5 style={{ margin: '0 0 0.75rem 0', color: '#166534' }}>
+                            ✅ Cotar Todos - {group.items.length} itens ({group.total_quantidade} {group.unidade})
+                          </h5>
+                          <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '1rem' }}>
+                            Os dados abaixo serão aplicados a TODOS os itens deste grupo:
+                          </p>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
+                            <div>
+                              <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#374151' }}>Preço Unitário (R$)</label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={groupFormData.preco_unitario}
+                                onChange={(e) => setGroupFormData({...groupFormData, preco_unitario: e.target.value})}
+                                style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #d1d5db' }}
+                                placeholder="0,00"
+                              />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#374151' }}>Fornecedor</label>
+                              <input
+                                type="text"
+                                value={groupFormData.fornecedor}
+                                onChange={(e) => setGroupFormData({...groupFormData, fornecedor: e.target.value})}
+                                style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #d1d5db' }}
+                                placeholder="Nome do fornecedor"
+                              />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#374151' }}>Link</label>
+                              <input
+                                type="text"
+                                value={groupFormData.link}
+                                onChange={(e) => setGroupFormData({...groupFormData, link: e.target.value})}
+                                style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #d1d5db' }}
+                                placeholder="URL do produto"
+                              />
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                saveGroupEdit(group.items);
+                              }}
+                              style={{
+                                padding: '0.5rem 1rem',
+                                background: '#22c55e',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontWeight: '600',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              ✅ Salvar Todos
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                cancelGroupEdit();
+                              }}
+                              style={{
+                                padding: '0.5rem 1rem',
+                                background: '#f3f4f6',
+                                color: '#4b5563',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '6px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Lista de itens individuais */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                         {group.items.map((item, idx) => (
                           <div key={idx} style={{
                             padding: '0.75rem',
-                            background: '#f9fafb',
+                            background: editingGroupItem === item._uniqueId ? '#fef3c7' : '#f9fafb',
                             borderRadius: '8px',
-                            border: '1px solid #e5e7eb'
+                            border: editingGroupItem === item._uniqueId ? '2px solid #f59e0b' : '1px solid #e5e7eb'
                           }}>
+                            {/* Header do item */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
                                 <Link 
                                   to={`/po/${item.po_id}`} 
                                   style={{ fontWeight: '600', color: '#667eea' }}
+                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   {item.numero_oc}
                                 </Link>
@@ -4091,38 +4212,126 @@ Chave PIX: 46.663.556/0001-69`;
                                 )}
                                 {item.lote && (
                                   <span style={{ color: '#6b7280', fontSize: '0.85rem' }}>
-                                    📍 {item.lote}
+                                    📍 Lote {item.lote}
                                   </span>
                                 )}
                               </div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setViewMode('normal');  // Voltar para visualização normal
-                                  setTimeout(() => startEdit(item), 100);  // Editar após mudar view
-                                }}
-                                style={{
-                                  padding: '0.4rem 0.8rem',
-                                  background: '#667eea',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '6px',
-                                  fontSize: '0.8rem',
-                                  cursor: 'pointer'
-                                }}
-                              >
-                                ✏️ Editar
-                              </button>
+                              
+                              {/* Botão Editar Individual */}
+                              {editingGroupItem !== item._uniqueId && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    startGroupEdit(group.codigo_item, 'individual', item);
+                                  }}
+                                  style={{
+                                    padding: '0.4rem 0.8rem',
+                                    background: '#667eea',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    fontSize: '0.8rem',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  ✏️ Cotar
+                                </button>
+                              )}
                             </div>
                             
+                            {/* Formulário de edição individual */}
+                            {editingGroupItem === item._uniqueId && (
+                              <div style={{ 
+                                marginTop: '0.75rem',
+                                padding: '0.75rem',
+                                background: 'white',
+                                borderRadius: '6px',
+                                border: '1px solid #fcd34d'
+                              }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                                  <div>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#374151' }}>Preço Unit.</label>
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      value={groupFormData.preco_unitario}
+                                      onChange={(e) => setGroupFormData({...groupFormData, preco_unitario: e.target.value})}
+                                      onClick={(e) => e.stopPropagation()}
+                                      style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '0.85rem' }}
+                                      placeholder="0,00"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#374151' }}>Fornecedor</label>
+                                    <input
+                                      type="text"
+                                      value={groupFormData.fornecedor}
+                                      onChange={(e) => setGroupFormData({...groupFormData, fornecedor: e.target.value})}
+                                      onClick={(e) => e.stopPropagation()}
+                                      style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '0.85rem' }}
+                                      placeholder="Fornecedor"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#374151' }}>Link</label>
+                                    <input
+                                      type="text"
+                                      value={groupFormData.link}
+                                      onChange={(e) => setGroupFormData({...groupFormData, link: e.target.value})}
+                                      onClick={(e) => e.stopPropagation()}
+                                      style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '0.85rem' }}
+                                      placeholder="URL"
+                                    />
+                                  </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      saveGroupEdit(group.items);
+                                    }}
+                                    style={{
+                                      padding: '0.4rem 0.8rem',
+                                      background: '#22c55e',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '4px',
+                                      fontSize: '0.8rem',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    ✅ Salvar
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      cancelGroupEdit();
+                                    }}
+                                    style={{
+                                      padding: '0.4rem 0.8rem',
+                                      background: '#f3f4f6',
+                                      color: '#4b5563',
+                                      border: '1px solid #d1d5db',
+                                      borderRadius: '4px',
+                                      fontSize: '0.8rem',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                            
                             {/* Endereço de entrega */}
-                            {item.endereco_entrega_oc && (
+                            {item.endereco_entrega_oc && !editingGroupItem && (
                               <div style={{ 
                                 fontSize: '0.8rem', 
                                 color: '#4b5563',
                                 background: '#f0f9ff',
                                 padding: '0.25rem 0.5rem',
-                                borderRadius: '4px'
+                                borderRadius: '4px',
+                                marginTop: '0.5rem'
                               }}>
                                 📍 {item.endereco_entrega_oc}
                               </div>
