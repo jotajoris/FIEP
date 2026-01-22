@@ -23,7 +23,26 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.0.0 (22/01/2026)
+## Versão Atual: 3.1.0 (22/01/2026)
+
+### 📊 Importação de Limites do Contrato FIEP (22/01/2026)
+- ✅ **Nova funcionalidade**: Importar planilha Excel com limites máximos do contrato
+- ✅ **Badge "📊 Contrato: X UN"** nos itens pendentes mostra quantidade máxima do contrato (não apenas do banco)
+- ✅ **Endpoints:**
+  - `POST /api/admin/importar-limites-contrato` - Upload e parse do Excel
+  - `GET /api/limites-contrato` - Lista todos os limites importados
+  - `GET /api/limites-contrato/mapa` - Retorna mapa código→quantidade para frontend
+- ✅ **UI na página de Estoque:**
+  - Seção dedicada para upload da planilha
+  - Mostra status "✅ X códigos importados"
+  - Botão "📤 Importar Planilha (.xlsx)"
+  - Instruções: Coluna J = Código, Coluna H = Quantidade Máxima
+- ✅ **Coleção MongoDB**: `limites_contrato` armazena os dados importados
+- ✅ **Fallback inteligente**: Se não houver limites importados, usa total do banco de dados
+
+---
+
+### Versão 3.0.0 (22/01/2026)
 
 ### 📸 Upload de Imagem de Itens (22/01/2026)
 - ✅ **Drag-and-drop** para upload de imagens (JPEG, PNG, WebP, GIF - máx 5MB)
