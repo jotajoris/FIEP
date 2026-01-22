@@ -4110,6 +4110,27 @@ Chave PIX: 46.663.556/0001-69`;
                         </button>
                       )}
                       
+                      {/* Total na Planilha (só para pendentes) */}
+                      {status === 'pendente' && totalPlanilhaPorCodigo[item.codigo_item] && totalPlanilhaPorCodigo[item.codigo_item] > item.quantidade && (
+                        <span 
+                          style={{
+                            background: '#8b5cf6',
+                            color: 'white',
+                            padding: '0.25rem 0.6rem',
+                            borderRadius: '12px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                          }}
+                          title={`Este item aparece em outras OCs. O total na planilha é ${totalPlanilhaPorCodigo[item.codigo_item]} ${item.unidade || 'UN'}`}
+                          data-testid={`total-planilha-${item.codigo_item}`}
+                        >
+                          📊 Total Planilha: {totalPlanilhaPorCodigo[item.codigo_item]} {item.unidade || 'UN'}
+                        </span>
+                      )}
+                      
                       {/* Mostrar se foi parcialmente atendido pelo estoque */}
                       {item.parcialmente_atendido_estoque && (
                         <span style={{
