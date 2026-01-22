@@ -3928,8 +3928,8 @@ Chave PIX: 46.663.556/0001-69`;
               </div>
             ))}
           </div>
-        ) : status === 'pendente' && viewMode === 'grouped' ? (
-          /* ============ VISUALIZAÇÃO AGRUPADA POR CÓDIGO (pendentes) ============ */
+        ) : (status === 'pendente' || status === 'cotado') && viewMode === 'grouped' ? (
+          /* ============ VISUALIZAÇÃO AGRUPADA POR CÓDIGO (pendentes e cotados) ============ */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {itemsGroupedByCode.map((group) => {
               const isExpanded = expandedGroups.has(group.codigo_item);
