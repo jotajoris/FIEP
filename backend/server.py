@@ -4961,6 +4961,42 @@ async def limpar_estoque(
     }
 
 
+@api_router.post("/estoque/resetar-uso/{po_id}/{item_index}")
+async def resetar_uso_estoque(
+    po_id: str,
+    item_index: int,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Reseta o histórico de uso do estoque de um item.
+    Limpa quantidade_usada_estoque e estoque_usado_em.
+    """
+    # Buscar OC
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not po:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    if item_index < 0 or item_index >= len(po.get('items', [])):
+        raise HTTPException(status_code=400, detail="Índice de item inválido")
+    
+    item = po['items'][item_index]
+    
+    # Resetar campos de uso
+    item['quantidade_usada_estoque'] = 0
+    item['estoque_usado_em'] = []
+    
+    # Salvar
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    return {
+        "success": True,
+        "mensagem": "Histórico de uso do estoque resetado"
+    }
+
+
 @api_router.get("/estoque/mapa")
 async def get_estoque_mapa(current_user: dict = Depends(get_current_user)):
     """
