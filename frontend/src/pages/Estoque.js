@@ -16,9 +16,18 @@ const Estoque = () => {
   const [totalItens, setTotalItens] = useState(0);
   
   // Estados para edição
-  const [editingOC, setEditingOC] = useState(null); // {po_id, item_index, quantidade_atual}
+  const [editingOC, setEditingOC] = useState(null); // {po_id, item_index, quantidade_atual, quantidade_necessaria}
   const [novaQuantidade, setNovaQuantidade] = useState(0);
   const [salvando, setSalvando] = useState(false);
+  
+  // Estados para adicionar item manual ao estoque
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [codigoBusca, setCodigoBusca] = useState('');
+  const [itemEncontrado, setItemEncontrado] = useState(null);
+  const [buscando, setBuscando] = useState(false);
+  const [addQuantidade, setAddQuantidade] = useState(0);
+  const [addPreco, setAddPreco] = useState(0);
+  const [addFornecedor, setAddFornecedor] = useState('ENTRADA MANUAL');
 
   useEffect(() => {
     loadEstoque();
@@ -36,6 +45,111 @@ const Estoque = () => {
       console.error('Erro ao carregar estoque:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Buscar item pelo código
+  const buscarItem = async () => {
+    if (!codigoBusca.trim()) return;
+    
+    setBuscando(true);
+    setItemEncontrado(null);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/api/purchase-orders?limit=0`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const pos = response.data.data || [];
+      
+      // Buscar item com status "comprado" ou posterior
+      for (const po of pos) {
+        for (let idx = 0; idx < po.items.length; idx++) {
+          const item = po.items[idx];
+          if (item.codigo_item === codigoBusca && 
+              ['comprado', 'em_separacao', 'em_transito', 'entregue'].includes(item.status)) {
+            setItemEncontrado({
+              ...item,
+              po_id: po.id,
+              numero_oc: po.numero_oc,
+              item_index: idx
+            });
+            setBuscando(false);
+            return;
+          }
+        }
+      }
+      
+      alert('Item não encontrado ou não está em status "Comprado" ou superior.');
+    } catch (error) {
+      console.error('Erro ao buscar item:', error);
+      alert('Erro ao buscar item.');
+    } finally {
+      setBuscando(false);
+    }
+  };
+
+  // Adicionar quantidade ao estoque
+  const adicionarAoEstoque = async () => {
+    if (!itemEncontrado || addQuantidade <= 0) return;
+    
+    setSalvando(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Buscar OC completa
+      const poResponse = await axios.get(`${API}/api/purchase-orders/${itemEncontrado.po_id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const po = poResponse.data;
+      const item = po.items[itemEncontrado.item_index];
+      
+      // Calcular nova quantidade total comprada
+      const fontes = item.fontes_compra || [];
+      const qtdAtual = fontes.length > 0 
+        ? fontes.reduce((sum, f) => sum + (f.quantidade || 0), 0)
+        : (item.quantidade_comprada || item.quantidade || 0);
+      
+      const novaQtdTotal = qtdAtual + addQuantidade;
+      
+      // Adicionar nova fonte de compra
+      if (!item.fontes_compra) {
+        item.fontes_compra = [];
+      }
+      
+      item.fontes_compra.push({
+        id: Date.now().toString(),
+        quantidade: addQuantidade,
+        preco_unitario: addPreco,
+        frete: 0,
+        fornecedor: addFornecedor,
+        link: ''
+      });
+      
+      // Atualizar quantidade_comprada
+      item.quantidade_comprada = novaQtdTotal;
+      
+      // Salvar
+      await axios.patch(`${API}/api/purchase-orders/${itemEncontrado.po_id}`, {
+        items: po.items
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      alert(`Adicionado ${addQuantidade} UN ao estoque do item ${itemEncontrado.codigo_item}!`);
+      setShowAddModal(false);
+      setCodigoBusca('');
+      setItemEncontrado(null);
+      setAddQuantidade(0);
+      setAddPreco(0);
+      loadEstoque();
+    } catch (error) {
+      console.error('Erro ao adicionar ao estoque:', error);
+      alert('Erro ao adicionar ao estoque: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setSalvando(false);
     }
   };
 
