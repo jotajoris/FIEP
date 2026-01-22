@@ -5582,6 +5582,7 @@ async def listar_planilha_itens(current_user: dict = Depends(get_current_user)):
                     'codigo_item': codigo_item,
                     'descricao': item.get('descricao', ''),
                     'unidade': item.get('unidade', 'UN'),
+                    'imagem_url': item.get('imagem_url'),  # URL da imagem
                     'quantidade_total_necessaria': quantidade,
                     'quantidade_total_comprada': quantidade if ja_comprado else 0,
                     'quantidade_faltante': 0 if ja_comprado else quantidade,
@@ -5600,6 +5601,9 @@ async def listar_planilha_itens(current_user: dict = Depends(get_current_user)):
                 itens_map[codigo_item]['lotes_unicos'].add(item.get('lote', ''))
                 itens_map[codigo_item]['responsaveis_unicos'].add(item.get('responsavel', ''))
                 itens_map[codigo_item]['marcas_unicas'].add(item.get('marca_modelo', ''))
+                # Atualizar imagem_url se não tiver
+                if not itens_map[codigo_item].get('imagem_url') and item.get('imagem_url'):
+                    itens_map[codigo_item]['imagem_url'] = item.get('imagem_url')
     
     # Converter sets para listas e calcular estatísticas
     resultado = []
