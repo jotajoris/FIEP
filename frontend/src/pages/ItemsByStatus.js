@@ -3790,6 +3790,95 @@ Chave PIX: 46.663.556/0001-69`;
                     </div>
                     <p style={{ color: '#4a5568', marginBottom: '0.5rem' }}>{item.descricao}</p>
                     
+                    {/* ========== UPLOAD/MINIATURA DE IMAGEM ========== */}
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '0.75rem', 
+                      marginBottom: '0.75rem',
+                      padding: '0.5rem',
+                      background: dragOver === item._uniqueId ? '#dbeafe' : '#f8fafc',
+                      borderRadius: '8px',
+                      border: dragOver === item._uniqueId ? '2px dashed #3b82f6' : '1px dashed #cbd5e1',
+                      transition: 'all 0.2s'
+                    }}
+                    onDragOver={(e) => handleDragOver(e, item._uniqueId)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, item)}
+                    data-testid={`image-upload-zone-${item.codigo_item}`}
+                    >
+                      {/* Se tem imagem, mostrar miniatura */}
+                      {item.imagem_url ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <div 
+                            onClick={() => setImagemExpandida(`${API}${item.imagem_url}`)}
+                            style={{ 
+                              width: '50px', 
+                              height: '50px', 
+                              borderRadius: '6px',
+                              overflow: 'hidden',
+                              cursor: 'pointer',
+                              border: '2px solid #e2e8f0',
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                              flexShrink: 0
+                            }}
+                          >
+                            <img 
+                              src={`${API}${item.imagem_url}`} 
+                              alt={`Imagem ${item.codigo_item}`}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              data-testid={`image-thumbnail-${item.codigo_item}`}
+                            />
+                          </div>
+                          <button
+                            onClick={() => handleDeleteImage(item)}
+                            disabled={uploadingImage === item._uniqueId}
+                            style={{
+                              padding: '0.25rem 0.5rem',
+                              fontSize: '0.7rem',
+                              background: '#ef4444',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              opacity: uploadingImage === item._uniqueId ? 0.5 : 1
+                            }}
+                            data-testid={`delete-image-btn-${item.codigo_item}`}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        /* Se não tem imagem, mostrar área de upload */
+                        <label style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '0.5rem',
+                          cursor: 'pointer',
+                          color: '#64748b',
+                          fontSize: '0.8rem'
+                        }}>
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            onChange={(e) => handleImageUpload(item, e.target.files[0])}
+                            style={{ display: 'none' }}
+                            disabled={uploadingImage === item._uniqueId}
+                            data-testid={`image-input-${item.codigo_item}`}
+                          />
+                          {uploadingImage === item._uniqueId ? (
+                            <span>⏳ Enviando...</span>
+                          ) : (
+                            <>
+                              <span style={{ fontSize: '1.2rem' }}>📷</span>
+                              <span>Arraste ou clique para adicionar imagem</span>
+                            </>
+                          )}
+                        </label>
+                      )}
+                    </div>
+                    {/* ========== FIM UPLOAD/MINIATURA DE IMAGEM ========== */}
+                    
                     {/* Endereço de Entrega da OC */}
                     {item.endereco_entrega_oc && (
                       <div style={{ 
