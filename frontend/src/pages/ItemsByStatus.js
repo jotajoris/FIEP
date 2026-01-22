@@ -230,6 +230,9 @@ const ItemsByStatus = () => {
     fornecedor: '',
     link: ''
   });
+  
+  // Total real da planilha (todos os itens, todos os status)
+  const [totalPlanilhaReal, setTotalPlanilhaReal] = useState({});
 
   const statusLabels = {
     'pendente': 'Pendentes',
