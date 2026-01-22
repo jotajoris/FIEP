@@ -174,11 +174,12 @@ const PlanilhaItens = () => {
 
       {/* Tabela */}
       <div className="card" style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1000px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1100px' }}>
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
               <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Código</th>
               <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Descrição</th>
+              <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Imagem</th>
               <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Lotes</th>
               <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Responsáveis</th>
               <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Marcas</th>
