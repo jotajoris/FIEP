@@ -3878,21 +3878,19 @@ Chave PIX: 46.663.556/0001-69`;
                             Total: {group.total_quantidade} {group.unidade}
                           </span>
                           
-                          {/* Total na planilha (Funcionalidade 3) */}
-                          {totalPlanilha > group.total_quantidade && (
-                            <span style={{
-                              background: '#8b5cf6',
-                              color: 'white',
-                              padding: '0.25rem 0.75rem',
-                              borderRadius: '20px',
-                              fontSize: '0.85rem',
-                              fontWeight: '600'
-                            }}
-                            title="Quantidade total deste item em todas as OCs do sistema"
-                            >
-                              📊 Planilha: {totalPlanilha} {group.unidade}
-                            </span>
-                          )}
+                          {/* Total na planilha (sempre mostrar) */}
+                          <span style={{
+                            background: '#8b5cf6',
+                            color: 'white',
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '20px',
+                            fontSize: '0.85rem',
+                            fontWeight: '600'
+                          }}
+                          title="Quantidade total deste item em todas as OCs do sistema"
+                          >
+                            📊 Planilha: {totalPlanilha} {group.unidade}
+                          </span>
                           
                           {/* Estoque disponível */}
                           {group.estoqueDisponivel > 0 && (
