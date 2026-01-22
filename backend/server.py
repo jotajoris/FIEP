@@ -5736,6 +5736,164 @@ async def listar_planilha_itens(current_user: dict = Depends(get_current_user)):
     }
 
 
+# ============== PLANILHA DO CONTRATO (com limites importados) ==============
+@api_router.get("/planilha-contrato")
+async def listar_planilha_contrato(current_user: dict = Depends(get_current_user)):
+    """
+    Retorna uma visão consolidada de TODOS os itens do contrato FIEP.
+    Usa os limites importados da planilha externa como fonte de verdade.
+    
+    Para cada item do contrato, cruza com os dados das OCs para mostrar:
+    - Quantidade máxima do contrato (da planilha importada)
+    - Quantidade já comprada (itens com status comprado ou posterior)
+    - Quantidade faltante (limite do contrato - quantidade comprada)
+    - Detalhes de cada ocorrência em OCs
+    """
+    
+    # Buscar limites do contrato importados
+    limites_cursor = db.limites_contrato.find({}, {"_id": 0})
+    limites_list = await limites_cursor.to_list(10000)
+    
+    if not limites_list:
+        # Se não há limites importados, retorna a planilha normal
+        return await listar_planilha_itens(current_user)
+    
+    # Criar mapa de limites: codigo_item -> quantidade_maxima_contrato
+    limites_map = {item['codigo_item']: item['quantidade_maxima_contrato'] for item in limites_list}
+    
+    # Buscar todos os itens de todas as OCs
+    pos = await db.purchase_orders.find(
+        {},
+        {"_id": 0, "id": 1, "numero_oc": 1, "items": 1}
+    ).to_list(5000)
+    
+    # Mapa: codigo_item -> {info consolidada das OCs}
+    ocs_map = {}
+    status_comprado_ou_adiante = ['comprado', 'em_separacao', 'em_transito', 'entregue']
+    
+    for po in pos:
+        for idx, item in enumerate(po.get('items', [])):
+            codigo_item = item.get('codigo_item', '')
+            if not codigo_item:
+                continue
+            
+            quantidade = item.get('quantidade', 0)
+            status = item.get('status', 'pendente')
+            ja_comprado = status in status_comprado_ou_adiante
+            
+            # Considerar quantidade_comprada se disponível (pode ser maior que quantidade necessária)
+            quantidade_efetivamente_comprada = item.get('quantidade_comprada', quantidade) if ja_comprado else 0
+            
+            # Pegar info das fontes de compra
+            fontes = item.get('fontes_compra', [])
+            preco_unitario = fontes[0].get('preco_unitario', 0) if fontes else item.get('preco_compra', 0)
+            
+            ocorrencia = {
+                'numero_oc': po.get('numero_oc'),
+                'po_id': po.get('id'),
+                'lote': item.get('lote', ''),
+                'responsavel': item.get('responsavel', ''),
+                'marca_modelo': item.get('marca_modelo', ''),
+                'preco_unitario': preco_unitario,
+                'quantidade': quantidade,
+                'status': status,
+                'ja_comprado': ja_comprado,
+                'quantidade_comprada': item.get('quantidade_comprada'),
+                'data_compra': item.get('data_compra')
+            }
+            
+            if codigo_item not in ocs_map:
+                ocs_map[codigo_item] = {
+                    'descricao': item.get('descricao', ''),
+                    'unidade': item.get('unidade', 'UN'),
+                    'imagem_url': item.get('imagem_url'),
+                    'quantidade_nas_ocs': quantidade,
+                    'quantidade_comprada': quantidade_efetivamente_comprada,
+                    'ocorrencias': [ocorrencia],
+                    'lotes_unicos': set([item.get('lote', '')]),
+                    'responsaveis_unicos': set([item.get('responsavel', '')]),
+                    'marcas_unicas': set([item.get('marca_modelo', '')])
+                }
+            else:
+                ocs_map[codigo_item]['quantidade_nas_ocs'] += quantidade
+                ocs_map[codigo_item]['quantidade_comprada'] += quantidade_efetivamente_comprada
+                ocs_map[codigo_item]['ocorrencias'].append(ocorrencia)
+                ocs_map[codigo_item]['lotes_unicos'].add(item.get('lote', ''))
+                ocs_map[codigo_item]['responsaveis_unicos'].add(item.get('responsavel', ''))
+                ocs_map[codigo_item]['marcas_unicas'].add(item.get('marca_modelo', ''))
+                # Atualizar imagem_url e descrição se não tiver
+                if not ocs_map[codigo_item].get('imagem_url') and item.get('imagem_url'):
+                    ocs_map[codigo_item]['imagem_url'] = item.get('imagem_url')
+                if not ocs_map[codigo_item].get('descricao') and item.get('descricao'):
+                    ocs_map[codigo_item]['descricao'] = item.get('descricao')
+    
+    # Construir resultado final baseado nos limites do contrato
+    resultado = []
+    
+    for codigo_item, qtd_maxima in limites_map.items():
+        oc_data = ocs_map.get(codigo_item, {})
+        
+        quantidade_comprada = oc_data.get('quantidade_comprada', 0)
+        quantidade_faltante = max(0, qtd_maxima - quantidade_comprada)
+        
+        # Converter sets para listas
+        lotes = sorted([l for l in oc_data.get('lotes_unicos', set()) if l]) if oc_data else []
+        responsaveis = sorted([r for r in oc_data.get('responsaveis_unicos', set()) if r]) if oc_data else []
+        marcas = sorted([m for m in oc_data.get('marcas_unicas', set()) if m]) if oc_data else []
+        
+        # Ordenar ocorrências por lote
+        ocorrencias = oc_data.get('ocorrencias', [])
+        ocorrencias.sort(key=lambda x: x.get('lote', ''))
+        
+        item_resultado = {
+            'codigo_item': codigo_item,
+            'descricao': oc_data.get('descricao', ''),
+            'unidade': oc_data.get('unidade', 'UN'),
+            'imagem_url': oc_data.get('imagem_url'),
+            'quantidade_contrato': qtd_maxima,  # Do Excel importado
+            'quantidade_nas_ocs': oc_data.get('quantidade_nas_ocs', 0),  # Total nas OCs
+            'quantidade_comprada': quantidade_comprada,  # Já comprado
+            'quantidade_faltante': quantidade_faltante,  # Falta para completar o contrato
+            'tem_oc': len(ocorrencias) > 0,
+            'lotes': lotes,
+            'responsaveis': responsaveis,
+            'marcas': marcas,
+            'ocorrencias': ocorrencias
+        }
+        
+        resultado.append(item_resultado)
+    
+    # Ordenar: primeiro os com OC e faltantes, depois os sem OC
+    resultado.sort(key=lambda x: (
+        -1 if x['tem_oc'] and x['quantidade_faltante'] > 0 else 0,  # OCs com faltante primeiro
+        -x['quantidade_faltante'],  # Maior faltante primeiro
+        0 if x['tem_oc'] else 1,  # Com OC antes de sem OC
+        x['codigo_item']
+    ))
+    
+    # Estatísticas gerais
+    total_itens_diferentes = len(resultado)
+    total_quantidade_contrato = sum(r['quantidade_contrato'] for r in resultado)
+    total_quantidade_comprada = sum(r['quantidade_comprada'] for r in resultado)
+    total_quantidade_faltante = sum(r['quantidade_faltante'] for r in resultado)
+    itens_com_oc = sum(1 for r in resultado if r['tem_oc'])
+    itens_completos = sum(1 for r in resultado if r['quantidade_faltante'] == 0)
+    
+    return {
+        "estatisticas": {
+            "total_itens_diferentes": total_itens_diferentes,
+            "total_quantidade_contrato": total_quantidade_contrato,
+            "total_quantidade_comprada": total_quantidade_comprada,
+            "total_quantidade_faltante": total_quantidade_faltante,
+            "percentual_comprado": round((total_quantidade_comprada / total_quantidade_contrato * 100) if total_quantidade_contrato > 0 else 0, 1),
+            "itens_com_oc": itens_com_oc,
+            "itens_completos": itens_completos
+        },
+        "itens": resultado,
+        "fonte": "contrato_fiep"
+    }
+
+
 # ============== USAR ESTOQUE ==============
 @api_router.post("/estoque/usar")
 async def usar_estoque(
