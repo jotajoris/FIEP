@@ -5739,13 +5739,17 @@ Chave PIX: 46.663.556/0001-69`;
                         {/* ===== ÁREA DE IMAGEM + BOTÃO EDITAR ===== */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                           {/* Miniatura de Imagem ou Botão Upload */}
+                          {(() => {
+                            // Priorizar mapa de imagens, depois imagem do item
+                            const imagemUrl = imagensItens[item.codigo_item] || item.imagem_url;
+                            return (
                           <div 
                             style={{ 
                               width: '80px', 
                               height: '80px', 
                               borderRadius: '8px',
-                              border: item.imagem_url ? '2px solid #22c55e' : '2px dashed #cbd5e1',
-                              background: dragOver === item._uniqueId ? '#dbeafe' : (item.imagem_url ? 'transparent' : '#f8fafc'),
+                              border: imagemUrl ? '2px solid #22c55e' : '2px dashed #cbd5e1',
+                              background: dragOver === item._uniqueId ? '#dbeafe' : (imagemUrl ? 'transparent' : '#f8fafc'),
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -5758,18 +5762,18 @@ Chave PIX: 46.663.556/0001-69`;
                             onDragLeave={handleDragLeave}
                             onDrop={(e) => handleDrop(e, item)}
                             onClick={() => {
-                              if (item.imagem_url) {
-                                setImagemExpandida(`${BACKEND_URL}${item.imagem_url}`);
+                              if (imagemUrl) {
+                                setImagemExpandida(`${BACKEND_URL}${imagemUrl}`);
                               } else {
                                 document.getElementById(`img-input-${item._uniqueId}`).click();
                               }
                             }}
                             data-testid={`image-zone-${item.codigo_item}`}
                           >
-                            {item.imagem_url ? (
+                            {imagemUrl ? (
                               <>
                                 <img 
-                                  src={`${BACKEND_URL}${item.imagem_url}`} 
+                                  src={`${BACKEND_URL}${imagemUrl}`} 
                                   alt={`Imagem ${item.codigo_item}`}
                                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                   onError={(e) => {
