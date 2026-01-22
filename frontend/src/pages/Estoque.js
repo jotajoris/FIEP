@@ -327,7 +327,7 @@ const Estoque = () => {
             Itens comprados em quantidade maior que a necessária
           </p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
           <button
             onClick={() => setShowAddModal(true)}
             style={{
@@ -374,6 +374,61 @@ const Estoque = () => {
             <div style={{ fontSize: '2rem', fontWeight: '700', color: '#166534' }}>{totalItens}</div>
           </div>
         </div>
+      </div>
+      
+      {/* Upload de Planilha de Limites do Contrato */}
+      <div style={{ 
+        marginBottom: '1.5rem', 
+        padding: '1rem 1.5rem', 
+        background: 'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)', 
+        borderRadius: '12px',
+        border: '2px solid #8b5cf6'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: '#5b21b6' }}>
+              📊 Planilha de Limites do Contrato FIEP
+            </h3>
+            <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: '#6d28d9' }}>
+              {limitesInfo 
+                ? `✅ ${limitesInfo.total} códigos importados` 
+                : 'Importe a planilha para mostrar os limites máximos do contrato na tela de Pendentes'}
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleUploadLimites}
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              id="upload-limites-input"
+              data-testid="upload-limites-input"
+            />
+            <label
+              htmlFor="upload-limites-input"
+              style={{
+                background: uploadingLimites ? '#9ca3af' : '#7c3aed',
+                color: 'white',
+                border: 'none',
+                padding: '0.6rem 1.25rem',
+                borderRadius: '8px',
+                cursor: uploadingLimites ? 'wait' : 'pointer',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.9rem'
+              }}
+              data-testid="btn-upload-limites"
+            >
+              {uploadingLimites ? '⏳ Importando...' : '📤 Importar Planilha (.xlsx)'}
+            </label>
+          </div>
+        </div>
+        <p style={{ margin: '0.75rem 0 0', fontSize: '0.8rem', color: '#7c3aed' }}>
+          💡 A planilha deve ter: Coluna J = Código do Item, Coluna H = Quantidade Máxima
+        </p>
       </div>
 
       {/* Busca */}
