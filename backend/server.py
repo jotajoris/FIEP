@@ -6133,6 +6133,27 @@ async def usar_estoque(
         # Atende parcialmente
         item['parcialmente_atendido_estoque'] = True
         item['quantidade_faltante'] = quantidade_necessaria - quantidade_total_atendida
+        
+        # Adicionar fonte de compra parcial do estoque
+        if 'fontes_compra' not in item:
+            item['fontes_compra'] = []
+        
+        # Verificar se já existe fonte do estoque interno
+        fonte_estoque_existente = next((f for f in item['fontes_compra'] if f.get('fornecedor') == 'ESTOQUE INTERNO'), None)
+        if fonte_estoque_existente:
+            # Atualizar quantidade da fonte existente
+            fonte_estoque_existente['quantidade'] = quantidade_total_atendida
+        else:
+            # Adicionar nova fonte do estoque
+            item['fontes_compra'].append({
+                'id': str(uuid.uuid4()),
+                'quantidade': total_usado,
+                'preco_unitario': preco_medio,
+                'frete': dados_item_origem.get('frete', 0),
+                'link': dados_item_origem.get('link', ''),
+                'fornecedor': 'ESTOQUE INTERNO (parcial)'
+            })
+        
         mensagem = f"Item parcialmente atendido pelo estoque ({total_usado} UN). Faltam {item['quantidade_faltante']} UN"
     
     # Salvar item destino
