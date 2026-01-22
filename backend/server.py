@@ -5999,15 +5999,30 @@ async def usar_estoque(
                 # Pegar preço unitário
                 if fontes:
                     preco_unitario = fontes[0].get('preco_unitario', 0)
+                    frete_unitario = fontes[0].get('frete', 0)
+                    link_compra = fontes[0].get('link', '')
+                    fornecedor = fontes[0].get('fornecedor', '')
                 else:
                     preco_unitario = item_origem.get('preco_compra', 0)
+                    frete_unitario = item_origem.get('frete_compra', 0)
+                    link_compra = item_origem.get('link_compra', '')
+                    fornecedor = item_origem.get('fornecedor', '')
                 
+                # Capturar todos os dados do item original para copiar
                 fontes_estoque.append({
                     'po_id': po_origem.get('id'),
                     'numero_oc': po_origem.get('numero_oc'),
                     'item_index': idx,
                     'excedente_disponivel': excedente,
-                    'preco_unitario': preco_unitario
+                    'preco_unitario': preco_unitario,
+                    # Dados adicionais do item original
+                    'frete': frete_unitario,
+                    'link': link_compra,
+                    'fornecedor': fornecedor,
+                    'observacao': item_origem.get('observacao', ''),
+                    'imagem_url': item_origem.get('imagem_url', ''),
+                    'imagem_filename': item_origem.get('imagem_filename', ''),
+                    'marca_modelo': item_origem.get('marca_modelo', '')
                 })
     
     if not fontes_estoque:
