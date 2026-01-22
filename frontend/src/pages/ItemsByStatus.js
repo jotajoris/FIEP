@@ -270,7 +270,7 @@ const ItemsByStatus = () => {
         // Carregar total real da planilha (todos os status)
         try {
           const planilhaResponse = await apiGet(`${API}/planilha-itens`);
-          const planilhaData = planilhaResponse.data || [];
+          const planilhaData = planilhaResponse.data?.itens || planilhaResponse.data || [];
           const totaisPlanilha = {};
           planilhaData.forEach(item => {
             totaisPlanilha[item.codigo_item] = item.quantidade_total_necessaria || 0;
