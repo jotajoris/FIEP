@@ -4154,7 +4154,7 @@ Chave PIX: 46.663.556/0001-69`;
                           <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '1rem' }}>
                             Os dados abaixo serão aplicados a TODOS os itens deste grupo:
                           </p>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
                             <div>
                               <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#374151' }}>Preço Unitário (R$)</label>
                               <input
@@ -4162,6 +4162,19 @@ Chave PIX: 46.663.556/0001-69`;
                                 step="0.01"
                                 value={groupFormData.preco_unitario}
                                 onChange={(e) => setGroupFormData({...groupFormData, preco_unitario: e.target.value})}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #d1d5db' }}
+                                placeholder="0,00"
+                              />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#374151' }}>Frete (R$)</label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={groupFormData.frete}
+                                onChange={(e) => setGroupFormData({...groupFormData, frete: e.target.value})}
+                                onClick={(e) => e.stopPropagation()}
                                 style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #d1d5db' }}
                                 placeholder="0,00"
                               />
@@ -4172,6 +4185,7 @@ Chave PIX: 46.663.556/0001-69`;
                                 type="text"
                                 value={groupFormData.fornecedor}
                                 onChange={(e) => setGroupFormData({...groupFormData, fornecedor: e.target.value})}
+                                onClick={(e) => e.stopPropagation()}
                                 style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #d1d5db' }}
                                 placeholder="Nome do fornecedor"
                               />
@@ -4182,6 +4196,7 @@ Chave PIX: 46.663.556/0001-69`;
                                 type="text"
                                 value={groupFormData.link}
                                 onChange={(e) => setGroupFormData({...groupFormData, link: e.target.value})}
+                                onClick={(e) => e.stopPropagation()}
                                 style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #d1d5db' }}
                                 placeholder="URL do produto"
                               />
