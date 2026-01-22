@@ -23,7 +23,18 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.1.0 (22/01/2026)
+## Versão Atual: 3.2.0 (22/01/2026)
+
+### 🔧 Refatoração do Backend (22/01/2026)
+- ✅ **Documentação de arquitetura**: `/app/backend/REFACTORING.md` com plano completo
+- ✅ **config.py expandido**: Novas constantes centralizadas (STATUS_COMPRADO_OU_ADIANTE, FRONTEND_URL)
+- ✅ **services/estoque_service.py**: Funções de negócio extraídas:
+  - `reverter_uso_estoque()` - Reverte uso de estoque quando item volta a pendente
+  - `atualizar_data_compra()` - Atualiza data de compra automaticamente
+  - `calcular_lucro_item()` - Calcula lucro líquido do item
+- ✅ **routes/rastreio_routes.py**: Módulo de rotas de rastreamento Correios
+- ✅ **utils/config.py**: Re-exporta constantes de config.py
+- ✅ **services/__init__.py**: Exporta funções de todos os serviços
 
 ### 📊 Importação de Limites do Contrato FIEP (22/01/2026)
 - ✅ **Nova funcionalidade**: Importar planilha Excel com limites máximos do contrato
