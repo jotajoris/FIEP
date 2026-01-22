@@ -1077,13 +1077,12 @@ const ItemsByStatus = () => {
           fornecedor: groupFormData.fornecedor || ''
         }];
         
-        await axios.patch(
+        await apiPatch(
           `${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}`,
           {
             status: novoStatus,
             fontes_compra: fontesCompra
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
+          }
         );
       }
       
