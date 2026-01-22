@@ -17,6 +17,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
 import Layout from './components/Layout';
+import UpdateNotification from './components/UpdateNotification';
 import './App.css';
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
