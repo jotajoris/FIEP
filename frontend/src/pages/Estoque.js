@@ -28,9 +28,15 @@ const Estoque = () => {
   const [addQuantidade, setAddQuantidade] = useState(0);
   const [addPreco, setAddPreco] = useState(0);
   const [addFornecedor, setAddFornecedor] = useState('ENTRADA MANUAL');
+  
+  // Estados para upload de planilha de limites do contrato
+  const [uploadingLimites, setUploadingLimites] = useState(false);
+  const [limitesInfo, setLimitesInfo] = useState(null); // Info sobre limites importados
+  const fileInputRef = React.useRef(null);
 
   useEffect(() => {
     loadEstoque();
+    loadLimitesInfo();
   }, []);
 
   const loadEstoque = async () => {
@@ -45,6 +51,61 @@ const Estoque = () => {
       console.error('Erro ao carregar estoque:', error);
     } finally {
       setLoading(false);
+    }
+  };
+  
+  // Carregar info sobre limites do contrato
+  const loadLimitesInfo = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/api/limites-contrato`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data?.total > 0) {
+        setLimitesInfo({
+          total: response.data.total,
+          dataImportacao: response.data.limites?.[0]?.data_importacao
+        });
+      }
+    } catch (error) {
+      console.warn('Limites não carregados:', error);
+    }
+  };
+  
+  // Upload de planilha de limites do contrato
+  const handleUploadLimites = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!file.name.toLowerCase().endsWith('.xlsx') && !file.name.toLowerCase().endsWith('.xls')) {
+      alert('Por favor, selecione um arquivo Excel (.xlsx ou .xls)');
+      return;
+    }
+    
+    setUploadingLimites(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await axios.post(`${API}/api/admin/importar-limites-contrato`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      alert(`✅ Limites importados com sucesso!\n\n• ${response.data.itens_importados} códigos de itens\n• ${response.data.linhas_processadas} linhas processadas\n\nO badge "📊 Contrato" na página de Pendentes agora mostrará os valores da planilha.`);
+      loadLimitesInfo();
+    } catch (error) {
+      console.error('Erro ao importar limites:', error);
+      alert('Erro ao importar planilha: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setUploadingLimites(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
