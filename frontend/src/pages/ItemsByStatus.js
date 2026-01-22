@@ -1003,7 +1003,7 @@ const ItemsByStatus = () => {
     setEditingGroupCode(null);
     setGroupEditMode('individual');
     setEditingGroupItem(null);
-    setGroupFormData({ preco_unitario: '', fornecedor: '', link: '' });
+    setGroupFormData({ preco_unitario: '', frete: '', fornecedor: '', link: '' });
   };
   
   const saveGroupEdit = async (items) => {
@@ -1019,7 +1019,7 @@ const ItemsByStatus = () => {
         const fontesCompra = [{
           quantidade: item.quantidade || 1,
           preco_unitario: parseFloat(groupFormData.preco_unitario) || 0,
-          frete: 0,
+          frete: parseFloat(groupFormData.frete) || 0,
           link: groupFormData.link || '',
           fornecedor: groupFormData.fornecedor || ''
         }];
