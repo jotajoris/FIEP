@@ -271,7 +271,7 @@ const ItemsByStatus = () => {
           setEstoqueDisponivel({});
         }
         
-        // Carregar total real da planilha (todos os status)
+        // Carregar total real da planilha (todos os status) - fallback
         try {
           const planilhaResponse = await apiGet(`${API}/planilha-itens`);
           const planilhaData = planilhaResponse.data?.itens || planilhaResponse.data || [];
@@ -283,6 +283,17 @@ const ItemsByStatus = () => {
         } catch (err) {
           console.warn('Erro ao carregar planilha:', err);
           setTotalPlanilhaReal({});
+        }
+        
+        // Carregar limites do contrato FIEP (fonte de verdade para "Total Planilha")
+        try {
+          const limitesResponse = await apiGet(`${API}/limites-contrato/mapa`);
+          if (limitesResponse.data && Object.keys(limitesResponse.data).length > 0) {
+            setLimitesContrato(limitesResponse.data);
+          }
+        } catch (err) {
+          console.warn('Limites do contrato não importados ainda:', err);
+          setLimitesContrato({});
         }
       }
       
