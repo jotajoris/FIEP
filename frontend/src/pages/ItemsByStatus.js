@@ -237,6 +237,9 @@ const ItemsByStatus = () => {
   
   // Limites do contrato FIEP (quantidade máxima por código)
   const [limitesContrato, setLimitesContrato] = useState({});
+  
+  // Mapa de imagens por código de item
+  const [imagensItens, setImagensItens] = useState({});
 
   const statusLabels = {
     'pendente': 'Pendentes',
@@ -250,9 +253,20 @@ const ItemsByStatus = () => {
   useEffect(() => {
     loadItems();
     loadFornecedoresSistema();
+    loadImagensItens();
     setSelectedItems(new Set());  // Limpar seleção ao trocar de status
     setCurrentPage(1);  // Reset página ao trocar de status
   }, [status]);
+  
+  // Carregar mapa de imagens por código
+  const loadImagensItens = async () => {
+    try {
+      const response = await apiGet(`${API}/imagens-itens/mapa`);
+      setImagensItens(response.data || {});
+    } catch (err) {
+      console.warn('Erro ao carregar mapa de imagens:', err);
+    }
+  };
 
   const loadItems = async () => {
     setLoading(true);
