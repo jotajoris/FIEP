@@ -5030,14 +5030,12 @@ async def verificar_estoque_item(codigo_item: str, current_user: dict = Depends(
                 
                 quantidade_necessaria = item.get('quantidade', 0)
                 
-                # Calcular quantidade comprada
-                quantidade_comprada = item.get('quantidade_comprada')
-                if not quantidade_comprada:
-                    fontes = item.get('fontes_compra', [])
-                    if fontes:
-                        quantidade_comprada = sum(f.get('quantidade', 0) for f in fontes)
-                    else:
-                        quantidade_comprada = 0
+                # Calcular quantidade comprada: priorizar fontes de compra
+                fontes = item.get('fontes_compra', [])
+                if fontes:
+                    quantidade_comprada = sum(f.get('quantidade', 0) for f in fontes)
+                else:
+                    quantidade_comprada = item.get('quantidade_comprada', 0)
                 
                 # Quantidade já usada do estoque
                 quantidade_usada_estoque = item.get('quantidade_usada_estoque', 0)
