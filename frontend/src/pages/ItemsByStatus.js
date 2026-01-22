@@ -4009,7 +4009,7 @@ Chave PIX: 46.663.556/0001-69`;
                               }}
                             >
                               <img 
-                                src={`${API}${group.imagem_url}`} 
+                                src={`${BACKEND_URL}${group.imagem_url}`} 
                                 alt={`Imagem ${group.codigo_item}`}
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                               />
