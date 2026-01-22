@@ -3933,7 +3933,9 @@ Chave PIX: 46.663.556/0001-69`;
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {itemsGroupedByCode.map((group) => {
               const isExpanded = expandedGroups.has(group.codigo_item);
-              const totalPlanilha = totalPlanilhaReal[group.codigo_item] || 0;
+              // Priorizar limites do contrato FIEP, fallback para total do banco
+              const totalPlanilha = limitesContrato[group.codigo_item] || totalPlanilhaReal[group.codigo_item] || 0;
+              const usandoLimiteContrato = !!limitesContrato[group.codigo_item];
               
               return (
                 <div 
