@@ -4781,16 +4781,13 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
                 continue
             
             # Calcular quantidade comprada:
-            # 1. Se tem campo quantidade_comprada, usar ele
-            # 2. Senão, somar quantidades das fontes de compra
-            quantidade_comprada = item.get('quantidade_comprada')
-            
-            if not quantidade_comprada:
-                fontes = item.get('fontes_compra', [])
-                if fontes:
-                    quantidade_comprada = sum(f.get('quantidade', 0) for f in fontes)
-                else:
-                    quantidade_comprada = 0
+            # Prioridade: somar quantidades das fontes de compra (mais preciso)
+            # Se não tem fontes, usar o campo quantidade_comprada
+            fontes = item.get('fontes_compra', [])
+            if fontes:
+                quantidade_comprada = sum(f.get('quantidade', 0) for f in fontes)
+            else:
+                quantidade_comprada = item.get('quantidade_comprada', 0)
             
             # Quantidade já usada do estoque
             quantidade_usada_estoque = item.get('quantidade_usada_estoque', 0)
@@ -4801,7 +4798,6 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
                 codigo_item = item.get('codigo_item', '')
                 
                 # Pegar informações da fonte de compra (link, fornecedor)
-                fontes = item.get('fontes_compra', [])
                 link_compra = fontes[0].get('link', '') if fontes else ''
                 fornecedor = fontes[0].get('fornecedor', '') if fontes else ''
                 preco_unitario = fontes[0].get('preco_unitario', 0) if fontes else item.get('preco_compra', 0)
