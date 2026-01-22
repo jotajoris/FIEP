@@ -3810,6 +3810,253 @@ Chave PIX: 46.663.556/0001-69`;
               </div>
             ))}
           </div>
+        ) : status === 'pendente' && viewMode === 'grouped' ? (
+          /* ============ VISUALIZAÇÃO AGRUPADA POR CÓDIGO (pendentes) ============ */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {itemsGroupedByCode.map((group) => {
+              const isExpanded = expandedGroups.has(group.codigo_item);
+              const totalPlanilha = totalPlanilhaPorCodigo[group.codigo_item] || 0;
+              
+              return (
+                <div 
+                  key={group.codigo_item} 
+                  className="card" 
+                  style={{ 
+                    background: group.items.length > 1 ? '#fef3c7' : '#f7fafc', 
+                    border: group.items.length > 1 ? '2px solid #f59e0b' : '1px solid #e2e8f0',
+                    overflow: 'hidden'
+                  }} 
+                  data-testid={`grouped-card-${group.codigo_item}`}
+                >
+                  {/* Header do Grupo */}
+                  <div 
+                    onClick={() => {
+                      const newExpanded = new Set(expandedGroups);
+                      if (isExpanded) {
+                        newExpanded.delete(group.codigo_item);
+                      } else {
+                        newExpanded.add(group.codigo_item);
+                      }
+                      setExpandedGroups(newExpanded);
+                    }}
+                    style={{ 
+                      cursor: 'pointer',
+                      padding: '1rem',
+                      background: group.items.length > 1 ? 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' : 'transparent'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+                          <h3 style={{ fontSize: '1.2rem', fontWeight: '700', margin: 0 }}>
+                            📦 {group.codigo_item}
+                          </h3>
+                          
+                          {/* Badge de múltiplas OCs */}
+                          {group.items.length > 1 && (
+                            <span style={{
+                              background: '#f59e0b',
+                              color: 'white',
+                              padding: '0.25rem 0.75rem',
+                              borderRadius: '20px',
+                              fontSize: '0.85rem',
+                              fontWeight: '700'
+                            }}>
+                              🔥 {group.items.length} OCs
+                            </span>
+                          )}
+                          
+                          {/* Total de quantidade */}
+                          <span style={{
+                            background: '#3b82f6',
+                            color: 'white',
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '20px',
+                            fontSize: '0.85rem',
+                            fontWeight: '600'
+                          }}>
+                            Total: {group.total_quantidade} {group.unidade}
+                          </span>
+                          
+                          {/* Total na planilha (Funcionalidade 3) */}
+                          {totalPlanilha > group.total_quantidade && (
+                            <span style={{
+                              background: '#8b5cf6',
+                              color: 'white',
+                              padding: '0.25rem 0.75rem',
+                              borderRadius: '20px',
+                              fontSize: '0.85rem',
+                              fontWeight: '600'
+                            }}
+                            title="Quantidade total deste item em todas as OCs do sistema"
+                            >
+                              📊 Planilha: {totalPlanilha} {group.unidade}
+                            </span>
+                          )}
+                          
+                          {/* Estoque disponível */}
+                          {group.estoqueDisponivel > 0 && (
+                            <span style={{
+                              background: '#10b981',
+                              color: 'white',
+                              padding: '0.25rem 0.75rem',
+                              borderRadius: '20px',
+                              fontSize: '0.85rem',
+                              fontWeight: '600'
+                            }}>
+                              📦 Estoque: {group.estoqueDisponivel}
+                            </span>
+                          )}
+                          
+                          {/* Miniatura da imagem */}
+                          {group.imagem_url && (
+                            <div 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setImagemExpandida(`${API}${group.imagem_url}`);
+                              }}
+                              style={{ 
+                                width: '40px', 
+                                height: '40px', 
+                                borderRadius: '6px',
+                                overflow: 'hidden',
+                                cursor: 'pointer',
+                                border: '2px solid white',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                                flexShrink: 0
+                              }}
+                            >
+                              <img 
+                                src={`${API}${group.imagem_url}`} 
+                                alt={`Imagem ${group.codigo_item}`}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        
+                        <p style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                          {group.descricao?.substring(0, 150)}{group.descricao?.length > 150 ? '...' : ''}
+                        </p>
+                        
+                        {/* Lista resumida das OCs */}
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          {group.items.map((item, idx) => (
+                            <span key={idx} style={{
+                              background: 'white',
+                              padding: '0.25rem 0.5rem',
+                              borderRadius: '6px',
+                              fontSize: '0.8rem',
+                              border: '1px solid #e5e7eb'
+                            }}>
+                              <strong>{item.numero_oc}</strong>: {item.quantidade} {item.unidade}
+                              {item.responsavel && <span style={{ color: '#6b7280' }}> ({item.responsavel})</span>}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <button style={{
+                        background: 'transparent',
+                        border: 'none',
+                        fontSize: '1.5rem',
+                        cursor: 'pointer',
+                        padding: '0.5rem'
+                      }}>
+                        {isExpanded ? '▲' : '▼'}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Itens expandidos */}
+                  {isExpanded && (
+                    <div style={{ 
+                      padding: '1rem', 
+                      borderTop: '1px solid #e5e7eb',
+                      background: 'white'
+                    }}>
+                      <h4 style={{ margin: '0 0 1rem 0', color: '#4b5563' }}>
+                        Detalhes por OC:
+                      </h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        {group.items.map((item, idx) => (
+                          <div key={idx} style={{
+                            padding: '0.75rem',
+                            background: '#f9fafb',
+                            borderRadius: '8px',
+                            border: '1px solid #e5e7eb'
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                <Link 
+                                  to={`/po/${item.po_id}`} 
+                                  style={{ fontWeight: '600', color: '#667eea' }}
+                                >
+                                  {item.numero_oc}
+                                </Link>
+                                <span style={{ 
+                                  background: '#e0e7ff', 
+                                  padding: '0.15rem 0.5rem', 
+                                  borderRadius: '4px',
+                                  fontSize: '0.85rem'
+                                }}>
+                                  {item.quantidade} {item.unidade}
+                                </span>
+                                {item.responsavel && (
+                                  <span style={{ color: '#6b7280', fontSize: '0.85rem' }}>
+                                    👤 {item.responsavel}
+                                  </span>
+                                )}
+                                {item.lote && (
+                                  <span style={{ color: '#6b7280', fontSize: '0.85rem' }}>
+                                    📍 {item.lote}
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => startEdit(item)}
+                                style={{
+                                  padding: '0.4rem 0.8rem',
+                                  background: '#667eea',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  fontSize: '0.8rem',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                ✏️ Editar
+                              </button>
+                            </div>
+                            
+                            {/* Endereço de entrega */}
+                            {item.endereco_entrega_oc && (
+                              <div style={{ 
+                                fontSize: '0.8rem', 
+                                color: '#4b5563',
+                                background: '#f0f9ff',
+                                padding: '0.25rem 0.5rem',
+                                borderRadius: '4px'
+                              }}>
+                                📍 {item.endereco_entrega_oc}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            
+            {/* Info quando não há itens agrupáveis */}
+            {itemsGroupedByCode.length === 0 && (
+              <div className="card" style={{ textAlign: 'center', padding: '2rem' }}>
+                <p style={{ color: '#6b7280' }}>Nenhum item para agrupar</p>
+              </div>
+            )}
+          </div>
         ) : (
           /* ============ VISUALIZAÇÃO NORMAL (outros status) ============ */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
