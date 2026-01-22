@@ -5784,7 +5784,7 @@ Chave PIX: 46.663.556/0001-69`;
                             {imagemUrl ? (
                               <>
                                 <img 
-                                  src={`${BACKEND_URL}${imagemUrl}?t=${Date.now()}`} 
+                                  src={`${BACKEND_URL}${imagemUrl}?t=${imageCacheTimestamp}`} 
                                   alt={`Imagem ${item.codigo_item}`}
                                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                   onError={(e) => {
