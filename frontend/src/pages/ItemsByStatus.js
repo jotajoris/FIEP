@@ -234,6 +234,9 @@ const ItemsByStatus = () => {
   
   // Total real da planilha (todos os itens, todos os status)
   const [totalPlanilhaReal, setTotalPlanilhaReal] = useState({});
+  
+  // Limites do contrato FIEP (quantidade máxima por código)
+  const [limitesContrato, setLimitesContrato] = useState({});
 
   const statusLabels = {
     'pendente': 'Pendentes',
