@@ -5415,14 +5415,12 @@ async def get_estoque_detalhes(codigo_item: str, current_user: dict = Depends(ge
             if status not in ['comprado', 'em_separacao', 'em_transito', 'entregue']:
                 continue
             
-            # Calcular quantidade comprada
-            qtd_comprada = item.get('quantidade_comprada')
-            if not qtd_comprada:
-                fontes_compra = item.get('fontes_compra', [])
-                if fontes_compra:
-                    qtd_comprada = sum(f.get('quantidade', 0) for f in fontes_compra)
-                else:
-                    qtd_comprada = 0
+            # Calcular quantidade comprada: PRIORIZAR fontes_compra (mais preciso)
+            fontes_compra = item.get('fontes_compra', [])
+            if fontes_compra:
+                qtd_comprada = sum(f.get('quantidade', 0) for f in fontes_compra)
+            else:
+                qtd_comprada = item.get('quantidade_comprada', 0)
             
             qtd_necessaria = item.get('quantidade', 0)
             qtd_ja_usada = item.get('quantidade_usada_estoque', 0)
@@ -5431,7 +5429,6 @@ async def get_estoque_detalhes(codigo_item: str, current_user: dict = Depends(ge
             
             if excedente > 0:
                 # Pegar preço unitário
-                fontes_compra = item.get('fontes_compra', [])
                 if fontes_compra:
                     preco = fontes_compra[0].get('preco_unitario', 0)
                     fornecedor = fontes_compra[0].get('fornecedor', '')
