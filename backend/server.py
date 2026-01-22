@@ -4133,7 +4133,10 @@ async def delete_item_image(
     item_index: int,
     current_user: dict = Depends(get_current_user)
 ):
-    """Remove a imagem de um item"""
+    """
+    Remove a imagem de um item.
+    A imagem é removida da coleção imagens_itens e de TODOS os itens com o mesmo código.
+    """
     po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
     if not po:
         raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
@@ -4142,24 +4145,41 @@ async def delete_item_image(
         raise HTTPException(status_code=404, detail="Índice de item inválido")
     
     item = po['items'][item_index]
+    codigo_item = item.get('codigo_item', 'unknown')
+    
+    # Buscar imagem da coleção imagens_itens
+    imagem_info = await db.imagens_itens.find_one({"codigo_item": codigo_item}, {"_id": 0})
     
     # Remover arquivo físico se existir
-    filename = item.get('imagem_filename')
+    filename = item.get('imagem_filename') or (imagem_info.get('imagem_filename') if imagem_info else None)
     if filename:
         filepath = UPLOAD_DIR / filename
         if filepath.exists():
             filepath.unlink()
+            logger.info(f"Arquivo de imagem removido: {filename}")
     
-    # Limpar campos de imagem
-    item['imagem_url'] = None
-    item['imagem_filename'] = None
+    # Remover da coleção imagens_itens
+    await db.imagens_itens.delete_one({"codigo_item": codigo_item})
     
-    await db.purchase_orders.update_one(
-        {"id": po_id},
-        {"$set": {"items": po['items']}}
+    # Limpar imagem de TODOS os itens com este código em TODAS as OCs
+    result = await db.purchase_orders.update_many(
+        {"items.codigo_item": codigo_item},
+        {
+            "$set": {
+                "items.$[elem].imagem_url": None,
+                "items.$[elem].imagem_filename": None
+            }
+        },
+        array_filters=[{"elem.codigo_item": codigo_item}]
     )
     
-    return {"success": True, "message": "Imagem removida com sucesso"}
+    logger.info(f"Imagem removida para código {codigo_item}: {result.modified_count} OCs atualizadas")
+    
+    return {
+        "success": True, 
+        "message": f"Imagem removida de todos os itens com código {codigo_item}",
+        "ocs_atualizadas": result.modified_count
+    }
 
 
 @api_router.get("/item-images/{filename}")
