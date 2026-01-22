@@ -283,7 +283,7 @@ const PlanilhaItens = () => {
                 {/* Detalhes expandidos */}
                 {expandedItem === item.codigo_item && (
                   <tr>
-                    <td colSpan="9" style={{ padding: '0' }}>
+                    <td colSpan="10" style={{ padding: '0' }}>
                       <div style={{ 
                         background: '#f8fafc', 
                         padding: '1rem',
