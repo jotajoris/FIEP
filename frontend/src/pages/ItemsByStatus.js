@@ -986,6 +986,7 @@ const ItemsByStatus = () => {
       // Preencher com dados do item individual
       setGroupFormData({
         preco_unitario: item.fontes_compra?.[0]?.preco_unitario || '',
+        frete: item.fontes_compra?.[0]?.frete || '',
         fornecedor: item.fontes_compra?.[0]?.fornecedor || '',
         link: item.fontes_compra?.[0]?.link || ''
       });
@@ -993,6 +994,7 @@ const ItemsByStatus = () => {
       // Limpar para edição em grupo
       setGroupFormData({
         preco_unitario: '',
+        frete: '',
         fornecedor: '',
         link: ''
       });
