@@ -5037,6 +5037,63 @@ Chave PIX: 46.663.556/0001-69`;
       
       {/* Modal de Usar do Estoque */}
       {renderModalUsarEstoque()}
+      
+      {/* Modal de Imagem Expandida */}
+      {imagemExpandida && (
+        <div 
+          onClick={() => setImagemExpandida(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.85)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            cursor: 'pointer',
+            padding: '2rem'
+          }}
+          data-testid="image-modal"
+        >
+          <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }}>
+            <img 
+              src={imagemExpandida} 
+              alt="Imagem expandida"
+              style={{ 
+                maxWidth: '100%', 
+                maxHeight: '85vh', 
+                borderRadius: '12px',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button
+              onClick={() => setImagemExpandida(null)}
+              style={{
+                position: 'absolute',
+                top: '-15px',
+                right: '-15px',
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: 'white',
+                border: 'none',
+                fontSize: '1.2rem',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
