@@ -4183,20 +4183,20 @@ Chave PIX: 46.663.556/0001-69`;
                         </button>
                       </div>
                       
-                      {/* Formulário de edição em grupo (Cotar Todos) */}
+                      {/* Formulário de edição em grupo (Cotar Todos / Comprar Todos) */}
                       {editingGroupCode === group.codigo_item && groupEditMode === 'all' && (
                         <div style={{ 
                           padding: '1rem', 
-                          background: '#ecfdf5', 
+                          background: status === 'cotado' ? '#eff6ff' : '#ecfdf5', 
                           borderRadius: '8px',
                           marginBottom: '1rem',
-                          border: '2px solid #22c55e'
+                          border: status === 'cotado' ? '2px solid #3b82f6' : '2px solid #22c55e'
                         }}>
-                          <h5 style={{ margin: '0 0 0.75rem 0', color: '#166534' }}>
-                            ✅ Cotar Todos - {group.items.length} itens ({group.total_quantidade} {group.unidade})
+                          <h5 style={{ margin: '0 0 0.75rem 0', color: status === 'cotado' ? '#1e40af' : '#166534' }}>
+                            {status === 'cotado' ? '🛒 Comprar Todos' : '✅ Cotar Todos'} - {group.items.length} itens ({group.total_quantidade} {group.unidade})
                           </h5>
                           <p style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '1rem' }}>
-                            Os dados abaixo serão aplicados a TODOS os itens deste grupo:
+                            Os dados abaixo serão aplicados a TODOS os itens deste grupo{status === 'cotado' ? ' e o status será alterado para COMPRADO' : ''}:
                           </p>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
                             <div>
