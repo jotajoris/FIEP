@@ -356,6 +356,7 @@ const Estoque = () => {
                 <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Fornecedor</th>
                 <th style={{ padding: '1rem', textAlign: 'right', fontWeight: '600' }}>Preço Unit.</th>
                 <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Link</th>
+                <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Imagem</th>
                 <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Origem</th>
               </tr>
             </thead>
