@@ -704,7 +704,11 @@ const ItemsByStatus = () => {
         prioridadeOrdenacao
       };
     }).sort((a, b) => {
-      // Ordenar: 1) Prontos para envio, 2) Com NF Fornecedor, 3) Sem NF
+      // NOVA ORDENAÇÃO: Prontos para despacho (verdes) SEMPRE no topo
+      if (a.prontoParaDespacho && !b.prontoParaDespacho) return -1;
+      if (!a.prontoParaDespacho && b.prontoParaDespacho) return 1;
+      
+      // Depois: 1) Prontos para envio, 2) Com NF Fornecedor, 3) Sem NF
       if (a.prioridadeOrdenacao !== b.prioridadeOrdenacao) {
         return a.prioridadeOrdenacao - b.prioridadeOrdenacao;
       }
