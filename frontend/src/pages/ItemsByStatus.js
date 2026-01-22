@@ -220,6 +220,16 @@ const ItemsByStatus = () => {
   // Visualização agrupada por código (para pendentes)
   const [viewMode, setViewMode] = useState('normal');  // 'normal' ou 'grouped'
   const [expandedGroups, setExpandedGroups] = useState(new Set());  // Grupos expandidos
+  
+  // Edição em grupo
+  const [editingGroupCode, setEditingGroupCode] = useState(null);  // código do item sendo editado em grupo
+  const [groupEditMode, setGroupEditMode] = useState('individual');  // 'individual' ou 'all'
+  const [editingGroupItem, setEditingGroupItem] = useState(null);  // item individual sendo editado no grupo
+  const [groupFormData, setGroupFormData] = useState({
+    preco_unitario: '',
+    fornecedor: '',
+    link: ''
+  });
 
   const statusLabels = {
     'pendente': 'Pendentes',
