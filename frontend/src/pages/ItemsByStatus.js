@@ -4000,16 +4000,18 @@ Chave PIX: 46.663.556/0001-69`;
                           
                           {/* Total na planilha (sempre mostrar) */}
                           <span style={{
-                            background: '#8b5cf6',
+                            background: usandoLimiteContrato ? '#7c3aed' : '#8b5cf6',
                             color: 'white',
                             padding: '0.25rem 0.75rem',
                             borderRadius: '20px',
                             fontSize: '0.85rem',
                             fontWeight: '600'
                           }}
-                          title="Quantidade total deste item em todas as OCs do sistema"
+                          title={usandoLimiteContrato 
+                            ? "Quantidade máxima do contrato FIEP (importada da planilha)" 
+                            : "Quantidade total deste item em todas as OCs do sistema"}
                           >
-                            📊 Planilha: {totalPlanilha} {group.unidade}
+                            📊 {usandoLimiteContrato ? 'Contrato' : 'Planilha'}: {totalPlanilha} {group.unidade}
                           </span>
                           
                           {/* Estoque disponível */}
