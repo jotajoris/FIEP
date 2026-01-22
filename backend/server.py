@@ -5119,6 +5119,7 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
                         'link_compra': link_compra,
                         'fornecedor': fornecedor,
                         'preco_unitario': preco_unitario,
+                        'imagem_url': item.get('imagem_url'),  # URL da imagem do item
                         'ocs_origem': [{
                             'numero_oc': po.get('numero_oc'),
                             'po_id': po.get('id'),
