@@ -4043,6 +4043,45 @@ async def upload_item_image(
     }
 
 
+@api_router.patch("/purchase-orders/{po_id}/items/by-index/{item_index}/copiar-imagem")
+async def copiar_imagem_item(
+    po_id: str,
+    item_index: int,
+    data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Copia uma imagem já existente para outro item.
+    Usado para propagar imagem entre itens com mesmo código em diferentes OCs.
+    """
+    imagem_url = data.get('imagem_url')
+    imagem_filename = data.get('imagem_filename')
+    
+    if not imagem_url:
+        raise HTTPException(status_code=400, detail="imagem_url é obrigatório")
+    
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not po:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    if item_index < 0 or item_index >= len(po['items']):
+        raise HTTPException(status_code=404, detail="Índice de item inválido")
+    
+    item = po['items'][item_index]
+    item['imagem_url'] = imagem_url
+    if imagem_filename:
+        item['imagem_filename'] = imagem_filename
+    
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    logger.info(f"Imagem copiada para item {item.get('codigo_item')} na OC {po.get('numero_oc')}")
+    
+    return {"success": True, "message": "Imagem copiada com sucesso"}
+
+
 @api_router.delete("/purchase-orders/{po_id}/items/by-index/{item_index}/imagem")
 async def delete_item_image(
     po_id: str,
