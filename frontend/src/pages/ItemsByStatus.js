@@ -216,6 +216,10 @@ const ItemsByStatus = () => {
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+  
+  // Visualização agrupada por código (para pendentes)
+  const [viewMode, setViewMode] = useState('normal');  // 'normal' ou 'grouped'
+  const [expandedGroups, setExpandedGroups] = useState(new Set());  // Grupos expandidos
 
   const statusLabels = {
     'pendente': 'Pendentes',
