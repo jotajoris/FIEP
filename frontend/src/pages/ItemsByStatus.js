@@ -809,6 +809,113 @@ const ItemsByStatus = () => {
     setObservacaoTemp('');
   };
 
+  // ================== FUNÇÕES DE UPLOAD DE IMAGEM ==================
+  
+  const handleImageUpload = async (item, file) => {
+    if (!file) return;
+    
+    // Validar tipo
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Tipo de arquivo não permitido. Use: JPEG, PNG, WebP ou GIF');
+      return;
+    }
+    
+    // Validar tamanho (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Arquivo muito grande. Máximo: 5MB');
+      return;
+    }
+    
+    setUploadingImage(item._uniqueId);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}/imagem`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        }
+      );
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Erro ao enviar imagem');
+      }
+      
+      await response.json();
+      loadItems();
+    } catch (error) {
+      console.error('Erro ao enviar imagem:', error);
+      alert('Erro ao enviar imagem: ' + error.message);
+    } finally {
+      setUploadingImage(null);
+    }
+  };
+  
+  const handleDeleteImage = async (item) => {
+    if (!window.confirm('Remover imagem deste item?')) return;
+    
+    setUploadingImage(item._uniqueId);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}/imagem`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Erro ao remover imagem');
+      }
+      
+      loadItems();
+    } catch (error) {
+      console.error('Erro ao remover imagem:', error);
+      alert('Erro ao remover imagem: ' + error.message);
+    } finally {
+      setUploadingImage(null);
+    }
+  };
+  
+  const handleDragOver = (e, itemId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(itemId);
+  };
+  
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(null);
+  };
+  
+  const handleDrop = async (e, item) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(null);
+    
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      await handleImageUpload(item, files[0]);
+    }
+  };
+
+  // ================== FIM FUNÇÕES DE UPLOAD DE IMAGEM ==================
+
   // Funções de Rastreio
   const toggleRastreio = (itemKey) => {
     setExpandedRastreio(prev => ({
