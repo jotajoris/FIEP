@@ -558,14 +558,15 @@ const ItemsByStatus = () => {
           items: [],
           total_quantidade: 0,
           estoqueDisponivel: estoqueDisponivel[codigo] || 0,
-          imagem_url: item.imagem_url  // Pegar imagem do primeiro item
+          // Priorizar imagem do mapa (fonte de verdade) depois do item
+          imagem_url: imagensItens[codigo] || item.imagem_url
         };
       }
       grouped[codigo].items.push(item);
       grouped[codigo].total_quantidade += item.quantidade || 0;
-      // Atualizar imagem se não tinha
-      if (!grouped[codigo].imagem_url && item.imagem_url) {
-        grouped[codigo].imagem_url = item.imagem_url;
+      // Atualizar imagem se não tinha (usar mapa ou item)
+      if (!grouped[codigo].imagem_url) {
+        grouped[codigo].imagem_url = imagensItens[codigo] || item.imagem_url;
       }
     });
     
@@ -578,7 +579,7 @@ const ItemsByStatus = () => {
       // Depois por quantidade total
       return b.total_quantidade - a.total_quantidade;
     });
-  }, [displayItems, status, viewMode, estoqueDisponivel]);
+  }, [displayItems, status, viewMode, estoqueDisponivel, imagensItens]);
 
   // Total da planilha para cada código (para mostrar ao cotar)
   const totalPlanilhaPorCodigo = useMemo(() => {
