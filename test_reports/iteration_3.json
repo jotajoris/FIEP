@@ -25,10 +25,10 @@
   "test_credentials": {
     "admin": {"email": "projetos.onsolucoes@gmail.com", "password": "on123456"}
   },
-  "seed_data_creation": "Used existing OC: ID=c885f4bb-fc52-44f4-b064-1503707b994a, numero_oc=OC-2.118938, Item codigo=114641",
+  "seed_data_creation": "Used existing OC: ID=purchase-tracker-62, numero_oc=OC-2.118938, Item codigo=114641",
   "retest_needed": false,
   "should_main_agent_self_test": false,
-  "context_for_next_testing_agent": "Estoque bug fixes verified. Test file /app/tests/test_estoque_bugs.py covers: estoque endpoint, estoque/mapa endpoint, lucro calculation with quantidade_necessaria, and planilha-itens endpoint. Test data: OC ID=c885f4bb-fc52-44f4-b064-1503707b994a, item 114641 with 20 units purchased but only 1 needed, resulting in 19 units in stock and lucro of R$ 1,532.58.",
+  "context_for_next_testing_agent": "Estoque bug fixes verified. Test file /app/tests/test_estoque_bugs.py covers: estoque endpoint, estoque/mapa endpoint, lucro calculation with quantidade_necessaria, and planilha-itens endpoint. Test data: OC ID=purchase-tracker-62, item 114641 with 20 units purchased but only 1 needed, resulting in 19 units in stock and lucro of R$ 1,532.58.",
   "bugs_verified": {
     "bug_1_estoque_zerado": {
       "status": "FIXED",
