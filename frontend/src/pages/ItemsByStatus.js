@@ -3916,7 +3916,7 @@ Chave PIX: 46.663.556/0001-69`;
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {itemsGroupedByCode.map((group) => {
               const isExpanded = expandedGroups.has(group.codigo_item);
-              const totalPlanilha = totalPlanilhaPorCodigo[group.codigo_item] || 0;
+              const totalPlanilha = totalPlanilhaReal[group.codigo_item] || 0;
               
               return (
                 <div 
