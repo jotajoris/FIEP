@@ -5158,6 +5158,126 @@ async def resetar_uso_estoque(
     }
 
 
+@api_router.post("/admin/limpar-dados-estoque-inconsistentes")
+async def limpar_dados_estoque_inconsistentes(
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Limpa dados de estoque inconsistentes em itens que estão em status pendente/cotado
+    mas ainda têm dados de uso de estoque (atendido_por_estoque, estoque_origem, etc).
+    
+    Esta é uma operação de migração/correção para dados legados.
+    """
+    pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(5000)
+    
+    itens_corrigidos = []
+    status_antes_compra = ['pendente', 'cotado']
+    
+    for po in pos:
+        po_modificado = False
+        
+        for idx, item in enumerate(po.get('items', [])):
+            status = item.get('status', 'pendente')
+            
+            # Se o item está pendente/cotado mas tem dados de estoque, limpar
+            if status in status_antes_compra:
+                teve_correcao = False
+                
+                # Verificar se tem dados de estoque a limpar
+                if item.get('atendido_por_estoque'):
+                    item['atendido_por_estoque'] = False
+                    teve_correcao = True
+                
+                if item.get('quantidade_do_estoque'):
+                    item['quantidade_do_estoque'] = 0
+                    teve_correcao = True
+                
+                if item.get('estoque_origem'):
+                    # Reverter o uso nas OCs de origem
+                    for fonte in item.get('estoque_origem', []):
+                        numero_oc_origem = fonte.get('numero_oc')
+                        quantidade_usada = fonte.get('quantidade', 0)
+                        
+                        if not numero_oc_origem or quantidade_usada <= 0:
+                            continue
+                        
+                        # Encontrar a OC de origem
+                        po_origem = await db.purchase_orders.find_one(
+                            {"numero_oc": numero_oc_origem},
+                            {"_id": 0}
+                        )
+                        
+                        if not po_origem:
+                            continue
+                        
+                        codigo_item = item.get('codigo_item')
+                        
+                        for item_origem in po_origem.get('items', []):
+                            if item_origem.get('codigo_item') != codigo_item:
+                                continue
+                            
+                            # Decrementar quantidade_usada_estoque
+                            qtd_usada_atual = item_origem.get('quantidade_usada_estoque', 0)
+                            nova_qtd_usada = max(0, qtd_usada_atual - quantidade_usada)
+                            item_origem['quantidade_usada_estoque'] = nova_qtd_usada
+                            
+                            # Remover entrada em estoque_usado_em
+                            estoque_usado_em = item_origem.get('estoque_usado_em', [])
+                            item_origem['estoque_usado_em'] = [
+                                uso for uso in estoque_usado_em 
+                                if uso.get('po_id') != po.get('id')
+                            ]
+                            break
+                        
+                        # Salvar OC de origem
+                        await db.purchase_orders.update_one(
+                            {"id": po_origem['id']},
+                            {"$set": {"items": po_origem['items']}}
+                        )
+                    
+                    item['estoque_origem'] = []
+                    teve_correcao = True
+                
+                if item.get('parcialmente_atendido_estoque'):
+                    item['parcialmente_atendido_estoque'] = False
+                    teve_correcao = True
+                
+                if item.get('preco_estoque_unitario'):
+                    item['preco_estoque_unitario'] = None
+                    teve_correcao = True
+                
+                # Remover fonte de compra "ESTOQUE INTERNO" se existir
+                if item.get('fontes_compra'):
+                    fontes_filtradas = [
+                        fc for fc in item['fontes_compra'] 
+                        if fc.get('fornecedor') != 'ESTOQUE INTERNO'
+                    ]
+                    if len(fontes_filtradas) != len(item['fontes_compra']):
+                        item['fontes_compra'] = fontes_filtradas
+                        teve_correcao = True
+                
+                if teve_correcao:
+                    itens_corrigidos.append({
+                        'numero_oc': po.get('numero_oc'),
+                        'item_index': idx,
+                        'codigo_item': item.get('codigo_item'),
+                        'status': status
+                    })
+                    po_modificado = True
+        
+        if po_modificado:
+            await db.purchase_orders.update_one(
+                {"id": po['id']},
+                {"$set": {"items": po['items']}}
+            )
+    
+    return {
+        "success": True,
+        "itens_corrigidos": len(itens_corrigidos),
+        "detalhes": itens_corrigidos
+    }
+
+
 @api_router.get("/estoque/mapa")
 async def get_estoque_mapa(current_user: dict = Depends(get_current_user)):
     """
