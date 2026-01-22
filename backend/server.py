@@ -3986,7 +3986,8 @@ async def upload_item_image(
     """
     Upload de imagem para um item.
     Aceita: JPEG, PNG, WebP, GIF (máx 5MB)
-    A imagem é salva no servidor e a URL é armazenada no item.
+    A imagem é salva no servidor e vinculada ao CÓDIGO do item.
+    Todos os itens com o mesmo código compartilharão a mesma imagem.
     """
     logger.info(f"Upload de imagem recebido: po_id={po_id}, item_index={item_index}, filename={file.filename}, content_type={file.content_type}")
     
@@ -4002,7 +4003,12 @@ async def upload_item_image(
     contents = await file.read()
     logger.info(f"Arquivo lido: {len(contents)} bytes")
     
-    # Verificar tamanho
+    # Verificar tamanho mínimo (evitar imagens corrompidas/vazias)
+    if len(contents) < 1000:
+        logger.warning(f"Arquivo muito pequeno: {len(contents)} bytes - possível imagem corrompida")
+        raise HTTPException(status_code=400, detail="Arquivo muito pequeno ou corrompido. Envie uma imagem válida.")
+    
+    # Verificar tamanho máximo
     if len(contents) > MAX_IMAGE_SIZE:
         raise HTTPException(status_code=400, detail="Arquivo muito grande. Máximo: 5MB")
     
@@ -4018,32 +4024,55 @@ async def upload_item_image(
     codigo_item = item.get('codigo_item', 'unknown')
     
     # Gerar nome único para o arquivo
-    ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+    ext = file.filename.split('.')[-1].lower() if '.' in file.filename else 'jpg'
     unique_id = str(uuid.uuid4())[:8]
     filename = f"{codigo_item}_{unique_id}.{ext}"
     filepath = UPLOAD_DIR / filename
     
-    # Salvar arquivo
+    # Salvar arquivo no disco
     with open(filepath, "wb") as f:
         f.write(contents)
     
-    # Atualizar item com URL da imagem
     imagem_url = f"/api/item-images/{filename}"
-    item['imagem_url'] = imagem_url
-    item['imagem_filename'] = filename
     
-    await db.purchase_orders.update_one(
-        {"id": po_id},
-        {"$set": {"items": po['items']}}
+    # Salvar na coleção de imagens por código (fonte de verdade)
+    await db.imagens_itens.update_one(
+        {"codigo_item": codigo_item},
+        {
+            "$set": {
+                "codigo_item": codigo_item,
+                "imagem_url": imagem_url,
+                "imagem_filename": filename,
+                "tamanho_bytes": len(contents),
+                "content_type": file.content_type,
+                "data_upload": datetime.now(timezone.utc).isoformat(),
+                "uploaded_by": current_user.get('email')
+            }
+        },
+        upsert=True
     )
     
-    logger.info(f"Imagem salva para item {codigo_item}: {filename}")
+    # Atualizar TODOS os itens com este código em TODAS as OCs
+    result = await db.purchase_orders.update_many(
+        {"items.codigo_item": codigo_item},
+        {
+            "$set": {
+                "items.$[elem].imagem_url": imagem_url,
+                "items.$[elem].imagem_filename": filename
+            }
+        },
+        array_filters=[{"elem.codigo_item": codigo_item}]
+    )
+    
+    logger.info(f"Imagem salva para código {codigo_item}: {filename} ({len(contents)} bytes) - {result.modified_count} OCs atualizadas")
     
     return {
         "success": True,
         "imagem_url": imagem_url,
         "filename": filename,
-        "message": "Imagem enviada com sucesso"
+        "tamanho_bytes": len(contents),
+        "ocs_atualizadas": result.modified_count,
+        "message": f"Imagem salva para todos os itens com código {codigo_item}"
     }
 
 
