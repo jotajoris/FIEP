@@ -4980,14 +4980,12 @@ async def get_estoque_mapa(current_user: dict = Depends(get_current_user)):
             if status not in ['comprado', 'em_separacao', 'em_transito', 'entregue']:
                 continue
             
-            # Calcular quantidade comprada
-            quantidade_comprada = item.get('quantidade_comprada')
-            
-            if not quantidade_comprada:
-                fontes = item.get('fontes_compra', [])
-                if fontes:
-                    quantidade_comprada = sum(f.get('quantidade', 0) for f in fontes)
-                else:
+            # Calcular quantidade comprada: priorizar fontes de compra
+            fontes = item.get('fontes_compra', [])
+            if fontes:
+                quantidade_comprada = sum(f.get('quantidade', 0) for f in fontes)
+            else:
+                quantidade_comprada = item.get('quantidade_comprada', 0)
                     quantidade_comprada = 0
             
             # Quantidade já usada do estoque
