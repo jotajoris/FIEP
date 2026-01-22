@@ -4367,17 +4367,32 @@ Chave PIX: 46.663.556/0001-69`;
                               </div>
                             )}
                             
-                            {/* Endereço de entrega */}
-                            {item.endereco_entrega_oc && !editingGroupItem && (
-                              <div style={{ 
-                                fontSize: '0.8rem', 
-                                color: '#4b5563',
-                                background: '#f0f9ff',
-                                padding: '0.25rem 0.5rem',
-                                borderRadius: '4px',
-                                marginTop: '0.5rem'
-                              }}>
-                                📍 {item.endereco_entrega_oc}
+                            {/* Informações adicionais: marca/modelo e endereço */}
+                            {!editingGroupItem && (
+                              <div style={{ marginTop: '0.5rem' }}>
+                                {/* Marca/Modelo */}
+                                {item.marca_modelo && (
+                                  <div style={{ 
+                                    fontSize: '0.8rem', 
+                                    color: '#6b7280',
+                                    marginBottom: '0.25rem'
+                                  }}>
+                                    🏷️ {item.marca_modelo}
+                                  </div>
+                                )}
+                                
+                                {/* Endereço de entrega */}
+                                {item.endereco_entrega_oc && (
+                                  <div style={{ 
+                                    fontSize: '0.8rem', 
+                                    color: '#4b5563',
+                                    background: '#f0f9ff',
+                                    padding: '0.25rem 0.5rem',
+                                    borderRadius: '4px'
+                                  }}>
+                                    📍 {item.endereco_entrega_oc}
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
