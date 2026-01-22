@@ -2804,6 +2804,43 @@ Chave PIX: 46.663.556/0001-69`;
                 )}
               </button>
             )}
+            
+            {/* Botão Agrupar por Código (apenas para pendentes) */}
+            {status === 'pendente' && (
+              <button
+                onClick={() => {
+                  setViewMode(viewMode === 'grouped' ? 'normal' : 'grouped');
+                  setCurrentPage(1);
+                }}
+                style={{ 
+                  padding: '0.6rem 1.2rem',
+                  background: viewMode === 'grouped' ? '#8b5cf6' : '#f3f4f6',
+                  color: viewMode === 'grouped' ? 'white' : '#4b5563',
+                  border: viewMode === 'grouped' ? 'none' : '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+                data-testid="toggle-grouped-view-btn"
+              >
+                {viewMode === 'grouped' ? '🔗 Agrupado ✓' : '🔗 Agrupar por Código'}
+                {viewMode === 'grouped' && (
+                  <span style={{ 
+                    background: 'white', 
+                    color: '#8b5cf6', 
+                    borderRadius: '50%', 
+                    padding: '0.1rem 0.5rem',
+                    fontSize: '0.8rem',
+                    fontWeight: '700'
+                  }}>
+                    {itemsGroupedByCode.length}
+                  </span>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
