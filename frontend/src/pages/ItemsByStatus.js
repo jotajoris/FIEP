@@ -227,6 +227,7 @@ const ItemsByStatus = () => {
   const [editingGroupItem, setEditingGroupItem] = useState(null);  // item individual sendo editado no grupo
   const [groupFormData, setGroupFormData] = useState({
     preco_unitario: '',
+    frete: '',
     fornecedor: '',
     link: ''
   });
