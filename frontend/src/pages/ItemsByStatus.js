@@ -4129,7 +4129,8 @@ Chave PIX: 46.663.556/0001-69`;
                             onChange={(e) => {
                               const firstItem = group.items[0];
                               if (firstItem && e.target.files[0]) {
-                                handleImageUpload(firstItem, e.target.files[0]);
+                                // Passar todos os itens do grupo para propagar a imagem
+                                handleImageUpload(firstItem, e.target.files[0], group.items);
                               }
                             }}
                             style={{ display: 'none' }}
