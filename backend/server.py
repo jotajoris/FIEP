@@ -5123,8 +5123,17 @@ async def usar_estoque(
     if quantidade_disponivel <= 0:
         raise HTTPException(status_code=400, detail="Não há estoque disponível para este item")
     
+    # Para itens pendentes/cotados, ignorar quantidade_do_estoque anterior
+    # (o usuário pode ter voltado o status para testar ou corrigir)
+    status_item = item.get('status', 'pendente')
+    if status_item in ['pendente', 'cotado']:
+        # Resetar campos de estoque anterior se o item voltou para pendente/cotado
+        item['quantidade_do_estoque'] = 0
+        item['estoque_origem'] = []
+        item['parcialmente_atendido_estoque'] = False
+        item['atendido_por_estoque'] = False
+    
     # Limitar a quantidade a usar ao necessário e ao disponível
-    # Não pode usar mais do que o item precisa!
     quantidade_faltante = quantidade_necessaria - item.get('quantidade_do_estoque', 0)
     quantidade_efetiva = min(quantidade_usar, quantidade_disponivel, quantidade_faltante)
     
