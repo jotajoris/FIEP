@@ -527,9 +527,9 @@ const ItemsByStatus = () => {
     return filtered;
   }, [items, showOnlyMine, user?.owner_name, filterFornecedor, filterResponsavel, searchCodigo, searchOC, searchDescricao, searchMarca, searchLink]);
 
-  // ====== AGRUPAMENTO POR CÓDIGO (para pendentes) ======
+  // ====== AGRUPAMENTO POR CÓDIGO (para pendentes e cotados) ======
   const itemsGroupedByCode = useMemo(() => {
-    if (status !== 'pendente' || viewMode !== 'grouped') return [];
+    if ((status !== 'pendente' && status !== 'cotado') || viewMode !== 'grouped') return [];
     
     const grouped = {};
     
