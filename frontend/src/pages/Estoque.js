@@ -233,21 +233,40 @@ const Estoque = () => {
 
   return (
     <div data-testid="estoque-page" style={{ padding: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '2rem', fontWeight: '700', margin: 0 }}>📦 Estoque</h1>
           <p style={{ color: '#6b7280', marginTop: '0.5rem' }}>
             Itens comprados em quantidade maior que a necessária
           </p>
         </div>
-        <div style={{ 
-          background: '#dcfce7', 
-          padding: '1rem 1.5rem', 
-          borderRadius: '12px',
-          border: '2px solid #22c55e'
-        }}>
-          <div style={{ fontSize: '0.85rem', color: '#166534' }}>Total de Itens em Estoque</div>
-          <div style={{ fontSize: '2rem', fontWeight: '700', color: '#166534' }}>{totalItens}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <button
+            onClick={() => setShowAddModal(true)}
+            style={{
+              background: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1.25rem',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            ➕ Adicionar ao Estoque
+          </button>
+          <div style={{ 
+            background: '#dcfce7', 
+            padding: '1rem 1.5rem', 
+            borderRadius: '12px',
+            border: '2px solid #22c55e'
+          }}>
+            <div style={{ fontSize: '0.85rem', color: '#166534' }}>Total de Itens em Estoque</div>
+            <div style={{ fontSize: '2rem', fontWeight: '700', color: '#166534' }}>{totalItens}</div>
+          </div>
         </div>
       </div>
 
