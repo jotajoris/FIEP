@@ -341,13 +341,15 @@ const PlanilhaItens = () => {
                       : <span style={{ color: '#9ca3af' }}>-</span>
                     }
                   </td>
-                  <td style={{ padding: '1rem', textAlign: 'center', fontWeight: '700', background: '#faf5ff' }}>
+                  <td style={{ padding: '1rem', textAlign: 'center', fontWeight: '700', background: '#faf5ff', minWidth: '120px' }}>
                     <span style={{
                       background: '#8b5cf6',
                       color: 'white',
                       padding: '0.25rem 0.6rem',
                       borderRadius: '12px',
-                      fontWeight: '700'
+                      fontWeight: '700',
+                      whiteSpace: 'nowrap',
+                      display: 'inline-block'
                     }}>
                       {item.quantidade_contrato || item.quantidade_total_necessaria} {item.unidade}
                     </span>
