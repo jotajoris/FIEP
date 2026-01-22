@@ -4008,20 +4008,20 @@ Chave PIX: 46.663.556/0001-69`;
                           )}
                           
                           {/* Miniatura da imagem */}
-                          {group.imagem_url && (
+                          {group.imagem_url ? (
                             <div 
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setImagemExpandida(`${BACKEND_URL}${group.imagem_url}`);
                               }}
                               style={{ 
-                                width: '40px', 
-                                height: '40px', 
-                                borderRadius: '6px',
+                                width: '80px', 
+                                height: '80px', 
+                                borderRadius: '8px',
                                 overflow: 'hidden',
                                 cursor: 'pointer',
-                                border: '2px solid white',
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                                border: '2px solid #22c55e',
+                                boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
                                 flexShrink: 0
                               }}
                             >
@@ -4029,7 +4029,27 @@ Chave PIX: 46.663.556/0001-69`;
                                 src={`${BACKEND_URL}${group.imagem_url}`} 
                                 alt={`Imagem ${group.codigo_item}`}
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  e.target.parentElement.innerHTML = '<span style="font-size: 1.5rem; color: #ef4444;">⚠️</span>';
+                                }}
                               />
+                            </div>
+                          ) : (
+                            <div 
+                              style={{ 
+                                width: '80px', 
+                                height: '80px', 
+                                borderRadius: '8px',
+                                border: '2px dashed #cbd5e1',
+                                background: '#f8fafc',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0
+                              }}
+                            >
+                              <span style={{ fontSize: '2rem', color: '#94a3b8' }}>📷</span>
                             </div>
                           )}
                         </div>
@@ -4037,6 +4057,13 @@ Chave PIX: 46.663.556/0001-69`;
                         <p style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
                           {group.descricao?.substring(0, 150)}{group.descricao?.length > 150 ? '...' : ''}
                         </p>
+                        
+                        {/* Marca/Modelo */}
+                        {group.marca_modelo && (
+                          <p style={{ color: '#6b7280', marginBottom: '0.5rem', fontSize: '0.85rem' }}>
+                            🏷️ <strong>Marca/Modelo:</strong> {group.marca_modelo}
+                          </p>
+                        )}
                         
                         {/* Lista resumida das OCs */}
                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
