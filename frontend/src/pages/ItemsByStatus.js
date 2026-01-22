@@ -1009,9 +1009,12 @@ const ItemsByStatus = () => {
         throw new Error(error.detail || 'Erro ao remover imagem');
       }
       
+      // Atualizar timestamp de cache ANTES de recarregar para forçar refresh
+      setImageCacheTimestamp(Date.now());
+      
       // Recarregar mapa de imagens e itens
-      loadImagensItens();
-      loadItems();
+      await loadImagensItens();
+      await loadItems();
     } catch (error) {
       console.error('Erro ao remover imagem:', error);
       alert('Erro ao remover imagem: ' + error.message);
