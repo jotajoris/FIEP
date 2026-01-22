@@ -23,7 +23,34 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 2.9.0 (22/01/2026)
+## Versão Atual: 3.0.0 (22/01/2026)
+
+### 📸 Upload de Imagem de Itens (22/01/2026)
+- ✅ **Drag-and-drop** para upload de imagens (JPEG, PNG, WebP, GIF - máx 5MB)
+- ✅ **Miniatura** no card do item (50x50px)
+- ✅ **Popup expandido** ao clicar na miniatura (modal com fundo escuro)
+- ✅ **Link "🖼️ Ver Imagem"** nas páginas de Estoque e Planilha (abre em nova guia)
+- ✅ **Botão de remover** imagem (X vermelho)
+- ✅ **Endpoints:**
+  - `POST /api/purchase-orders/{po_id}/items/by-index/{item_index}/imagem`
+  - `GET /api/item-images/{filename}`
+  - `DELETE /api/purchase-orders/{po_id}/items/by-index/{item_index}/imagem`
+- ✅ **Armazenamento:** `/app/backend/uploads/item_images`
+
+### 🔗 Agrupar Itens por Código (22/01/2026)
+- ✅ **Botão "Agrupar por Código"** na página de Pendentes
+- ✅ **Visualização agrupada** mostra itens com mesmo código juntos
+- ✅ **Badge "🔥 X OCs"** quando item aparece em múltiplas OCs
+- ✅ **Badge "Total: X UN"** mostra quantidade total consolidada
+- ✅ **Expansão de detalhes** mostra cada OC com quantidade, responsável e endereço
+- ✅ **Botão Editar** individual para cada item no grupo
+
+### 📊 Total da Planilha em Pendentes (22/01/2026)
+- ✅ **Badge roxo "📊 Total Planilha: X UN"** nos itens pendentes
+- ✅ Aparece quando o item aparece em outras OCs (quantidade total > quantidade do item)
+- ✅ Ajuda a negociar melhor com fornecedores sabendo o volume total
+
+---
 
 ### 🐛 Correção Crítica P0 - Reversão de Estoque (22/01/2026)
 - ✅ **Bug corrigido**: Quando um item era revertido de "Comprado" para "Pendente", os campos `quantidade_usada_estoque` e `estoque_usado_em` da OC de origem NÃO eram limpos, causando corrupção de dados no cálculo do estoque
