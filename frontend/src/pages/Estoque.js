@@ -199,6 +199,32 @@ const Estoque = () => {
     }
   };
 
+  // Limpar dados inconsistentes de estoque
+  const handleLimparDadosInconsistentes = async () => {
+    if (!window.confirm('Isso vai corrigir dados de estoque em itens que estão pendentes/cotados mas ainda têm dados de uso de estoque. Deseja continuar?')) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/api/admin/limpar-dados-estoque-inconsistentes`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const { itens_corrigidos, detalhes } = response.data;
+      
+      if (itens_corrigidos > 0) {
+        alert(`${itens_corrigidos} item(ns) corrigido(s):\n${detalhes.map(d => `• ${d.numero_oc} - Item ${d.codigo_item}`).join('\n')}`);
+        loadEstoque();
+      } else {
+        alert('Nenhum dado inconsistente encontrado!');
+      }
+    } catch (error) {
+      console.error('Erro ao limpar dados inconsistentes:', error);
+      alert('Erro ao limpar dados: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
   // Abrir modal de edição
   const abrirEdicao = (oc, codigoItem) => {
     setEditingOC({
