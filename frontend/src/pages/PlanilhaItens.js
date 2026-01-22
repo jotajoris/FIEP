@@ -208,6 +208,22 @@ const PlanilhaItens = () => {
                     {item.descricao?.substring(0, 60)}{item.descricao?.length > 60 ? '...' : ''}
                   </td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>
+                    {item.imagem_url ? (
+                      <a 
+                        href={`${API}${item.imagem_url}`}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        style={{ color: '#8b5cf6', textDecoration: 'underline', fontWeight: '500' }}
+                        onClick={(e) => e.stopPropagation()}
+                        data-testid={`planilha-image-link-${item.codigo_item}`}
+                      >
+                        🖼️ Ver
+                      </a>
+                    ) : (
+                      <span style={{ color: '#9ca3af', fontSize: '0.85rem' }}>-</span>
+                    )}
+                  </td>
+                  <td style={{ padding: '1rem', textAlign: 'center' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', justifyContent: 'center' }}>
                       {item.lotes?.slice(0, 3).map((lote, i) => (
                         <span key={i} style={{ 
