@@ -4421,6 +4421,10 @@ async def atualizar_status_em_massa(
     items = po.get('items', [])
     itens_atualizados = 0
     
+    # Definir categorias de status
+    status_antes_compra = ['pendente', 'cotado']
+    status_apos_compra = ['comprado', 'em_separacao', 'em_transito', 'entregue']
+    
     # Se item_indices foi fornecido, usar apenas esses índices
     if item_indices is not None:
         indices_set = set(item_indices)
@@ -4428,14 +4432,26 @@ async def atualizar_status_em_massa(
             if idx in indices_set:
                 status_anterior = item.get('status', 'pendente')
                 if status_anterior != novo_status:
+                    # VERIFICAR SE PRECISA REVERTER USO DE ESTOQUE
+                    if novo_status in status_antes_compra and status_anterior in status_apos_compra:
+                        if item.get('estoque_origem') or item.get('atendido_por_estoque'):
+                            logger.info(f"Item {idx} voltando para {novo_status} via status em massa, revertendo uso de estoque...")
+                            await reverter_uso_estoque(item, po_id, po.get('numero_oc', ''))
+                    
                     item['status'] = novo_status
                     atualizar_data_compra(item, novo_status)  # Atualiza data de compra automaticamente
                     itens_atualizados += 1
     else:
         # Atualizar todos os itens
-        for item in items:
+        for idx, item in enumerate(items):
             status_anterior = item.get('status', 'pendente')
             if status_anterior != novo_status:
+                # VERIFICAR SE PRECISA REVERTER USO DE ESTOQUE
+                if novo_status in status_antes_compra and status_anterior in status_apos_compra:
+                    if item.get('estoque_origem') or item.get('atendido_por_estoque'):
+                        logger.info(f"Item {idx} voltando para {novo_status} via status em massa (todos), revertendo uso de estoque...")
+                        await reverter_uso_estoque(item, po_id, po.get('numero_oc', ''))
+                
                 item['status'] = novo_status
                 atualizar_data_compra(item, novo_status)  # Atualiza data de compra automaticamente
                 itens_atualizados += 1
