@@ -965,37 +965,14 @@ const ItemsByStatus = () => {
       
       const result = await response.json();
       
-      // Se tiver groupItems, propagar a imagem para todos os outros itens do grupo
-      if (groupItems && groupItems.length > 1 && result.imagem_url) {
-        console.log(`Propagando imagem para ${groupItems.length - 1} outros itens do grupo`);
-        
-        for (const groupItem of groupItems) {
-          // Pular o item que já recebeu a imagem
-          if (groupItem._uniqueId === item._uniqueId) continue;
-          
-          try {
-            // Copiar a imagem para os outros itens usando PATCH
-            await fetch(
-              `${API}/purchase-orders/${groupItem.po_id}/items/by-index/${groupItem._itemIndexInPO}/copiar-imagem`,
-              {
-                method: 'PATCH',
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  imagem_url: result.imagem_url,
-                  imagem_filename: result.filename
-                })
-              }
-            );
-          } catch (err) {
-            console.warn(`Erro ao propagar imagem para item ${groupItem._uniqueId}:`, err);
-          }
-        }
-      }
+      // O backend agora atualiza automaticamente TODOS os itens com o mesmo código
+      // Não é mais necessário propagar manualmente
       
+      // Recarregar mapa de imagens e itens
+      loadImagensItens();
       loadItems();
+      
+      alert(`✅ Imagem salva com sucesso!\n\nA imagem foi vinculada ao código ${item.codigo_item} e aparecerá automaticamente em todas as OCs.`);
     } catch (error) {
       console.error('Erro ao enviar imagem:', error);
       alert('Erro ao enviar imagem: ' + error.message);
