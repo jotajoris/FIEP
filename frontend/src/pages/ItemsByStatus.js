@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { apiGet, apiPatch, apiPost, apiDelete, API, formatBRL } from '../utils/api';
+import { apiGet, apiPatch, apiPost, apiDelete, API, BACKEND_URL, formatBRL } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { v4 as uuidv4 } from 'uuid';
 import { normalizeText } from '../utils/textUtils';
