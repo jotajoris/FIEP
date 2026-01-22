@@ -1031,6 +1031,9 @@ const ItemsByStatus = () => {
         ? items.filter(i => i._uniqueId === editingGroupItem)
         : items;
       
+      // Determinar o novo status baseado no status atual da página
+      const novoStatus = status === 'cotado' ? 'comprado' : 'cotado';
+      
       for (const item of itemsToSave) {
         const fontesCompra = [{
           quantidade: item.quantidade || 1,
@@ -1043,7 +1046,7 @@ const ItemsByStatus = () => {
         await axios.patch(
           `${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}`,
           {
-            status: 'cotado',
+            status: novoStatus,
             fontes_compra: fontesCompra
           },
           { headers: { Authorization: `Bearer ${token}` } }
@@ -1053,9 +1056,10 @@ const ItemsByStatus = () => {
       cancelGroupEdit();
       loadItems();
       
+      const acaoTexto = status === 'cotado' ? 'comprado(s)' : 'cotado(s)';
       const msg = groupEditMode === 'all' 
-        ? `${itemsToSave.length} item(ns) cotados com sucesso!`
-        : 'Item cotado com sucesso!';
+        ? `${itemsToSave.length} item(ns) ${acaoTexto} com sucesso!`
+        : `Item ${acaoTexto} com sucesso!`;
       alert(msg);
     } catch (error) {
       console.error('Erro ao salvar:', error);
