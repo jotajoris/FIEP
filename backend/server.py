@@ -4183,8 +4183,9 @@ async def delete_item_image(
 
 
 @api_router.get("/item-images/{filename}")
+@api_router.head("/item-images/{filename}")
 async def get_item_image(filename: str):
-    """Servir imagem de item"""
+    """Servir imagem de item (suporta GET e HEAD)"""
     filepath = UPLOAD_DIR / filename
     
     if not filepath.exists():
@@ -4201,7 +4202,16 @@ async def get_item_image(filename: str):
     }
     content_type = content_types.get(ext, 'image/jpeg')
     
-    return FileResponse(filepath, media_type=content_type)
+    # Adicionar headers de cache para garantir atualização
+    return FileResponse(
+        filepath, 
+        media_type=content_type,
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
+    )
 
 
 # ============== ENDPOINTS DE LIMITES DO CONTRATO (PLANILHA) ==============
