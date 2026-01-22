@@ -2923,8 +2923,8 @@ Chave PIX: 46.663.556/0001-69`;
               </button>
             )}
             
-            {/* Botão Agrupar por Código (apenas para pendentes) */}
-            {status === 'pendente' && (
+            {/* Botão Agrupar por Código (para pendentes e cotados) */}
+            {(status === 'pendente' || status === 'cotado') && (
               <button
                 onClick={() => {
                   setViewMode(viewMode === 'grouped' ? 'normal' : 'grouped');
