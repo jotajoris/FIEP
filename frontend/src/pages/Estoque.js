@@ -410,6 +410,21 @@ const Estoque = () => {
                     ) : '-'}
                   </td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>
+                    {item.imagem_url ? (
+                      <a 
+                        href={`${API}${item.imagem_url}`}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        style={{ color: '#8b5cf6', textDecoration: 'underline', fontWeight: '500' }}
+                        data-testid={`estoque-image-link-${item.codigo_item}`}
+                      >
+                        🖼️ Ver Imagem
+                      </a>
+                    ) : (
+                      <span style={{ color: '#9ca3af' }}>-</span>
+                    )}
+                  </td>
+                  <td style={{ padding: '1rem', textAlign: 'center' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       {item.ocs_origem?.map((oc, i) => (
                         <div key={i} style={{ 
