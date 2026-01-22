@@ -5777,12 +5777,18 @@ Chave PIX: 46.663.556/0001-69`;
                                   alt={`Imagem ${item.codigo_item}`}
                                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                   onError={(e) => {
+                                    // Esconder imagem quebrada mas manter container
                                     e.target.style.display = 'none';
-                                    e.target.parentElement.innerHTML = '<span style="font-size: 1.5rem; color: #ef4444;">⚠️</span>';
+                                    // Mostrar indicador de erro no lugar
+                                    const errorSpan = document.createElement('span');
+                                    errorSpan.style.cssText = 'font-size: 1.5rem; color: #ef4444;';
+                                    errorSpan.innerHTML = '⚠️';
+                                    errorSpan.title = 'Imagem corrompida - clique no X para remover';
+                                    e.target.parentElement.insertBefore(errorSpan, e.target);
                                   }}
                                   data-testid={`image-thumbnail-${item.codigo_item}`}
                                 />
-                                {/* Botão remover no canto */}
+                                {/* Botão remover no canto - SEMPRE visível quando tem URL de imagem */}
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -5803,9 +5809,11 @@ Chave PIX: 46.663.556/0001-69`;
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                                    zIndex: 10
                                   }}
                                   data-testid={`delete-image-btn-${item.codigo_item}`}
+                                  title="Remover imagem"
                                 >
                                   ✕
                                 </button>
