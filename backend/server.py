@@ -6075,10 +6075,28 @@ async def usar_estoque(
     # Calcular preço médio
     preco_medio = preco_medio_ponderado / total_usado if total_usado > 0 else 0
     
+    # Pegar dados do primeiro item de estoque usado (para copiar dados)
+    dados_item_origem = fontes_estoque[0] if fontes_estoque else {}
+    
     # Atualizar item destino
     quantidade_anterior_estoque = item.get('quantidade_do_estoque', 0)
     item['quantidade_do_estoque'] = quantidade_anterior_estoque + total_usado
     item['preco_estoque_unitario'] = preco_medio
+    
+    # ========= COPIAR DADOS DO ITEM ORIGINAL DO ESTOQUE =========
+    # Copiar observação se não tiver ou estiver vazia
+    if dados_item_origem.get('observacao') and not item.get('observacao'):
+        item['observacao'] = dados_item_origem['observacao']
+    
+    # Copiar imagem se não tiver
+    if dados_item_origem.get('imagem_url') and not item.get('imagem_url'):
+        item['imagem_url'] = dados_item_origem['imagem_url']
+        if dados_item_origem.get('imagem_filename'):
+            item['imagem_filename'] = dados_item_origem['imagem_filename']
+    
+    # Copiar marca/modelo se não tiver
+    if dados_item_origem.get('marca_modelo') and not item.get('marca_modelo'):
+        item['marca_modelo'] = dados_item_origem['marca_modelo']
     
     # Registrar origem do estoque
     if 'estoque_origem' not in item:
@@ -6094,17 +6112,18 @@ async def usar_estoque(
         item['atendido_por_estoque'] = True
         atualizar_data_compra(item, 'comprado')
         
-        # Adicionar fonte de compra com preço do estoque
+        # Adicionar fonte de compra com dados do item original do estoque
         if 'fontes_compra' not in item or not item['fontes_compra']:
             item['fontes_compra'] = []
         
+        # Usar dados do item original (frete, link, fornecedor)
         item['fontes_compra'].append({
             'id': str(uuid.uuid4()),
             'quantidade': quantidade_necessaria,
             'preco_unitario': preco_medio,
-            'frete': 0,
-            'link': '',
-            'fornecedor': 'ESTOQUE INTERNO'
+            'frete': dados_item_origem.get('frete', 0),
+            'link': dados_item_origem.get('link', ''),
+            'fornecedor': dados_item_origem.get('fornecedor', '') or 'ESTOQUE INTERNO'
         })
         
         # Recalcular lucro
