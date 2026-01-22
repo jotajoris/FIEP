@@ -1,0 +1,102 @@
+{
+  "summary": "P0 Bug Fix Verified: Estoque reversal when item status changes from 'comprado' to 'pendente'. All 14 backend tests passed. Frontend UI tests confirmed Estoque page working correctly with 'Corrigir Dados' button functional.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_estoque_reverter_bug.py",
+    "/app/test_reports/pytest/pytest_results_reverter_bug.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/tests/test_estoque_reverter_bug.py"
+  ],
+  "success_rate": {
+    "backend": "100% (14/14 tests passed)",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "admin": {"email": "projetos.onsolucoes@gmail.com", "password": "on123456"}
+  },
+  "seed_data_creation": "Used existing test data: OC-2.118938 (origem) and OC-2.118941 (destino) with item 114641",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "P0 Bug fix verified. The reverter_uso_estoque function correctly clears quantidade_usada_estoque and estoque_usado_em in origin OC when item is reverted from 'comprado' to 'pendente'. Test file /app/tests/test_estoque_reverter_bug.py covers complete flow: use estoque -> verify decreased -> revert to pendente -> verify restored.",
+  "bugs_verified": {
+    "p0_bug_estoque_reversal": {
+      "status": "FIXED",
+      "description": "When item reverted from 'comprado' to 'pendente', the origin OC fields quantidade_usada_estoque and estoque_usado_em are now correctly cleared",
+      "verification": {
+        "test_flow": [
+          "1. Verified estoque shows 9 UN for item 114641 (10 compradas - 1 necessária)",
+          "2. Used estoque (2 UN) for item in OC-2.118941 -> estoque decreased to 7 UN",
+          "3. Verified OC origem registered usage (quantidade_usada_estoque=2, estoque_usado_em has entry)",
+          "4. Reverted item status to 'pendente'",
+          "5. Verified estoque restored to 9 UN",
+          "6. Verified OC origem fields cleared (quantidade_usada_estoque=0, estoque_usado_em empty)"
+        ]
+      },
+      "function": "reverter_uso_estoque() in server.py lines 101-207",
+      "endpoints_tested": [
+        "GET /api/estoque",
+        "POST /api/estoque/usar",
+        "PATCH /api/purchase-orders/{po_id}/items/by-index/{item_index}",
+        "POST /api/admin/limpar-dados-estoque-inconsistentes"
+      ]
+    }
+  },
+  "test_results": {
+    "backend_tests": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "test_classes": [
+        "TestEstoqueQuantidadeCorreta - 3 tests (endpoint returns 200, has item 114641, quantity is 9 UN)",
+        "TestFluxoCompletoEstoque - 9 tests (complete flow: use estoque -> verify -> revert -> verify restoration)",
+        "TestCorrigirDadosEndpoint - 1 test (POST /api/admin/limpar-dados-estoque-inconsistentes returns 200)",
+        "TestCamposLimposAoReverter - 1 test (verify all estoque fields cleared in pendente items)"
+      ]
+    },
+    "frontend_tests": {
+      "estoque_page": {
+        "page_loads": true,
+        "item_114641_displayed": true,
+        "quantity_9_shown": true,
+        "origin_oc_link": true,
+        "total_items_badge": true,
+        "corrigir_dados_button": {
+          "visible": true,
+          "clickable": true,
+          "shows_confirmation_dialog": true,
+          "executes_cleanup": true
+        }
+      }
+    }
+  },
+  "test_data": {
+    "oc_origem": {
+      "numero_oc": "OC-2.118938",
+      "po_id": "c885f4bb-fc52-44f4-b064-1503707b994a",
+      "item_114641": {
+        "quantidade_comprada": 10,
+        "quantidade_necessaria": 1,
+        "estoque_disponivel": 9
+      }
+    },
+    "oc_destino": {
+      "numero_oc": "OC-2.118941",
+      "po_id": "7e7e32af-96a1-4d7f-a474-c341b4344e01",
+      "item_114641": {
+        "quantidade_necessaria": 2,
+        "status": "pendente"
+      }
+    }
+  }
+}
