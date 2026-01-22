@@ -5606,7 +5606,7 @@ Chave PIX: 46.663.556/0001-69`;
                             {item.imagem_url ? (
                               <>
                                 <img 
-                                  src={`${API}${item.imagem_url}`} 
+                                  src={`${BACKEND_URL}${item.imagem_url}`} 
                                   alt={`Imagem ${item.codigo_item}`}
                                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                   onError={(e) => {
