@@ -4168,7 +4168,7 @@ Chave PIX: 46.663.556/0001-69`;
                           }}
                           style={{
                             padding: '0.5rem 1rem',
-                            background: '#22c55e',
+                            background: status === 'cotado' ? '#3b82f6' : '#22c55e',
                             color: 'white',
                             border: 'none',
                             borderRadius: '8px',
@@ -4179,7 +4179,7 @@ Chave PIX: 46.663.556/0001-69`;
                             gap: '0.5rem'
                           }}
                         >
-                          🚀 Cotar Todos ({group.total_quantidade} {group.unidade})
+                          {status === 'cotado' ? '🛒' : '🚀'} {status === 'cotado' ? 'Comprar Todos' : 'Cotar Todos'} ({group.total_quantidade} {group.unidade})
                         </button>
                       </div>
                       
