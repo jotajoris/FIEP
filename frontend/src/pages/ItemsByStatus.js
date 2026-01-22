@@ -1448,8 +1448,12 @@ Chave PIX: 46.663.556/0001-69`;
         return;
       }
       
-      // Calcular quanto falta para o item
-      const qtdJaAtendida = item.quantidade_do_estoque || 0;
+      // Para itens pendentes/cotados, ignorar quantidade_do_estoque anterior
+      // (o usuário pode ter voltado o status para testar ou corrigir)
+      const statusPodeUsarEstoque = ['pendente', 'cotado'];
+      const ignorarQtdAnterior = statusPodeUsarEstoque.includes(item.status);
+      
+      const qtdJaAtendida = ignorarQtdAnterior ? 0 : (item.quantidade_do_estoque || 0);
       const qtdFaltante = (item.quantidade || 0) - qtdJaAtendida;
       
       if (qtdFaltante <= 0) {
