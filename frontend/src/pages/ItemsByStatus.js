@@ -4059,6 +4059,43 @@ Chave PIX: 46.663.556/0001-69`;
                 )}
               </div>
             ))}
+            
+            {/* Paginação no final */}
+            {totalPagesEmSeparacao > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', alignItems: 'center', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
+                <button
+                  onClick={() => setEmSeparacaoPage(p => Math.max(1, p - 1))}
+                  disabled={emSeparacaoPage === 1}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '6px',
+                    background: emSeparacaoPage === 1 ? '#f3f4f6' : 'white',
+                    cursor: emSeparacaoPage === 1 ? 'not-allowed' : 'pointer',
+                    opacity: emSeparacaoPage === 1 ? 0.5 : 1
+                  }}
+                >
+                  ← Anterior
+                </button>
+                <span style={{ padding: '0 1rem', fontWeight: '600' }}>
+                  Página {emSeparacaoPage} de {totalPagesEmSeparacao}
+                </span>
+                <button
+                  onClick={() => setEmSeparacaoPage(p => Math.min(totalPagesEmSeparacao, p + 1))}
+                  disabled={emSeparacaoPage === totalPagesEmSeparacao}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '6px',
+                    background: emSeparacaoPage === totalPagesEmSeparacao ? '#f3f4f6' : 'white',
+                    cursor: emSeparacaoPage === totalPagesEmSeparacao ? 'not-allowed' : 'pointer',
+                    opacity: emSeparacaoPage === totalPagesEmSeparacao ? 0.5 : 1
+                  }}
+                >
+                  Próximo →
+                </button>
+              </div>
+            )}
           </div>
         ) : (status === 'pendente' || status === 'cotado') && viewMode === 'grouped' ? (
           /* ============ VISUALIZAÇÃO AGRUPADA POR CÓDIGO (pendentes e cotados) ============ */
