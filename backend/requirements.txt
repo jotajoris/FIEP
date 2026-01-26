@@ -1,3 +1,6 @@
+PyJWT==2.10.1
+PyMuPDF==1.26.7
+Pygments==2.19.2
 annotated-types==0.7.0
 anyio==4.12.0
 bcrypt==4.0.1
@@ -16,6 +19,7 @@ et_xmlfile==2.0.0
 fastapi==0.110.1
 flake8==7.3.0
 h11==0.16.0
+httpx==0.28.1
 idna==3.11
 iniconfig==2.3.0
 isort==7.0.0
@@ -35,6 +39,7 @@ packaging==25.0
 pandas==2.3.3
 passlib==1.7.4
 pathspec==0.12.1
+pillow==12.1.0
 platformdirs==4.5.1
 pluggy==1.6.0
 pyasn1==0.6.1
@@ -43,10 +48,8 @@ pycparser==2.23
 pydantic==2.12.5
 pydantic_core==2.41.5
 pyflakes==3.4.0
-Pygments==2.19.2
-PyJWT==2.10.1
 pymongo==4.5.0
-PyMuPDF==1.26.7
+pytesseract==0.3.13
 pytest==9.0.2
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
@@ -54,8 +57,8 @@ python-jose==3.5.0
 python-multipart==0.0.21
 pytokens==0.3.0
 pytz==2025.2
-requests==2.32.5
 requests-oauthlib==2.0.0
+requests==2.32.5
 resend==2.19.0
 rich==14.2.0
 rsa==4.9.1
@@ -71,4 +74,3 @@ tzdata==2025.3
 urllib3==2.6.2
 uvicorn==0.25.0
 watchfiles==1.1.1
-httpx==0.28.1
