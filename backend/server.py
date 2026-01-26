@@ -325,6 +325,84 @@ def extract_text_with_ocr(pdf_bytes: bytes) -> str:
         return ""
 
 
+def buscar_cep_por_endereco(endereco: str) -> Optional[str]:
+    """
+    Buscar CEP automaticamente pelo endereço usando APIs gratuitas.
+    Tenta múltiplas fontes para maior confiabilidade.
+    """
+    if not endereco or len(endereco) < 10:
+        return None
+    
+    # Limpar e formatar endereço
+    endereco_limpo = endereco.strip()
+    
+    # Extrair componentes do endereço (LOGRADOURO, NUMERO, BAIRRO, CIDADE)
+    # Formato típico: "AVENIDA AVIAÇÃO, 1851, VILA NOVA, APUCARANA"
+    partes = [p.strip() for p in endereco_limpo.split(',')]
+    
+    if len(partes) >= 3:
+        logradouro = partes[0]
+        cidade = partes[-1].strip()
+        # Se tem estado (ex: "APUCARANA - PR"), extrair
+        if ' - ' in cidade:
+            cidade = cidade.split(' - ')[0].strip()
+    else:
+        logradouro = endereco_limpo
+        cidade = ""
+    
+    # Método 1: API ViaCEP (busca por endereço)
+    try:
+        # ViaCEP aceita busca: UF/Cidade/Logradouro
+        # Tentar com PR (Paraná) que é o estado da FIEP
+        estados = ['PR', 'SC', 'RS', 'SP']  # Estados mais prováveis
+        
+        for uf in estados:
+            url = f"https://viacep.com.br/ws/{uf}/{cidade}/{logradouro}/json/"
+            response = requests.get(url, timeout=5)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list) and len(data) > 0:
+                    cep = data[0].get('cep', '').replace('-', '')
+                    if cep and len(cep) == 8:
+                        logger.info(f"CEP encontrado via ViaCEP: {cep} para {endereco_limpo}")
+                        return f"{cep[:5]}-{cep[5:]}"
+    except Exception as e:
+        logger.warning(f"Erro ao buscar CEP via ViaCEP: {e}")
+    
+    # Método 2: API Nominatim (OpenStreetMap) - Geocodificação reversa
+    try:
+        # Adicionar ", Brasil" para melhor precisão
+        query = f"{endereco_limpo}, Brasil"
+        url = f"https://nominatim.openstreetmap.org/search"
+        params = {
+            'q': query,
+            'format': 'json',
+            'addressdetails': 1,
+            'limit': 1,
+            'countrycodes': 'br'
+        }
+        headers = {'User-Agent': 'FIEP-OC-System/1.0'}
+        
+        response = requests.get(url, params=params, headers=headers, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data and len(data) > 0:
+                address = data[0].get('address', {})
+                cep = address.get('postcode', '')
+                if cep:
+                    cep = cep.replace('-', '').replace('.', '')
+                    if len(cep) == 8:
+                        logger.info(f"CEP encontrado via Nominatim: {cep} para {endereco_limpo}")
+                        return f"{cep[:5]}-{cep[5:]}"
+    except Exception as e:
+        logger.warning(f"Erro ao buscar CEP via Nominatim: {e}")
+    
+    logger.info(f"CEP não encontrado para: {endereco_limpo}")
+    return None
+
+
 def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
     """Extrair dados de OC de um PDF"""
     try:
