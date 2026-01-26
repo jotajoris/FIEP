@@ -1040,7 +1040,8 @@ const ItemsByStatus = () => {
         preco_unitario: item.fontes_compra?.[0]?.preco_unitario || '',
         frete: item.fontes_compra?.[0]?.frete || '',
         fornecedor: item.fontes_compra?.[0]?.fornecedor || '',
-        link: item.fontes_compra?.[0]?.link || ''
+        link: item.fontes_compra?.[0]?.link || '',
+        quantidade_comprar: item.quantidade || 1  // Para compra parcial
       });
     } else {
       // Limpar para edição em grupo
@@ -1048,7 +1049,8 @@ const ItemsByStatus = () => {
         preco_unitario: '',
         frete: '',
         fornecedor: '',
-        link: ''
+        link: '',
+        quantidade_comprar: ''
       });
     }
   };
@@ -1057,7 +1059,44 @@ const ItemsByStatus = () => {
     setEditingGroupCode(null);
     setGroupEditMode('individual');
     setEditingGroupItem(null);
-    setGroupFormData({ preco_unitario: '', frete: '', fornecedor: '', link: '' });
+    setGroupFormData({ preco_unitario: '', frete: '', fornecedor: '', link: '', quantidade_comprar: '' });
+  };
+  
+  // Função para compra parcial
+  const compraParcial = async (item) => {
+    const quantidadeComprar = parseInt(groupFormData.quantidade_comprar) || 0;
+    const quantidadeTotal = item.quantidade || 1;
+    
+    if (quantidadeComprar <= 0) {
+      alert('Informe a quantidade a comprar');
+      return;
+    }
+    
+    if (quantidadeComprar >= quantidadeTotal) {
+      // Se vai comprar tudo, usar fluxo normal
+      await saveGroupEdit([item]);
+      return;
+    }
+    
+    try {
+      await apiPost(
+        `${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}/compra-parcial`,
+        {
+          quantidade_comprar: quantidadeComprar,
+          preco_unitario: parseFloat(groupFormData.preco_unitario) || 0,
+          frete: parseFloat(groupFormData.frete) || 0,
+          fornecedor: groupFormData.fornecedor || '',
+          link: groupFormData.link || ''
+        }
+      );
+      
+      cancelGroupEdit();
+      loadItems();
+      alert(`✅ Compra parcial realizada!\n\n${quantidadeComprar} de ${quantidadeTotal} unidades foram compradas.\n\nAs ${quantidadeTotal - quantidadeComprar} unidades restantes continuam em "Cotados".`);
+    } catch (error) {
+      console.error('Erro na compra parcial:', error);
+      alert('Erro na compra parcial: ' + (error.response?.data?.detail || error.message));
+    }
   };
   
   const saveGroupEdit = async (items) => {
