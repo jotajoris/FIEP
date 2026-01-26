@@ -724,6 +724,14 @@ const ItemsByStatus = () => {
     });
   }, [status, displayItems, ocNFVenda, ocNFsVenda, ocProntoDespacho]);
 
+  // Paginação para Em Separação
+  const paginatedOCs = useMemo(() => {
+    const startIdx = (emSeparacaoPage - 1) * ITEMS_PER_PAGE_EM_SEPARACAO;
+    return itemsGroupedByOC.slice(startIdx, startIdx + ITEMS_PER_PAGE_EM_SEPARACAO);
+  }, [itemsGroupedByOC, emSeparacaoPage]);
+  
+  const totalPagesEmSeparacao = Math.ceil(itemsGroupedByOC.length / ITEMS_PER_PAGE_EM_SEPARACAO);
+
   const startEdit = (item) => {
     // Usar ID único do item para evitar conflito
     setEditingItem(item._uniqueId);
