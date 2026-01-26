@@ -2012,6 +2012,8 @@ async def get_purchase_orders_simple(
             "cnpj_requisitante": po.get('cnpj_requisitante', ''),
             "total_items": total_items,
             "valor_total": valor_total,
+            # Incluir itens simplificados para filtro local
+            "items": [{"codigo_item": i.get('codigo_item'), "descricao": i.get('descricao'), "responsavel": i.get('responsavel')} for i in items],
             # Resumo por status
             "status_count": {
                 "pendente": sum(1 for i in items if i.get('status') == 'pendente'),
