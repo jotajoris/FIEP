@@ -4037,7 +4037,97 @@ Chave PIX: 46.663.556/0001-69`;
                                         </span>
                                       )}
                                     </div>
-                                    <p style={{ color: '#4a5568', marginBottom: '0.5rem' }}>{item.descricao}</p>
+                                    
+                                    {/* Área de foto do item */}
+                                    <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.75rem' }}>
+                                      {/* Thumbnail da imagem */}
+                                      {(() => {
+                                        const imagemUrl = imagensItens[item.codigo_item];
+                                        return (
+                                          <div
+                                            style={{
+                                              width: '70px',
+                                              height: '70px',
+                                              borderRadius: '8px',
+                                              overflow: 'hidden',
+                                              border: imagemUrl ? '2px solid #22c55e' : '2px dashed #d1d5db',
+                                              cursor: 'pointer',
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              justifyContent: 'center',
+                                              background: imagemUrl ? 'white' : '#f9fafb',
+                                              flexShrink: 0,
+                                              position: 'relative'
+                                            }}
+                                            onClick={() => {
+                                              if (imagemUrl) {
+                                                setImagemExpandida(`${BACKEND_URL}${imagemUrl}?t=${imageCacheTimestamp}`);
+                                              } else {
+                                                const input = document.createElement('input');
+                                                input.type = 'file';
+                                                input.accept = 'image/*';
+                                                input.onchange = (e) => {
+                                                  if (e.target.files && e.target.files[0]) {
+                                                    handleImageUpload(item, e.target.files[0]);
+                                                  }
+                                                };
+                                                input.click();
+                                              }
+                                            }}
+                                            title={imagemUrl ? 'Clique para ampliar' : 'Clique para adicionar foto'}
+                                          >
+                                            {imagemUrl ? (
+                                              <>
+                                                <img
+                                                  src={`${BACKEND_URL}${imagemUrl}?t=${imageCacheTimestamp}`}
+                                                  alt={`Foto ${item.codigo_item}`}
+                                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                  onError={(e) => {
+                                                    e.target.style.display = 'none';
+                                                    e.target.parentElement.innerHTML = '<span style="font-size: 1.5rem; color: #ef4444;">⚠️</span>';
+                                                  }}
+                                                />
+                                                {/* Botão de remover */}
+                                                <button
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteImage(item);
+                                                  }}
+                                                  style={{
+                                                    position: 'absolute',
+                                                    top: '-5px',
+                                                    right: '-5px',
+                                                    width: '20px',
+                                                    height: '20px',
+                                                    borderRadius: '50%',
+                                                    background: '#ef4444',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    fontSize: '0.7rem',
+                                                    fontWeight: '700',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center'
+                                                  }}
+                                                  title="Remover imagem"
+                                                >
+                                                  ×
+                                                </button>
+                                              </>
+                                            ) : (
+                                              <span style={{ fontSize: '1.2rem', color: '#9ca3af' }}>📷</span>
+                                            )}
+                                          </div>
+                                        );
+                                      })()}
+                                      
+                                      {/* Descrição ao lado da foto */}
+                                      <div style={{ flex: 1 }}>
+                                        <p style={{ color: '#4a5568', marginBottom: '0.5rem', lineHeight: '1.4' }}>{item.descricao}</p>
+                                      </div>
+                                    </div>
+                                    
                                     <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.9rem', color: '#718096' }}>
                                       <span><strong>Responsável:</strong> <strong style={{ color: '#667eea' }}>{item.responsavel}</strong></span>
                                       <span><strong>Quantidade:</strong> {item.quantidade} {item.unidade}</span>
