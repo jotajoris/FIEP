@@ -1923,8 +1923,8 @@ Chave PIX: 46.663.556/0001-69`;
             <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>
               Código: {item.codigo_item}
             </div>
-            <div style={{ fontSize: '0.9rem', color: '#64748b' }}>
-              {item.descricao?.substring(0, 100)}...
+            <div style={{ fontSize: '0.9rem', color: '#64748b', lineHeight: '1.4' }}>
+              {item.descricao}
             </div>
             <div style={{ marginTop: '0.5rem' }}>
               <span style={{ fontWeight: '500' }}>Quantidade necessária: </span>
