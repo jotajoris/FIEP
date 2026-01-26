@@ -1802,12 +1802,17 @@ async def create_purchase_order(po_create: PurchaseOrderCreate, current_user: di
     po = PurchaseOrder(
         numero_oc=po_create.numero_oc,
         data_entrega=po_create.data_entrega,
+        endereco_entrega=po_create.endereco_entrega or "",
         items=processed_items,
         created_by=current_user.get('sub')
     )
     
     doc = po.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
+    
+    # Garantir que endereco_entrega está no documento
+    if po_create.endereco_entrega:
+        doc['endereco_entrega'] = po_create.endereco_entrega
     
     await db.purchase_orders.insert_one(doc)
     
