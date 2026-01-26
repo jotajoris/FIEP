@@ -53,6 +53,8 @@ from auth import (
     get_current_user, require_admin
 )
 
+import requests  # Para buscar CEP
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
