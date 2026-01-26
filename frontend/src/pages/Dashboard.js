@@ -686,9 +686,8 @@ const Dashboard = () => {
         </div>
 
         {/* Contador de resultados */}
-        {(searchTerm || searchCodigoItem || searchResponsavel || dateFrom || dateTo) && (
+        {(searchTerm || searchCodigoItem || searchDescricaoItem || searchResponsavel || dateFrom || dateTo) && (
           <div style={{ marginBottom: '1rem', color: '#718096', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            {filtering && <span>🔄</span>}
             Mostrando {filteredOrders.length} OCs
             {(searchCodigoItem || searchDescricaoItem || searchResponsavel) && ' (filtrado por itens)'}
           </div>
@@ -696,8 +695,8 @@ const Dashboard = () => {
         
         {filteredOrders.length === 0 ? (
           <p style={{ textAlign: 'center', color: '#718096', padding: '2rem' }} data-testid="no-orders-message">
-            {filtering 
-              ? 'Buscando...'
+            {loading 
+              ? 'Carregando...'
               : 'Nenhuma OC encontrada com os filtros aplicados.'
             }
           </p>
