@@ -168,6 +168,7 @@ class PurchaseOrder(BaseModel):
 class PurchaseOrderCreate(BaseModel):
     numero_oc: str
     data_entrega: Optional[str] = None  # Data de entrega no formato YYYY-MM-DD
+    endereco_entrega: Optional[str] = None  # Endereço de entrega
     items: List[POItem]
     created_by: Optional[str] = None
 
