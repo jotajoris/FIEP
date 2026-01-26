@@ -289,6 +289,40 @@ def calcular_lucro_item(item: dict) -> None:
         item['lucro_liquido'] = round(receita_total - custo_total - frete_compra - impostos - frete_envio, 2)
 
 
+def extract_text_with_ocr(pdf_bytes: bytes) -> str:
+    """Extrair texto de PDF usando OCR (para PDFs escaneados)"""
+    if not OCR_AVAILABLE:
+        logger.warning("OCR não disponível - pytesseract não instalado")
+        return ""
+    
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        full_text = ""
+        
+        for page_num, page in enumerate(doc):
+            # Converter página para imagem com alta resolução
+            mat = fitz.Matrix(2, 2)  # 2x zoom para melhor qualidade
+            pix = page.get_pixmap(matrix=mat)
+            
+            # Converter para PIL Image
+            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+            
+            # Usar OCR para extrair texto (português + inglês)
+            try:
+                page_text = pytesseract.image_to_string(img, lang='por+eng')
+                full_text += page_text + "\n"
+                logger.info(f"OCR página {page_num + 1}: {len(page_text)} caracteres extraídos")
+            except Exception as ocr_error:
+                logger.warning(f"Erro OCR na página {page_num + 1}: {ocr_error}")
+        
+        doc.close()
+        return full_text
+        
+    except Exception as e:
+        logger.error(f"Erro ao extrair texto com OCR: {e}")
+        return ""
+
+
 def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
     """Extrair dados de OC de um PDF"""
     try:
@@ -299,6 +333,15 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
             full_text += page.get_text()
         
         doc.close()
+        
+        # Se o PDF não tem texto (é escaneado), usar OCR
+        if not full_text.strip() and OCR_AVAILABLE:
+            logger.info("PDF parece ser escaneado - tentando OCR...")
+            full_text = extract_text_with_ocr(pdf_bytes)
+            if full_text.strip():
+                logger.info(f"OCR extraiu {len(full_text)} caracteres")
+            else:
+                logger.warning("OCR não conseguiu extrair texto")
         
         # Extrair número da OC - procurar por padrões como OC-X.XXXXXX
         oc_patterns = [
