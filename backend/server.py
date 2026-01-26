@@ -2157,6 +2157,123 @@ async def update_item_by_index_status(
     
     return {"message": "Item atualizado com sucesso"}
 
+
+# ============== ENDPOINT PARA COMPRA PARCIAL ==============
+
+class CompraParcialRequest(BaseModel):
+    """Request para compra parcial de um item"""
+    quantidade_comprar: int  # Quantidade a comprar (vai para 'comprado')
+    fontes_compra: Optional[List[FonteCompra]] = None  # Fontes de compra (preço, fornecedor, etc)
+    preco_unitario: Optional[float] = None
+    frete: Optional[float] = None
+    fornecedor: Optional[str] = None
+    link: Optional[str] = None
+
+@api_router.post("/purchase-orders/{po_id}/items/by-index/{item_index}/compra-parcial")
+async def comprar_parcialmente(
+    po_id: str,
+    item_index: int,
+    request: CompraParcialRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Comprar parcialmente um item cotado.
+    
+    Divide o item original em dois:
+    1. A quantidade comprada vai para status 'comprado'
+    2. A quantidade restante permanece em status 'cotado'
+    
+    Exemplo:
+    - Item original: 4 unidades em 'cotado'
+    - Comprar 2 unidades
+    - Resultado: 2 itens no banco
+      - Item 1: 2 unidades em 'comprado' (com dados da compra)
+      - Item 2: 2 unidades em 'cotado' (mantém dados da cotação)
+    """
+    logger.info(f"compra_parcial: po_id={po_id}, item_index={item_index}, qtd_comprar={request.quantidade_comprar}")
+    
+    # Buscar OC
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not po:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    if item_index < 0 or item_index >= len(po['items']):
+        raise HTTPException(status_code=404, detail="Índice de item inválido")
+    
+    item_original = po['items'][item_index]
+    quantidade_total = item_original.get('quantidade', 0)
+    
+    # Validações
+    if item_original.get('status') != 'cotado':
+        raise HTTPException(status_code=400, detail="Apenas itens com status 'cotado' podem ser comprados parcialmente")
+    
+    if request.quantidade_comprar <= 0:
+        raise HTTPException(status_code=400, detail="Quantidade a comprar deve ser maior que zero")
+    
+    if request.quantidade_comprar >= quantidade_total:
+        raise HTTPException(status_code=400, detail=f"Para comprar todas as {quantidade_total} unidades, use a função de compra normal. Este endpoint é para compra parcial.")
+    
+    quantidade_restante = quantidade_total - request.quantidade_comprar
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # CRIAR ITEM COMPRADO (cópia do original com quantidade comprada)
+    item_comprado = item_original.copy()
+    item_comprado['quantidade'] = request.quantidade_comprar
+    item_comprado['status'] = 'comprado'
+    item_comprado['data_compra'] = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    item_comprado['compra_parcial'] = True  # Flag para indicar que veio de compra parcial
+    item_comprado['compra_parcial_de'] = quantidade_total  # Quantidade original
+    
+    # Adicionar fonte de compra
+    if request.fontes_compra:
+        item_comprado['fontes_compra'] = [fc.model_dump() for fc in request.fontes_compra]
+    elif request.preco_unitario is not None:
+        item_comprado['fontes_compra'] = [{
+            'quantidade': request.quantidade_comprar,
+            'preco_unitario': request.preco_unitario,
+            'frete': request.frete or 0,
+            'fornecedor': request.fornecedor or '',
+            'link': request.link or ''
+        }]
+    
+    # Calcular preço de compra médio
+    if item_comprado.get('fontes_compra'):
+        total_custo = sum(fc.get('quantidade', 0) * fc.get('preco_unitario', 0) for fc in item_comprado['fontes_compra'])
+        total_qtd = sum(fc.get('quantidade', 0) for fc in item_comprado['fontes_compra'])
+        if total_qtd > 0:
+            item_comprado['preco_compra'] = round(total_custo / total_qtd, 2)
+        item_comprado['frete_compra'] = sum(fc.get('frete', 0) for fc in item_comprado['fontes_compra'])
+    
+    # Calcular lucro
+    calcular_lucro_item(item_comprado)
+    
+    # ATUALIZAR ITEM ORIGINAL (mantém em cotado com quantidade restante)
+    item_original['quantidade'] = quantidade_restante
+    item_original['quantidade_original_antes_compra_parcial'] = quantidade_total
+    
+    # Inserir item comprado logo após o original
+    po['items'].insert(item_index + 1, item_comprado)
+    
+    # Salvar
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    logger.info(f"Compra parcial realizada: {request.quantidade_comprar} de {quantidade_total} unidades do item {item_original.get('codigo_item')}")
+    
+    return {
+        "success": True,
+        "message": f"Compra parcial realizada com sucesso!",
+        "detalhes": {
+            "codigo_item": item_original.get('codigo_item'),
+            "quantidade_original": quantidade_total,
+            "quantidade_comprada": request.quantidade_comprar,
+            "quantidade_restante_cotado": quantidade_restante
+        }
+    }
+
+
 # Endpoint para mover múltiplos itens do carrinho para Comprado
 @api_router.post("/purchase-orders/mover-carrinho-para-comprado")
 async def mover_carrinho_para_comprado(
