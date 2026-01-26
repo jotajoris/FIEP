@@ -715,19 +715,10 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                             "regiao": regiao
                         })
         
-        # Buscar CEP automaticamente se o endereço foi encontrado
-        cep = None
-        if endereco_entrega:
-            cep = buscar_cep_por_endereco(endereco_entrega)
-            if cep:
-                # Adicionar CEP ao endereço se encontrado
-                endereco_entrega = f"{endereco_entrega} - CEP: {cep}"
-        
         return {
             "numero_oc": numero_oc,
             "items": items,
             "endereco_entrega": endereco_entrega,
-            "cep": cep,  # CEP separado também
             "regiao": regiao,
             "cnpj_requisitante": cnpj_requisitante,
             "data_entrega": data_entrega
