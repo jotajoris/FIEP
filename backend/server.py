@@ -328,7 +328,7 @@ def extract_text_with_ocr(pdf_bytes: bytes) -> str:
 def buscar_cep_por_endereco(endereco: str) -> Optional[str]:
     """
     Buscar CEP automaticamente pelo endereço usando APIs gratuitas.
-    Tenta múltiplas fontes para maior confiabilidade.
+    Considera o número do endereço para selecionar o CEP correto.
     """
     if not endereco or len(endereco) < 10:
         return None
@@ -340,29 +340,80 @@ def buscar_cep_por_endereco(endereco: str) -> Optional[str]:
     # Formato típico: "AVENIDA AVIAÇÃO, 1851, VILA NOVA, APUCARANA"
     partes = [p.strip() for p in endereco_limpo.split(',')]
     
+    logradouro = ""
+    numero = 0
+    cidade = ""
+    
     if len(partes) >= 3:
         logradouro = partes[0]
         cidade = partes[-1].strip()
         # Se tem estado (ex: "APUCARANA - PR"), extrair
         if ' - ' in cidade:
             cidade = cidade.split(' - ')[0].strip()
+        
+        # Tentar extrair número do endereço
+        for parte in partes[1:-1]:
+            try:
+                numero = int(parte.strip())
+                break
+            except ValueError:
+                pass
     else:
         logradouro = endereco_limpo
-        cidade = ""
     
-    # Método 1: API ViaCEP (busca por endereço)
+    # Remover prefixos comuns do logradouro para busca
+    logradouro_busca = logradouro
+    for prefixo in ['AVENIDA ', 'AV ', 'AV. ', 'RUA ', 'R ', 'R. ', 'TRAVESSA ', 'TV ', 'ALAMEDA ', 'AL ']:
+        if logradouro_busca.upper().startswith(prefixo):
+            logradouro_busca = logradouro_busca[len(prefixo):]
+            break
+    
+    # Método 1: API ViaCEP (busca por endereço) - com seleção por número
     try:
         # ViaCEP aceita busca: UF/Cidade/Logradouro
         # Tentar com PR (Paraná) que é o estado da FIEP
-        estados = ['PR', 'SC', 'RS', 'SP']  # Estados mais prováveis
+        estados = ['PR', 'SC', 'RS', 'SP']
         
         for uf in estados:
-            url = f"https://viacep.com.br/ws/{uf}/{cidade}/{logradouro}/json/"
+            url = f"https://viacep.com.br/ws/{uf}/{cidade}/{logradouro_busca}/json/"
             response = requests.get(url, timeout=5)
             
             if response.status_code == 200:
                 data = response.json()
                 if isinstance(data, list) and len(data) > 0:
+                    # Se tem número e múltiplos resultados, escolher o correto pelo range
+                    if numero > 0 and len(data) > 1:
+                        for item in data:
+                            complemento = item.get('complemento', '')
+                            # Tentar parsear o range (ex: "de 1101/1102 ao fim")
+                            if 'até' in complemento.lower():
+                                # Ex: "até 1099/1100"
+                                try:
+                                    nums = re.findall(r'\d+', complemento)
+                                    if nums:
+                                        limite = int(nums[0])
+                                        if numero <= limite:
+                                            cep = item.get('cep', '').replace('-', '')
+                                            if cep and len(cep) == 8:
+                                                logger.info(f"CEP encontrado via ViaCEP (range ≤{limite}): {cep}")
+                                                return f"{cep[:5]}-{cep[5:]}"
+                                except:
+                                    pass
+                            elif 'de ' in complemento.lower() and 'ao fim' in complemento.lower():
+                                # Ex: "de 1101/1102 ao fim"
+                                try:
+                                    nums = re.findall(r'\d+', complemento)
+                                    if nums:
+                                        inicio = int(nums[0])
+                                        if numero >= inicio:
+                                            cep = item.get('cep', '').replace('-', '')
+                                            if cep and len(cep) == 8:
+                                                logger.info(f"CEP encontrado via ViaCEP (range ≥{inicio}): {cep}")
+                                                return f"{cep[:5]}-{cep[5:]}"
+                                except:
+                                    pass
+                    
+                    # Se não conseguiu pelo range, usar o primeiro
                     cep = data[0].get('cep', '').replace('-', '')
                     if cep and len(cep) == 8:
                         logger.info(f"CEP encontrado via ViaCEP: {cep} para {endereco_limpo}")
@@ -370,7 +421,7 @@ def buscar_cep_por_endereco(endereco: str) -> Optional[str]:
     except Exception as e:
         logger.warning(f"Erro ao buscar CEP via ViaCEP: {e}")
     
-    # Método 2: API Nominatim (OpenStreetMap) - Geocodificação reversa
+    # Método 2: API Nominatim (OpenStreetMap) - Geocodificação
     try:
         # Adicionar ", Brasil" para melhor precisão
         query = f"{endereco_limpo}, Brasil"
