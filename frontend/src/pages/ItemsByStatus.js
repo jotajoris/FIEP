@@ -3238,7 +3238,49 @@ Chave PIX: 46.663.556/0001-69`;
         ) : status === 'em_separacao' ? (
           /* ============ VISUALIZAÇÃO POR OC (Em Separação) ============ */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {itemsGroupedByOC.map((oc) => (
+            {/* Contador e paginação no topo */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <span style={{ color: '#718096', fontSize: '0.9rem' }}>
+                Mostrando {((emSeparacaoPage - 1) * ITEMS_PER_PAGE_EM_SEPARACAO) + 1}-{Math.min(emSeparacaoPage * ITEMS_PER_PAGE_EM_SEPARACAO, itemsGroupedByOC.length)} de {itemsGroupedByOC.length} OCs
+              </span>
+              {totalPagesEmSeparacao > 1 && (
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <button
+                    onClick={() => setEmSeparacaoPage(p => Math.max(1, p - 1))}
+                    disabled={emSeparacaoPage === 1}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      background: emSeparacaoPage === 1 ? '#f3f4f6' : 'white',
+                      cursor: emSeparacaoPage === 1 ? 'not-allowed' : 'pointer',
+                      opacity: emSeparacaoPage === 1 ? 0.5 : 1
+                    }}
+                  >
+                    ← Anterior
+                  </button>
+                  <span style={{ padding: '0 0.5rem', fontWeight: '600' }}>
+                    {emSeparacaoPage} / {totalPagesEmSeparacao}
+                  </span>
+                  <button
+                    onClick={() => setEmSeparacaoPage(p => Math.min(totalPagesEmSeparacao, p + 1))}
+                    disabled={emSeparacaoPage === totalPagesEmSeparacao}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      background: emSeparacaoPage === totalPagesEmSeparacao ? '#f3f4f6' : 'white',
+                      cursor: emSeparacaoPage === totalPagesEmSeparacao ? 'not-allowed' : 'pointer',
+                      opacity: emSeparacaoPage === totalPagesEmSeparacao ? 0.5 : 1
+                    }}
+                  >
+                    Próximo →
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            {paginatedOCs.map((oc) => (
               <div 
                 key={oc.po_id} 
                 className="card" 
