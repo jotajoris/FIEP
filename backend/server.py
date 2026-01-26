@@ -4023,28 +4023,35 @@ async def upload_item_image(
     item = po['items'][item_index]
     codigo_item = item.get('codigo_item', 'unknown')
     
-    # Gerar nome único para o arquivo
+    # Converter imagem para base64 para salvar no MongoDB (PERSISTENTE)
+    import base64
+    imagem_base64 = base64.b64encode(contents).decode('utf-8')
+    
+    # Determinar content type
     ext = file.filename.split('.')[-1].lower() if '.' in file.filename else 'jpg'
+    content_types = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'webp': 'image/webp',
+        'gif': 'image/gif'
+    }
+    content_type = content_types.get(ext, 'image/jpeg')
+    
+    # Gerar URL única para servir a imagem
     unique_id = str(uuid.uuid4())[:8]
-    filename = f"{codigo_item}_{unique_id}.{ext}"
-    filepath = UPLOAD_DIR / filename
+    imagem_url = f"/api/item-images-db/{codigo_item}"
     
-    # Salvar arquivo no disco
-    with open(filepath, "wb") as f:
-        f.write(contents)
-    
-    imagem_url = f"/api/item-images/{filename}"
-    
-    # Salvar na coleção de imagens por código (fonte de verdade)
+    # Salvar na coleção de imagens por código (PERSISTENTE NO MONGODB)
     await db.imagens_itens.update_one(
         {"codigo_item": codigo_item},
         {
             "$set": {
                 "codigo_item": codigo_item,
                 "imagem_url": imagem_url,
-                "imagem_filename": filename,
+                "imagem_base64": imagem_base64,  # SALVAR BASE64 NO BANCO
+                "content_type": content_type,
                 "tamanho_bytes": len(contents),
-                "content_type": file.content_type,
                 "data_upload": datetime.now(timezone.utc).isoformat(),
                 "uploaded_by": current_user.get('email')
             }
@@ -4057,22 +4064,20 @@ async def upload_item_image(
         {"items.codigo_item": codigo_item},
         {
             "$set": {
-                "items.$[elem].imagem_url": imagem_url,
-                "items.$[elem].imagem_filename": filename
+                "items.$[elem].imagem_url": imagem_url
             }
         },
         array_filters=[{"elem.codigo_item": codigo_item}]
     )
     
-    logger.info(f"Imagem salva para código {codigo_item}: {filename} ({len(contents)} bytes) - {result.modified_count} OCs atualizadas")
+    logger.info(f"Imagem salva no MongoDB para código {codigo_item}: {len(contents)} bytes - {result.modified_count} OCs atualizadas")
     
     return {
         "success": True,
         "imagem_url": imagem_url,
-        "filename": filename,
         "tamanho_bytes": len(contents),
         "ocs_atualizadas": result.modified_count,
-        "message": f"Imagem salva para todos os itens com código {codigo_item}"
+        "message": f"Imagem salva permanentemente para todos os itens com código {codigo_item}"
     }
 
 
