@@ -253,6 +253,7 @@ const CreatePO = () => {
       const response = await apiPost(`${API}/purchase-orders`, {
         numero_oc: pdfPreview.numero_oc,
         endereco_entrega: pdfPreview.endereco_entrega || '',
+        data_entrega: pdfPreview.data_entrega || null,
         items: pdfPreview.items.map(item => ({
           codigo_item: item.codigo_item,
           quantidade: parseInt(item.quantidade) || 1,
