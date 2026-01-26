@@ -174,6 +174,10 @@ const ItemsByStatus = () => {
   const [ocProntoDespacho, setOcProntoDespacho] = useState({});  // {po_id: boolean} - Status pronto despacho por OC
   const [itensParaNFVenda, setItensParaNFVenda] = useState({});  // {po_id: Set(uniqueId)} - Itens selecionados para NF de Venda
   
+  // Paginação para Em Separação
+  const [emSeparacaoPage, setEmSeparacaoPage] = useState(1);
+  const ITEMS_PER_PAGE_EM_SEPARACAO = 5;
+  
   // Estados para frete de envio em lote
   const [itensParaFrete, setItensParaFrete] = useState({});  // {po_id: Set(item_index)} - Itens selecionados para frete
   const [freteEnvioTotal, setFreteEnvioTotal] = useState({});  // {po_id: valor} - Valor total do frete por OC
