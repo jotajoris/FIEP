@@ -437,8 +437,15 @@ const CreatePO = () => {
             </div>
 
             {pdfPreview.endereco_entrega && (
-              <div style={{ background: '#f0f4f8', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
-                <strong>Endereço de Entrega:</strong> {pdfPreview.endereco_entrega}
+              <div style={{ background: '#f0f4f8', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
+                <strong>📍 Endereço de Entrega:</strong> {pdfPreview.endereco_entrega}
+                {pdfPreview.cep && <span style={{ marginLeft: '0.5rem', color: '#22c55e', fontWeight: '600' }}>✓ CEP encontrado</span>}
+              </div>
+            )}
+            
+            {pdfPreview.data_entrega && (
+              <div style={{ background: '#dcfce7', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                <strong>📅 Data de Entrega:</strong> {new Date(pdfPreview.data_entrega + 'T00:00:00').toLocaleDateString('pt-BR')}
               </div>
             )}
 
