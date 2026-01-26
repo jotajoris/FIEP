@@ -4481,24 +4481,106 @@ Chave PIX: 46.663.556/0001-69`;
                                     />
                                   </div>
                                 </div>
-                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      saveGroupEdit(group.items);
-                                    }}
-                                    style={{
-                                      padding: '0.4rem 0.8rem',
-                                      background: '#22c55e',
-                                      color: 'white',
-                                      border: 'none',
-                                      borderRadius: '4px',
-                                      fontSize: '0.8rem',
-                                      cursor: 'pointer'
-                                    }}
-                                  >
-                                    ✅ Salvar
-                                  </button>
+                                
+                                {/* Campo de quantidade para compra parcial (só no status cotado) */}
+                                {status === 'cotado' && (
+                                  <div style={{ 
+                                    marginBottom: '0.75rem', 
+                                    padding: '0.75rem', 
+                                    background: '#fef3c7', 
+                                    borderRadius: '6px',
+                                    border: '1px solid #fcd34d'
+                                  }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                      <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#92400e' }}>
+                                        📦 Quantidade a comprar:
+                                      </span>
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        max={item.quantidade}
+                                        value={groupFormData.quantidade_comprar}
+                                        onChange={(e) => setGroupFormData({...groupFormData, quantidade_comprar: e.target.value})}
+                                        onClick={(e) => e.stopPropagation()}
+                                        style={{ 
+                                          width: '80px', 
+                                          padding: '0.4rem', 
+                                          borderRadius: '4px', 
+                                          border: '2px solid #f59e0b', 
+                                          fontSize: '0.9rem',
+                                          fontWeight: '600',
+                                          textAlign: 'center'
+                                        }}
+                                      />
+                                      <span style={{ fontSize: '0.85rem', color: '#78350f' }}>
+                                        de {item.quantidade} {item.unidade || 'UN'}
+                                      </span>
+                                      {parseInt(groupFormData.quantidade_comprar) < item.quantidade && parseInt(groupFormData.quantidade_comprar) > 0 && (
+                                        <span style={{ 
+                                          fontSize: '0.75rem', 
+                                          background: '#3b82f6', 
+                                          color: 'white', 
+                                          padding: '0.2rem 0.5rem', 
+                                          borderRadius: '4px' 
+                                        }}>
+                                          → {item.quantidade - parseInt(groupFormData.quantidade_comprar)} ficam em "Cotados"
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                  {/* Botão de compra - muda comportamento baseado na quantidade */}
+                                  {status === 'cotado' ? (
+                                    <>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const qtdComprar = parseInt(groupFormData.quantidade_comprar) || 0;
+                                          if (qtdComprar < item.quantidade && qtdComprar > 0) {
+                                            // Compra parcial
+                                            compraParcial(item);
+                                          } else {
+                                            // Compra total
+                                            saveGroupEdit([item]);
+                                          }
+                                        }}
+                                        style={{
+                                          padding: '0.4rem 0.8rem',
+                                          background: parseInt(groupFormData.quantidade_comprar) < item.quantidade && parseInt(groupFormData.quantidade_comprar) > 0 ? '#f59e0b' : '#22c55e',
+                                          color: 'white',
+                                          border: 'none',
+                                          borderRadius: '4px',
+                                          fontSize: '0.8rem',
+                                          cursor: 'pointer',
+                                          fontWeight: '600'
+                                        }}
+                                      >
+                                        {parseInt(groupFormData.quantidade_comprar) < item.quantidade && parseInt(groupFormData.quantidade_comprar) > 0 
+                                          ? `🛒 Comprar ${groupFormData.quantidade_comprar} (Parcial)` 
+                                          : `✅ Comprar Todos (${item.quantidade})`}
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        saveGroupEdit([item]);
+                                      }}
+                                      style={{
+                                        padding: '0.4rem 0.8rem',
+                                        background: '#22c55e',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        fontSize: '0.8rem',
+                                        cursor: 'pointer'
+                                      }}
+                                    >
+                                      ✅ Salvar
+                                    </button>
+                                  )}
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
