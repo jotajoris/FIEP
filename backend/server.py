@@ -11,6 +11,7 @@ import asyncio
 from pathlib import Path
 import base64
 import shutil
+import io
 
 # Configure logging FIRST - before any logger usage
 logging.basicConfig(
@@ -27,6 +28,15 @@ import resend
 import fitz  # PyMuPDF
 import re
 from pydantic import BaseModel
+
+# OCR para PDFs escaneados
+try:
+    import pytesseract
+    from PIL import Image
+    OCR_AVAILABLE = True
+except ImportError:
+    OCR_AVAILABLE = False
+    logger.warning("pytesseract ou PIL não instalados - OCR não disponível")
 
 # Importar modelos do módulo models
 from models import (
