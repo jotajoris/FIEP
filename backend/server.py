@@ -4187,10 +4187,41 @@ async def delete_item_image(
     }
 
 
+# NOVO ENDPOINT: Servir imagens do MongoDB (PERSISTENTE)
+@api_router.get("/item-images-db/{codigo_item}")
+async def get_item_image_from_db(codigo_item: str):
+    """Servir imagem de item diretamente do MongoDB (persistente)"""
+    import base64
+    from fastapi.responses import Response
+    
+    # Buscar imagem no MongoDB
+    imagem_doc = await db.imagens_itens.find_one(
+        {"codigo_item": codigo_item},
+        {"_id": 0, "imagem_base64": 1, "content_type": 1}
+    )
+    
+    if not imagem_doc or not imagem_doc.get('imagem_base64'):
+        raise HTTPException(status_code=404, detail="Imagem não encontrada")
+    
+    # Decodificar base64
+    imagem_bytes = base64.b64decode(imagem_doc['imagem_base64'])
+    content_type = imagem_doc.get('content_type', 'image/jpeg')
+    
+    return Response(
+        content=imagem_bytes,
+        media_type=content_type,
+        headers={
+            "Cache-Control": "public, max-age=31536000",  # Cache por 1 ano (imagem não muda)
+            "Content-Length": str(len(imagem_bytes))
+        }
+    )
+
+
+# Manter endpoint antigo para compatibilidade (arquivos em disco)
 @api_router.get("/item-images/{filename}")
 @api_router.head("/item-images/{filename}")
 async def get_item_image(filename: str):
-    """Servir imagem de item (suporta GET e HEAD)"""
+    """Servir imagem de item do disco (legado - para compatibilidade)"""
     filepath = UPLOAD_DIR / filename
     
     if not filepath.exists():
@@ -4217,6 +4248,7 @@ async def get_item_image(filename: str):
             "Expires": "0"
         }
     )
+
 
 
 # ============== ENDPOINTS DE LIMITES DO CONTRATO (PLANILHA) ==============
