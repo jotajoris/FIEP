@@ -4180,8 +4180,8 @@ Chave PIX: 46.663.556/0001-69`;
                           />
                         </div>
                         
-                        <p style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                          {group.descricao?.substring(0, 150)}{group.descricao?.length > 150 ? '...' : ''}
+                        <p style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem', lineHeight: '1.4' }}>
+                          {group.descricao}
                         </p>
                         
                         {/* Marca/Modelo */}
