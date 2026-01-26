@@ -4523,7 +4523,7 @@ Chave PIX: 46.663.556/0001-69`;
                                           padding: '0.2rem 0.5rem', 
                                           borderRadius: '4px' 
                                         }}>
-                                          → {item.quantidade - parseInt(groupFormData.quantidade_comprar)} ficam em "Cotados"
+                                          → {item.quantidade - parseInt(groupFormData.quantidade_comprar)} ficam em Cotados
                                         </span>
                                       )}
                                     </div>
