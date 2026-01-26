@@ -77,18 +77,68 @@ const Dashboard = () => {
     loadData();
   }, []);
 
-  // Recarregar quando filtros mudam (com debounce)
+  // Carregar dados apenas uma vez ou quando forçado
   useEffect(() => {
-    const timer = setTimeout(() => {
-      loadData();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchTerm, searchCodigoItem, searchDescricaoItem, searchResponsavel, dateFrom, dateTo]);
+    loadData();
+  }, []); // Removido os filtros das dependências - agora filtra localmente
 
-  // Filtrar ordens (agora é feito no servidor, mas mantemos para paginação local)
+  // Filtrar ordens LOCALMENTE (sem recarregar do servidor)
   const filteredOrders = useMemo(() => {
-    return orders; // Filtros já aplicados no servidor
-  }, [orders]);
+    let result = orders;
+    
+    // Filtro por número da OC
+    if (searchTerm) {
+      const termo = searchTerm.toLowerCase();
+      result = result.filter(order => 
+        order.numero_oc?.toLowerCase().includes(termo) ||
+        order.id?.toLowerCase().includes(termo)
+      );
+    }
+    
+    // Filtro por código do item
+    if (searchCodigoItem) {
+      const termo = searchCodigoItem.toLowerCase();
+      result = result.filter(order => 
+        order.items?.some(item => 
+          item.codigo_item?.toLowerCase().includes(termo)
+        )
+      );
+    }
+    
+    // Filtro por descrição do item
+    if (searchDescricaoItem) {
+      const termo = searchDescricaoItem.toLowerCase();
+      result = result.filter(order => 
+        order.items?.some(item => 
+          item.descricao?.toLowerCase().includes(termo)
+        )
+      );
+    }
+    
+    // Filtro por responsável
+    if (searchResponsavel) {
+      const termo = searchResponsavel.toLowerCase();
+      result = result.filter(order => 
+        order.items?.some(item => 
+          item.responsavel?.toLowerCase().includes(termo)
+        )
+      );
+    }
+    
+    // Filtro por data
+    if (dateFrom) {
+      result = result.filter(order => 
+        order.data_cadastro >= dateFrom
+      );
+    }
+    if (dateTo) {
+      result = result.filter(order => 
+        order.data_cadastro <= dateTo
+      );
+    }
+    
+    return result;
+  }, [orders, searchTerm, searchCodigoItem, searchDescricaoItem, searchResponsavel, dateFrom, dateTo]);
 
   // Dados paginados
   const paginatedOrders = useMemo(() => {
@@ -104,6 +154,7 @@ const Dashboard = () => {
   const clearFilters = () => {
     setSearchTerm('');
     setSearchCodigoItem('');
+    setSearchDescricaoItem('');
     setSearchResponsavel('');
     setDateFrom('');
     setDateTo('');
@@ -111,24 +162,12 @@ const Dashboard = () => {
 
   const loadData = async () => {
     setLoading(true);
-    setFiltering(true);
     setError(null);
     try {
-      // Construir query params para filtros
-      const params = new URLSearchParams();
-      if (searchTerm) params.append('search_oc', searchTerm);
-      if (searchCodigoItem) params.append('search_codigo', searchCodigoItem);
-      if (searchDescricaoItem) params.append('search_descricao', searchDescricaoItem);
-      if (searchResponsavel) params.append('search_responsavel', searchResponsavel);
-      if (dateFrom) params.append('date_from', dateFrom);
-      if (dateTo) params.append('date_to', dateTo);
-      
-      const queryString = params.toString();
-      const ordersUrl = `${API}/purchase-orders/list/simple${queryString ? '?' + queryString : ''}`;
-      
+      // Carregar TODOS os dados (sem filtros no servidor)
       const [statsRes, ordersRes] = await Promise.all([
         apiGet(`${API}/dashboard`),
-        apiGet(ordersUrl)
+        apiGet(`${API}/purchase-orders/list/simple`)  // Sem filtros - carrega tudo
       ]);
       setStats(statsRes.data);
       setOrders(ordersRes.data);
