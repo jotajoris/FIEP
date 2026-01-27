@@ -2,7 +2,7 @@ import React from 'react';
 import { formatBRL } from '../../utils/api';
 
 /**
- * Formulário para aplicar frete e rastreio em lote
+ * Formulário para aplicar frete, rastreio e mudança de status em lote
  */
 const FreteRastreioForm = ({
   poId,
@@ -10,10 +10,12 @@ const FreteRastreioForm = ({
   itensSelecionados,
   freteTotal,
   codigoRastreio,
+  novoStatus,
   aplicando,
   onToggleAll,
   onFreteChange,
   onRastreioChange,
+  onStatusChange,
   onAplicar
 }) => {
   const qtdSelecionados = itensSelecionados?.size || 0;
@@ -37,7 +39,7 @@ const FreteRastreioForm = ({
         alignItems: 'center',
         gap: '0.5rem'
       }}>
-        🚚 Frete de Envio (Dividir entre itens)
+        🚚 Frete, Rastreio e Status (Aplicar em Lote)
       </h4>
       
       <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -58,7 +60,7 @@ const FreteRastreioForm = ({
             fontWeight: '600'
           }}
         >
-          {todosSelected ? '☑️ Desmarcar Todos' : '☐ Selecionar Todos p/ Frete'}
+          {todosSelected ? '☑️ Desmarcar Todos' : '☐ Selecionar Todos'}
         </button>
         
         {/* Contador de selecionados */}
@@ -67,7 +69,7 @@ const FreteRastreioForm = ({
         </span>
       </div>
       
-      {/* Campo de valor e botão aplicar */}
+      {/* Campos de frete, rastreio, status e botão aplicar */}
       {qtdSelecionados > 0 && (
         <div style={{ 
           display: 'flex', 
@@ -80,7 +82,7 @@ const FreteRastreioForm = ({
         }}>
           {/* Linha do Frete */}
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <label style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem' }}>
+            <label style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem', minWidth: '100px' }}>
               💰 Frete Total:
             </label>
             <input
@@ -100,14 +102,16 @@ const FreteRastreioForm = ({
               }}
               onClick={(e) => e.stopPropagation()}
             />
-            <span style={{ color: '#6b7280', fontSize: '0.85rem' }}>
-              ÷ {qtdSelecionados} = <strong>{formatBRL(fretePorItem)}</strong>/item
-            </span>
+            {freteTotal > 0 && (
+              <span style={{ color: '#6b7280', fontSize: '0.85rem' }}>
+                ÷ {qtdSelecionados} = <strong style={{ color: '#166534' }}>{formatBRL(fretePorItem)}</strong>/item
+              </span>
+            )}
           </div>
           
           {/* Linha do Rastreio */}
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <label style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem' }}>
+            <label style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem', minWidth: '100px' }}>
               📦 Rastreio:
             </label>
             <input
@@ -123,10 +127,43 @@ const FreteRastreioForm = ({
                 fontWeight: '600',
                 fontFamily: 'monospace',
                 flex: 1,
-                minWidth: '150px'
+                minWidth: '150px',
+                maxWidth: '250px'
               }}
               onClick={(e) => e.stopPropagation()}
             />
+          </div>
+          
+          {/* Linha do Status */}
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <label style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem', minWidth: '100px' }}>
+              🔄 Mudar Status:
+            </label>
+            <select
+              value={novoStatus || ''}
+              onChange={(e) => onStatusChange(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                padding: '0.5rem 0.75rem',
+                border: '2px solid #8b5cf6',
+                borderRadius: '6px',
+                fontSize: '0.95rem',
+                fontWeight: '600',
+                background: 'white',
+                cursor: 'pointer',
+                minWidth: '180px'
+              }}
+            >
+              <option value="">-- Manter atual --</option>
+              <option value="em_transito">🚚 Em Trânsito</option>
+              <option value="entregue">✅ Entregue</option>
+              <option value="comprado">🛒 Comprado</option>
+            </select>
+            {novoStatus === 'em_transito' && (
+              <span style={{ fontSize: '0.8rem', color: '#7c3aed', fontWeight: '500' }}>
+                ✨ Ideal para envio!
+              </span>
+            )}
           </div>
           
           {/* Botão único de aplicar */}
@@ -148,7 +185,7 @@ const FreteRastreioForm = ({
               marginTop: '0.5rem'
             }}
           >
-            {aplicando ? '⏳ Aplicando...' : '✅ Aplicar Frete e Rastreio'}
+            {aplicando ? '⏳ Aplicando...' : `✅ Aplicar em ${qtdSelecionados} itens`}
           </button>
         </div>
       )}
