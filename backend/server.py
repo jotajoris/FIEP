@@ -2881,65 +2881,24 @@ async def restore_backup_data(backup_data: dict, current_user: dict = Depends(re
 # ================== RASTREAMENTO CORREIOS ==================
 
 import httpx
+from services.correios_service import rastrear_objeto_correios, verificar_status_evento
 
 async def buscar_rastreio_api(codigo: str) -> dict:
-    """Tenta buscar rastreio em múltiplas APIs"""
-    eventos = []
+    """
+    Busca rastreio usando a API oficial dos Correios (com fallback para API pública).
+    """
+    result = await rastrear_objeto_correios(codigo)
     
-    # Tentar API do Seu Rastreio primeiro (com retry)
-    for tentativa in range(3):
-        try:
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                response = await client.get(
-                    f"https://seurastreio.com.br/api/public/rastreio/{codigo}",
-                    headers={
-                        "Accept": "application/json",
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-                    }
-                )
-                if response.status_code == 200:
-                    data = response.json()
-                    if data.get('success') and data.get('eventos'):
-                        for evento in data.get('eventos', []):
-                            eventos.append({
-                                "data": evento.get('data', ''),
-                                "hora": evento.get('hora', ''),
-                                "local": evento.get('local', evento.get('cidade', '')),
-                                "status": evento.get('descricao', evento.get('status', '')),
-                                "subStatus": evento.get('subStatus', [])
-                            })
-                        return {"success": True, "eventos": eventos}
-                    elif data.get('status') == 'service_error':
-                        # API temporariamente indisponível, aguardar e tentar novamente
-                        await asyncio.sleep(2)
-                        continue
-        except Exception as e:
-            logging.getLogger(__name__).warning(f"Erro ao consultar SeuRastreio (tentativa {tentativa+1}): {str(e)}")
-            await asyncio.sleep(1)
+    if result.get('success'):
+        return {
+            "success": True,
+            "eventos": result.get('eventos', []),
+            "entregue": result.get('entregue', False),
+            "saiu_para_entrega": result.get('saiu_para_entrega', False),
+            "tentativa_entrega": result.get('tentativa_entrega', False)
+        }
     
-    # Fallback: tentar LinkTrack
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(
-                f"https://api.linketrack.com/track/json?user=teste&token=1abcd00b2731640e886fb41a8a9671ad1434c599dbaa0a0de9a5aa619f29a83f&codigo={codigo}",
-                headers={"Accept": "application/json"}
-            )
-            if response.status_code == 200:
-                data = response.json()
-                for evento in data.get('eventos', []):
-                    eventos.append({
-                        "data": evento.get('data', ''),
-                        "hora": evento.get('hora', ''),
-                        "local": evento.get('local', ''),
-                        "status": evento.get('status', ''),
-                        "subStatus": evento.get('subStatus', [])
-                    })
-                if eventos:
-                    return {"success": True, "eventos": eventos}
-    except Exception:
-        pass
-    
-    return {"success": False, "eventos": [], "message": "Não foi possível consultar o rastreio. APIs indisponíveis."}
+    return {"success": False, "eventos": [], "message": result.get('error', "Não foi possível consultar o rastreio.")}
 
 # ===== ROTAS DE RASTREIO MOVIDAS PARA routes/rastreio_routes.py =====
 # As rotas /rastreio/{codigo}, /items/{codigo_item}/rastreio, /items/{codigo_item}/atualizar-rastreio
