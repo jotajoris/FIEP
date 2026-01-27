@@ -25,6 +25,19 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 ## Versão Atual: 3.3.0 (27/01/2026)
 
+### 🔄 Refatoração Frontend - Fase 1 (27/01/2026)
+- ✅ **Componentes extraídos de `ItemsByStatus.js`**:
+  - `components/items/DataEntregaBadge.jsx` - Badge de data de entrega com contagem regressiva
+  - `components/items/FreteRastreioForm.jsx` - Formulário de frete e rastreio em lote
+  - `components/items/ItemFilters.jsx` - Filtros de pesquisa e dropdown
+  - `components/items/ItemImage.jsx` - Visualização e upload de imagens
+  - `components/items/Pagination.jsx` - Componente de paginação
+  - `components/items/StatusBadge.jsx` - Badges de status, estoque, despacho
+  - `components/items/itemHelpers.js` - Funções utilitárias e constantes
+  - `components/items/index.js` - Arquivo de exportações
+- ✅ **Redução de código**: `ItemsByStatus.js` reduzido de ~6401 para ~6285 linhas (~116 linhas extraídas)
+- ✅ **Build verificado**: Frontend compila sem erros
+
 ### 🔧 Refatoração do Backend - Fase 2 (27/01/2026)
 - ✅ **Modularização completa de rotas**: 
   - `routes/auth_routes.py` - Autenticação (login, profile, password reset) - **EM USO**
