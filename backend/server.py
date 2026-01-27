@@ -2282,6 +2282,102 @@ async def comprar_parcialmente(
     }
 
 
+class EnvioParcialRequest(BaseModel):
+    """Request para envio parcial de um item"""
+    quantidade_enviar: int  # Quantidade a enviar (vai para 'em_transito')
+    codigo_rastreio: Optional[str] = None
+    frete_envio: Optional[float] = None
+
+
+@api_router.post("/purchase-orders/{po_id}/items/by-index/{item_index}/envio-parcial")
+async def enviar_parcialmente(
+    po_id: str,
+    item_index: int,
+    request: EnvioParcialRequest,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Enviar parcialmente um item em separação.
+    
+    Divide o item original em dois:
+    1. A quantidade enviada vai para status 'em_transito'
+    2. A quantidade restante permanece em status 'em_separacao'
+    
+    Exemplo:
+    - Item original: 10 unidades em 'em_separacao'
+    - Enviar 4 unidades
+    - Resultado: 2 itens no banco
+      - Item 1: 6 unidades em 'em_separacao' (quantidade restante)
+      - Item 2: 4 unidades em 'em_transito' (com rastreio e frete)
+    """
+    logger.info(f"envio_parcial: po_id={po_id}, item_index={item_index}, qtd_enviar={request.quantidade_enviar}")
+    
+    # Buscar OC
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not po:
+        raise HTTPException(status_code=404, detail="Ordem de Compra não encontrada")
+    
+    if item_index < 0 or item_index >= len(po['items']):
+        raise HTTPException(status_code=404, detail="Índice de item inválido")
+    
+    item_original = po['items'][item_index]
+    quantidade_total = item_original.get('quantidade', 0)
+    
+    # Validações
+    if item_original.get('status') != 'em_separacao':
+        raise HTTPException(status_code=400, detail="Apenas itens com status 'em_separacao' podem ser enviados parcialmente")
+    
+    if request.quantidade_enviar <= 0:
+        raise HTTPException(status_code=400, detail="Quantidade a enviar deve ser maior que zero")
+    
+    if request.quantidade_enviar >= quantidade_total:
+        raise HTTPException(status_code=400, detail=f"Para enviar todas as {quantidade_total} unidades, use a função de envio normal. Este endpoint é para envio parcial.")
+    
+    quantidade_restante = quantidade_total - request.quantidade_enviar
+    
+    # CRIAR ITEM ENVIADO (cópia do original com quantidade enviada)
+    item_enviado = item_original.copy()
+    item_enviado['quantidade'] = request.quantidade_enviar
+    item_enviado['status'] = 'em_transito'
+    item_enviado['envio_parcial'] = True  # Flag para indicar que veio de envio parcial
+    item_enviado['envio_parcial_de'] = quantidade_total  # Quantidade original
+    
+    # Adicionar código de rastreio se informado
+    if request.codigo_rastreio:
+        item_enviado['codigo_rastreio'] = request.codigo_rastreio.strip().upper()
+    
+    # Adicionar frete se informado
+    if request.frete_envio is not None and request.frete_envio > 0:
+        item_enviado['frete_envio'] = request.frete_envio
+    
+    # ATUALIZAR ITEM ORIGINAL (mantém em separação com quantidade restante)
+    item_original['quantidade'] = quantidade_restante
+    item_original['quantidade_original_antes_envio_parcial'] = quantidade_total
+    
+    # Inserir item enviado logo após o original
+    po['items'].insert(item_index + 1, item_enviado)
+    
+    # Salvar
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": po['items']}}
+    )
+    
+    logger.info(f"Envio parcial realizado: {request.quantidade_enviar} de {quantidade_total} unidades do item {item_original.get('codigo_item')}")
+    
+    return {
+        "success": True,
+        "message": f"Envio parcial realizado com sucesso!",
+        "detalhes": {
+            "codigo_item": item_original.get('codigo_item'),
+            "quantidade_original": quantidade_total,
+            "quantidade_enviada": request.quantidade_enviar,
+            "quantidade_restante_separacao": quantidade_restante,
+            "codigo_rastreio": request.codigo_rastreio
+        }
+    }
+
+
 # Endpoint para mover múltiplos itens do carrinho para Comprado
 @api_router.post("/purchase-orders/mover-carrinho-para-comprado")
 async def mover_carrinho_para_comprado(
