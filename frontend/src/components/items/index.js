@@ -8,6 +8,7 @@ export { default as MudarStatusForm } from './MudarStatusForm';
 export { default as OcCardHeader } from './OcCardHeader';
 export { default as Pagination } from './Pagination';
 export { default as ProntoDespachoToggle } from './ProntoDespachoToggle';
+export { default as RastreioLoteForm } from './RastreioLoteForm';
 export { default as StatusBadge, EstoqueBadge, DespachoReadyBadge, NFEmitidaBadge } from './StatusBadge';
 
 // Helpers
