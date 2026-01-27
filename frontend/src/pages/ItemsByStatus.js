@@ -72,7 +72,8 @@ const ItemsByStatus = () => {
   const [itensParaFrete, setItensParaFrete] = useState({});  // {po_id: Set(item_index)} - Itens selecionados para frete
   const [freteEnvioTotal, setFreteEnvioTotal] = useState({});  // {po_id: valor} - Valor total do frete por OC
   const [aplicandoFrete, setAplicandoFrete] = useState(null);  // po_id do frete sendo aplicado
-  const [statusNoFrete, setStatusNoFrete] = useState({});  // {po_id: status} - Status a aplicar junto com frete
+  const [statusNoFrete, setStatusNoFrete] = useState({});  // {po_id: status} - Status a aplicar junto com frete (Em Separação)
+  const [statusNoRastreio, setStatusNoRastreio] = useState({});  // {po_id: status} - Status a aplicar junto com rastreio (Em Trânsito)
   
   // Estados para código de rastreio em lote
   const [codigoRastreioLote, setCodigoRastreioLote] = useState({});  // {po_id: codigo} - Código de rastreio por OC
