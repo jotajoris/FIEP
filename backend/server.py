@@ -3491,16 +3491,20 @@ async def upload_nota_fiscal(
         if 'notas_fiscais_fornecedor' not in item:
             item['notas_fiscais_fornecedor'] = []
         item['notas_fiscais_fornecedor'].append(nf_doc)
+        logging.info(f"NF Fornecedor adicionada - po_id: {po_id}, item_index: {item_index}, total NFs: {len(item['notas_fiscais_fornecedor'])}")
     elif request.tipo == "revenda":
         # Substituir NF de revenda (única)
         item['nota_fiscal_revenda'] = nf_doc
+        logging.info(f"NF Revenda adicionada - po_id: {po_id}, item_index: {item_index}")
     else:
         raise HTTPException(status_code=400, detail="Tipo deve ser 'fornecedor' ou 'revenda'")
     
-    await db.purchase_orders.update_one(
+    # Atualizar o item específico no array usando arrayFilters ou posicional
+    result = await db.purchase_orders.update_one(
         {"id": po_id},
         {"$set": {"items": po['items']}}
     )
+    logging.info(f"Update result - matched: {result.matched_count}, modified: {result.modified_count}")
     
     return {
         "success": True,
