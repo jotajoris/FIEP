@@ -275,15 +275,45 @@ const RastreioItemCard = memo(({
           ) : (
             <div style={{ 
               textAlign: 'center', 
-              padding: '1rem',
-              color: '#9ca3af',
-              fontSize: '0.9rem'
+              padding: '1.5rem',
+              background: '#fef3c7',
+              borderRadius: '8px',
+              border: '1px solid #fcd34d'
             }}>
-              Nenhum evento de rastreamento disponível.
-              <br />
-              <span style={{ fontSize: '0.8rem' }}>
-                Os eventos serão atualizados automaticamente.
-              </span>
+              <div style={{ 
+                color: '#92400e',
+                fontSize: '0.9rem',
+                marginBottom: '0.75rem'
+              }}>
+                ⏳ Aguardando dados de rastreamento
+              </div>
+              <div style={{ 
+                fontSize: '0.85rem', 
+                color: '#78350f'
+              }}>
+                Os eventos serão atualizados automaticamente quando disponíveis.
+              </div>
+              {codigoRastreio && (
+                <a 
+                  href={`https://rastreamento.correios.com.br/app/index.php?objetos=${codigoRastreio}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-block',
+                    marginTop: '1rem',
+                    padding: '0.5rem 1rem',
+                    background: '#ffffff',
+                    color: '#1d4ed8',
+                    borderRadius: '6px',
+                    border: '1px solid #3b82f6',
+                    textDecoration: 'none',
+                    fontSize: '0.85rem',
+                    fontWeight: '600'
+                  }}
+                >
+                  🔍 Consultar no site dos Correios
+                </a>
+              )}
             </div>
           )}
         </div>
