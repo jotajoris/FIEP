@@ -1813,6 +1813,72 @@ const ItemsByStatus = () => {
     }
   };
 
+  // Aplicar RASTREIO E FRETE em lote para itens em trânsito (atualização/correção)
+  const aplicarRastreioEFreteEmTransito = async (poId) => {
+    const selectedIndices = itensParaRastreio[poId];
+    const codigoRastreio = codigoRastreioLote[poId]?.trim();
+    const freteTotal = parseFloat(freteEnvioTotal[poId] || 0);
+    
+    if (!selectedIndices || selectedIndices.size === 0) {
+      alert('Selecione ao menos um item.');
+      return;
+    }
+    
+    if (!codigoRastreio && freteTotal <= 0) {
+      alert('Informe o código de rastreio e/ou valor do frete.');
+      return;
+    }
+    
+    const fretePorItem = freteTotal > 0 ? (freteTotal / selectedIndices.size) : 0;
+    
+    let mensagem = `Aplicar alterações em ${selectedIndices.size} item(s)?\n\n`;
+    if (codigoRastreio) mensagem += `📦 Código: ${codigoRastreio}\n`;
+    if (freteTotal > 0) mensagem += `🚚 Frete Total: R$ ${freteTotal.toFixed(2)} (R$ ${fretePorItem.toFixed(2)}/item)\n`;
+    
+    if (!window.confirm(mensagem)) {
+      return;
+    }
+    
+    setAplicandoRastreio(poId);
+    
+    try {
+      // Preparar payload
+      const payload = {
+        item_indices: Array.from(selectedIndices)
+      };
+      
+      if (codigoRastreio) {
+        payload.codigo_rastreio = codigoRastreio;
+      }
+      if (freteTotal > 0) {
+        payload.frete_por_item = fretePorItem;
+      }
+      
+      // Usar o endpoint existente ou criar um novo
+      const response = await apiPost(`${API}/purchase-orders/${poId}/rastreio-frete-multiplo`, payload);
+      
+      let alertMsg = `✅ Atualização aplicada!\n\n`;
+      alertMsg += `• Itens atualizados: ${response.data.quantidade_itens || selectedIndices.size}\n`;
+      if (codigoRastreio) alertMsg += `• Código: ${codigoRastreio}\n`;
+      if (freteTotal > 0) alertMsg += `• Frete por item: R$ ${fretePorItem.toFixed(2)}`;
+      
+      alert(alertMsg);
+      
+      // Limpar seleção e valores
+      setItensParaRastreio(prev => ({ ...prev, [poId]: new Set() }));
+      setCodigoRastreioLote(prev => ({ ...prev, [poId]: '' }));
+      setFreteEnvioTotal(prev => ({ ...prev, [poId]: '' }));
+      
+      // Recarregar dados
+      loadItems();
+    } catch (error) {
+      console.error('Erro ao aplicar rastreio/frete:', error);
+      alert('Erro: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setAplicandoRastreio(null);
+    }
+  };
+
   // Toggle seleção de item para mudança de status
   const toggleItemParaStatus = (poId, itemIndex) => {
     setItensParaStatus(prev => {
