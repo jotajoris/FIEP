@@ -14,7 +14,6 @@ The user requested a web platform to manage purchase orders (OCs) for their clie
 - A system to track package deliveries.
 - A summary page showing key financial metrics.
 - Format all monetary values in Brazilian standard (R$).
-- Provide a backup and restore functionality.
 - An Observação text field for each item.
 - Breakdown of item counts by status on the Dashboard.
 - Allow editing all fields on the OC creation preview screen.
@@ -23,7 +22,6 @@ The user requested a web platform to manage purchase orders (OCs) for their clie
 - Extract NCM codes and item lists from supplier invoices.
 - Detect and flag duplicate supplier invoices.
 - Implement site-wide pagination and bulk download for invoices.
-- Refactor Sales Invoice (NF de Venda) to be one per OC, allowing partial item selection.
 - Display Observação field in item view, editable only in the edit form.
 - For pending items, display a history of previous quotations.
 - Extract and display the delivery date () from OC PDFs, with countdowns and admin editing.
@@ -36,87 +34,129 @@ The user requested a web platform to manage purchase orders (OCs) for their clie
 - Indicate if a new OC item is already available in stock.
 - Implement a Use from Stock feature for pending items.
 - Allow uploading images for items via drag-and-drop, with a thumbnail view and a popup for the full image.
-- **On the Pendentes tab, group items with the same code from different OCs to allow for bulk quoting and editing.**
-- **On the Pendentes tab, when quoting an item, display the total quantity needed for that item across all OCs.**
+- On the Pendentes tab, group items with the same code from different OCs to allow for bulk quoting and editing.
 - On the Estoque page, allow admins to manually edit or delete stock entries.
-- On the Estoque page, allow manually adding items to stock by searching for their code.
-- **Display item images (as thumbnails) and key details (Brand/Model, Delivery Address) in the grouped view.**
-- **Add a Frete (Shipping) field to the bulk and individual quoting forms in the grouped view.**
-- **Clicking the image thumbnail in the grouped view header should allow uploading a new image.**
-- **Implement a system to import and use a separate Excel spreadsheet as the single source of truth for the Total Contract Quantity for each item, to be displayed on the UI.**
+- A Planilha de Contrato page showing all items from an Excel file, cross-referencing their status within the app.
+- Extend the Grouped View functionality to the Cotados page to allow for bulk purchasing.
+- When using an item from stock, automatically copy all its data (price, photo, notes, supplier, etc.).
+- Link an uploaded image to the item's CODE, so it appears for all instances of that item.
+- **Implement partial purchase: when buying a portion of a quoted item, the purchased quantity moves to Comprados and the remainder stays in Cotados.**
+- **Persist uploaded images in the database so they are not lost on deploy.**
+- **Handle scanned/image-based PDFs by implementing OCR.**
+- **On the Em Separação page, sort OCs marked Pronto para Despacho to the top.**
+- **Improve UI filtering to avoid full-page reloads.**
+- **On the Em Separação page, add pagination and the ability to view/upload images.**
+- **On the Em Separação page, add a feature to apply a tracking code in bulk, unified with the freight cost application.**
+- **Expand truncated item descriptions in the grouped view.**
 
 **User's preferred language**:
 The user's primary language is **Portuguese (Brazil)**. The next agent MUST respond in Portuguese.
 
 **what currently exists?**
-A full-stack Purchase Order management application (FastAPI + React). A critical bug in the stock management system was fixed in this session, and the system is now stable. Major new features were implemented on the Pendentes (Pending) page, including a grouped view that consolidates items by code across multiple OCs. This view allows for inline and bulk quoting (including price, supplier, link, and shipping). A feature for uploading and viewing item images (thumbnails with popups) was also added. The UI for these features has gone through several iterations based on user feedback. The application can now read an external Excel file, but the logic to store and use this data is still in progress.
+A full-stack Purchase Order management application using FastAPI and React. This session focused heavily on critical bug fixes and user-requested enhancements. The most critical fix was migrating image storage from the temporary server filesystem to the MongoDB database (as Base64 strings), solving a major data persistence issue. The PDF upload functionality was significantly improved by integrating an OCR library () to handle scanned documents. Key features were also added, including partial purchase of items, pagination and image management on the Em Separação page, and a unified UI to apply freight and tracking codes in bulk. Several UI/UX bugs were also addressed, such as fixing page reloads during filtering and expanding truncated text fields.
 
 **Last working item**:
-- **Last item agent was working:** The agent was implementing a major new requirement to use an external Excel file as the source of truth for the total contract quantity for each item. The user wants this value (from Column H, Quantidade Máxima in their spreadsheet) to be displayed, rather than the total quantity currently present in the app's database. The agent successfully analyzed the spreadsheet, created a backend endpoint () to parse it, and fixed a related UI bug where clicking the image upload icon in the grouped view was not working correctly. The implementation was paused before the frontend could be updated to use this new system.
+- **Last item agent was working:** Unifying the UI for applying freight costs and tracking codes on the Em Separação page. The agent combined the two separate input fields and buttons into a single form with one Aplicar button and created a new backend endpoint to handle the combined update.
 - **Status:** IN PROGRESS
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** both. A backend test should verify that the Excel file is correctly parsed and that the quantidade_maxima values are stored in a new MongoDB collection. A frontend test should verify that an admin can upload the file and that the UI correctly fetches and displays the new total contract quantity in the appropriate badges.
+- **Which testing method agent to use?** frontend testing agent. The agent should navigate to the Em Separação page, select multiple items from a Purchase Order, enter values for both the freight cost and the tracking code, click the unified Aplicar button, and then verify that the UI updates correctly and the changes are persisted for all selected items.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P0)** Implement the Total Contract Quantity from the external Excel file.
-- **Issue 2: (P1)** Editing duplicate items opens all of them for editing simultaneously.
+- **Issue 1: (P0)** Notas Fiscais (Invoices) are not appearing in the Admin panel after being uploaded.
+- **Issue 2: (P1)** Editing an item that appears in multiple OCs (duplicate) opens all instances for editing simultaneously.
+- **Issue 3: (P2)** Dashboard search by item code is not working.
+- **Issue 4: (P2)** The Em Separação page has significant performance issues, causing slowness, especially when expanding an OC.
 
 **Issues Detail:**
-- **Issue 1: Implement the Total Contract Quantity from the external Excel file**
-    - **Attempted fixes:** The agent has created the backend endpoint  in  to receive and parse the Excel file using . It also fixed a bug preventing image uploads from the grouped view header. The work was paused before this new data could be stored in the database or displayed on the frontend.
+- **Issue 1: Notas Fiscais (Invoices) are not appearing in the Admin panel**
+    - **Attempted fixes:** The agent confirmed via database inspection that the user's uploaded invoices were not being saved. The investigation started but was preempted by other user requests. The root cause is likely in the  endpoint or related frontend logic.
     - **Next debug checklist:**
-        1.  In , complete the  endpoint:
-            -   Create a new MongoDB collection (e.g., ).
-            -   Iterate through the parsed Excel rows, and for each item code,  with  the  from Column H.
-        2.  Create a new endpoint (e.g., ) to return a dictionary of .
-        3.  In , fetch data from this new endpoint.
-        4.  Update the state  with this new data.
-        5.  Add a button to the UI (e.g., on the Admin page or Estoque page) for an admin to upload the  file.
-    - **Why fix this issue and what will be achieved with the fix?** This is a critical requirement from the user. It will ensure the UI displays the correct total contract potential for each item, aligning the application with the user's external business data.
+        1.  Add detailed logging to the  endpoint in .
+        2.  Use the browser's developer tools to inspect the network request when a user uploads an invoice on the Em Separação page. Check the payload and the server response.
+        3.  Trace the data flow from the frontend form submission to the backend database update operation.
+    - **Why fix this issue and what will be achieved with the fix?** This is a critical data loss bug that prevents users from tracking supplier invoices, a core part of their workflow.
     - **Status:** IN PROGRESS
     - **Is recurring issue?** N
     - **Should Test frontend/backend/both after fix?** Both.
     - **Blocked on other issue:** None.
 
-- **Issue 2: Editing duplicate items opens all of them**
-    - **Attempted fixes:** None in this session. This issue was deprioritized in favor of new features.
+- **Issue 2: Editing duplicate items opens all instances for editing**
+    - **Attempted fixes:** None in this session.
     - **Next debug checklist:**
         1.  Investigate state management in .
-        2.  While  uses , the state for the form data itself ( or similar) might be shared or incorrectly keyed, causing all instances to show the same form.
-        3.  Ensure that when  is called, the form data state is initialized specifically for .
+        2.  The state variable  (or similar) is likely being set to a non-unique identifier (like  instead of ).
+        3.  Ensure that when an item's edit mode is toggled, the state controlling the form's visibility is tied to a unique identifier for that specific item instance.
     - **Why fix this issue and what will be achieved with the fix?** This is a long-standing, frustrating usability bug. Fixing it will significantly improve the user experience.
     - **Status:** NOT STARTED
     - **Is recurring issue?** Y
     - **Should Test frontend/backend/both after fix?** Frontend.
     - **Blocked on other issue:** None.
 
+- **Issue 3: Dashboard search by item code is not working**
+    - **Attempted fixes:** The agent modified the backend endpoint  to include a list of item codes in the response, so the client-side filter could use it.
+    - **Next debug checklist:**
+        1.  Verify the frontend logic in  is correctly searching within the newly added item code list.
+        2.  Use browser developer tools to inspect the API response from  to ensure it contains the expected item data.
+        3.  Test by searching for a known item code on the Dashboard.
+    - **Why fix this issue and what will be achieved with the fix?** Allows users to quickly find OCs containing a specific item directly from the main Dashboard.
+    - **Status:** USER VERIFICATION PENDING
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** Frontend.
+    - **Blocked on other issue:** None.
+
+- **Issue 4: Performance issues on Em Separação page**
+    - **Attempted fixes:** The agent implemented pagination as a first step to mitigate the slowness.
+    - **Next debug checklist:**
+        1.  Analyze the component rendering in  using React DevTools Profiler to identify bottlenecks.
+        2.  Wrap sub-components (like the OC card or item row) in  to prevent unnecessary re-renders.
+        3.  Move expensive calculations (like sorting or filtering) inside  hooks.
+        4.  Consider breaking the monolithic  into smaller, more manageable child components.
+    - **Why fix this issue and what will be achieved with the fix?** Improves user experience by making a frequently used page responsive and usable.
+    - **Status:** IN PROGRESS
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** Frontend.
+    - **Blocked on other issue:** None.
+
 **In progress Task List**:
-- **Task 1: (P0)** Complete the Total Contract Quantity Feature
-    - **Where to resume:** Implement the frontend component for uploading the Excel file and update the logic in  to fetch and display the contract limits from the new backend endpoint. The backend endpoint itself needs to be completed to save the data to MongoDB.
-    - **What will be achieved with this?** The UI will display the correct total quantities as defined in the user's external contract spreadsheet.
+- **Task 1: (P1)** Finalize and test the unified Freight & Tracking feature.
+    - **Where to resume:** On the Em Separação page, select items, fill out the freight and tracking fields, and click the Aplicar button to test the end-to-end flow.
+    - **What will be achieved with this?** A streamlined UI for applying shipping information to multiple items at once.
     - **Status:** IN PROGRESS
     - **Should Test frontend/backend/both after fix?** Both.
     - **Blocked on something:** None.
 
+- **Task 2: (P3)** Backend Refactoring
+    - **Where to resume:** Continue following the plan in . Move a group of related endpoints from  into a new file in .
+    - **What will be achieved with this?** A more maintainable, modular, and less error-prone backend codebase.
+    - **Status:** IN PROGRESS
+    - **Should Test frontend/backend/both after fix?** Backend.
+    - **Blocked on something:** Blocked by higher-priority bug fixes.
+
 **Upcoming and Future Tasks**
+- **Upcoming Tasks:**
+  - (P1) Fix bug: Editing duplicate items opens all of them for editing simultaneously.
+  - (P2) Address performance issues on Em Separação page with memoization or component refactoring.
 - **Future Tasks:**
-    - (P2) Refactor the monolithic  and  files.
-    - (P3) Provide guidance on deploying the application to Hostinger.
-    - (P3) Guide the user on verifying their Resend domain.
-    - (P3) Investigate a more reliable, paid Correios API for package tracking.
+  - (P2) Complete the backend refactoring of .
+  - (P2) Refactor the monolithic frontend component .
+  - (P3) Add a Create OC button directly on the Planilha de Contrato page for items that don't have an OC yet.
+  - (P3) Extend the Grouped View functionality to the Em Separação page.
 
 **Completed work in this session**
-- **Bug Fix (P0):** Corrected the critical stock calculation bug. The application now correctly handles reverting an item's status (e.g., from  to ) by automatically returning the used stock to the available pool. A migration endpoint was created to fix previously corrupted data.
-- **Feature:** Implemented item image uploads, including a drag-and-drop UI, a thumbnail preview next to the Edit button, and a popup modal for the full image.
-- **Feature:** Implemented a grouped view on the pending items page, which consolidates all items with the same code, showing total quantity and a breakdown by OC.
-- **Feature:** Implemented inline and bulk quoting within the grouped view, with a form to apply price, supplier, link, and shipping cost to one or all items in a group.
-- **UI/UX Improvements:** Made numerous UI adjustments based on user feedback, including thumbnail size, badge visibility, and adding more details (brand/model, address) to the grouped view.
-- **Bug Fix:** Fixed an issue where image URLs were being constructed with a duplicate  prefix, preventing images from loading.
-- **Bug Fix:** Fixed an issue where clicking the image upload icon in the grouped view header would expand the item list instead of opening the file dialog.
+- **Image Persistence Fix (CRITICAL):** Migrated image storage from the temporary filesystem to MongoDB (as Base64) to prevent data loss on deploy.
+- **Partial Purchase Feature:** Implemented backend and frontend logic for buying a partial quantity of a quoted item, correctly splitting the item into Comprado and Cotado statuses.
+- **OCR for PDF Uploads:** Integrated  to handle scanned/image-based PDFs, making the upload feature more robust.
+- **Automatic Page Refresh (Removed):** Implemented a Service Worker for cache invalidation, but removed it after it caused deployment issues. The current code now unregisters any active service workers.
+- **Dashboard Filter Fix:** Changed the Dashboard search to filter data locally, preventing page reloads on every keystroke.
+- **Em Separação Page Sorting:** OCs marked as Pronto para Despacho are now automatically sorted to the top of the list.
+- **Em Separação Page Enhancements:** Added pagination and the ability to view/upload images directly within the OC expansion view.
+- **Bulk Tracking Code:** Implemented the UI and backend to add a tracking code to multiple selected items, later unifying this with the freight application.
+- **UI/UX Fixes:** Removed character limits on item descriptions and fixed bugs where OC delivery date and address were not being saved from the preview screen.
 
 **Earlier issues found/mentioned but not fixed**
-- **Issue 1:** Editing duplicate items opens all instances for editing simultaneously. (See All Pending/In progress Issue list for details).
+- **Issue 1: NFs not appearing in Admin panel.** User reported this, agent confirmed the data was not in the DB, but the investigation was not completed.
+- **Issue 2: Editing duplicate items opens all instances.** This is a known recurring issue from a previous fork.
 
 **Known issue recurrence from previous fork**
 - **Issue recurrence in previous fork:** Editing duplicate items opens all of them.
@@ -127,76 +167,82 @@ A full-stack Purchase Order management application (FastAPI + React). A critical
 
 
 **Key Technical Concepts**
-- **Backend:** FastAPI, Motor (async MongoDB), Pydantic,  (for Excel parsing).
-- **Frontend:** React (Hooks, useMemo), Axios, TailwindCSS.
-- **Complex UI State:**  now manages multiple view modes (, ), inline editing forms, group editing forms, and image upload state.
-- **External Data Source:** A new concept of using an external Excel file as the source of truth for contract limits, separate from the transactional data in the main database.
+- **Image Storage in MongoDB:** Images are no longer saved to the filesystem. They are read, encoded into Base64 strings, and stored directly in the  collection in MongoDB, ensuring persistence across deployments. Images are served via a new endpoint that decodes the Base64 string.
+- **OCR for PDF Parsing:** The  library is now used as a fallback mechanism. If  fails to extract text from a PDF (indicating a scanned document), the system uses OCR to convert the PDF's page images to text before parsing.
+- **Partial Purchase Logic:** A new backend endpoint () was created. When called, it finds the target item, reduces its quantity, and creates a new, duplicated item in the same OC with the purchased quantity and comprado status.
+- **Client-Side Filtering:** The Dashboard page was refactored to fetch all data once and then apply search filters locally using JavaScript, providing an instant search experience without reloading the page.
 
 **key DB schema**
-- **** (collection):
-    -  (array of objects):
-        - : (Optional[str]) Path to the item's image.
-        - : (Optional[str]) Filename of the item's image.
-        - : (int) Tracks usage of this item's surplus.
-        - : (Array) Logs which OCs used stock from this item.
-        - : (bool) Flag if fulfilled from stock.
-- **** (collection, **PROPOSED**):
-    - : (str, index)
-    - : (int)
+- : (collection)
+  - : (str) field added at the root level.
+  - : (str) field added at the root level.
+  - : Each item object can now contain a  (str) field.
+- : (collection)
+  - : (str, index)
+  - : (str, **NEW**) Contains the Base64-encoded image data.
+  - : (str, **NEW**) The MIME type of the image (e.g., 'image/jpeg').
+  - (Fields  and  are now deprecated).
 
 **All files of reference**
-- : CRITICAL. Contains all backend logic. New endpoints for stock correction, image upload/serving, and the start of the Excel import logic were added.
-- : CRITICAL. Contains all the new UI/UX for image uploads, the grouped view, and bulk/inline quoting.
-- : Modified to export  to fix an image path issue.
-- : Updated with completed features.
-- : The user-provided Excel file that is the source of truth for contract limits.
+- : CRITICAL. Heavily modified for OCR, partial purchase, Base64 image handling, and new endpoints for tracking codes.
+- : CRITICAL. The frontend monolith. Heavily modified to add UI for partial purchase, pagination, image display, and the unified freight/tracking form.
+- : Modified for client-side filtering.
+- : Modified to correctly save delivery date/address and handle new error types from the backend.
+- : Modified to add  to the  and  Pydantic models.
 
 **Areas that need refactoring**:
-- : **CRITICAL PRIORITY.** This file is now approaching 6000 lines and is extremely difficult to maintain. It must be broken down.
-- : **CRITICAL PRIORITY.** This component is also a monolith, handling logic for multiple views, complex state, API calls, and multiple forms. It should be decomposed into custom hooks and smaller, specialized components.
+- : **CRITICAL PRIORITY.** This monolithic file is now over 6000 lines and is becoming increasingly difficult to manage.
+- : **CRITICAL PRIORITY.** This component is also over 6000 lines and is responsible for the performance issues on the Em Separação page. It must be broken down into smaller, memoized components.
 
 **key api endpoints**
-- : One-time migration to fix inconsistent stock data.
-- : Uploads an image for a specific item.
-- : Deletes an image for a specific item.
-- : Serves an uploaded item image.
-- : **(In Progress)** Endpoint to upload and parse the Excel file with contract limits.
+- : (Modified) Now uses OCR for scanned PDFs.
+- : (Modified) Now accepts  and .
+- : (NEW) Handles partial purchases by splitting an item.
+- : (NEW) Serves images directly from MongoDB as Base64. Replaces the old filename-based endpoint.
+- : (Modified) Now saves the uploaded image as Base64 in the database instead of to disk.
+- : (NEW) Applies both freight and a tracking code to multiple items in a single API call.
+- : (Modified) Now includes a minimal list of item codes to enable client-side searching on the dashboard.
 
 **Critical Info for New Agent**
-- **Your immediate task is to finish the Total Contract Quantity feature.** The user wants the quantity shown in the purple Planilha badge to come from an external Excel file they provided, not the sum of items in the database. You need to complete the backend endpoint  to save the parsed data to a new MongoDB collection, create another endpoint to fetch this data, and then update the frontend to use it.
-- **Do not be confused by the Total Planilha count.** The agent correctly implemented a feature to show the total from all OCs in the database. However, the user's requirement has evolved. The truth is now the external Excel file.
-- The long-standing bug where editing duplicate items opens all of them still exists and should be addressed after the P0 task is complete.
+- **User Priorities:** The user is currently focused on fixing bugs and improving the usability of existing features. Prioritize the items in the All Pending/In progress Issue list before starting new features. The invoice-saving bug (Issue #1) is especially critical as it involves data loss.
+- **Image Storage:** The image persistence problem has been solved by storing images as Base64 in MongoDB. Do not revert to filesystem storage. The relevant endpoints are  for serving and  for uploading.
+- **Service Worker:** A previously implemented Service Worker for automatic page refreshes caused issues and has been disabled. The code in  and  actively unregisters it. Do not attempt to re-enable it.
+- **Performance:** The user has reported slowness on the Em Separação page. While pagination was a temporary fix, the root cause is the monolithic  component. Any work on this page should consider performance implications and use memoization (, ).
 
 **documents and test reports created in this job**
-- 
-- 
-- 
+- None.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Feedback):** Image preview is not working and the edit button in the grouped view is broken.
-2.  **User (Feedback):** Wants inline editing within the grouped view (Cotar Todos) and a larger image thumbnail.
-3.  **User (Feedback):** Image still missing in the grouped view, brand/model/address details are missing, and Total Planilha count is wrong (showing 62 instead of 140 from their Excel sheet).
-4.  **User (Feedback):** Wants Frete (shipping) added to the group quoting forms. Reiterates the Total Planilha issue.
-5.  **User (Feedback, LATEST/BLOCKER):** Provides the Excel sheet. Clarifies that Total Planilha must come from Quantidade Máxima (Column H) in that sheet. Also reports that clicking the image icon in the grouped view doesn't work for uploads.
-6.  **Agent (Acknowledgement):** Confirms understanding of the Excel sheet requirement.
-7.  **User (Instruction):** Tells the agent to continue and that they will fork later.
+1.  **User (Request):** The filter on the Dashboard reloads the page on every keystroke, which is annoying. (COMPLETED)
+2.  **User (Bug):** Trying to upload a specific PDF fails with a body stream already read error. (COMPLETED - Fixed by adding OCR support for scanned PDFs).
+3.  **User (Question):** Asks if the app can automatically find the CEP (zip code) from a delivery address. (IMPLEMENTED, then REMOVED at user's request).
+4.  **User (Bug):** The delivery address and date are shown in the OC preview but are not saved with the OC. (COMPLETED).
+5.  **User (Feedback):** The auto-fetched CEP is incorrect. (RESOLVED - Agent removed the feature per user request).
+6.  **User (Request):** De-prioritizes the CEP feature to test other fixes. (COMPLETED).
+7.  **User (Requests):** 1. Dashboard search doesn't find item codes. 2. Em Separação page is slow and needs pagination. 3. Em Separação needs image view/upload functionality. (IN PROGRESS/COMPLETED).
+8.  **User (Request):** The Em Separação page is still slow. Also, add a bulk tracking code feature similar to the bulk freight feature. (IN PROGRESS).
+9.  **User (Bug):** A syntax error appeared in the UI after the tracking code feature was added. (COMPLETED).
+10. **User (Request, LATEST):** Unify the apply freight and apply tracking code actions into a single button. (IN PROGRESS - Last working item).
 
 **Project Health Check:**
-- **Broken:** The Total Planilha feature does not meet the user's latest requirement, as it reads from the database instead of the specified Excel file.
-- **Mocked:** Forgot Password functionality via Resend (domain not verified).
-- **Technical Debt:** CRITICAL.  and  have grown significantly, making them fragile and hard to debug. Refactoring is urgently needed but has been consistently postponed for new features.
+- **Broken:**
+  - The mechanism for saving supplier invoices () appears to be broken, leading to data loss.
+- **Technical Debt:**
+  - **CRITICAL:**  and  are massive monoliths (6000+ lines each) that are difficult to maintain and are causing performance bottlenecks. Refactoring is urgently needed.
 
 **3rd Party Integrations**
 - **Resend:** For emails.
-- **PyMuPDF:** For parsing PDFs.
+- **PyMuPDF:** For parsing text-based PDFs.
 - **APScheduler:** For background jobs.
 - **openpyxl:** For parsing  files.
+- **pytesseract & Tesseract OCR:** (NEW) For extracting text from image-based/scanned PDFs.
+- **requests:** (NEW) For calling the ViaCEP API (though the feature is now disabled).
 
 **Testing status**
-- **Testing agent used after significant changes:** YES. The agent used the testing agent successfully to validate the P0 stock bug fix and the initial implementation of the image upload/grouping features.
+- **Testing agent used after significant changes:** NO
 - **Troubleshoot agent used after agent stuck in loop:** NO
-- **Test files created:** , 
-- **Known regressions:** None in this session; the major bug was fixed.
+- **Test files created:** None.
+- **Known regressions:** None from this session, but the invoice saving functionality is a newly discovered critical bug.
 
 **Credentials to test flow:**
 - **Admin Login (João):**
@@ -207,4 +253,6 @@ A full-stack Purchase Order management application (FastAPI + React). A critical
     - **Password:** 
 
 **What agent forgot to execute**
-- The agent has consistently deferred fixing the P1 bug where editing duplicate items opens all instances simultaneously, despite it being a recurring issue from a previous fork. New feature requests have taken priority.</analysis>
+- The agent did not complete the investigation into why supplier invoices are not being saved, despite confirming the user's report of data loss.
+- The agent has not addressed the long-standing P1 bug where editing duplicate items opens all instances simultaneously.
+- The agent acknowledged the performance problem with  but has only implemented a partial solution (pagination) without addressing the root cause (component size and re-renders).</analysis>
