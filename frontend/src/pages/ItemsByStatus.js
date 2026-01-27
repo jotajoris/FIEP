@@ -1015,6 +1015,49 @@ const ItemsByStatus = () => {
       alert('Erro na compra parcial: ' + (error.response?.data?.detail || error.message));
     }
   };
+
+  // Envio parcial de um item em separação
+  const envioParcial = async () => {
+    const item = showEnvioParcialModal;
+    if (!item) return;
+    
+    const quantidadeEnviar = parseInt(envioParcialData.quantidade_enviar) || 0;
+    const quantidadeTotal = item.quantidade || 1;
+    
+    if (quantidadeEnviar <= 0) {
+      alert('Informe a quantidade a enviar');
+      return;
+    }
+    
+    if (quantidadeEnviar >= quantidadeTotal) {
+      alert(`Para enviar todas as ${quantidadeTotal} unidades, use o formulário de frete/rastreio normal.\nEste recurso é apenas para envio parcial.`);
+      return;
+    }
+    
+    setAplicandoEnvioParcial(true);
+    
+    try {
+      await apiPost(
+        `${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}/envio-parcial`,
+        {
+          quantidade_enviar: quantidadeEnviar,
+          codigo_rastreio: envioParcialData.codigo_rastreio?.trim() || null,
+          frete_envio: envioParcialData.frete_envio ? parseFloat(envioParcialData.frete_envio) : null
+        }
+      );
+      
+      setShowEnvioParcialModal(null);
+      setEnvioParcialData({ quantidade_enviar: '', codigo_rastreio: '', frete_envio: '' });
+      loadItems();
+      
+      alert(`✅ Envio parcial realizado!\n\n📦 ${quantidadeEnviar} de ${quantidadeTotal} unidades foram enviadas.\n\n📋 As ${quantidadeTotal - quantidadeEnviar} unidades restantes continuam em "Em Separação".`);
+    } catch (error) {
+      console.error('Erro no envio parcial:', error);
+      alert('Erro no envio parcial: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setAplicandoEnvioParcial(false);
+    }
+  };
   
   const saveGroupEdit = async (items) => {
     try {
