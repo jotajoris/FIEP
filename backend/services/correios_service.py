@@ -90,22 +90,24 @@ async def obter_token_correios() -> Optional[str]:
         return None
     
     try:
+        import base64
+        
         async with httpx.AsyncClient(timeout=30.0) as client:
-            # Tentar autenticação com cartão de postagem
+            # Autenticação Basic: base64(usuario:senha)
+            credentials = base64.b64encode(f"{CORREIOS_USUARIO}:{CORREIOS_SENHA}".encode()).decode()
+            
+            # Endpoint com cartão de postagem
             if CORREIOS_CARTAO_POSTAGEM:
                 endpoint = f"{CORREIOS_API_URL}/token/v1/autentica/cartaopostagem"
                 payload = {
-                    "numero": CORREIOS_USUARIO,
-                    "senha": CORREIOS_SENHA,
-                    "cartaoPostagem": CORREIOS_CARTAO_POSTAGEM
+                    "numero": CORREIOS_CARTAO_POSTAGEM
                 }
+                if CORREIOS_CONTRATO:
+                    payload["contrato"] = CORREIOS_CONTRATO
             else:
-                # Autenticação básica
+                # Autenticação simples sem cartão
                 endpoint = f"{CORREIOS_API_URL}/token/v1/autentica"
-                payload = {
-                    "numero": CORREIOS_USUARIO,
-                    "senha": CORREIOS_SENHA
-                }
+                payload = {}
             
             logger.info(f"Obtendo token dos Correios: {endpoint}")
             
@@ -113,6 +115,7 @@ async def obter_token_correios() -> Optional[str]:
                 endpoint,
                 json=payload,
                 headers={
+                    "Authorization": f"Basic {credentials}",
                     "Content-Type": "application/json",
                     "Accept": "application/json"
                 }
