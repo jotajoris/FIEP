@@ -3860,10 +3860,12 @@ Chave PIX: 46.663.556/0001-69`;
                         itensSelecionados={itensParaFrete[oc.po_id]}
                         freteTotal={freteEnvioTotal[oc.po_id]}
                         codigoRastreio={codigoRastreioLote[oc.po_id]}
+                        novoStatus={statusNoFrete[oc.po_id]}
                         aplicando={aplicandoFrete === oc.po_id}
                         onToggleAll={() => toggleAllItensParaFrete(oc.po_id, oc.items)}
                         onFreteChange={(value) => setFreteEnvioTotal(prev => ({ ...prev, [oc.po_id]: value }))}
                         onRastreioChange={(value) => setCodigoRastreioLote(prev => ({ ...prev, [oc.po_id]: value }))}
+                        onStatusChange={(value) => setStatusNoFrete(prev => ({ ...prev, [oc.po_id]: value }))}
                         onAplicar={() => aplicarFreteERastreio(oc.po_id)}
                       />
                     )}
