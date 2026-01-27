@@ -3782,6 +3782,7 @@ Chave PIX: 46.663.556/0001-69`;
                             >
                               {aplicandoFrete === oc.po_id ? '⏳ Aplicando...' : '✅ Aplicar Frete'}
                             </button>
+                          </div>
                           
                           {/* Campo de Código de Rastreio */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #fed7aa' }}>
