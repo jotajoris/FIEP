@@ -23,7 +23,18 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.3.6 (27/01/2026)
+## Versão Atual: 3.3.7 (27/01/2026)
+
+### 🔄 Mudança de Status em Massa em "Em Trânsito" (27/01/2026)
+- ✅ **Dropdown de status** adicionado ao formulário de rastreio/frete em "Em Trânsito"
+- ✅ **Opções disponíveis**:
+  - `-- Manter atual --` (padrão)
+  - `✅ Entregue` (para marcar quando a API não atualiza)
+  - `📦 Voltar p/ Em Separação`
+  - `🛒 Voltar p/ Comprado`
+- ✅ **Seleção em massa**: Selecionar múltiplos itens → escolher status → aplicar
+- ✅ **Botão individual**: Cada item ainda tem o botão "Mudar Status" para alterações unitárias
+- ✅ **Caso de uso principal**: Marcar como entregue itens enviados sem contrato dos Correios
 
 ### 📦 Envio Parcial de Itens em "Em Separação" (27/01/2026)
 - ✅ **Botão "Envio Parcial"** aparece em itens com quantidade > 1
