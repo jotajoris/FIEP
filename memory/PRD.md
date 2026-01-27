@@ -23,7 +23,18 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.3.4 (27/01/2026)
+## Versão Atual: 3.3.5 (27/01/2026)
+
+### 🔄 Mudança de Status no Formulário de Frete "Em Separação" (27/01/2026)
+- ✅ **Formulário unificado** agora inclui: Frete + Rastreio + Status
+- ✅ **Dropdown de status** com opções:
+  - `-- Manter atual --` (padrão)
+  - `🚚 Em Trânsito` (ideal para envio!)
+  - `✅ Entregue`
+  - `🛒 Comprado`
+- ✅ **Aplicação em uma única ação** - Frete, rastreio e status são aplicados juntos
+- ✅ **Novo endpoint `/api/purchase-orders/{po_id}/status-multiplo`** para mudança de status em lote
+- ✅ **Registro automático de `data_compra`** quando status muda para "Comprado"
 
 ### 🚚 Formulário de Rastreio e Frete em Lote para "Em Trânsito" (27/01/2026)
 - ✅ **Atualizado `RastreioLoteForm.jsx`** para incluir campo de frete total
