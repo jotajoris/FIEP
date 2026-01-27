@@ -1663,7 +1663,82 @@ const ItemsByStatus = () => {
     }
   };
 
-  // Aplicar código de rastreio em lote
+  // Aplicar frete E código de rastreio em lote (botão único)
+  const aplicarFreteERastreio = async (poId) => {
+    const selectedIndices = itensParaFrete[poId];
+    const freteTotal = parseFloat(freteEnvioTotal[poId] || 0);
+    const codigoRastreio = codigoRastreioLote[poId]?.trim() || '';
+    
+    if (!selectedIndices || selectedIndices.size === 0) {
+      alert('Selecione ao menos um item.');
+      return;
+    }
+    
+    if (freteTotal <= 0 && !codigoRastreio) {
+      alert('Informe o valor do frete e/ou o código de rastreio.');
+      return;
+    }
+    
+    const fretePorItem = freteTotal > 0 ? (freteTotal / selectedIndices.size) : 0;
+    
+    let mensagem = `Aplicar para ${selectedIndices.size} item(s):\n`;
+    if (freteTotal > 0) {
+      mensagem += `• Frete: ${formatBRL(freteTotal)} (${formatBRL(fretePorItem)}/item)\n`;
+    }
+    if (codigoRastreio) {
+      mensagem += `• Rastreio: ${codigoRastreio}\n`;
+    }
+    mensagem += '\nConfirmar?';
+    
+    if (!window.confirm(mensagem)) {
+      return;
+    }
+    
+    setAplicandoFrete(poId);
+    
+    try {
+      // Aplicar frete se informado
+      if (freteTotal > 0) {
+        await apiPost(`${API}/purchase-orders/${poId}/frete-envio-multiplo`, {
+          item_indices: Array.from(selectedIndices),
+          frete_total: freteTotal
+        });
+      }
+      
+      // Aplicar rastreio se informado
+      if (codigoRastreio) {
+        await apiPost(`${API}/purchase-orders/${poId}/rastreio-multiplo`, {
+          item_indices: Array.from(selectedIndices),
+          codigo_rastreio: codigoRastreio
+        });
+      }
+      
+      let alertMsg = `✅ Aplicado com sucesso para ${selectedIndices.size} item(s)!\n\n`;
+      if (freteTotal > 0) {
+        alertMsg += `• Frete: ${formatBRL(fretePorItem)} por item\n`;
+      }
+      if (codigoRastreio) {
+        alertMsg += `• Rastreio: ${codigoRastreio}\n`;
+      }
+      
+      alert(alertMsg);
+      
+      // Limpar campos
+      setItensParaFrete(prev => ({ ...prev, [poId]: new Set() }));
+      setFreteEnvioTotal(prev => ({ ...prev, [poId]: '' }));
+      setCodigoRastreioLote(prev => ({ ...prev, [poId]: '' }));
+      
+      // Recarregar dados
+      loadItems();
+    } catch (error) {
+      console.error('Erro ao aplicar:', error);
+      alert('Erro ao aplicar: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setAplicandoFrete(null);
+    }
+  };
+
+  // Aplicar código de rastreio em lote (mantido para compatibilidade)
   const aplicarRastreioEmLote = async (poId) => {
     const selectedIndices = itensParaFrete[poId];  // Usa a mesma seleção do frete
     const codigoRastreio = codigoRastreioLote[poId]?.trim();
