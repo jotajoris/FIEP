@@ -276,8 +276,93 @@ def _processar_resposta_correios(data: Dict, codigo: str) -> Dict[str, Any]:
 
 async def _rastrear_fallback(codigo: str) -> Dict[str, Any]:
     """
-    Fallback para API pública de rastreamento (LinkeTrack).
-    Usado quando as credenciais dos Correios não estão disponíveis.
+    Fallback para APIs públicas de rastreamento.
+    Tenta múltiplas APIs em sequência.
+    """
+    # Lista de fallbacks a tentar em ordem
+    fallback_apis = [
+        _rastrear_seurastreio,
+        _rastrear_linketrack,
+    ]
+    
+    for api_func in fallback_apis:
+        try:
+            result = await api_func(codigo)
+            if result.get('success'):
+                return result
+        except Exception as e:
+            logger.warning(f"Fallback {api_func.__name__} falhou: {str(e)}")
+            continue
+    
+    return {"success": False, "error": "Não foi possível rastrear o objeto", "codigo": codigo}
+
+
+async def _rastrear_seurastreio(codigo: str) -> Dict[str, Any]:
+    """
+    Fallback usando API SeuRastreio.com.br (gratuita, sem autenticação).
+    """
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.get(
+                f"https://seurastreio.com.br/api/public/rastreio/{codigo}",
+                headers={"Accept": "application/json"}
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if data.get('status') == 'found' and data.get('ultimoEvento'):
+                    ultimo = data.get('ultimoEvento', {})
+                    status_desc = ultimo.get('descricao', '')
+                    status_lower = status_desc.lower()
+                    
+                    entregue = any(d in status_lower for d in DESCRICOES_ENTREGA)
+                    saiu_para_entrega = any(d in status_lower for d in DESCRICOES_SAIU_ENTREGA)
+                    tentativa_entrega = any(d in status_lower for d in DESCRICOES_TENTATIVA)
+                    
+                    evento = {
+                        "data": ultimo.get('data', ''),
+                        "hora": ultimo.get('hora', ''),
+                        "local": ultimo.get('local', ''),
+                        "cidade": ultimo.get('cidade', ''),
+                        "uf": ultimo.get('uf', ''),
+                        "status": status_desc,
+                        "tipo": '',
+                        "subStatus": '',
+                    }
+                    
+                    return {
+                        "success": True,
+                        "codigo": codigo,
+                        "eventos": [evento],
+                        "entregue": entregue,
+                        "saiu_para_entrega": saiu_para_entrega,
+                        "tentativa_entrega": tentativa_entrega,
+                        "ultimo_evento": evento,
+                        "fonte": "seurastreio",
+                        "link_detalhes": data.get('linkDetalhesCompletos', '')
+                    }
+                elif data.get('status') == 'no_events':
+                    return {
+                        "success": True,
+                        "codigo": codigo,
+                        "eventos": [],
+                        "entregue": False,
+                        "saiu_para_entrega": False,
+                        "tentativa_entrega": False,
+                        "ultimo_evento": None,
+                        "fonte": "seurastreio",
+                        "mensagem": "Objeto postado, aguardando movimentação"
+                    }
+    except Exception as e:
+        logger.warning(f"SeuRastreio API falhou: {str(e)}")
+    
+    return {"success": False, "error": "SeuRastreio indisponível", "codigo": codigo}
+
+
+async def _rastrear_linketrack(codigo: str) -> Dict[str, Any]:
+    """
+    Fallback usando API LinkeTrack (gratuita, com credenciais de teste).
     """
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
@@ -322,21 +407,22 @@ async def _rastrear_fallback(codigo: str) -> Dict[str, Any]:
                         "subStatus": evento.get('subStatus', []),
                     })
                 
-                return {
-                    "success": True,
-                    "codigo": codigo,
-                    "eventos": eventos,
-                    "entregue": entregue,
-                    "saiu_para_entrega": saiu_para_entrega,
-                    "tentativa_entrega": tentativa_entrega,
-                    "ultimo_evento": eventos[0] if eventos else None,
-                    "fonte": "linketrack"
-                }
-            
+                if eventos:
+                    return {
+                        "success": True,
+                        "codigo": codigo,
+                        "eventos": eventos,
+                        "entregue": entregue,
+                        "saiu_para_entrega": saiu_para_entrega,
+                        "tentativa_entrega": tentativa_entrega,
+                        "ultimo_evento": eventos[0] if eventos else None,
+                        "fonte": "linketrack"
+                    }
+                    
     except Exception as e:
-        logger.warning(f"Fallback também falhou: {str(e)}")
+        logger.warning(f"LinkeTrack API falhou: {str(e)}")
     
-    return {"success": False, "error": "Não foi possível rastrear o objeto", "codigo": codigo}
+    return {"success": False, "error": "LinkeTrack indisponível", "codigo": codigo}
 
 
 def verificar_status_evento(eventos: List[Dict]) -> Dict[str, bool]:
