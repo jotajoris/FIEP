@@ -3730,62 +3730,63 @@ Chave PIX: 46.663.556/0001-69`;
                         
                         {/* Campo de valor e botão aplicar */}
                         {(itensParaFrete[oc.po_id]?.size || 0) > 0 && (
-                          <div style={{ 
-                            display: 'flex', 
-                            gap: '0.75rem', 
-                            alignItems: 'center', 
-                            marginTop: '0.75rem',
-                            padding: '0.75rem',
-                            background: 'white',
-                            borderRadius: '8px',
-                            flexWrap: 'wrap'
-                          }}>
-                            <label style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem' }}>
-                              Valor Total do Frete:
-                            </label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              placeholder="R$ 0,00"
-                              value={freteEnvioTotal[oc.po_id] || ''}
-                              onChange={(e) => setFreteEnvioTotal(prev => ({ ...prev, [oc.po_id]: e.target.value }))}
-                              style={{
-                                padding: '0.5rem 0.75rem',
-                                border: '2px solid #f59e0b',
-                                borderRadius: '6px',
-                                fontSize: '1rem',
-                                fontWeight: '600',
-                                width: '150px'
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                            <span style={{ color: '#6b7280', fontSize: '0.85rem' }}>
-                              ÷ {itensParaFrete[oc.po_id]?.size} itens = <strong>{formatBRL((parseFloat(freteEnvioTotal[oc.po_id] || 0) / (itensParaFrete[oc.po_id]?.size || 1)))}</strong> cada
-                            </span>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                aplicarFreteEnvio(oc.po_id);
-                              }}
-                              disabled={aplicandoFrete === oc.po_id}
-                              style={{
-                                padding: '0.5rem 1rem',
-                                background: aplicandoFrete === oc.po_id ? '#9ca3af' : '#22c55e',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '6px',
-                                fontWeight: '600',
-                                cursor: aplicandoFrete === oc.po_id ? 'wait' : 'pointer',
-                                fontSize: '0.9rem'
-                              }}
-                            >
-                              {aplicandoFrete === oc.po_id ? '⏳ Aplicando...' : '✅ Aplicar Frete'}
-                            </button>
-                          </div>
-                          
-                          {/* Campo de Código de Rastreio */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #fed7aa' }}>
+                          <>
+                            <div style={{ 
+                              display: 'flex', 
+                              gap: '0.75rem', 
+                              alignItems: 'center', 
+                              marginTop: '0.75rem',
+                              padding: '0.75rem',
+                              background: 'white',
+                              borderRadius: '8px',
+                              flexWrap: 'wrap'
+                            }}>
+                              <label style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem' }}>
+                                Valor Total do Frete:
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder="R$ 0,00"
+                                value={freteEnvioTotal[oc.po_id] || ''}
+                                onChange={(e) => setFreteEnvioTotal(prev => ({ ...prev, [oc.po_id]: e.target.value }))}
+                                style={{
+                                  padding: '0.5rem 0.75rem',
+                                  border: '2px solid #f59e0b',
+                                  borderRadius: '6px',
+                                  fontSize: '1rem',
+                                  fontWeight: '600',
+                                  width: '150px'
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <span style={{ color: '#6b7280', fontSize: '0.85rem' }}>
+                                ÷ {itensParaFrete[oc.po_id]?.size} itens = <strong>{formatBRL((parseFloat(freteEnvioTotal[oc.po_id] || 0) / (itensParaFrete[oc.po_id]?.size || 1)))}</strong> cada
+                              </span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  aplicarFreteEnvio(oc.po_id);
+                                }}
+                                disabled={aplicandoFrete === oc.po_id}
+                                style={{
+                                  padding: '0.5rem 1rem',
+                                  background: aplicandoFrete === oc.po_id ? '#9ca3af' : '#22c55e',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  fontWeight: '600',
+                                  cursor: aplicandoFrete === oc.po_id ? 'wait' : 'pointer',
+                                  fontSize: '0.9rem'
+                                }}
+                              >
+                                {aplicandoFrete === oc.po_id ? '⏳ Aplicando...' : '✅ Aplicar Frete'}
+                              </button>
+                            </div>
+                            
+                            {/* Campo de Código de Rastreio */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', padding: '0.75rem', background: 'white', borderRadius: '8px' }}>
                             <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>📦 Rastreio:</span>
                             <input
                               type="text"
