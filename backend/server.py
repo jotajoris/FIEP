@@ -5231,6 +5231,65 @@ async def aplicar_frete_envio_multiplo(
     }
 
 
+@api_router.post("/purchase-orders/{po_id}/rastreio-multiplo")
+async def aplicar_rastreio_multiplo(
+    po_id: str,
+    data: dict,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Aplicar código de rastreio para múltiplos itens de uma OC.
+    
+    Body:
+    {
+        "item_indices": [0, 1, 2],           // Índices dos itens
+        "codigo_rastreio": "AB123456789BR"   // Código de rastreio dos Correios
+    }
+    """
+    
+    item_indices = data.get("item_indices", [])
+    codigo_rastreio = data.get("codigo_rastreio", "").strip()
+    
+    if not item_indices:
+        raise HTTPException(status_code=400, detail="Nenhum item selecionado")
+    
+    if not codigo_rastreio:
+        raise HTTPException(status_code=400, detail="Código de rastreio não informado")
+    
+    # Buscar OC
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not po:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    # Atualizar cada item com o código de rastreio
+    items = po.get('items', [])
+    itens_atualizados = []
+    
+    for idx in item_indices:
+        if idx < 0 or idx >= len(items):
+            continue
+        
+        items[idx]['codigo_rastreio'] = codigo_rastreio
+        itens_atualizados.append({
+            "indice": idx,
+            "codigo_item": items[idx].get('codigo_item', ''),
+            "codigo_rastreio": codigo_rastreio
+        })
+    
+    # Salvar alterações
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": items}}
+    )
+    
+    return {
+        "success": True,
+        "codigo_rastreio": codigo_rastreio,
+        "itens_atualizados": itens_atualizados,
+        "quantidade_itens": len(itens_atualizados)
+    }
+
+
 @api_router.post("/purchase-orders/{po_id}/atualizar-pdf")
 async def atualizar_oc_com_pdf(
     po_id: str,
