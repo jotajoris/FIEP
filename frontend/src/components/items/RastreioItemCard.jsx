@@ -202,15 +202,15 @@ const RastreioItemCard = memo(({
                 {showStatusMenu && (
                   <div style={{
                     position: 'absolute',
-                    top: '100%',
+                    bottom: '100%',
                     left: 0,
-                    marginTop: '0.25rem',
+                    marginBottom: '0.25rem',
                     background: 'white',
                     border: '1px solid #e2e8f0',
                     borderRadius: '8px',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                     zIndex: 100,
-                    minWidth: '180px',
+                    minWidth: '200px',
                     overflow: 'hidden'
                   }}>
                     <button
