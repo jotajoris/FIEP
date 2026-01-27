@@ -423,8 +423,8 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 ### P3 - Backlog (Adiadas pelo usuário)
 - [x] **Refatoração do Backend - Fase 2** - ✅ COMPLETO (27/01/2026)
 - [ ] **Refatoração do Backend - Fase 3** - Extrair rotas de estoque, planilha, admin
-- **Refatoração Frontend - Fase 1** - ✅ COMPLETO (27/01/2026) - Componentes básicos extraídos
-- [ ] **Refatoração Frontend - Fase 2** - Extrair OcCard, ItemRow e outros componentes complexos
+- **Refatoração Frontend - Fase 1 e 2** - ✅ COMPLETO (27/01/2026) - 12 componentes criados, 2 em uso ativo
+- [ ] **Refatoração Frontend - Fase 3** - Substituir mais blocos de código pelos componentes criados
 - [ ] **Verificação de Domínio Resend** - Para emails funcionarem externamente
 
 ### Notas de Limitações Conhecidas
