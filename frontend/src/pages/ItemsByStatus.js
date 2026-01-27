@@ -1179,6 +1179,37 @@ const ItemsByStatus = () => {
     }
   };
 
+  // Função para editar código de rastreio e frete de um item
+  const editarRastreioFrete = async (item, editData) => {
+    try {
+      const payload = {};
+      
+      // Só incluir campos que foram alterados
+      if (editData.codigo_rastreio !== item.codigo_rastreio) {
+        payload.codigo_rastreio = editData.codigo_rastreio?.trim() || null;
+      }
+      if (editData.frete_envio !== item.frete_envio) {
+        payload.frete_envio = editData.frete_envio ? parseFloat(editData.frete_envio) : null;
+      }
+      
+      if (Object.keys(payload).length === 0) {
+        return; // Nada para atualizar
+      }
+      
+      await apiPatch(`${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}`, payload);
+      
+      const mensagens = [];
+      if (payload.codigo_rastreio !== undefined) mensagens.push(`Rastreio: ${payload.codigo_rastreio || 'removido'}`);
+      if (payload.frete_envio !== undefined) mensagens.push(`Frete: R$ ${(payload.frete_envio || 0).toFixed(2)}`);
+      
+      alert(`✅ Atualizado!\n${mensagens.join('\n')}`);
+      loadItems();
+    } catch (error) {
+      console.error('Erro ao editar rastreio/frete:', error);
+      alert('Erro ao editar: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
   // ============== FUNÇÕES DE NOTAS FISCAIS ==============
   
   const toggleNFSection = (itemKey) => {
