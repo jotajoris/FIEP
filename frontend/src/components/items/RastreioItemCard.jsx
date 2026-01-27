@@ -175,6 +175,105 @@ const RastreioItemCard = memo(({
                 {eventos.length} evento{eventos.length !== 1 ? 's' : ''}
               </span>
             )}
+            
+            {/* Botão de Mudar Status (Admin) */}
+            {isAdmin && onMudarStatus && (
+              <div style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setShowStatusMenu(!showStatusMenu)}
+                  style={{
+                    padding: '0.4rem 0.75rem',
+                    background: '#f3f4f6',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '0.8rem',
+                    fontWeight: '500',
+                    color: '#374151',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.3rem'
+                  }}
+                  title="Alterar status manualmente"
+                >
+                  ✏️ Mudar Status
+                </button>
+                
+                {showStatusMenu && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    marginTop: '0.25rem',
+                    background: 'white',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    zIndex: 100,
+                    minWidth: '180px',
+                    overflow: 'hidden'
+                  }}>
+                    <button
+                      onClick={() => { onMudarStatus(item, 'entregue'); setShowStatusMenu(false); }}
+                      style={{
+                        width: '100%',
+                        padding: '0.6rem 1rem',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        fontSize: '0.85rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                      onMouseEnter={(e) => e.target.style.background = '#dcfce7'}
+                      onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                    >
+                      ✅ Marcar como Entregue
+                    </button>
+                    <button
+                      onClick={() => { onMudarStatus(item, 'em_separacao'); setShowStatusMenu(false); }}
+                      style={{
+                        width: '100%',
+                        padding: '0.6rem 1rem',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        fontSize: '0.85rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                      onMouseEnter={(e) => e.target.style.background = '#fef3c7'}
+                      onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                    >
+                      📦 Voltar p/ Em Separação
+                    </button>
+                    <button
+                      onClick={() => { onMudarStatus(item, 'comprado'); setShowStatusMenu(false); }}
+                      style={{
+                        width: '100%',
+                        padding: '0.6rem 1rem',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        fontSize: '0.85rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                      onMouseEnter={(e) => e.target.style.background = '#dbeafe'}
+                      onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                    >
+                      🛒 Voltar p/ Comprado
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
