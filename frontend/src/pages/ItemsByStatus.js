@@ -19,6 +19,7 @@ import {
   MudarStatusForm,
   OcCardHeader,
   ProntoDespachoToggle,
+  RastreioLoteForm,
   calcularStatusEntrega,
   statusLabels,
   statusColors,
