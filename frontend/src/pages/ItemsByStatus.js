@@ -3783,6 +3783,46 @@ Chave PIX: 46.663.556/0001-69`;
                               {aplicandoFrete === oc.po_id ? '⏳ Aplicando...' : '✅ Aplicar Frete'}
                             </button>
                           </div>
+                          
+                          {/* Campo de Código de Rastreio */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #fed7aa' }}>
+                            <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>📦 Rastreio:</span>
+                            <input
+                              type="text"
+                              placeholder="AB123456789BR"
+                              value={codigoRastreioLote[oc.po_id] || ''}
+                              onChange={(e) => setCodigoRastreioLote(prev => ({ ...prev, [oc.po_id]: e.target.value }))}
+                              style={{
+                                flex: 1,
+                                padding: '0.5rem',
+                                borderRadius: '6px',
+                                border: '1px solid #fed7aa',
+                                fontSize: '0.9rem',
+                                fontFamily: 'monospace',
+                                textTransform: 'uppercase'
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                aplicarRastreioEmLote(oc.po_id);
+                              }}
+                              disabled={aplicandoRastreio === oc.po_id || !codigoRastreioLote[oc.po_id]}
+                              style={{
+                                padding: '0.5rem 1rem',
+                                background: aplicandoRastreio === oc.po_id ? '#9ca3af' : !codigoRastreioLote[oc.po_id] ? '#d1d5db' : '#3b82f6',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontWeight: '600',
+                                cursor: aplicandoRastreio === oc.po_id || !codigoRastreioLote[oc.po_id] ? 'not-allowed' : 'pointer',
+                                fontSize: '0.9rem'
+                              }}
+                            >
+                              {aplicandoRastreio === oc.po_id ? '⏳...' : '📦 Aplicar'}
+                            </button>
+                          </div>
                         )}
                       </div>
                     )}
