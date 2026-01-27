@@ -131,6 +131,9 @@ async def obter_token_correios() -> Optional[str]:
                     # É uma data/hora no formato ISO
                     try:
                         expires_at = datetime.fromisoformat(expires_em.replace('Z', '+00:00'))
+                        # Garantir que tem timezone
+                        if expires_at.tzinfo is None:
+                            expires_at = expires_at.replace(tzinfo=timezone.utc)
                         _token_cache['expires_at'] = expires_at - timedelta(minutes=5)  # 5min de margem
                     except:
                         _token_cache['expires_at'] = datetime.now(timezone.utc) + timedelta(hours=23)
