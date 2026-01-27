@@ -1152,6 +1152,33 @@ const ItemsByStatus = () => {
     }
   };
 
+  // Função para mudar status de um item manualmente (usado em Em Trânsito)
+  const mudarStatusItemManual = async (item, novoStatus) => {
+    const statusLabels = {
+      'pendente': 'Pendente',
+      'cotado': 'Cotado',
+      'comprado': 'Comprado',
+      'em_separacao': 'Em Separação',
+      'em_transito': 'Em Trânsito',
+      'entregue': 'Entregue'
+    };
+    
+    if (!window.confirm(`Alterar status do item ${item.codigo_item} para "${statusLabels[novoStatus]}"?`)) {
+      return;
+    }
+    
+    try {
+      await apiPatch(`${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}`, {
+        status: novoStatus
+      });
+      alert(`✅ Status alterado para "${statusLabels[novoStatus]}"!`);
+      loadItems();
+    } catch (error) {
+      console.error('Erro ao mudar status:', error);
+      alert('Erro ao mudar status: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
   // ============== FUNÇÕES DE NOTAS FISCAIS ==============
   
   const toggleNFSection = (itemKey) => {
