@@ -74,6 +74,7 @@ const ItemsByStatus = () => {
   // Estados para código de rastreio em lote
   const [codigoRastreioLote, setCodigoRastreioLote] = useState({});  // {po_id: codigo} - Código de rastreio por OC
   const [aplicandoRastreio, setAplicandoRastreio] = useState(null);  // po_id do rastreio sendo aplicado
+  const [itensParaRastreio, setItensParaRastreio] = useState({});  // {po_id: Set(item_index)} - Itens selecionados para rastreio (Em Trânsito)
   
   // Estados para mudança de status em massa
   const [novoStatusMassa, setNovoStatusMassa] = useState({});  // {po_id: status} - Status selecionado para mudança em massa
