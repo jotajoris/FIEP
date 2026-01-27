@@ -3,25 +3,18 @@ import React, { memo, useState } from 'react';
 /**
  * Componente de exibição de rastreio para itens "Em Trânsito"
  * Mostra código de rastreio, status atual e eventos expandíveis
- * Permite edição de rastreio e frete
+ * Inclui checkbox para seleção em lote
  */
 const RastreioItemCard = memo(({
   item,
   isSelected,
   onToggleSelect,
-  onAtualizarRastreio,
   onMudarStatus,
-  onEditarRastreioFrete,
   isAdmin,
   formatBRL
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-  const [editData, setEditData] = useState({
-    codigo_rastreio: item.codigo_rastreio || '',
-    frete_envio: item.frete_envio || ''
-  });
   
   const eventos = item.rastreio_eventos || [];
   const ultimoEvento = eventos[0];
