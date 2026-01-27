@@ -2909,12 +2909,16 @@ async def buscar_rastreio_api(codigo: str) -> dict:
 # ================== VERIFICAÇÃO AUTOMÁTICA DE RASTREIO ==================
 
 async def verificar_rastreios_em_transito():
-    """Verifica todos os itens em trânsito e atualiza status se entregue"""
+    """
+    Verifica todos os itens em trânsito e atualiza status automaticamente.
+    Cria notificações para: saiu para entrega, tentativa de entrega, entregue.
+    Executado 1x ao dia.
+    """
     logger = logging.getLogger(__name__)
     
     while True:
         try:
-            logger.info("Iniciando verificação automática de rastreios...")
+            logger.info("Iniciando verificação automática de rastreios (API Correios)...")
             
             # Buscar todas as OCs com itens em trânsito
             cursor = db.purchase_orders.find(
@@ -2922,65 +2926,134 @@ async def verificar_rastreios_em_transito():
                 {"_id": 0}
             )
             
-            itens_atualizados = 0
+            stats = {
+                "verificados": 0,
+                "entregues": 0,
+                "saiu_entrega": 0,
+                "tentativa": 0,
+                "erros": 0
+            }
             
             async for po in cursor:
+                po_atualizado = False
+                
                 for item in po['items']:
                     if item.get('status') == 'em_transito' and item.get('codigo_rastreio'):
                         codigo = item['codigo_rastreio']
+                        stats["verificados"] += 1
                         
-                        # Tentar buscar rastreio
-                        result = await buscar_rastreio_api(codigo)
-                        
-                        if result.get('success') and result.get('eventos'):
-                            eventos = result['eventos']
-                            item['rastreio_eventos'] = eventos
+                        try:
+                            # Buscar rastreio na API dos Correios
+                            result = await buscar_rastreio_api(codigo)
                             
-                            # Verificar se foi entregue
-                            entregue = False
-                            for evento in eventos:
-                                status_lower = (evento.get('status') or '').lower()
-                                if 'entregue' in status_lower or 'entrega realizada' in status_lower or 'destinatário' in status_lower:
-                                    entregue = True
-                                    break
-                            
-                            if entregue:
+                            if result.get('success') and result.get('eventos'):
+                                eventos = result['eventos']
+                                
+                                # Comparar com eventos anteriores para detectar novidades
+                                eventos_anteriores = item.get('rastreio_eventos', [])
+                                qtd_anterior = len(eventos_anteriores)
+                                
+                                # Atualizar eventos no item
+                                item['rastreio_eventos'] = eventos
+                                
+                                # Verificar se há novos eventos
+                                novos_eventos = len(eventos) > qtd_anterior
+                                
                                 now = datetime.now(timezone.utc)
-                                item['status'] = ItemStatus.ENTREGUE.value
-                                item['data_entrega'] = now.isoformat()
                                 
-                                # Criar notificação
-                                notificacao = {
-                                    "id": str(uuid.uuid4()),
-                                    "tipo": "entrega",
-                                    "titulo": "Item Entregue",
-                                    "numero_oc": po.get('numero_oc', ''),
-                                    "codigo_item": item['codigo_item'],
-                                    "descricao_item": item.get('descricao', '')[:30] + ('...' if len(item.get('descricao', '')) > 30 else ''),
-                                    "lida": False,
-                                    "created_at": now.isoformat()
-                                }
-                                await db.notificacoes.insert_one(notificacao)
+                                # Verificar se foi entregue
+                                if result.get('entregue'):
+                                    item['status'] = ItemStatus.ENTREGUE.value
+                                    item['data_entrega'] = now.isoformat()
+                                    stats["entregues"] += 1
+                                    po_atualizado = True
+                                    
+                                    # Criar notificação de entrega
+                                    await _criar_notificacao_rastreio(
+                                        po, item, "entrega", "✅ Item Entregue",
+                                        f"O item {item['codigo_item']} foi entregue ao destinatário."
+                                    )
+                                    
+                                    logger.info(f"✅ Item {item['codigo_item']} da OC {po['numero_oc']} ENTREGUE")
                                 
-                                itens_atualizados += 1
-                                logger.info(f"Item {item['codigo_item']} da OC {po['numero_oc']} marcado como entregue automaticamente")
-                            
-                            # Atualizar OC no banco
-                            await db.purchase_orders.update_one(
-                                {"id": po['id']},
-                                {"$set": {"items": po['items']}}
-                            )
+                                # Verificar se saiu para entrega (apenas se houver novos eventos)
+                                elif result.get('saiu_para_entrega') and novos_eventos:
+                                    if not item.get('notificado_saiu_entrega'):
+                                        stats["saiu_entrega"] += 1
+                                        item['notificado_saiu_entrega'] = True
+                                        po_atualizado = True
+                                        
+                                        await _criar_notificacao_rastreio(
+                                            po, item, "saiu_entrega", "🚚 Saiu para Entrega",
+                                            f"O item {item['codigo_item']} saiu para entrega ao destinatário."
+                                        )
+                                        
+                                        logger.info(f"🚚 Item {item['codigo_item']} da OC {po['numero_oc']} SAIU PARA ENTREGA")
+                                
+                                # Verificar tentativa de entrega (apenas se houver novos eventos)
+                                elif result.get('tentativa_entrega') and novos_eventos:
+                                    if not item.get('notificado_tentativa') or item.get('tentativas_count', 0) < len([e for e in eventos if 'ausente' in (e.get('status', '') or '').lower() or 'não entregue' in (e.get('status', '') or '').lower()]):
+                                        stats["tentativa"] += 1
+                                        item['notificado_tentativa'] = True
+                                        item['tentativas_count'] = item.get('tentativas_count', 0) + 1
+                                        po_atualizado = True
+                                        
+                                        ultimo_evento = eventos[0] if eventos else {}
+                                        await _criar_notificacao_rastreio(
+                                            po, item, "tentativa", "⚠️ Tentativa de Entrega",
+                                            f"Tentativa de entrega para o item {item['codigo_item']}: {ultimo_evento.get('status', 'Destinatário ausente')}"
+                                        )
+                                        
+                                        logger.info(f"⚠️ Item {item['codigo_item']} da OC {po['numero_oc']} TENTATIVA DE ENTREGA")
+                                
+                                # Atualizar eventos mesmo sem mudança de status
+                                po_atualizado = True
+                                
+                        except Exception as e:
+                            stats["erros"] += 1
+                            logger.warning(f"Erro ao verificar rastreio {codigo}: {str(e)}")
+                
+                # Atualizar OC no banco se houve alterações
+                if po_atualizado:
+                    await db.purchase_orders.update_one(
+                        {"id": po['id']},
+                        {"$set": {"items": po['items']}}
+                    )
             
-            if itens_atualizados > 0:
-                logger.info(f"Verificação concluída. {itens_atualizados} itens atualizados para entregue.")
-            else:
-                logger.info("Verificação concluída. Nenhum item novo entregue.")
+            logger.info(
+                f"Verificação concluída. "
+                f"Verificados: {stats['verificados']}, "
+                f"Entregues: {stats['entregues']}, "
+                f"Saiu p/ Entrega: {stats['saiu_entrega']}, "
+                f"Tentativas: {stats['tentativa']}, "
+                f"Erros: {stats['erros']}"
+            )
                 
         except Exception as e:
             logger.error(f"Erro na verificação automática de rastreios: {str(e)}")
         
-        # Aguardar 30 minutos antes da próxima verificação
-        await asyncio.sleep(1800)
+        # Aguardar 24 horas antes da próxima verificação (1x ao dia)
+        await asyncio.sleep(86400)
+
+
+async def _criar_notificacao_rastreio(po: dict, item: dict, tipo: str, titulo: str, mensagem: str):
+    """Cria uma notificação de rastreio no banco de dados."""
+    now = datetime.now(timezone.utc)
+    
+    notificacao = {
+        "id": str(uuid.uuid4()),
+        "tipo": tipo,
+        "titulo": titulo,
+        "mensagem": mensagem,
+        "numero_oc": po.get('numero_oc', ''),
+        "codigo_item": item.get('codigo_item', ''),
+        "codigo_rastreio": item.get('codigo_rastreio', ''),
+        "descricao_item": (item.get('descricao', '')[:50] + '...') if len(item.get('descricao', '')) > 50 else item.get('descricao', ''),
+        "lida": False,
+        "created_at": now.isoformat()
+    }
+    
+    await db.notificacoes.insert_one(notificacao)
 
 # ============== FUNÇÕES DE NOTAS FISCAIS ==============
 
