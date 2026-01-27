@@ -193,6 +193,16 @@ async def rastrear_objeto_correios(codigo_rastreio: str) -> Dict[str, Any]:
             
             if response.status_code == 200:
                 data = response.json()
+                
+                # Verificar se o objeto pertence ao contrato
+                objetos = data.get('objetos', [])
+                if objetos and objetos[0].get('mensagem'):
+                    msg = objetos[0].get('mensagem', '')
+                    if 'não pertence ao contrato' in msg.lower() or 'SRO-009' in msg:
+                        # Objeto não pertence ao contrato, usar fallback
+                        logger.info(f"Objeto {codigo} não pertence ao contrato, usando fallback")
+                        return await _rastrear_fallback(codigo)
+                
                 return _processar_resposta_correios(data, codigo)
             elif response.status_code == 401:
                 # Token expirado, limpar cache e tentar novamente
