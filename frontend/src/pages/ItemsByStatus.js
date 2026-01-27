@@ -113,6 +113,15 @@ const ItemsByStatus = () => {
   const [imagemExpandida, setImagemExpandida] = useState(null);  // URL da imagem para popup expandido
   const [dragOver, setDragOver] = useState(null);  // _uniqueId do item com drag over
 
+  // Estados para modal de Envio Parcial
+  const [showEnvioParcialModal, setShowEnvioParcialModal] = useState(null);  // item para envio parcial
+  const [envioParcialData, setEnvioParcialData] = useState({
+    quantidade_enviar: '',
+    codigo_rastreio: '',
+    frete_envio: ''
+  });
+  const [aplicandoEnvioParcial, setAplicandoEnvioParcial] = useState(false);
+
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
