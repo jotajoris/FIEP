@@ -513,7 +513,7 @@ const ItemsByStatus = () => {
 
   // Agrupar itens por OC para a visualização "Em Separação"
   const itemsGroupedByOC = useMemo(() => {
-    if (status !== 'em_separacao') return [];
+    if (status !== 'em_separacao' && status !== 'em_transito') return [];
     
     const grouped = {};
     displayItems.forEach(item => {
