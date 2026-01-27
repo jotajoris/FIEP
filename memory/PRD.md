@@ -23,9 +23,26 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.2.0 (22/01/2026)
+## Versão Atual: 3.3.0 (27/01/2026)
 
-### 🔧 Refatoração do Backend (22/01/2026)
+### 🔧 Refatoração do Backend - Fase 2 (27/01/2026)
+- ✅ **Modularização completa de rotas**: 
+  - `routes/auth_routes.py` - Autenticação (login, profile, password reset) - **EM USO**
+  - `routes/rastreio_routes.py` - Rastreamento Correios - **EM USO**
+  - `routes/notificacao_routes.py` - Notificações (NOVO) - **EM USO**
+- ✅ **Routers incluídos em server.py** via `api_router.include_router()`
+- ✅ **Redução de código**: `server.py` reduzido de ~6841 para ~6421 linhas (~420 linhas extraídas)
+- ✅ **Testes verificados**: 15/15 testes passaram (100%)
+
+### 🚚 Frete e Rastreio Unificado (27/01/2026)
+- ✅ **Botão único "Aplicar Frete e Rastreio"** na página "Em Separação"
+- ✅ **Seleção múltipla de itens** para aplicar frete dividido + código de rastreio
+- ✅ **Cálculo automático** de frete por item (total ÷ número de itens)
+- ✅ **Endpoints utilizados**:
+  - `POST /api/purchase-orders/{po_id}/frete-envio-multiplo`
+  - `POST /api/purchase-orders/{po_id}/rastreio-multiplo`
+
+### 🔧 Refatoração do Backend - Fase 1 (22/01/2026)
 - ✅ **Documentação de arquitetura**: `/app/backend/REFACTORING.md` com plano completo
 - ✅ **config.py expandido**: Novas constantes centralizadas (STATUS_COMPRADO_OU_ADIANTE, FRONTEND_URL)
 - ✅ **services/estoque_service.py**: Funções de negócio extraídas:
