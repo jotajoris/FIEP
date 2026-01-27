@@ -58,6 +58,7 @@ import requests  # Para buscar CEP
 # Importar routers modulares
 from routes.auth_routes import router as auth_router
 from routes.rastreio_routes import router as rastreio_router
+from routes.notificacao_routes import router as notificacao_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
