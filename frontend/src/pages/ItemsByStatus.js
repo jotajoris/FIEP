@@ -20,6 +20,7 @@ import {
   OcCardHeader,
   ProntoDespachoToggle,
   RastreioLoteForm,
+  RastreioItemCard,
   calcularStatusEntrega,
   statusLabels,
   statusColors,
