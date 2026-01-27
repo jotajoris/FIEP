@@ -25,6 +25,23 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 ## Versão Atual: 3.3.0 (27/01/2026)
 
+### 📦 API Correios - Rastreamento Automático (27/01/2026)
+- ✅ **Integração com API oficial dos Correios** implementada:
+  - Autenticação OAuth com token Bearer
+  - Credenciais configuradas no `.env` (CNPJ, Token, Contrato, Cartão Postagem)
+  - Cache de token para evitar requisições desnecessárias
+  - Fallback para API pública se credenciais falharem
+- ✅ **Verificação automática 1x ao dia** (job em background):
+  - Consulta todos os itens "Em Trânsito"
+  - Atualiza eventos de rastreio
+  - Move automaticamente para "Entregue" quando detectar entrega
+- ✅ **Notificações automáticas** para admins:
+  - 🚚 "Saiu para Entrega" - quando o objeto sai para entrega
+  - ⚠️ "Tentativa de Entrega" - quando há tentativa sem sucesso
+  - ✅ "Item Entregue" - quando o objeto é entregue
+- ✅ **Endpoint manual** `/api/rastreio/verificar-todos` (admin only) para forçar verificação
+- ✅ **Arquivo criado**: `/app/backend/services/correios_service.py`
+
 ### 📦 Código de Rastreio em Lote (Em Trânsito) - 27/01/2026
 - ✅ **Funcionalidade de rastreio em lote** adicionada à página "Em Trânsito":
   - Seleção individual de itens via checkbox
