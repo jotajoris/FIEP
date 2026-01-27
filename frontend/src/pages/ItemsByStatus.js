@@ -3862,8 +3862,30 @@ Chave PIX: 46.663.556/0001-69`;
                                   />
                                   <span style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: '600' }}>NF</span>
                                 </div>
-                                {/* Checkbox Frete */}
-                                {isAdmin() && (
+                                )}
+                                {/* Checkbox Rastreio - apenas em_transito */}
+                                {status === 'em_transito' && isAdmin() && (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelectedForRastreio}
+                                      onChange={(e) => {
+                                        e.stopPropagation();
+                                        toggleItemParaRastreio(oc.po_id, item._itemIndexInPO);
+                                      }}
+                                      style={{ 
+                                        width: '18px', 
+                                        height: '18px', 
+                                        cursor: 'pointer',
+                                        accentColor: '#7c3aed'
+                                      }}
+                                      title="Selecionar para Rastreio"
+                                    />
+                                    <span style={{ fontSize: '0.7rem', color: '#7c3aed', fontWeight: '600' }}>📦</span>
+                                  </div>
+                                )}
+                                {/* Checkbox Frete - apenas em_separacao */}
+                                {status === 'em_separacao' && isAdmin() && (
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                     <input
                                       type="checkbox"
