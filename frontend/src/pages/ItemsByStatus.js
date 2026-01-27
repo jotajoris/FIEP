@@ -1676,6 +1676,84 @@ const ItemsByStatus = () => {
     }
   };
 
+  // ============ FUNÇÕES PARA RASTREIO EM LOTE (EM TRÂNSITO) ============
+  
+  // Toggle seleção de item para rastreio (Em Trânsito)
+  const toggleItemParaRastreio = (poId, itemIndex) => {
+    setItensParaRastreio(prev => {
+      const currentSet = prev[poId] || new Set();
+      const newSet = new Set(currentSet);
+      if (newSet.has(itemIndex)) {
+        newSet.delete(itemIndex);
+      } else {
+        newSet.add(itemIndex);
+      }
+      return { ...prev, [poId]: newSet };
+    });
+  };
+
+  // Selecionar/desselecionar todos os itens para rastreio
+  const toggleAllItensParaRastreio = (poId, items) => {
+    const currentSet = itensParaRastreio[poId] || new Set();
+    if (currentSet.size === items.length) {
+      // Se todos já estão selecionados, desseleciona todos
+      setItensParaRastreio(prev => ({ ...prev, [poId]: new Set() }));
+    } else {
+      // Seleciona todos
+      const newSet = new Set(items.map(item => item._itemIndexInPO));
+      setItensParaRastreio(prev => ({ ...prev, [poId]: newSet }));
+    }
+  };
+
+  // Aplicar rastreio em lote para itens "Em Trânsito"
+  const aplicarRastreioEmTransito = async (poId) => {
+    const selectedIndices = itensParaRastreio[poId];
+    const codigoRastreio = codigoRastreioLote[poId]?.trim();
+    
+    if (!selectedIndices || selectedIndices.size === 0) {
+      alert('Selecione ao menos um item para aplicar o código de rastreio.');
+      return;
+    }
+    
+    if (!codigoRastreio) {
+      alert('Informe o código de rastreio.');
+      return;
+    }
+    
+    if (!window.confirm(
+      `Aplicar/atualizar código de rastreio "${codigoRastreio}" para ${selectedIndices.size} item(s)?`
+    )) {
+      return;
+    }
+    
+    setAplicandoRastreio(poId);
+    
+    try {
+      const response = await apiPost(`${API}/purchase-orders/${poId}/rastreio-multiplo`, {
+        item_indices: Array.from(selectedIndices),
+        codigo_rastreio: codigoRastreio
+      });
+      
+      alert(
+        `✅ Código de rastreio aplicado!\n\n` +
+        `• Código: ${codigoRastreio}\n` +
+        `• Itens atualizados: ${response.data.quantidade_itens}`
+      );
+      
+      // Limpar seleção e código
+      setItensParaRastreio(prev => ({ ...prev, [poId]: new Set() }));
+      setCodigoRastreioLote(prev => ({ ...prev, [poId]: '' }));
+      
+      // Recarregar dados
+      loadItems();
+    } catch (error) {
+      console.error('Erro ao aplicar rastreio:', error);
+      alert('Erro ao aplicar rastreio: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setAplicandoRastreio(null);
+    }
+  };
+
   // Toggle seleção de item para mudança de status
   const toggleItemParaStatus = (poId, itemIndex) => {
     setItensParaStatus(prev => {
