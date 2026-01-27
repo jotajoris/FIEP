@@ -23,7 +23,19 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.3.5 (27/01/2026)
+## Versão Atual: 3.3.6 (27/01/2026)
+
+### 📦 Envio Parcial de Itens em "Em Separação" (27/01/2026)
+- ✅ **Botão "Envio Parcial"** aparece em itens com quantidade > 1
+- ✅ **Modal de envio parcial** com campos:
+  - Quantidade a enviar (1 até quantidade-1)
+  - Código de rastreio (opcional)
+  - Frete (opcional)
+- ✅ **Divisão automática do item**:
+  - Quantidade enviada → novo item em "Em Trânsito"
+  - Quantidade restante → permanece em "Em Separação"
+- ✅ **Novo endpoint `/api/purchase-orders/{po_id}/items/by-index/{item_index}/envio-parcial`**
+- ✅ **Flags de controle**: `envio_parcial`, `envio_parcial_de`
 
 ### 🔄 Mudança de Status no Formulário de Frete "Em Separação" (27/01/2026)
 - ✅ **Formulário unificado** agora inclui: Frete + Rastreio + Status
