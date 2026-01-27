@@ -4311,6 +4311,37 @@ Chave PIX: 46.663.556/0001-69`;
                                       <span><strong>Quantidade:</strong> {item.quantidade} {item.unidade}</span>
                                       <span><strong>Lote:</strong> {item.lote}</span>
                                       {item.marca_modelo && <span><strong>Marca/Modelo:</strong> {item.marca_modelo}</span>}
+                                      
+                                      {/* Botão Envio Parcial - apenas se tem mais de 1 unidade */}
+                                      {isAdmin() && item.quantidade > 1 && (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowEnvioParcialModal(item);
+                                            setEnvioParcialData({
+                                              quantidade_enviar: '',
+                                              codigo_rastreio: '',
+                                              frete_envio: ''
+                                            });
+                                          }}
+                                          style={{
+                                            padding: '0.25rem 0.6rem',
+                                            background: '#8b5cf6',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            fontSize: '0.8rem',
+                                            fontWeight: '600',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.25rem'
+                                          }}
+                                          title="Enviar apenas parte das unidades"
+                                        >
+                                          📦 Envio Parcial
+                                        </button>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
