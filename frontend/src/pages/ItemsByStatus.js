@@ -3548,6 +3548,9 @@ Chave PIX: 46.663.556/0001-69`;
                 {expandedOC === oc.po_id && (
                   <div style={{ marginTop: '1rem', borderTop: '1px solid #e5e7eb', paddingTop: '1rem' }}>
                     
+                    {/* ======== SEÇÕES ESPECÍFICAS PARA EM SEPARAÇÃO ======== */}
+                    {status === 'em_separacao' && (
+                    <>
                     {/* NF de Venda da OC (1 por OC inteira) */}
                     <div style={{ 
                       marginBottom: '1.5rem', 
