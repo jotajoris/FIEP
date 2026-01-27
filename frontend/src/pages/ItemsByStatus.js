@@ -6392,6 +6392,175 @@ Chave PIX: 46.663.556/0001-69`;
       {renderModalUsarEstoque()}
       
       {/* Modal de Imagem Expandida */}
+      {/* Modal de Envio Parcial */}
+      {showEnvioParcialModal && (
+        <div 
+          onClick={() => setShowEnvioParcialModal(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9998,
+            padding: '2rem'
+          }}
+          data-testid="envio-parcial-modal"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '1.5rem',
+              maxWidth: '450px',
+              width: '100%',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+            }}
+          >
+            <h3 style={{ 
+              margin: '0 0 1rem 0', 
+              fontSize: '1.2rem', 
+              color: '#8b5cf6',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              📦 Envio Parcial
+            </h3>
+            
+            <div style={{ 
+              background: '#f5f3ff', 
+              padding: '0.75rem', 
+              borderRadius: '8px', 
+              marginBottom: '1rem',
+              border: '1px solid #c4b5fd'
+            }}>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: '#374151' }}>
+                <strong>Item:</strong> {showEnvioParcialModal.codigo_item}
+              </p>
+              <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: '#374151' }}>
+                <strong>Quantidade disponível:</strong> {showEnvioParcialModal.quantidade} {showEnvioParcialModal.unidade}
+              </p>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Quantidade a enviar */}
+              <div>
+                <label style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem', display: 'block', marginBottom: '0.25rem' }}>
+                  📦 Quantidade a enviar: *
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max={showEnvioParcialModal.quantidade - 1}
+                  placeholder={`1 a ${showEnvioParcialModal.quantidade - 1}`}
+                  value={envioParcialData.quantidade_enviar}
+                  onChange={(e) => setEnvioParcialData(prev => ({ ...prev, quantidade_enviar: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.6rem',
+                    border: '2px solid #8b5cf6',
+                    borderRadius: '6px',
+                    fontSize: '1rem',
+                    fontWeight: '600'
+                  }}
+                />
+                {envioParcialData.quantidade_enviar && (
+                  <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: '#6b7280' }}>
+                    📋 {showEnvioParcialModal.quantidade - parseInt(envioParcialData.quantidade_enviar || 0)} unidades permanecerão em "Em Separação"
+                  </p>
+                )}
+              </div>
+              
+              {/* Código de Rastreio */}
+              <div>
+                <label style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem', display: 'block', marginBottom: '0.25rem' }}>
+                  🔍 Código de Rastreio (opcional):
+                </label>
+                <input
+                  type="text"
+                  placeholder="AB123456789BR"
+                  value={envioParcialData.codigo_rastreio}
+                  onChange={(e) => setEnvioParcialData(prev => ({ ...prev, codigo_rastreio: e.target.value.toUpperCase() }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.6rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    fontSize: '1rem',
+                    fontFamily: 'monospace'
+                  }}
+                />
+              </div>
+              
+              {/* Frete */}
+              <div>
+                <label style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem', display: 'block', marginBottom: '0.25rem' }}>
+                  🚚 Frete (R$) - opcional:
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00"
+                  value={envioParcialData.frete_envio}
+                  onChange={(e) => setEnvioParcialData(prev => ({ ...prev, frete_envio: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.6rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    fontSize: '1rem'
+                  }}
+                />
+              </div>
+            </div>
+            
+            {/* Botões */}
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+              <button
+                onClick={() => setShowEnvioParcialModal(null)}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  background: '#f3f4f6',
+                  color: '#374151',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '0.95rem',
+                  fontWeight: '600'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={envioParcial}
+                disabled={aplicandoEnvioParcial || !envioParcialData.quantidade_enviar}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  background: aplicandoEnvioParcial || !envioParcialData.quantidade_enviar ? '#9ca3af' : '#8b5cf6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: aplicandoEnvioParcial || !envioParcialData.quantidade_enviar ? 'not-allowed' : 'pointer',
+                  fontSize: '0.95rem',
+                  fontWeight: '700'
+                }}
+              >
+                {aplicandoEnvioParcial ? '⏳ Enviando...' : '✅ Confirmar Envio'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {imagemExpandida && (
         <div 
           onClick={() => setImagemExpandida(null)}
