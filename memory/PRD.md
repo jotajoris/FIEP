@@ -23,7 +23,14 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.3.3 (27/01/2026)
+## Versão Atual: 3.3.4 (27/01/2026)
+
+### 🚚 Formulário de Rastreio e Frete em Lote para "Em Trânsito" (27/01/2026)
+- ✅ **Atualizado `RastreioLoteForm.jsx`** para incluir campo de frete total
+- ✅ **Divisão automática do frete** pelo número de itens selecionados
+- ✅ **Novo endpoint `/api/purchase-orders/{po_id}/rastreio-frete-multiplo`** para atualizar rastreio e/ou frete em múltiplos itens
+- ✅ **Interface igual à "Em Separação"**: selecionar itens → preencher rastreio + frete → aplicar
+- ✅ **Componente simplificado:** Removida edição inline individual, mantendo apenas o formulário em lote
 
 ### ✏️ Edição de Rastreio e Frete em "Em Trânsito" (27/01/2026)
 - ✅ **Botão "Editar"** para modificar código de rastreio e valor do frete
