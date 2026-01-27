@@ -3661,101 +3661,18 @@ Chave PIX: 46.663.556/0001-69`;
 
                     {/* ============== SEÇÃO MUDAR STATUS EM MASSA ============== */}
                     {isAdmin() && (
-                      <div style={{ 
-                        marginBottom: '1rem', 
-                        padding: '1rem', 
-                        background: '#ede9fe', 
-                        borderRadius: '8px',
-                        border: '2px solid #8b5cf6'
-                      }}>
-                        <h4 style={{ 
-                          margin: '0 0 0.75rem 0', 
-                          fontSize: '1rem', 
-                          fontWeight: '700', 
-                          color: '#5b21b6',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem'
-                        }}>
-                          🔄 Mudar Status dos Itens Selecionados
-                        </h4>
-                        
-                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
-                          {/* Botão selecionar/desselecionar todos */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleAllItensParaStatus(oc.po_id, oc.items);
-                            }}
-                            style={{ 
-                              padding: '0.4rem 0.8rem',
-                              background: (itensParaStatus[oc.po_id]?.size || 0) === oc.items.length ? '#8b5cf6' : '#e2e8f0',
-                              color: (itensParaStatus[oc.po_id]?.size || 0) === oc.items.length ? 'white' : '#374151',
-                              border: 'none',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontSize: '0.85rem',
-                              fontWeight: '600'
-                            }}
-                          >
-                            {(itensParaStatus[oc.po_id]?.size || 0) === oc.items.length ? '☑️ Desmarcar Todos' : '☐ Selecionar Todos p/ Status'}
-                          </button>
-                          
-                          {/* Contador de selecionados */}
-                          <span style={{ fontSize: '0.9rem', color: '#5b21b6', fontWeight: '600' }}>
-                            🔄 {itensParaStatus[oc.po_id]?.size || 0} de {oc.items.length} itens selecionados
-                          </span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                          <select
-                            value={novoStatusMassa[oc.po_id] || ''}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              setNovoStatusMassa(prev => ({ ...prev, [oc.po_id]: e.target.value }));
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              border: '2px solid #8b5cf6',
-                              borderRadius: '6px',
-                              fontSize: '0.95rem',
-                              fontWeight: '600',
-                              background: 'white',
-                              cursor: 'pointer',
-                              minWidth: '180px'
-                            }}
-                          >
-                            <option value="">Selecione o novo status...</option>
-                            <option value="pendente">📋 Pendente</option>
-                            <option value="cotado">💬 Cotado</option>
-                            <option value="comprado">🛒 Comprado</option>
-                            <option value="em_separacao">📦 Em Separação</option>
-                            <option value="em_transito">🚚 Em Trânsito</option>
-                            <option value="entregue">✅ Entregue</option>
-                          </select>
-                          
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              aplicarStatusEmMassa(oc.po_id, oc.numero_oc, oc.items.length);
-                            }}
-                            disabled={aplicandoStatusMassa === oc.po_id || !novoStatusMassa[oc.po_id] || (itensParaStatus[oc.po_id]?.size || 0) === 0}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              background: aplicandoStatusMassa === oc.po_id ? '#9ca3af' : (!novoStatusMassa[oc.po_id] || (itensParaStatus[oc.po_id]?.size || 0) === 0) ? '#d1d5db' : '#8b5cf6',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '6px',
-                              fontWeight: '600',
-                              cursor: (aplicandoStatusMassa === oc.po_id || !novoStatusMassa[oc.po_id] || (itensParaStatus[oc.po_id]?.size || 0) === 0) ? 'not-allowed' : 'pointer',
-                              fontSize: '0.9rem'
-                            }}
-                          >
-                            {aplicandoStatusMassa === oc.po_id ? '⏳ Aplicando...' : `🔄 Aplicar para ${itensParaStatus[oc.po_id]?.size || 0} itens`}
-                          </button>
-                        </div>
-                      </div>
+                      <MudarStatusForm
+                        poId={oc.po_id}
+                        numeroOC={oc.numero_oc}
+                        totalItens={oc.items.length}
+                        itensSelecionados={itensParaStatus[oc.po_id]}
+                        statusAtual={status}
+                        novoStatus={novoStatusMassa[oc.po_id]}
+                        aplicando={aplicandoStatusMassa === oc.po_id}
+                        onToggleAll={() => toggleAllItensParaStatus(oc.po_id, oc.items)}
+                        onStatusChange={(value) => setNovoStatusMassa(prev => ({ ...prev, [oc.po_id]: value }))}
+                        onAplicar={() => aplicarStatusEmMassa(oc.po_id, oc.numero_oc, oc.items.length)}
+                      />
                     )}
 
                     {/* Seleção de Itens para NF de Venda */}
