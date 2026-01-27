@@ -1613,23 +1613,30 @@ const ItemsByStatus = () => {
     }
   };
 
-  // Aplicar frete E código de rastreio em lote (botão único)
+  // Aplicar frete, código de rastreio e status em lote (botão único)
   const aplicarFreteERastreio = async (poId) => {
     const selectedIndices = itensParaFrete[poId];
     const freteTotal = parseFloat(freteEnvioTotal[poId] || 0);
     const codigoRastreio = codigoRastreioLote[poId]?.trim() || '';
+    const novoStatus = statusNoFrete[poId] || '';
     
     if (!selectedIndices || selectedIndices.size === 0) {
       alert('Selecione ao menos um item.');
       return;
     }
     
-    if (freteTotal <= 0 && !codigoRastreio) {
-      alert('Informe o valor do frete e/ou o código de rastreio.');
+    if (freteTotal <= 0 && !codigoRastreio && !novoStatus) {
+      alert('Informe o valor do frete, código de rastreio e/ou novo status.');
       return;
     }
     
     const fretePorItem = freteTotal > 0 ? (freteTotal / selectedIndices.size) : 0;
+    
+    const statusLabels = {
+      'em_transito': '🚚 Em Trânsito',
+      'entregue': '✅ Entregue',
+      'comprado': '🛒 Comprado'
+    };
     
     let mensagem = `Aplicar para ${selectedIndices.size} item(s):\n`;
     if (freteTotal > 0) {
@@ -1637,6 +1644,9 @@ const ItemsByStatus = () => {
     }
     if (codigoRastreio) {
       mensagem += `• Rastreio: ${codigoRastreio}\n`;
+    }
+    if (novoStatus) {
+      mensagem += `• Status: ${statusLabels[novoStatus] || novoStatus}\n`;
     }
     mensagem += '\nConfirmar?';
     
@@ -1663,12 +1673,23 @@ const ItemsByStatus = () => {
         });
       }
       
+      // Aplicar mudança de status se informado
+      if (novoStatus) {
+        await apiPost(`${API}/purchase-orders/${poId}/status-multiplo`, {
+          item_indices: Array.from(selectedIndices),
+          novo_status: novoStatus
+        });
+      }
+      
       let alertMsg = `✅ Aplicado com sucesso para ${selectedIndices.size} item(s)!\n\n`;
       if (freteTotal > 0) {
         alertMsg += `• Frete: ${formatBRL(fretePorItem)} por item\n`;
       }
       if (codigoRastreio) {
         alertMsg += `• Rastreio: ${codigoRastreio}\n`;
+      }
+      if (novoStatus) {
+        alertMsg += `• Status: ${statusLabels[novoStatus] || novoStatus}\n`;
       }
       
       alert(alertMsg);
@@ -1677,6 +1698,7 @@ const ItemsByStatus = () => {
       setItensParaFrete(prev => ({ ...prev, [poId]: new Set() }));
       setFreteEnvioTotal(prev => ({ ...prev, [poId]: '' }));
       setCodigoRastreioLote(prev => ({ ...prev, [poId]: '' }));
+      setStatusNoFrete(prev => ({ ...prev, [poId]: '' }));
       
       // Recarregar dados
       loadItems();
