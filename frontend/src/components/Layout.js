@@ -248,23 +248,39 @@ const Layout = ({ children }) => {
                             >
                               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
                                 <span style={{ fontSize: '1.25rem' }}>
-                                  {notif.tipo === 'entrega' ? '📦' : '🔔'}
+                                  {notif.tipo === 'entrega' ? '✅' : 
+                                   notif.tipo === 'saiu_entrega' ? '🚚' : 
+                                   notif.tipo === 'tentativa' ? '⚠️' : '🔔'}
                                 </span>
                                 <div style={{ flex: 1 }}>
                                   <div style={{
                                     fontWeight: notif.lida ? '400' : '600',
-                                    color: '#2d3748',
+                                    color: notif.tipo === 'entrega' ? '#16a34a' : 
+                                           notif.tipo === 'saiu_entrega' ? '#2563eb' : 
+                                           notif.tipo === 'tentativa' ? '#d97706' : '#2d3748',
                                     fontSize: '0.9rem',
                                     marginBottom: '0.25rem'
                                   }}>
                                     {notif.titulo}
                                   </div>
+                                  {notif.mensagem && (
+                                    <div style={{
+                                      fontSize: '0.85rem',
+                                      color: '#4a5568',
+                                      marginBottom: '0.25rem'
+                                    }}>
+                                      {notif.mensagem}
+                                    </div>
+                                  )}
                                   <div style={{
                                     fontSize: '0.85rem',
                                     color: '#4a5568',
                                     marginBottom: '0.25rem'
                                   }}>
                                     <strong>OC:</strong> {notif.numero_oc} | <strong>Item:</strong> {notif.codigo_item}
+                                    {notif.codigo_rastreio && (
+                                      <> | <strong>Rastreio:</strong> {notif.codigo_rastreio}</>
+                                    )}
                                   </div>
                                   <div style={{
                                     fontSize: '0.8rem',
