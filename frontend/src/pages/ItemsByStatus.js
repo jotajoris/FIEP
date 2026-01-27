@@ -3730,19 +3730,19 @@ Chave PIX: 46.663.556/0001-69`;
                         
                         {/* Campo de valor e botão aplicar */}
                         {(itensParaFrete[oc.po_id]?.size || 0) > 0 && (
-                          <>
-                            <div style={{ 
-                              display: 'flex', 
-                              gap: '0.75rem', 
-                              alignItems: 'center', 
-                              marginTop: '0.75rem',
-                              padding: '0.75rem',
-                              background: 'white',
-                              borderRadius: '8px',
-                              flexWrap: 'wrap'
-                            }}>
+                          <div style={{ 
+                            display: 'flex', 
+                            flexDirection: 'column',
+                            gap: '0.75rem', 
+                            marginTop: '0.75rem',
+                            padding: '0.75rem',
+                            background: 'white',
+                            borderRadius: '8px'
+                          }}>
+                            {/* Linha do Frete */}
+                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
                               <label style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem' }}>
-                                Valor Total do Frete:
+                                💰 Frete Total:
                               </label>
                               <input
                                 type="number"
@@ -3757,74 +3757,61 @@ Chave PIX: 46.663.556/0001-69`;
                                   borderRadius: '6px',
                                   fontSize: '1rem',
                                   fontWeight: '600',
-                                  width: '150px'
+                                  width: '120px'
                                 }}
                                 onClick={(e) => e.stopPropagation()}
                               />
                               <span style={{ color: '#6b7280', fontSize: '0.85rem' }}>
-                                ÷ {itensParaFrete[oc.po_id]?.size} itens = <strong>{formatBRL((parseFloat(freteEnvioTotal[oc.po_id] || 0) / (itensParaFrete[oc.po_id]?.size || 1)))}</strong> cada
+                                ÷ {itensParaFrete[oc.po_id]?.size} = <strong>{formatBRL((parseFloat(freteEnvioTotal[oc.po_id] || 0) / (itensParaFrete[oc.po_id]?.size || 1)))}</strong>/item
                               </span>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  aplicarFreteEnvio(oc.po_id);
-                                }}
-                                disabled={aplicandoFrete === oc.po_id}
-                                style={{
-                                  padding: '0.5rem 1rem',
-                                  background: aplicandoFrete === oc.po_id ? '#9ca3af' : '#22c55e',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '6px',
-                                  fontWeight: '600',
-                                  cursor: aplicandoFrete === oc.po_id ? 'wait' : 'pointer',
-                                  fontSize: '0.9rem'
-                                }}
-                              >
-                                {aplicandoFrete === oc.po_id ? '⏳ Aplicando...' : '✅ Aplicar Frete'}
-                              </button>
                             </div>
                             
-                            {/* Campo de Código de Rastreio */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', padding: '0.75rem', background: 'white', borderRadius: '8px' }}>
-                            <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>📦 Rastreio:</span>
-                            <input
-                              type="text"
-                              placeholder="AB123456789BR"
-                              value={codigoRastreioLote[oc.po_id] || ''}
-                              onChange={(e) => setCodigoRastreioLote(prev => ({ ...prev, [oc.po_id]: e.target.value }))}
-                              style={{
-                                flex: 1,
-                                padding: '0.5rem',
-                                borderRadius: '6px',
-                                border: '1px solid #fed7aa',
-                                fontSize: '0.9rem',
-                                fontFamily: 'monospace',
-                                textTransform: 'uppercase'
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                            />
+                            {/* Linha do Rastreio */}
+                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <label style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem' }}>
+                                📦 Rastreio:
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="AB123456789BR"
+                                value={codigoRastreioLote[oc.po_id] || ''}
+                                onChange={(e) => setCodigoRastreioLote(prev => ({ ...prev, [oc.po_id]: e.target.value.toUpperCase() }))}
+                                style={{
+                                  padding: '0.5rem 0.75rem',
+                                  border: '2px solid #3b82f6',
+                                  borderRadius: '6px',
+                                  fontSize: '1rem',
+                                  fontWeight: '600',
+                                  fontFamily: 'monospace',
+                                  flex: 1,
+                                  minWidth: '150px'
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                            
+                            {/* Botão único de aplicar */}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                aplicarRastreioEmLote(oc.po_id);
+                                aplicarFreteERastreio(oc.po_id);
                               }}
-                              disabled={aplicandoRastreio === oc.po_id || !codigoRastreioLote[oc.po_id]}
+                              disabled={aplicandoFrete === oc.po_id}
                               style={{
-                                padding: '0.5rem 1rem',
-                                background: aplicandoRastreio === oc.po_id ? '#9ca3af' : !codigoRastreioLote[oc.po_id] ? '#d1d5db' : '#3b82f6',
+                                padding: '0.75rem 1.5rem',
+                                background: aplicandoFrete === oc.po_id ? '#9ca3af' : '#22c55e',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '6px',
-                                fontWeight: '600',
-                                cursor: aplicandoRastreio === oc.po_id || !codigoRastreioLote[oc.po_id] ? 'not-allowed' : 'pointer',
-                                fontSize: '0.9rem'
+                                fontWeight: '700',
+                                cursor: aplicandoFrete === oc.po_id ? 'wait' : 'pointer',
+                                fontSize: '1rem',
+                                marginTop: '0.5rem'
                               }}
                             >
-                              {aplicandoRastreio === oc.po_id ? '⏳...' : '📦 Aplicar'}
+                              {aplicandoFrete === oc.po_id ? '⏳ Aplicando...' : '✅ Aplicar Frete e Rastreio'}
                             </button>
                           </div>
-                          </>
                         )}
                       </div>
                     )}
