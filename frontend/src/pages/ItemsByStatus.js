@@ -3829,6 +3829,21 @@ Chave PIX: 46.663.556/0001-69`;
                         const isSelectedForStatus = itensParaStatus[oc.po_id]?.has(item._itemIndexInPO) || false;
                         const isSelectedForRastreio = itensParaRastreio[oc.po_id]?.has(item._itemIndexInPO) || false;
                         const jaTemNF = oc.itensComNFIndices && oc.itensComNFIndices.has(item._itemIndexInPO);
+                        
+                        {/* VISUALIZAÇÃO SIMPLIFICADA PARA EM TRÂNSITO */}
+                        if (status === 'em_transito') {
+                          return (
+                            <RastreioItemCard
+                              key={item._uniqueId}
+                              item={item}
+                              isSelected={isSelectedForRastreio}
+                              onToggleSelect={() => toggleItemParaRastreio(oc.po_id, item._itemIndexInPO)}
+                              isAdmin={isAdmin()}
+                            />
+                          );
+                        }
+                        
+                        {/* VISUALIZAÇÃO COMPLETA PARA EM SEPARAÇÃO */}
                         return (
                           <div 
                             key={item._uniqueId} 
@@ -3863,27 +3878,6 @@ Chave PIX: 46.663.556/0001-69`;
                                   />
                                   <span style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: '600' }}>NF</span>
                                 </div>
-                                )}
-                                {/* Checkbox Rastreio - apenas em_transito */}
-                                {status === 'em_transito' && isAdmin() && (
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                    <input
-                                      type="checkbox"
-                                      checked={isSelectedForRastreio}
-                                      onChange={(e) => {
-                                        e.stopPropagation();
-                                        toggleItemParaRastreio(oc.po_id, item._itemIndexInPO);
-                                      }}
-                                      style={{ 
-                                        width: '18px', 
-                                        height: '18px', 
-                                        cursor: 'pointer',
-                                        accentColor: '#7c3aed'
-                                      }}
-                                      title="Selecionar para Rastreio"
-                                    />
-                                    <span style={{ fontSize: '0.7rem', color: '#7c3aed', fontWeight: '600' }}>📦</span>
-                                  </div>
                                 )}
                                 {/* Checkbox Frete - apenas em_separacao */}
                                 {status === 'em_separacao' && isAdmin() && (
