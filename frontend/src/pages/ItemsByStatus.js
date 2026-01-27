@@ -3824,6 +3824,7 @@ Chave PIX: 46.663.556/0001-69`;
                               {aplicandoRastreio === oc.po_id ? '⏳...' : '📦 Aplicar'}
                             </button>
                           </div>
+                          </>
                         )}
                       </div>
                     )}
