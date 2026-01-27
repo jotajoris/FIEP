@@ -23,7 +23,20 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.3.0 (27/01/2026)
+## Versão Atual: 3.3.1 (27/01/2026)
+
+### 🐛 Correção de Bugs P0 (27/01/2026)
+- ✅ **API Correios - Rastreamento melhorado**:
+  - Detecção automática quando objeto não pertence ao contrato (erro SRO-009)
+  - Fallback para APIs públicas: SeuRastreio, LinkeTrack
+  - Quando todas APIs falham, retorna `rastreamento_manual=true` com link direto para consulta nos Correios
+  - Mensagem clara: "APIs de rastreamento indisponíveis. Tente novamente mais tarde."
+- ✅ **Notas Fiscais no Admin Panel** - Verificado funcionando:
+  - Endpoint `/api/admin/notas-fiscais` retorna corretamente NFs de compra e venda
+  - Testes automatizados confirmando funcionamento (14/14 passaram)
+- ✅ **RastreioItemCard.jsx atualizado**:
+  - Exibe link para consulta manual nos Correios quando não há eventos
+  - UI melhorada para casos de API indisponível
 
 ### 📦 API Correios - Rastreamento Automático (27/01/2026)
 - ✅ **Integração com API oficial dos Correios** implementada:
