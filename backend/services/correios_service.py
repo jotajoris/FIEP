@@ -295,16 +295,26 @@ async def _rastrear_fallback(codigo: str) -> Dict[str, Any]:
         _rastrear_linketrack,
     ]
     
+    errors = []
     for api_func in fallback_apis:
         try:
             result = await api_func(codigo)
             if result.get('success'):
                 return result
+            errors.append(f"{api_func.__name__}: {result.get('error', 'falhou')}")
         except Exception as e:
             logger.warning(f"Fallback {api_func.__name__} falhou: {str(e)}")
+            errors.append(f"{api_func.__name__}: {str(e)[:50]}")
             continue
     
-    return {"success": False, "error": "Não foi possível rastrear o objeto", "codigo": codigo}
+    # Se todas as APIs falharem, retornar status de indisponibilidade
+    return {
+        "success": False, 
+        "error": "APIs de rastreamento indisponíveis. Tente novamente mais tarde.",
+        "codigo": codigo,
+        "detalhes": errors,
+        "rastreamento_manual": True  # Flag para indicar que o usuário pode rastrear manualmente no site dos Correios
+    }
 
 
 async def _rastrear_seurastreio(codigo: str) -> Dict[str, Any]:
