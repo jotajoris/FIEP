@@ -6412,6 +6412,7 @@ async def startup_event():
 # Incluir routers modulares no api_router
 api_router.include_router(auth_router)
 api_router.include_router(rastreio_router)
+api_router.include_router(notificacao_router)
 
 # Include the router in the main app
 app.include_router(api_router)
