@@ -3871,6 +3871,7 @@ Chave PIX: 46.663.556/0001-69`;
                               item={item}
                               isSelected={isSelectedForRastreio}
                               onToggleSelect={() => toggleItemParaRastreio(oc.po_id, item._itemIndexInPO)}
+                              onMudarStatus={mudarStatusItemManual}
                               isAdmin={isAdmin()}
                             />
                           );
