@@ -3984,6 +3984,18 @@ Chave PIX: 46.663.556/0001-69`;
                                           🔄 STATUS
                                         </span>
                                       )}
+                                      {isSelectedForRastreio && (
+                                        <span style={{ 
+                                          background: '#7c3aed',
+                                          color: 'white',
+                                          padding: '0.15rem 0.5rem',
+                                          borderRadius: '8px',
+                                          fontSize: '0.7rem',
+                                          fontWeight: '600'
+                                        }}>
+                                          📦 RASTREIO
+                                        </span>
+                                      )}
                                       {item.frete_envio > 0 && (
                                         <span style={{ 
                                           background: '#0891b2',
