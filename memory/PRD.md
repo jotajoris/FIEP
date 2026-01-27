@@ -23,7 +23,17 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.3.1 (27/01/2026)
+## Versão Atual: 3.3.2 (27/01/2026)
+
+### ✏️ Mudança Manual de Status em "Em Trânsito" (27/01/2026)
+- ✅ **Botão "Mudar Status"** adicionado ao componente `RastreioItemCard.jsx`
+- ✅ **Menu dropdown** com 3 opções:
+  - ✅ Marcar como Entregue
+  - 📦 Voltar p/ Em Separação
+  - 🛒 Voltar p/ Comprado
+- ✅ **Função `mudarStatusItemManual`** criada em `ItemsByStatus.js` para processar a mudança
+- ✅ **Disponível apenas para admins**
+- ✅ **Útil para:** Casos onde a API dos Correios não atualiza automaticamente
 
 ### 🐛 Correção de Bugs P0 (27/01/2026)
 - ✅ **API Correios - Rastreamento melhorado**:
