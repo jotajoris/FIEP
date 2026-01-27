@@ -5001,6 +5001,77 @@ async def aplicar_rastreio_multiplo(
     }
 
 
+@api_router.post("/purchase-orders/{po_id}/rastreio-frete-multiplo")
+async def aplicar_rastreio_frete_multiplo(
+    po_id: str,
+    data: dict,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Aplicar código de rastreio E/OU frete para múltiplos itens de uma OC.
+    Usado para atualizar/corrigir dados de itens em trânsito.
+    
+    Body:
+    {
+        "item_indices": [0, 1, 2],           // Índices dos itens
+        "codigo_rastreio": "AB123456789BR", // Código de rastreio (opcional)
+        "frete_por_item": 15.50              // Frete por item já calculado (opcional)
+    }
+    """
+    
+    item_indices = data.get("item_indices", [])
+    codigo_rastreio = data.get("codigo_rastreio", "").strip() if data.get("codigo_rastreio") else None
+    frete_por_item = data.get("frete_por_item")
+    
+    if not item_indices:
+        raise HTTPException(status_code=400, detail="Nenhum item selecionado")
+    
+    if not codigo_rastreio and frete_por_item is None:
+        raise HTTPException(status_code=400, detail="Informe código de rastreio e/ou valor do frete")
+    
+    # Buscar OC
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not po:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    # Atualizar cada item
+    items = po.get('items', [])
+    itens_atualizados = []
+    
+    for idx in item_indices:
+        if idx < 0 or idx >= len(items):
+            continue
+        
+        updates = {}
+        if codigo_rastreio:
+            items[idx]['codigo_rastreio'] = codigo_rastreio
+            updates['codigo_rastreio'] = codigo_rastreio
+        
+        if frete_por_item is not None:
+            items[idx]['frete_envio'] = float(frete_por_item)
+            updates['frete_envio'] = float(frete_por_item)
+        
+        itens_atualizados.append({
+            "indice": idx,
+            "codigo_item": items[idx].get('codigo_item', ''),
+            **updates
+        })
+    
+    # Salvar alterações
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": items}}
+    )
+    
+    return {
+        "success": True,
+        "codigo_rastreio": codigo_rastreio,
+        "frete_por_item": frete_por_item,
+        "itens_atualizados": itens_atualizados,
+        "quantidade_itens": len(itens_atualizados)
+    }
+
+
 @api_router.post("/purchase-orders/{po_id}/atualizar-pdf")
 async def atualizar_oc_com_pdf(
     po_id: str,
