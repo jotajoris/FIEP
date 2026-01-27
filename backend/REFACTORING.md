@@ -1,45 +1,56 @@
 # Arquitetura de Refatoração do Backend FIEP OC
 
-## Estado Atual (Antes da Refatoração)
+## Estado Atual (Após Refatoração Parcial - 27/01/2026)
 
-O arquivo `server.py` possui ~6300 linhas contendo toda a lógica do sistema.
+O arquivo `server.py` possui ~6461 linhas (reduzido de ~6841 linhas).
+Rotas de autenticação e rastreamento foram extraídas e **estão em uso**.
 
-## Estrutura de Diretórios Alvo
+## Estrutura de Diretórios Atual
 
 ```
 /app/backend/
-├── server.py                 # Entry point - apenas config e import de routers
+├── server.py                 # Entry point - config, routers e rotas restantes (~6461 linhas)
 ├── config.py                 # ✅ Configurações centralizadas
 ├── auth.py                   # ✅ Autenticação JWT
 ├── models/
 │   ├── __init__.py           # ✅ Re-exports
 │   └── schemas.py            # ✅ Pydantic models
 ├── routes/
-│   ├── __init__.py
-│   ├── auth_routes.py        # ✅ Rotas de autenticação
-│   ├── item_routes.py        # ✅ Rotas de atualização de itens
-│   ├── rastreio_routes.py    # ✅ Rotas de rastreamento Correios
-│   ├── po_routes.py          # 🔄 Rotas de Purchase Orders (CRUD)
-│   ├── estoque_routes.py     # 🔄 Rotas de estoque
-│   ├── planilha_routes.py    # 🔄 Rotas de planilha de itens
-│   ├── nf_routes.py          # 🔄 Rotas de notas fiscais
-│   ├── admin_routes.py       # 🔄 Rotas administrativas (comissões, backup)
-│   └── notificacao_routes.py # 🔄 Rotas de notificações
+│   ├── __init__.py           # ✅ Package init
+│   ├── auth_routes.py        # ✅ Rotas de autenticação (EM USO)
+│   ├── item_routes.py        # 🔄 Criado mas NÃO em uso (duplicado em server.py)
+│   ├── rastreio_routes.py    # ✅ Rotas de rastreamento (EM USO)
+│   ├── po_routes.py          # 🔄 Pendente
+│   ├── estoque_routes.py     # 🔄 Pendente
+│   ├── planilha_routes.py    # 🔄 Pendente
+│   ├── nf_routes.py          # 🔄 Pendente
+│   ├── admin_routes.py       # 🔄 Pendente
+│   └── notificacao_routes.py # 🔄 Pendente
 ├── services/
-│   ├── __init__.py
+│   ├── __init__.py           # ✅ Exports
 │   ├── email_service.py      # ✅ Serviço de envio de emails
 │   ├── pdf_service.py        # ✅ Extração de PDFs
-│   ├── estoque_service.py    # 🔄 Lógica de estoque
-│   └── rastreio_service.py   # 🔄 Lógica de rastreamento
+│   ├── estoque_service.py    # ✅ Lógica de estoque
+│   └── rastreio_service.py   # 🔄 Pendente (função buscar_rastreio_api)
 └── utils/
     ├── __init__.py
     ├── config.py             # ✅ Re-exports de config.py
     └── database.py           # ✅ Conexão MongoDB
 ```
 
-## Legendas
-- ✅ Implementado
-- 🔄 Pendente/Parcial
+## Progresso da Refatoração
+
+### ✅ Concluído (27/01/2026)
+- auth_routes.py incluído no server.py via `api_router.include_router(auth_router)`
+- rastreio_routes.py incluído no server.py via `api_router.include_router(rastreio_router)`
+- Rotas duplicadas de autenticação removidas do server.py (~180 linhas)
+- Rotas duplicadas de rastreamento removidas do server.py (~200 linhas)
+
+### 🔄 Próximos Passos
+1. **item_routes.py**: Já existe mas não está em uso. Incluir no server.py e remover duplicatas.
+2. **po_routes.py**: Extrair rotas de Purchase Orders (~1500 linhas)
+3. **estoque_routes.py**: Extrair rotas de estoque (~800 linhas)
+4. **notificacao_routes.py**: Extrair rotas de notificações (~150 linhas)
 
 ## Módulos a Extrair do server.py
 
