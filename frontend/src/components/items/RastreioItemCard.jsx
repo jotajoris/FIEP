@@ -107,163 +107,48 @@ const RastreioItemCard = memo(({
             gap: '1rem',
             flexWrap: 'wrap'
           }}>
-            {/* Modo de Edição */}
-            {editMode ? (
+            {/* Código de Rastreio */}
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem',
+              background: '#fef3c7',
+              padding: '0.4rem 0.75rem',
+              borderRadius: '6px',
+              border: '1px solid #fcd34d'
+            }}>
+              <span style={{ fontSize: '1.1rem' }}>📦</span>
+              <span style={{ 
+                fontWeight: '700', 
+                fontSize: '1rem',
+                fontFamily: 'monospace',
+                color: '#92400e',
+                letterSpacing: '0.5px'
+              }}>
+                {codigoRastreio || 'Sem código'}
+              </span>
+            </div>
+            
+            {/* Frete */}
+            {item.frete_envio > 0 && (
               <div style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
-                gap: '0.75rem',
-                flexWrap: 'wrap',
-                background: '#f0f9ff',
-                padding: '0.75rem',
-                borderRadius: '8px',
-                border: '1px solid #0ea5e9'
+                gap: '0.3rem',
+                background: '#f0fdf4',
+                padding: '0.4rem 0.75rem',
+                borderRadius: '6px',
+                border: '1px solid #86efac'
               }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                  <label style={{ fontSize: '0.7rem', color: '#0369a1', fontWeight: '600' }}>Código Rastreio</label>
-                  <input
-                    type="text"
-                    value={editData.codigo_rastreio}
-                    onChange={(e) => setEditData({ ...editData, codigo_rastreio: e.target.value.toUpperCase() })}
-                    placeholder="Ex: AB123456789BR"
-                    style={{
-                      padding: '0.4rem 0.6rem',
-                      border: '1px solid #cbd5e1',
-                      borderRadius: '4px',
-                      fontSize: '0.9rem',
-                      fontFamily: 'monospace',
-                      width: '160px'
-                    }}
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                  <label style={{ fontSize: '0.7rem', color: '#0369a1', fontWeight: '600' }}>Frete (R$)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={editData.frete_envio}
-                    onChange={(e) => setEditData({ ...editData, frete_envio: e.target.value })}
-                    placeholder="0,00"
-                    style={{
-                      padding: '0.4rem 0.6rem',
-                      border: '1px solid #cbd5e1',
-                      borderRadius: '4px',
-                      fontSize: '0.9rem',
-                      width: '100px'
-                    }}
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
-                  <button
-                    onClick={() => {
-                      if (onEditarRastreioFrete) {
-                        onEditarRastreioFrete(item, editData);
-                      }
-                      setEditMode(false);
-                    }}
-                    style={{
-                      padding: '0.4rem 0.75rem',
-                      background: '#22c55e',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '0.8rem',
-                      fontWeight: '600'
-                    }}
-                  >
-                    ✓ Salvar
-                  </button>
-                  <button
-                    onClick={() => {
-                      setEditData({
-                        codigo_rastreio: item.codigo_rastreio || '',
-                        frete_envio: item.frete_envio || ''
-                      });
-                      setEditMode(false);
-                    }}
-                    style={{
-                      padding: '0.4rem 0.75rem',
-                      background: '#f3f4f6',
-                      color: '#374151',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '0.8rem'
-                    }}
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                {/* Código de Rastreio */}
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.5rem',
-                  background: '#fef3c7',
-                  padding: '0.4rem 0.75rem',
-                  borderRadius: '6px',
-                  border: '1px solid #fcd34d'
+                <span style={{ fontSize: '0.9rem' }}>🚚</span>
+                <span style={{ 
+                  fontWeight: '600', 
+                  fontSize: '0.9rem',
+                  color: '#166534'
                 }}>
-                  <span style={{ fontSize: '1.1rem' }}>📦</span>
-                  <span style={{ 
-                    fontWeight: '700', 
-                    fontSize: '1rem',
-                    fontFamily: 'monospace',
-                    color: '#92400e',
-                    letterSpacing: '0.5px'
-                  }}>
-                    {codigoRastreio || 'Sem código'}
-                  </span>
-                </div>
-                
-                {/* Frete */}
-                {item.frete_envio > 0 && (
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.3rem',
-                    background: '#f0fdf4',
-                    padding: '0.4rem 0.75rem',
-                    borderRadius: '6px',
-                    border: '1px solid #86efac'
-                  }}>
-                    <span style={{ fontSize: '0.9rem' }}>🚚</span>
-                    <span style={{ 
-                      fontWeight: '600', 
-                      fontSize: '0.9rem',
-                      color: '#166534'
-                    }}>
-                      {formatBRL ? formatBRL(item.frete_envio) : `R$ ${Number(item.frete_envio).toFixed(2)}`}
-                    </span>
-                  </div>
-                )}
-                
-                {/* Botão Editar */}
-                {isAdmin && onEditarRastreioFrete && (
-                  <button
-                    onClick={() => setEditMode(true)}
-                    style={{
-                      padding: '0.35rem 0.6rem',
-                      background: '#f3f4f6',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '0.75rem',
-                      color: '#374151',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.25rem'
-                    }}
-                    title="Editar rastreio e frete"
-                  >
-                    ✏️ Editar
-                  </button>
-                )}
-              </>
+                  {formatBRL ? formatBRL(item.frete_envio) : `R$ ${Number(item.frete_envio).toFixed(2)}`}
+                </span>
+              </div>
             )}
             
             {/* Status Atual (colapsado) */}
