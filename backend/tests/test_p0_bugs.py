@@ -199,7 +199,7 @@ class TestPurchaseOrdersWithNFs:
     """Test GET /api/purchase-orders/{po_id} returns items with notas_fiscais_fornecedor"""
     
     def test_get_purchase_orders_list(self, admin_headers):
-        """Test getting list of purchase orders"""
+        """Test getting list of purchase orders (paginated response)"""
         response = requests.get(
             f"{BASE_URL}/api/purchase-orders",
             headers=admin_headers
@@ -208,8 +208,12 @@ class TestPurchaseOrdersWithNFs:
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         data = response.json()
         
-        assert isinstance(data, list), "Response should be a list"
-        print(f"✅ Got {len(data)} purchase orders")
+        # Response is paginated with 'data' field
+        assert "data" in data, "Response should have 'data' field"
+        assert isinstance(data["data"], list), "data should be a list"
+        assert "total" in data, "Response should have 'total' field"
+        
+        print(f"✅ Got {len(data['data'])} purchase orders (total: {data['total']})")
         return data
     
     def test_get_single_purchase_order_structure(self, admin_headers):
@@ -221,7 +225,8 @@ class TestPurchaseOrdersWithNFs:
         )
         
         assert list_response.status_code == 200
-        pos = list_response.json()
+        data = list_response.json()
+        pos = data.get("data", [])
         
         if not pos:
             pytest.skip("No purchase orders found")
@@ -253,7 +258,8 @@ class TestPurchaseOrdersWithNFs:
         )
         
         assert list_response.status_code == 200
-        pos = list_response.json()
+        data = list_response.json()
+        pos = data.get("data", [])
         
         if not pos:
             pytest.skip("No purchase orders found")
