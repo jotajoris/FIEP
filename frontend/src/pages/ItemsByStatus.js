@@ -1663,6 +1663,54 @@ const ItemsByStatus = () => {
     }
   };
 
+  // Aplicar código de rastreio em lote
+  const aplicarRastreioEmLote = async (poId) => {
+    const selectedIndices = itensParaFrete[poId];  // Usa a mesma seleção do frete
+    const codigoRastreio = codigoRastreioLote[poId]?.trim();
+    
+    if (!selectedIndices || selectedIndices.size === 0) {
+      alert('Selecione ao menos um item para aplicar o código de rastreio.');
+      return;
+    }
+    
+    if (!codigoRastreio) {
+      alert('Informe o código de rastreio.');
+      return;
+    }
+    
+    if (!window.confirm(
+      `Aplicar código de rastreio "${codigoRastreio}" para ${selectedIndices.size} item(s)?`
+    )) {
+      return;
+    }
+    
+    setAplicandoRastreio(poId);
+    
+    try {
+      const response = await apiPost(`${API}/purchase-orders/${poId}/rastreio-multiplo`, {
+        item_indices: Array.from(selectedIndices),
+        codigo_rastreio: codigoRastreio
+      });
+      
+      alert(
+        `✅ Código de rastreio aplicado!\n\n` +
+        `• Código: ${codigoRastreio}\n` +
+        `• Itens atualizados: ${response.data.quantidade_itens}`
+      );
+      
+      // Limpar código
+      setCodigoRastreioLote(prev => ({ ...prev, [poId]: '' }));
+      
+      // Recarregar dados
+      loadItems();
+    } catch (error) {
+      console.error('Erro ao aplicar rastreio:', error);
+      alert('Erro ao aplicar rastreio: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setAplicandoRastreio(null);
+    }
+  };
+
   // Toggle seleção de item para mudança de status
   const toggleItemParaStatus = (poId, itemIndex) => {
     setItensParaStatus(prev => {
