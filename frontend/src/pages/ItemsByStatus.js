@@ -3739,6 +3739,21 @@ Chave PIX: 46.663.556/0001-69`;
                       />
                     )}
 
+                    {/* ============== SEÇÃO RASTREIO EM LOTE (EM TRÂNSITO) ============== */}
+                    {status === 'em_transito' && isAdmin() && (
+                      <RastreioLoteForm
+                        poId={oc.po_id}
+                        totalItens={oc.items.length}
+                        itensSelecionados={itensParaRastreio[oc.po_id]}
+                        codigoRastreio={codigoRastreioLote[oc.po_id]}
+                        aplicando={aplicandoRastreio === oc.po_id}
+                        onToggleAll={() => toggleAllItensParaRastreio(oc.po_id, oc.items)}
+                        onRastreioChange={(value) => setCodigoRastreioLote(prev => ({ ...prev, [oc.po_id]: value }))}
+                        onAplicar={() => aplicarRastreioEmTransito(oc.po_id)}
+                        modo="atualizar"
+                      />
+                    )}
+
                     {/* ============== SEÇÃO MUDAR STATUS EM MASSA ============== */}
                     {isAdmin() && (
                       <MudarStatusForm
