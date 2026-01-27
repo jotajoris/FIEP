@@ -2,8 +2,8 @@ import React, { memo } from 'react';
 import { formatBRL } from '../../utils/api';
 
 /**
- * Formulário para adicionar/editar código de rastreio E FRETE em lote
- * Usado na página "Em Trânsito" para atualizar rastreios e corrigir valores de frete
+ * Formulário para adicionar/editar código de rastreio, frete e STATUS em lote
+ * Usado na página "Em Trânsito" para atualizar rastreios, corrigir valores de frete e mudar status
  */
 const RastreioLoteForm = memo(({
   poId,
@@ -11,10 +11,12 @@ const RastreioLoteForm = memo(({
   itensSelecionados,
   codigoRastreio,
   freteTotal,
+  novoStatus,
   aplicando,
   onToggleAll,
   onRastreioChange,
   onFreteChange,
+  onStatusChange,
   onAplicar,
   modo = 'adicionar' // 'adicionar' ou 'atualizar'
 }) => {
@@ -22,13 +24,11 @@ const RastreioLoteForm = memo(({
   const todosSelected = qtdSelecionados === totalItens;
   const fretePorItem = qtdSelecionados > 0 ? (parseFloat(freteTotal || 0) / qtdSelecionados) : 0;
 
-  const titulo = modo === 'atualizar' 
-    ? '📦 Atualizar Rastreio e Frete' 
-    : '📦 Adicionar Rastreio e Frete';
+  const titulo = '📦 Rastreio, Frete e Status (Aplicar em Lote)';
 
-  const corPrimaria = modo === 'atualizar' ? '#8b5cf6' : '#3b82f6';
-  const corFundo = modo === 'atualizar' ? '#f5f3ff' : '#eff6ff';
-  const corBorda = modo === 'atualizar' ? '#c4b5fd' : '#93c5fd';
+  const corPrimaria = '#8b5cf6';
+  const corFundo = '#f5f3ff';
+  const corBorda = '#c4b5fd';
 
   return (
     <div style={{ 
@@ -77,7 +77,7 @@ const RastreioLoteForm = memo(({
         </span>
       </div>
       
-      {/* Campos de rastreio e frete + botão aplicar */}
+      {/* Campos de rastreio, frete, status e botão aplicar */}
       {qtdSelecionados > 0 && (
         <div style={{ 
           display: 'flex', 
@@ -90,7 +90,7 @@ const RastreioLoteForm = memo(({
         }}>
           {/* Linha do Rastreio */}
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <label style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem', minWidth: '90px' }}>
+            <label style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem', minWidth: '100px' }}>
               📦 Rastreio:
             </label>
             <input
@@ -115,7 +115,7 @@ const RastreioLoteForm = memo(({
           
           {/* Linha do Frete */}
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <label style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem', minWidth: '90px' }}>
+            <label style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem', minWidth: '100px' }}>
               🚚 Frete Total:
             </label>
             <input
@@ -142,21 +142,53 @@ const RastreioLoteForm = memo(({
             )}
           </div>
           
+          {/* Linha do Status */}
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <label style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem', minWidth: '100px' }}>
+              🔄 Mudar Status:
+            </label>
+            <select
+              value={novoStatus || ''}
+              onChange={(e) => onStatusChange(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                padding: '0.5rem 0.75rem',
+                border: '2px solid #22c55e',
+                borderRadius: '6px',
+                fontSize: '0.95rem',
+                fontWeight: '600',
+                background: 'white',
+                cursor: 'pointer',
+                minWidth: '200px'
+              }}
+            >
+              <option value="">-- Manter atual --</option>
+              <option value="entregue">✅ Entregue</option>
+              <option value="em_separacao">📦 Voltar p/ Em Separação</option>
+              <option value="comprado">🛒 Voltar p/ Comprado</option>
+            </select>
+            {novoStatus === 'entregue' && (
+              <span style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: '500' }}>
+                ✨ Marcar como entregue!
+              </span>
+            )}
+          </div>
+          
           {/* Botão de aplicar */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               onAplicar();
             }}
-            disabled={(!codigoRastreio?.trim() && !freteTotal) || aplicando}
+            disabled={aplicando}
             style={{
               padding: '0.75rem 1.5rem',
-              background: (!codigoRastreio?.trim() && !freteTotal) || aplicando ? '#9ca3af' : '#22c55e',
+              background: aplicando ? '#9ca3af' : '#22c55e',
               color: 'white',
               border: 'none',
               borderRadius: '6px',
               fontWeight: '700',
-              cursor: (!codigoRastreio?.trim() && !freteTotal) || aplicando ? 'not-allowed' : 'pointer',
+              cursor: aplicando ? 'not-allowed' : 'pointer',
               fontSize: '0.95rem',
               marginTop: '0.5rem'
             }}
