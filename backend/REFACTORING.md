@@ -43,8 +43,11 @@ Rotas de autenticação e rastreamento foram extraídas e **estão em uso**.
 ### ✅ Concluído (27/01/2026)
 - auth_routes.py incluído no server.py via `api_router.include_router(auth_router)`
 - rastreio_routes.py incluído no server.py via `api_router.include_router(rastreio_router)`
+- notificacao_routes.py **NOVO** - criado e incluído no server.py
 - Rotas duplicadas de autenticação removidas do server.py (~180 linhas)
 - Rotas duplicadas de rastreamento removidas do server.py (~200 linhas)
+- Rotas duplicadas de notificações removidas do server.py (~40 linhas)
+- **Total de linhas removidas: ~420 linhas (de 6841 para 6421)**
 
 ### 🔄 Próximos Passos
 1. **item_routes.py**: Já existe mas não está em uso. Incluir no server.py e remover duplicatas.
