@@ -9,9 +9,11 @@ const RastreioItemCard = memo(({
   isSelected,
   onToggleSelect,
   onAtualizarRastreio,
+  onMudarStatus,
   isAdmin
 }) => {
   const [expanded, setExpanded] = useState(false);
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
   
   const eventos = item.rastreio_eventos || [];
   const ultimoEvento = eventos[0];
