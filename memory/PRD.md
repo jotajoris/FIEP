@@ -393,9 +393,21 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 ## Próximas Tarefas (Backlog)
 
-### P3 - Baixa Prioridade (Adiadas pelo usuário)
-- [ ] **Refatoração do Backend** - Dividir server.py em módulos menores (estrutura já criada em /app/backend/routes, /models, /services, /utils)
-- [ ] **Verificação de Domínio Resend** - Para emails funcionarem externamente (adiado pelo usuário)
+### P0 - Alta Prioridade (Bugs Críticos)
+- [ ] **Bug NFs não salvando**: Notas Fiscais de fornecedor não aparecem no painel Admin após upload
+
+### P1 - Média Prioridade
+- [ ] **Bug edição duplicada**: Editar item duplicado abre todas as instâncias simultaneamente
+
+### P2 - Baixa Prioridade
+- [ ] **Busca Dashboard**: Busca por código de item no Dashboard não funciona
+- [ ] **Performance Em Separação**: Página lenta ao expandir OC com muitos itens
+
+### P3 - Backlog (Adiadas pelo usuário)
+- [x] **Refatoração do Backend - Fase 2** - ✅ COMPLETO (27/01/2026)
+- [ ] **Refatoração do Backend - Fase 3** - Extrair rotas de estoque, planilha, admin
+- [ ] **Refatoração Frontend** - Dividir `ItemsByStatus.js` (~6000+ linhas) em componentes menores
+- [ ] **Verificação de Domínio Resend** - Para emails funcionarem externamente
 
 ### Notas de Limitações Conhecidas
 - **Funcionalidade "Esqueci Minha Senha"**: Emails só são enviados para o endereço cadastrado na conta Resend do usuário (falta verificação de domínio próprio)
