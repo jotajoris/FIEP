@@ -3826,14 +3826,15 @@ Chave PIX: 46.663.556/0001-69`;
                         const isSelectedForNF = getItensSelecionados(oc.po_id).has(item._uniqueId);
                         const isSelectedForFrete = itensParaFrete[oc.po_id]?.has(item._itemIndexInPO) || false;
                         const isSelectedForStatus = itensParaStatus[oc.po_id]?.has(item._itemIndexInPO) || false;
+                        const isSelectedForRastreio = itensParaRastreio[oc.po_id]?.has(item._itemIndexInPO) || false;
                         const jaTemNF = oc.itensComNFIndices && oc.itensComNFIndices.has(item._itemIndexInPO);
                         return (
                           <div 
                             key={item._uniqueId} 
                             className="card" 
                             style={{ 
-                              background: jaTemNF ? '#dcfce7' : isSelectedForNF ? '#f0fdf4' : isSelectedForFrete ? '#fef9c3' : isSelectedForStatus ? '#f3e8ff' : 'white', 
-                              border: jaTemNF ? '2px solid #16a34a' : isSelectedForNF ? '2px solid #22c55e' : isSelectedForFrete ? '2px solid #f59e0b' : isSelectedForStatus ? '2px solid #8b5cf6' : '1px solid #e2e8f0'
+                              background: jaTemNF ? '#dcfce7' : isSelectedForNF ? '#f0fdf4' : isSelectedForFrete ? '#fef9c3' : isSelectedForStatus ? '#f3e8ff' : isSelectedForRastreio ? '#f5f3ff' : 'white', 
+                              border: jaTemNF ? '2px solid #16a34a' : isSelectedForNF ? '2px solid #22c55e' : isSelectedForFrete ? '2px solid #f59e0b' : isSelectedForStatus ? '2px solid #8b5cf6' : isSelectedForRastreio ? '2px solid #7c3aed' : '1px solid #e2e8f0'
                             }} 
                             data-testid={`item-card-${item._uniqueId}`}
                           >
@@ -3841,7 +3842,8 @@ Chave PIX: 46.663.556/0001-69`;
                             <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                               {/* Checkboxes para seleção */}
                               <div style={{ paddingTop: '0.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                {/* Checkbox NF de Venda */}
+                                {/* Checkbox NF de Venda - apenas em_separacao */}
+                                {status === 'em_separacao' && (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                   <input
                                     type="checkbox"
