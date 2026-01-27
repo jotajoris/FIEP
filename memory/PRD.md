@@ -25,6 +25,16 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 ## Versão Atual: 3.3.0 (27/01/2026)
 
+### 📦 Código de Rastreio em Lote (Em Trânsito) - 27/01/2026
+- ✅ **Funcionalidade de rastreio em lote** adicionada à página "Em Trânsito":
+  - Seleção individual de itens via checkbox
+  - "Selecionar Todos" para selecionar toda a OC
+  - Campo para inserir código de rastreio
+  - Botão "Aplicar em X itens" para atualizar todos selecionados
+- ✅ **Página "Em Trânsito" reformulada** para usar a mesma visualização por OC que "Em Separação"
+- ✅ **Novo componente criado**: `RastreioLoteForm.jsx`
+- ✅ **Rotas e endpoints existentes reutilizados**: `/api/purchase-orders/{po_id}/rastreio-multiplo`
+
 ### 🔄 Refatoração Frontend - Fase 1 e 2 (27/01/2026)
 - ✅ **Componentes extraídos de `ItemsByStatus.js`**:
   - `components/items/DataEntregaBadge.jsx` - Badge de data de entrega com contagem regressiva
