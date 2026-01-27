@@ -183,6 +183,10 @@ const ItemsByStatus = () => {
   const [freteEnvioTotal, setFreteEnvioTotal] = useState({});  // {po_id: valor} - Valor total do frete por OC
   const [aplicandoFrete, setAplicandoFrete] = useState(null);  // po_id do frete sendo aplicado
   
+  // Estados para código de rastreio em lote
+  const [codigoRastreioLote, setCodigoRastreioLote] = useState({});  // {po_id: codigo} - Código de rastreio por OC
+  const [aplicandoRastreio, setAplicandoRastreio] = useState(null);  // po_id do rastreio sendo aplicado
+  
   // Estados para mudança de status em massa
   const [novoStatusMassa, setNovoStatusMassa] = useState({});  // {po_id: status} - Status selecionado para mudança em massa
   const [aplicandoStatusMassa, setAplicandoStatusMassa] = useState(null);  // po_id do status sendo aplicado
