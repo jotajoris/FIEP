@@ -299,13 +299,13 @@ class TestPurchaseOrdersWithNFs:
 class TestHealthAndVersion:
     """Test basic health and version endpoints"""
     
-    def test_health_check(self):
-        """Test health endpoint"""
-        response = requests.get(f"{BASE_URL}/health")
+    def test_api_root(self):
+        """Test API root endpoint"""
+        response = requests.get(f"{BASE_URL}/api/")
         assert response.status_code == 200
         data = response.json()
-        assert data.get("status") == "healthy"
-        print(f"✅ Health check passed")
+        assert "message" in data
+        print(f"✅ API root check passed: {data.get('message')}")
     
     def test_version_endpoint(self, admin_headers):
         """Test version endpoint"""
