@@ -5072,6 +5072,72 @@ async def aplicar_rastreio_frete_multiplo(
     }
 
 
+@api_router.post("/purchase-orders/{po_id}/status-multiplo")
+async def aplicar_status_multiplo(
+    po_id: str,
+    data: dict,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Aplicar mudança de status para múltiplos itens de uma OC.
+    
+    Body:
+    {
+        "item_indices": [0, 1, 2],     // Índices dos itens
+        "novo_status": "em_transito"   // Novo status
+    }
+    """
+    from datetime import datetime, timezone
+    
+    item_indices = data.get("item_indices", [])
+    novo_status = data.get("novo_status", "").strip()
+    
+    if not item_indices:
+        raise HTTPException(status_code=400, detail="Nenhum item selecionado")
+    
+    status_validos = ['pendente', 'cotado', 'comprado', 'em_separacao', 'em_transito', 'entregue']
+    if novo_status not in status_validos:
+        raise HTTPException(status_code=400, detail=f"Status inválido. Use: {', '.join(status_validos)}")
+    
+    # Buscar OC
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
+    if not po:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    # Atualizar cada item com o novo status
+    items = po.get('items', [])
+    itens_atualizados = []
+    
+    for idx in item_indices:
+        if idx < 0 or idx >= len(items):
+            continue
+        
+        items[idx]['status'] = novo_status
+        
+        # Se mudou para 'comprado', registrar data_compra
+        if novo_status == 'comprado' and not items[idx].get('data_compra'):
+            items[idx]['data_compra'] = datetime.now(timezone.utc).isoformat()
+        
+        itens_atualizados.append({
+            "indice": idx,
+            "codigo_item": items[idx].get('codigo_item', ''),
+            "novo_status": novo_status
+        })
+    
+    # Salvar alterações
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"items": items}}
+    )
+    
+    return {
+        "success": True,
+        "novo_status": novo_status,
+        "itens_atualizados": itens_atualizados,
+        "quantidade_itens": len(itens_atualizados)
+    }
+
+
 @api_router.post("/purchase-orders/{po_id}/atualizar-pdf")
 async def atualizar_oc_com_pdf(
     po_id: str,
