@@ -6796,6 +6796,10 @@ async def startup_event():
     rastreio_task = asyncio.create_task(verificar_rastreios_em_transito())
     logging.getLogger(__name__).info("Job de verificação de rastreios iniciado")
 
+# Incluir routers modulares no api_router
+api_router.include_router(auth_router)
+api_router.include_router(rastreio_router)
+
 # Include the router in the main app
 app.include_router(api_router)
 
