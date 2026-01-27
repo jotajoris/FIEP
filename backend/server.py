@@ -2895,10 +2895,19 @@ async def buscar_rastreio_api(codigo: str) -> dict:
             "eventos": result.get('eventos', []),
             "entregue": result.get('entregue', False),
             "saiu_para_entrega": result.get('saiu_para_entrega', False),
-            "tentativa_entrega": result.get('tentativa_entrega', False)
+            "tentativa_entrega": result.get('tentativa_entrega', False),
+            "fonte": result.get('fonte', 'correios'),
+            "link_detalhes": result.get('link_detalhes', '')
         }
     
-    return {"success": False, "eventos": [], "message": result.get('error', "Não foi possível consultar o rastreio.")}
+    # Retornar informações úteis quando falhar
+    return {
+        "success": False, 
+        "eventos": [], 
+        "message": result.get('error', "Não foi possível consultar o rastreio."),
+        "rastreamento_manual": result.get('rastreamento_manual', False),
+        "link_correios": f"https://rastreamento.correios.com.br/app/resultado.php?objeto={codigo}"
+    }
 
 # Endpoint para consultar rastreio (usando API dos Correios)
 @api_router.get("/rastreio/{codigo}")
