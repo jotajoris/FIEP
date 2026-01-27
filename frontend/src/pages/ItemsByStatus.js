@@ -3903,7 +3903,9 @@ Chave PIX: 46.663.556/0001-69`;
                               isSelected={isSelectedForRastreio}
                               onToggleSelect={() => toggleItemParaRastreio(oc.po_id, item._itemIndexInPO)}
                               onMudarStatus={mudarStatusItemManual}
+                              onEditarRastreioFrete={editarRastreioFrete}
                               isAdmin={isAdmin()}
+                              formatBRL={formatBRL}
                             />
                           );
                         }
