@@ -2900,6 +2900,97 @@ async def buscar_rastreio_api(codigo: str) -> dict:
     
     return {"success": False, "eventos": [], "message": result.get('error', "Não foi possível consultar o rastreio.")}
 
+# Endpoint para consultar rastreio (usando API dos Correios)
+@api_router.get("/rastreio/{codigo}")
+async def consultar_rastreio(codigo: str, current_user: dict = Depends(get_current_user)):
+    """Consulta o rastreamento de um objeto na API dos Correios."""
+    result = await buscar_rastreio_api(codigo)
+    return {
+        "codigo": codigo,
+        **result
+    }
+
+# Endpoint para forçar verificação de todos os rastreios (admin only)
+@api_router.post("/rastreio/verificar-todos")
+async def verificar_todos_rastreios(current_user: dict = Depends(get_current_user)):
+    """Força a verificação de todos os itens em trânsito. Apenas admin."""
+    if current_user.get('role') != 'admin':
+        raise HTTPException(status_code=403, detail="Apenas administradores podem executar esta ação")
+    
+    logger = logging.getLogger(__name__)
+    logger.info("Verificação manual de rastreios solicitada por admin")
+    
+    # Executar verificação em background
+    asyncio.create_task(_executar_verificacao_rastreios_uma_vez())
+    
+    return {"message": "Verificação de rastreios iniciada em background. As notificações aparecerão quando houver atualizações."}
+
+
+async def _executar_verificacao_rastreios_uma_vez():
+    """Executa uma única verificação de rastreios (para chamadas manuais)."""
+    logger = logging.getLogger(__name__)
+    
+    try:
+        logger.info("Iniciando verificação manual de rastreios (API Correios)...")
+        
+        cursor = db.purchase_orders.find(
+            {"items.status": "em_transito"},
+            {"_id": 0}
+        )
+        
+        stats = {"verificados": 0, "entregues": 0, "saiu_entrega": 0, "tentativa": 0, "erros": 0}
+        
+        async for po in cursor:
+            po_atualizado = False
+            
+            for item in po['items']:
+                if item.get('status') == 'em_transito' and item.get('codigo_rastreio'):
+                    codigo = item['codigo_rastreio']
+                    stats["verificados"] += 1
+                    
+                    try:
+                        result = await buscar_rastreio_api(codigo)
+                        
+                        if result.get('success') and result.get('eventos'):
+                            eventos = result['eventos']
+                            eventos_anteriores = item.get('rastreio_eventos', [])
+                            qtd_anterior = len(eventos_anteriores)
+                            item['rastreio_eventos'] = eventos
+                            novos_eventos = len(eventos) > qtd_anterior
+                            now = datetime.now(timezone.utc)
+                            
+                            if result.get('entregue'):
+                                item['status'] = ItemStatus.ENTREGUE.value
+                                item['data_entrega'] = now.isoformat()
+                                stats["entregues"] += 1
+                                po_atualizado = True
+                                await _criar_notificacao_rastreio(po, item, "entrega", "✅ Item Entregue", f"O item {item['codigo_item']} foi entregue.")
+                                logger.info(f"✅ Item {item['codigo_item']} ENTREGUE")
+                            elif result.get('saiu_para_entrega') and novos_eventos and not item.get('notificado_saiu_entrega'):
+                                stats["saiu_entrega"] += 1
+                                item['notificado_saiu_entrega'] = True
+                                po_atualizado = True
+                                await _criar_notificacao_rastreio(po, item, "saiu_entrega", "🚚 Saiu para Entrega", f"O item {item['codigo_item']} saiu para entrega.")
+                            elif result.get('tentativa_entrega') and novos_eventos:
+                                stats["tentativa"] += 1
+                                item['notificado_tentativa'] = True
+                                po_atualizado = True
+                                await _criar_notificacao_rastreio(po, item, "tentativa", "⚠️ Tentativa de Entrega", f"Tentativa de entrega: {item['codigo_item']}")
+                            else:
+                                po_atualizado = True
+                                
+                    except Exception as e:
+                        stats["erros"] += 1
+                        logger.warning(f"Erro ao verificar {codigo}: {e}")
+            
+            if po_atualizado:
+                await db.purchase_orders.update_one({"id": po['id']}, {"$set": {"items": po['items']}})
+        
+        logger.info(f"Verificação manual concluída. Stats: {stats}")
+        
+    except Exception as e:
+        logger.error(f"Erro na verificação manual: {e}")
+
 # ===== ROTAS DE RASTREIO MOVIDAS PARA routes/rastreio_routes.py =====
 # As rotas /rastreio/{codigo}, /items/{codigo_item}/rastreio, /items/{codigo_item}/atualizar-rastreio
 # e /items/{codigo_item}/marcar-entregue foram refatoradas para o módulo routes/rastreio_routes.py
