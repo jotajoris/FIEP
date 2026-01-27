@@ -4014,7 +4014,7 @@ Chave PIX: 46.663.556/0001-69`;
                     )}
                     {/* ======== FIM SEÇÕES EM SEPARAÇÃO ======== */}
                     
-                    {/* ======== SEÇÃO RASTREIO E FRETE EM LOTE (EM TRÂNSITO) ======== */}
+                    {/* ======== SEÇÃO RASTREIO, FRETE E STATUS EM LOTE (EM TRÂNSITO) ======== */}
                     {status === 'em_transito' && isAdmin() && (
                       <RastreioLoteForm
                         poId={oc.po_id}
@@ -4022,10 +4022,12 @@ Chave PIX: 46.663.556/0001-69`;
                         itensSelecionados={itensParaRastreio[oc.po_id]}
                         codigoRastreio={codigoRastreioLote[oc.po_id]}
                         freteTotal={freteEnvioTotal[oc.po_id]}
+                        novoStatus={statusNoRastreio[oc.po_id]}
                         aplicando={aplicandoRastreio === oc.po_id}
                         onToggleAll={() => toggleAllItensParaRastreio(oc.po_id, oc.items)}
                         onRastreioChange={(value) => setCodigoRastreioLote(prev => ({ ...prev, [oc.po_id]: value }))}
                         onFreteChange={(value) => setFreteEnvioTotal(prev => ({ ...prev, [oc.po_id]: value }))}
+                        onStatusChange={(value) => setStatusNoRastreio(prev => ({ ...prev, [oc.po_id]: value }))}
                         onAplicar={() => aplicarRastreioEFreteEmTransito(oc.po_id)}
                         modo="atualizar"
                       />
