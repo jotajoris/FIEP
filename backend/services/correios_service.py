@@ -124,11 +124,23 @@ async def obter_token_correios() -> Optional[str]:
             if response.status_code == 201 or response.status_code == 200:
                 data = response.json()
                 token = data.get('token')
-                expires_in = data.get('expiraEm', 86400)  # Default 24h
+                
+                # expiraEm pode vir como string datetime ou int (segundos)
+                expires_em = data.get('expiraEm')
+                if isinstance(expires_em, str):
+                    # É uma data/hora no formato ISO
+                    try:
+                        expires_at = datetime.fromisoformat(expires_em.replace('Z', '+00:00'))
+                        _token_cache['expires_at'] = expires_at - timedelta(minutes=5)  # 5min de margem
+                    except:
+                        _token_cache['expires_at'] = datetime.now(timezone.utc) + timedelta(hours=23)
+                elif isinstance(expires_em, int):
+                    _token_cache['expires_at'] = datetime.now(timezone.utc) + timedelta(seconds=expires_em - 300)
+                else:
+                    _token_cache['expires_at'] = datetime.now(timezone.utc) + timedelta(hours=23)
                 
                 # Atualizar cache
                 _token_cache['token'] = token
-                _token_cache['expires_at'] = datetime.now(timezone.utc) + timedelta(seconds=expires_in - 300)  # 5min de margem
                 
                 logger.info("Token dos Correios obtido com sucesso")
                 return token
