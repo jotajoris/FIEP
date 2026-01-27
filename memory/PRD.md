@@ -23,7 +23,16 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.3.2 (27/01/2026)
+## Versão Atual: 3.3.3 (27/01/2026)
+
+### ✏️ Edição de Rastreio e Frete em "Em Trânsito" (27/01/2026)
+- ✅ **Botão "Editar"** para modificar código de rastreio e valor do frete
+- ✅ **Campos editáveis**:
+  - Código Rastreio (texto, uppercase automático)
+  - Frete em R$ (numérico)
+- ✅ **Botões Salvar/Cancelar** para confirmar ou descartar alterações
+- ✅ **Exibição do frete** em verde quando > R$ 0,00
+- ✅ **Função `editarRastreioFrete`** para processar as alterações via API
 
 ### ✏️ Mudança Manual de Status em "Em Trânsito" (27/01/2026)
 - ✅ **Botão "Mudar Status"** adicionado ao componente `RastreioItemCard.jsx`
