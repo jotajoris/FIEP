@@ -1191,6 +1191,226 @@ const CreatePO = () => {
                 </div>
               </div>
             )}
+
+            {/* Aba Atualizar OC */}
+            {activeTab === 'atualizar' && (
+              <div>
+                <div style={{ 
+                  padding: '1rem', 
+                  background: '#fef3c7', 
+                  borderRadius: '8px', 
+                  marginBottom: '1.5rem',
+                  border: '1px solid #f59e0b'
+                }}>
+                  <h3 style={{ color: '#92400e', marginBottom: '0.5rem' }}>🔄 Atualizar OCs Existentes</h3>
+                  <p style={{ color: '#78350f', fontSize: '0.9rem' }}>
+                    Faça upload dos PDFs das OCs que já existem no sistema para atualizar dados como:
+                    <strong> Endereço de Entrega</strong>, <strong>Data de Entrega</strong> e outros campos.
+                    <br />
+                    <small>Os dados dos itens (status, preços, fornecedores, NFs) serão preservados.</small>
+                  </p>
+                </div>
+
+                {/* Área de Drop */}
+                <div
+                  onDragEnter={handleUpdateDragEnter}
+                  onDragLeave={handleUpdateDragLeave}
+                  onDragOver={handleUpdateDragOver}
+                  onDrop={handleUpdateDrop}
+                  style={{
+                    border: `3px dashed ${isDraggingUpdate ? '#f59e0b' : '#e2e8f0'}`,
+                    borderRadius: '12px',
+                    padding: '3rem 2rem',
+                    textAlign: 'center',
+                    background: isDraggingUpdate ? '#fffbeb' : '#fafafa',
+                    transition: 'all 0.3s ease',
+                    marginBottom: '1.5rem'
+                  }}
+                  data-testid="update-dropzone"
+                >
+                  <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🔄</div>
+                  <h3 style={{ fontSize: '1.3rem', fontWeight: '700', marginBottom: '0.5rem', color: '#f59e0b' }}>
+                    {isDraggingUpdate ? 'Solte os PDFs aqui!' : 'Arraste os PDFs das OCs para atualizar'}
+                  </h3>
+                  <p style={{ color: '#718096', marginBottom: '1.5rem' }}>
+                    ou selecione os arquivos manualmente
+                  </p>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    multiple
+                    onChange={handleUpdateFileSelect}
+                    style={{ display: 'none' }}
+                    id="update-pdf-input"
+                    data-testid="update-file-input"
+                  />
+                  <label 
+                    htmlFor="update-pdf-input" 
+                    className="btn"
+                    style={{ 
+                      padding: '0.75rem 2rem', 
+                      cursor: 'pointer',
+                      background: '#f59e0b',
+                      color: 'white',
+                      fontWeight: '600',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    📁 Selecionar PDFs
+                  </label>
+                </div>
+
+                {/* Lista de arquivos selecionados */}
+                {updateFiles.length > 0 && (
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                      <h4 style={{ margin: 0 }}>📋 {updateFiles.length} arquivo(s) selecionado(s):</h4>
+                      <button 
+                        onClick={clearUpdateFiles}
+                        className="btn btn-secondary"
+                        style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}
+                      >
+                        Limpar tudo
+                      </button>
+                    </div>
+                    <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                      {updateFiles.map((file, idx) => (
+                        <div 
+                          key={idx} 
+                          style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center',
+                            padding: '0.5rem 1rem',
+                            borderBottom: idx < updateFiles.length - 1 ? '1px solid #e2e8f0' : 'none',
+                            background: idx % 2 === 0 ? '#f8f9fa' : 'white'
+                          }}
+                        >
+                          <span>📄 {file.name}</span>
+                          <button 
+                            onClick={() => removeUpdateFile(idx)}
+                            style={{ 
+                              background: 'none', 
+                              border: 'none', 
+                              color: '#ef4444', 
+                              cursor: 'pointer',
+                              fontSize: '1.2rem'
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Botão de Atualizar */}
+                {updateFiles.length > 0 && !updateResults && (
+                  <div style={{ textAlign: 'center' }}>
+                    <button
+                      onClick={handleUpdateOCs}
+                      disabled={loading}
+                      className="btn btn-primary"
+                      style={{ 
+                        padding: '1rem 3rem', 
+                        fontSize: '1.1rem',
+                        background: '#f59e0b'
+                      }}
+                      data-testid="btn-atualizar-ocs"
+                    >
+                      {loading ? '⏳ Atualizando...' : `🔄 Atualizar ${updateFiles.length} OC(s)`}
+                    </button>
+                  </div>
+                )}
+
+                {/* Resultados da Atualização */}
+                {updateResults && (
+                  <div style={{ 
+                    background: '#f0fdf4', 
+                    border: '1px solid #22c55e', 
+                    borderRadius: '8px', 
+                    padding: '1.5rem'
+                  }}>
+                    <h3 style={{ color: '#166534', marginBottom: '1rem' }}>
+                      ✓ Processamento Concluído
+                    </h3>
+                    
+                    {/* Resumo */}
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(3, 1fr)', 
+                      gap: '1rem',
+                      marginBottom: '1.5rem'
+                    }}>
+                      <div style={{ background: '#dcfce7', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '2rem', fontWeight: '700', color: '#16a34a' }}>
+                          {updateResults.atualizados || 0}
+                        </div>
+                        <div style={{ color: '#166534' }}>Atualizadas</div>
+                      </div>
+                      <div style={{ background: '#fef9c3', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '2rem', fontWeight: '700', color: '#ca8a04' }}>
+                          {updateResults.sem_alteracao || 0}
+                        </div>
+                        <div style={{ color: '#854d0e' }}>Sem Alteração</div>
+                      </div>
+                      <div style={{ background: '#fee2e2', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '2rem', fontWeight: '700', color: '#dc2626' }}>
+                          {updateResults.erros || 0}
+                        </div>
+                        <div style={{ color: '#991b1b' }}>Erros</div>
+                      </div>
+                    </div>
+
+                    {/* Detalhes */}
+                    {updateResults.resultados && updateResults.resultados.length > 0 && (
+                      <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                        <h4 style={{ marginBottom: '0.5rem' }}>Detalhes:</h4>
+                        {updateResults.resultados.map((item, idx) => (
+                          <div 
+                            key={idx} 
+                            style={{ 
+                              padding: '0.75rem', 
+                              background: item.success ? (item.campos_atualizados?.length > 0 ? '#dcfce7' : '#fef9c3') : '#fee2e2',
+                              marginBottom: '0.5rem',
+                              borderRadius: '4px',
+                              fontSize: '0.9rem'
+                            }}
+                          >
+                            <strong>{item.numero_oc || item.filename}</strong>
+                            {item.success ? (
+                              item.campos_atualizados?.length > 0 ? (
+                                <span style={{ color: '#166534' }}> - ✓ Atualizado: {item.campos_atualizados.join(', ')}</span>
+                              ) : (
+                                <span style={{ color: '#854d0e' }}> - Sem alterações necessárias</span>
+                              )
+                            ) : (
+                              <span style={{ color: '#991b1b' }}> - ✗ {item.error || item.message}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', borderTop: '1px solid #e2e8f0', paddingTop: '1rem', marginTop: '1rem' }}>
+                      <button 
+                        onClick={clearUpdateFiles}
+                        className="btn btn-secondary"
+                      >
+                        Fazer nova atualização
+                      </button>
+                      <button 
+                        onClick={() => navigate('/')}
+                        className="btn btn-primary"
+                      >
+                        Ir para Dashboard
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
