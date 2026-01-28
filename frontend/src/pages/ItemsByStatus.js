@@ -2149,6 +2149,53 @@ Chave PIX: 46.663.556/0001-69`;
     }
   };
 
+  // Buscar CEP automaticamente pelo endereço (usando API do backend)
+  const buscarCepPeloEndereco = async (endereco) => {
+    if (!endereco || endereco.length < 10) return null;
+    
+    // Se já tem CEP no endereço, retornar ele
+    const cepExistente = endereco.match(/CEP\s*(\d{5}-?\d{3})/i);
+    if (cepExistente) {
+      return cepExistente[1].replace('-', '');
+    }
+    
+    try {
+      const response = await apiPost(`${API}/buscar-cep`, { endereco });
+      if (response.data.success) {
+        return response.data.cep;
+      }
+    } catch (error) {
+      console.error('Erro ao buscar CEP pelo endereço:', error);
+    }
+    return null;
+  };
+
+  // Adicionar CEP ao endereço se não existir
+  const adicionarCepAoEndereco = async (item) => {
+    if (!item.endereco_entrega) return;
+    
+    // Verificar se já tem CEP
+    if (/CEP\s*\d{5}-?\d{3}/i.test(item.endereco_entrega)) {
+      return; // Já tem CEP
+    }
+    
+    const cep = await buscarCepPeloEndereco(item.endereco_entrega);
+    if (cep) {
+      // Atualizar o endereço com o CEP
+      const novoEndereco = `${item.endereco_entrega}, CEP ${cep.substring(0,5)}-${cep.substring(5)}`;
+      try {
+        await apiPatch(
+          `${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}/endereco`,
+          { endereco: novoEndereco.toUpperCase() }
+        );
+        return novoEndereco;
+      } catch (error) {
+        console.error('Erro ao atualizar endereço com CEP:', error);
+      }
+    }
+    return null;
+  };
+
   const saveEndereco = async (item) => {
     try {
       await apiPatch(
