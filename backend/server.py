@@ -4800,9 +4800,11 @@ async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
 
 @api_router.get("/admin/itens-responsavel/{responsavel}")
 async def get_itens_responsavel(responsavel: str, current_user: dict = Depends(require_admin)):
-    """Obter todos os itens entregues/em_transito de uma pessoa baseado nos LOTES atribuídos
+    """Obter todos os itens entregues/em_transito de uma pessoa
     
-    Sistema de Comissões baseado em LOTES específicos.
+    Sistema de Comissões com lógica híbrida:
+    1. Itens com lote numérico (ex: "Lote 42") → Usa mapeamento fixo de lotes por pessoa
+    2. Itens sem lote numérico (ex: "CHAMAMENTO PÚBLICO...") → Usa campo responsavel do item
     """
     
     # Mapeamento fixo de LOTES por pessoa (baseado na cotação original)
@@ -4823,16 +4825,27 @@ async def get_itens_responsavel(responsavel: str, current_user: dict = Depends(r
         if not lote_str:
             return None
         import re
-        match = re.search(r'(\d+)', str(lote_str))
-        return int(match.group(1)) if match else None
+        # Só considera como lote numérico se tiver o padrão "Lote XX" ou similar
+        match = re.search(r'[Ll]ote\s*(\d+)', str(lote_str))
+        if match:
+            return int(match.group(1))
+        # Também aceita só o número se for curto (ex: "42")
+        if len(str(lote_str).strip()) <= 5:
+            match = re.search(r'^(\d+)$', str(lote_str).strip())
+            if match:
+                return int(match.group(1))
+        return None
+    
+    def normalizar_responsavel(resp):
+        """Normaliza o nome do responsável para maiúsculas"""
+        if not resp:
+            return None
+        return resp.strip().upper()
     
     responsavel_upper = responsavel.upper().strip()
     
-    # Verificar se o responsável existe no mapeamento
-    if responsavel_upper not in LOTES_POR_PESSOA:
-        return []
-    
-    lotes_do_responsavel = LOTES_POR_PESSOA[responsavel_upper]
+    # Verificar se é um responsável do mapeamento de lotes
+    lotes_do_responsavel = LOTES_POR_PESSOA.get(responsavel_upper, [])
     
     pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(length=1000)
     
@@ -4857,8 +4870,22 @@ async def get_itens_responsavel(responsavel: str, current_user: dict = Depends(r
             if item_status not in ['entregue', 'em_transito']:
                 continue
             
-            numero_lote = extrair_numero_lote(item.get('lote', ''))
-            if numero_lote is None or numero_lote not in lotes_do_responsavel:
+            lote_str = item.get('lote', '')
+            numero_lote = extrair_numero_lote(lote_str)
+            
+            pertence_ao_responsavel = False
+            
+            # LÓGICA 1: Se tem lote numérico, usar mapeamento fixo
+            if numero_lote is not None:
+                if numero_lote in lotes_do_responsavel:
+                    pertence_ao_responsavel = True
+            else:
+                # LÓGICA 2: Se não tem lote numérico, usar campo responsavel
+                responsavel_item = normalizar_responsavel(item.get('responsavel', ''))
+                if responsavel_item == responsavel_upper and responsavel_upper not in ['JOÃO', 'MATEUS', 'ADMIN']:
+                    pertence_ao_responsavel = True
+            
+            if not pertence_ao_responsavel:
                 continue
             
             # Calcular valor total de venda
