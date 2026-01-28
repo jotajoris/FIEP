@@ -1351,7 +1351,7 @@ const CreatePO = () => {
                     {/* Resumo */}
                     <div style={{ 
                       display: 'grid', 
-                      gridTemplateColumns: 'repeat(3, 1fr)', 
+                      gridTemplateColumns: 'repeat(4, 1fr)', 
                       gap: '1rem',
                       marginBottom: '1.5rem'
                     }}>
@@ -1360,6 +1360,12 @@ const CreatePO = () => {
                           {updateResults.atualizados || 0}
                         </div>
                         <div style={{ color: '#166534' }}>Atualizadas</div>
+                      </div>
+                      <div style={{ background: '#e0e7ff', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '2rem', fontWeight: '700', color: '#6366f1' }}>
+                          {updateResults.total_ncm_atualizados || 0}
+                        </div>
+                        <div style={{ color: '#4338ca' }}>NCM Atualizados</div>
                       </div>
                       <div style={{ background: '#fef9c3', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
                         <div style={{ fontSize: '2rem', fontWeight: '700', color: '#ca8a04' }}>
@@ -1393,7 +1399,14 @@ const CreatePO = () => {
                             <strong>{item.numero_oc || item.filename}</strong>
                             {item.success ? (
                               item.campos_atualizados?.length > 0 ? (
-                                <span style={{ color: '#166534' }}> - ✓ Atualizado: {item.campos_atualizados.join(', ')}</span>
+                                <>
+                                  <span style={{ color: '#166534' }}> - ✓ Atualizado: {item.campos_atualizados.join(', ')}</span>
+                                  {item.ncm_encontrados > 0 && (
+                                    <span style={{ color: '#6366f1', marginLeft: '0.5rem' }}>
+                                      (🏷️ {item.ncm_encontrados} NCMs)
+                                    </span>
+                                  )}
+                                </>
                               ) : (
                                 <span style={{ color: '#854d0e' }}> - Sem alterações necessárias</span>
                               )
