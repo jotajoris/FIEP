@@ -5891,6 +5891,148 @@ async def recalcular_lucros_todos_itens(current_user: dict = Depends(require_adm
     }
 
 
+@api_router.post("/admin/atualizar-ncm-em-massa")
+async def atualizar_ncm_em_massa(
+    files: List[UploadFile] = File(...),
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Atualizar o NCM de todos os itens a partir dos PDFs das OCs.
+    Cada PDF será parseado para extrair os NCMs dos itens.
+    Os itens são atualizados pelo código_item.
+    """
+    
+    resultados = []
+    total_ncm_atualizados = 0
+    
+    for file in files:
+        if not file.filename.lower().endswith('.pdf'):
+            resultados.append({
+                "arquivo": file.filename,
+                "success": False,
+                "erro": "Arquivo não é PDF"
+            })
+            continue
+        
+        content = await file.read()
+        
+        try:
+            pdf_doc = fitz.open(stream=content, filetype="pdf")
+            full_text = ""
+            for page in pdf_doc:
+                full_text += page.get_text()
+            pdf_doc.close()
+        except Exception as e:
+            resultados.append({
+                "arquivo": file.filename,
+                "success": False,
+                "erro": f"Erro ao ler PDF: {str(e)}"
+            })
+            continue
+        
+        # Extrair número da OC
+        oc_patterns = [
+            r'(?:OC|Ordem de Compra)[:\s\-]*(\d+[\.\-]?\d+)',
+            r'(?:N[úu]mero|N[°º])[:\s]*(\d+[\.\-]?\d+)',
+            r'(\d{1,2}\.\d{6,})'
+        ]
+        
+        numero_oc = None
+        for pattern in oc_patterns:
+            match = re.search(pattern, full_text, re.IGNORECASE)
+            if match:
+                numero_oc = f"OC-{match.group(1)}"
+                break
+        
+        if not numero_oc:
+            resultados.append({
+                "arquivo": file.filename,
+                "success": False,
+                "erro": "Não foi possível identificar o número da OC no PDF"
+            })
+            continue
+        
+        # Extrair NCM por item do PDF
+        # Criar mapeamento codigo_item -> ncm
+        ncm_por_item = {}
+        lines = full_text.split('\n')
+        
+        for i, line in enumerate(lines):
+            line_stripped = line.strip()
+            
+            # Procurar código de 6 dígitos que começa com 0 ou 1
+            if re.match(r'^([01]\d{5})$', line_stripped):
+                codigo = line_stripped
+                
+                # Procurar NCM nas próximas linhas
+                for j in range(i+1, min(i+40, len(lines))):
+                    check_line = lines[j].strip()
+                    
+                    # Se encontrar outro código de produto, parar
+                    if re.match(r'^([01]\d{5})$', check_line):
+                        break
+                    
+                    # Capturar NCM (8 dígitos começando com 8 ou 9)
+                    if re.match(r'^[89]\d{7}$', check_line):
+                        ncm_por_item[codigo] = check_line
+                        break
+        
+        if not ncm_por_item:
+            resultados.append({
+                "arquivo": file.filename,
+                "numero_oc": numero_oc,
+                "success": False,
+                "erro": "Nenhum NCM encontrado no PDF"
+            })
+            continue
+        
+        # Buscar OC existente
+        existing_po = await db.purchase_orders.find_one({"numero_oc": numero_oc}, {"_id": 0})
+        if not existing_po:
+            resultados.append({
+                "arquivo": file.filename,
+                "numero_oc": numero_oc,
+                "success": False,
+                "erro": f"OC {numero_oc} não encontrada no sistema"
+            })
+            continue
+        
+        # Atualizar NCMs nos itens
+        items_atualizados = 0
+        for item in existing_po.get('items', []):
+            codigo_item = item.get('codigo_item', '')
+            if codigo_item in ncm_por_item:
+                ncm_atual = item.get('ncm', '')
+                ncm_novo = ncm_por_item[codigo_item]
+                
+                if ncm_atual != ncm_novo:
+                    item['ncm'] = ncm_novo
+                    items_atualizados += 1
+        
+        if items_atualizados > 0:
+            await db.purchase_orders.update_one(
+                {"id": existing_po['id']},
+                {"$set": {"items": existing_po['items']}}
+            )
+            total_ncm_atualizados += items_atualizados
+        
+        resultados.append({
+            "arquivo": file.filename,
+            "numero_oc": numero_oc,
+            "success": True,
+            "ncm_encontrados": len(ncm_por_item),
+            "items_atualizados": items_atualizados,
+            "ncm_por_item": ncm_por_item
+        })
+    
+    return {
+        "success": True,
+        "total_arquivos": len(files),
+        "total_ncm_atualizados": total_ncm_atualizados,
+        "resultados": resultados
+    }
+
+
 # ============== ESTOQUE ==============
 @api_router.get("/estoque")
 async def listar_estoque(current_user: dict = Depends(get_current_user)):
