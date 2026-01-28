@@ -47,54 +47,64 @@ The user requested a web platform to manage purchase orders (OCs) for their clie
 - On the Em Trânsito page, add the ability to add/edit tracking codes in bulk (per-item, per-selection, or per-OC).
 - Integrate the Correios API to automatically update tracking status and send notifications to admins.
 - Simplify the UI on the Em Trânsito page to hide financial data and show a clean, expandable view of tracking events.
-- **Allow manual status changes for items on the Em Trânsito page, both individually and in bulk.**
-- **On the Em Separação page, add the ability to change the status of items when applying freight and tracking in bulk.**
-- **Implement a Partial Shipment feature to move a specific quantity of an item from Em Separação to Em Trânsito, leaving the remainder.**
-- **Add a separate upload button for XML files for sales invoices (NF de Venda).**
-- **Remove the static text EMPRESA OPTANTE PELO SIMPLES NACIONAL from the additional invoice data section.**
-- **Implement automatic CEP lookup based on the delivery address.**
+- Allow manual status changes for items on the Em Trânsito page, both individually and in bulk.
+- On the Em Separação page, add the ability to change the status of items when applying freight and tracking in bulk.
+- Implement a Partial Shipment feature to move a specific quantity of an item from Em Separação to Em Trânsito, leaving the remainder.
+- Add a separate upload button for XML files for sales invoices (NF de Venda).
+- Remove the static text EMPRESA OPTANTE PELO SIMPLES NACIONAL from the additional invoice data section.
+- **Implement automatic CEP lookup that appends the CEP to the address string, rather than using a separate field.**
+- **Display Valor de Venda Unitário and Valor de Venda Total inline with other item details, removing the separate Valores de Venda box.**
+- **Add a feature to bulk-update existing OCs by re-uploading their PDFs.**
+- **Add a Ver Todas modal to the notifications dropdown, showing a full, searchable history.**
+- **Add image upload/view/delete functionality to the OC Details page ().**
+- **Reorganize the Dashboard to move admin-only sections to the bottom.**
+- **Implement a hybrid commission logic: use lot number ranges for numeric lots and fall back to the  field for non-numeric lots (e.g., CHAMAMENTO PÚBLICO...).**
 
 **User's preferred language**:
 The user's primary language is **Portuguese (Brazil)**. The next agent MUST respond in Portuguese.
 
 **what currently exists?**
-A full-stack Purchase Order management application (FastAPI + React). This session was extremely productive, focused on resolving critical bugs and implementing a large number of user-requested features, primarily within the  component.
+A full-stack Purchase Order management application (FastAPI + React). This session was highly interactive, focusing on implementing several new features and fixing bugs based on immediate user feedback.
 
 Key achievements include:
-- **P0 Bug Fixes:** The two main P0 bugs were addressed.
-  - The Correios API integration was debugged. The system now correctly uses the user's contract to track their own packages and provides a clear manual lookup link for packages not associated with the contract. This behavior was tested and approved by the user.
-  - The bug where supplier invoices (Notas Fiscais) were not appearing was investigated and confirmed to be resolved by the testing agent.
-- **Bulk Actions & Partial Shipments:** A significant number of features were added to enhance user workflow:
-  - **Partial Shipment:** Users can now split an item in Em Separação, sending a partial quantity to Em Trânsito while the rest remains.
-  - **Bulk Actions on Em Separação:** The bulk form for applying freight and tracking now also includes a dropdown to change the status of selected items (e.g., to Em Trânsito) simultaneously.
-  - **Bulk Actions on Em Trânsito:** A similar bulk action form was implemented for the Em Trânsito page, allowing users to update tracking codes, freight costs, and status for multiple items at once. A manual status change button was also added to individual items.
+- **CEP Automation:** A CEP lookup feature was implemented. After user feedback, it was modified to automatically append the found CEP to the address text field instead of populating a separate input. A one-off backend script was also created and run to backfill CEPs for all existing OCs.
+- **Bulk OC Update:** A new Atualizar OC tab was added to the  page, allowing admins to drag-and-drop multiple PDFs to update existing OCs' delivery addresses and dates. Bugs related to file upload headers and request timeouts were also fixed.
 - **UI/UX Enhancements:**
-  - Separate Upload PDF and Upload XML buttons were added for sales invoices.
-  - The static text EMPRESA OPTANTE PELO SIMPLES NACIONAL was removed as requested.
-  - A manual CEP lookup feature was added to the delivery address editor.
+  - The item details view was refactored to show sales values inline, improving information density.
+  - The Dashboard was reorganized to move admin sections to the bottom, preventing them from overlapping toast notifications.
+  - A Ver Todas modal with a search bar was added to the notifications system for a complete history view.
+  - Image upload functionality was successfully added to the  page.
+- **Bug Fixes:**
+  - A critical bug preventing item status updates on the  page (due to incorrect pagination indexing) was resolved.
+  - The commission calculation logic was investigated and partially fixed. A hybrid model (lot number vs.  field) was implemented in the backend.
 
 **Last working item**:
-- **Last item agent was working:** Implementing **automatic** CEP lookup. The user requested that instead of manually entering a CEP to search, the system should automatically find the CEP based on the existing delivery address text. The agent successfully created a Python script to test this logic using the ViaCEP API, created a backend utility function () and a new API endpoint (), and started adding a corresponding  function to the frontend.
-- **Status:** IN PROGRESS
+- **Last item agent was working:** The user reported that the commission values in the Admin Panel were still incorrect because the items listed on the Resumo Completo page (which they use for verification) didn't match the items being counted for commission. The agent investigated and discovered a logic mismatch: the  page was using a loose filter to identify a user's items, while the backend commission calculation used a stricter, hybrid logic. This discrepancy is the root cause of the user's confusion.
+- **Status:** NOT STARTED
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** frontend testing agent. The agent needs to integrate the  function into the  component so it's called when the address editor is displayed, and then update the UI with the fetched CEP.
+- **Which testing method agent to use?** Frontend testing agent. The agent must first align the filtering logic in  with the backend's commission logic. Then, the test should verify that for a given user (e.g., Maria), the list of Em Trânsito and Entregue items on the Resumo Completo page exactly matches the list of items being used to calculate her commission on the Admin Panel.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P0)** Finish implementing automatic CEP lookup from the address string.
+- **Issue 1: (P0)** Resumo Completo page shows incorrect items for commission verification.
 - **Issue 2: (P1)** Editing an item that appears in multiple OCs (duplicate) opens all instances for editing simultaneously.
-- **Issue 3: (P2)** Performance issues on Em Separação page, exacerbated by the addition of many new features to the monolithic .
-- **Issue 4: (P2)** Dashboard search by item code is not working.
+- **Issue 3: (P2)** Dashboard search by item code is not working.
+- **Issue 4: (P2)** Performance issues on Em Separação page due to the  monolith.
+- **Issue 5: (P2)** Accessibility warnings (e.g., missing labels, IDs) appear in the browser console.
 
 **Issues Detail:**
-- **Issue 1: Finish implementing automatic CEP lookup**
-    - **Attempted fixes:** The backend endpoint and utility function are complete and tested. A frontend function  has been created in .
+- **Issue 1: Resumo Completo page shows incorrect items for commission verification**
+    - **Attempted fixes:** The agent correctly identified that the filtering logic in  is different from the logic in the backend commission endpoints (, ).
     - **Next debug checklist:**
-        1. In , call the  function when the address editor component is rendered or when the Editar button for the address is clicked.
-        2. Ensure the state for the CEP () is updated with the result from the API call.
-        3. Verify the input field for the CEP displays the automatically fetched value.
-    - **Why fix this issue and what will be achieved with the fix?** Fulfills a direct user request to automate a data entry step, improving workflow efficiency.
-    - **Status:** IN PROGRESS
+        1.  View .
+        2.  Locate the filtering logic that determines which items are displayed.
+        3.  Replace the current loose filtering () with the same hybrid logic used in the backend:
+            - First, try to match the strict Lote XX pattern.
+            - If it matches, use the lot ranges to assign the responsible person.
+            - If it does not match, fall back to checking the item's  field.
+        4.  Ensure the frontend logic correctly mirrors the Python backend logic.
+    - **Why fix this issue and what will be achieved with the fix?** This is the user's current P0 blocker. Fixing it will resolve the confusion around commission calculations and restore trust in the financial data presented.
+    - **Status:** NOT STARTED
     - **Is recurring issue?** N
     - **Should Test frontend/backend/both after fix?** Frontend.
     - **Blocked on other issue:** None.
@@ -104,42 +114,51 @@ Key achievements include:
     - **Next debug checklist:**
         1. Investigate state management in .
         2. The  state likely uses a non-unique identifier like . Refactor it to use the  of the specific item instance to control edit mode visibility.
-    - **Why fix this issue and what will be achieved with the fix?** Fixes a long-standing, highly frustrating UI bug for the user.
+    - **Why fix this issue and what will be achieved with the fix?** Fixes a long-standing, highly frustrating UI bug.
     - **Status:** NOT STARTED
     - **Is recurring issue?** Y
     - **Should Test frontend/backend/both after fix?** Frontend.
     - **Blocked on other issue:** None.
 
-- **Issue 3: Performance issues on Em Separação page**
-    - **Attempted fixes:** Previous agent started refactoring, but this agent added significant new logic and state to , likely worsening the problem.
-    - **Next debug checklist:** Continue the refactoring started in the previous session. Prioritize extracting the main item rendering loop and the new modal/form components into separate, memoized files.
-    - **Why fix this issue and what will be achieved with the fix?** Improves usability on a critical page that is becoming slow and difficult to maintain.
-    - **Status:** IN PROGRESS
+- **Issue 3: Dashboard search by item code is not working**
+    - **Attempted fixes:** None in this session.
+    - **Next debug checklist:**
+        1. Verify frontend logic in  is correctly filtering based on user input.
+        2. Inspect the API response from  to ensure it contains the necessary item data.
+    - **Why fix this issue and what will be achieved with the fix?** Restores a core navigation feature.
+    - **Status:** NOT STARTED
     - **Is recurring issue?** N
     - **Should Test frontend/backend/both after fix?** Frontend.
     - **Blocked on other issue:** None.
 
-- **Issue 4: Dashboard search by item code is not working**
+- **Issue 4: Performance issues on Em Separação page**
     - **Attempted fixes:** None in this session.
-    - **Next debug checklist:**
-        1. Verify frontend logic in  is correctly filtering based on user input.
-        2. Inspect the API response from  to ensure it contains the necessary item data for searching.
-    - **Why fix this issue and what will be achieved with the fix?** Restores a core navigation feature for users.
-    - **Status:** USER VERIFICATION PENDING
+    - **Next debug checklist:** Continue refactoring by extracting major UI sections (modals, forms, item rendering loops) from  into separate, memoized components.
+    - **Why fix this issue and what will be achieved with the fix?** Improves usability on a critical page that is slow and difficult to maintain.
+    - **Status:** NOT STARTED
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** Frontend.
+    - **Blocked on other issue:** None.
+
+- **Issue 5: Accessibility warnings in the console**
+    - **Attempted fixes:** None. The agent identified them but the user has not prioritized a fix.
+    - **Next debug checklist:** Add uid=0(root) gid=0(root) groups=0(root), , and  attributes to form fields and labels throughout the application, particularly in  and .
+    - **Why fix this issue and what will be achieved with the fix?** Improves accessibility and removes console noise, leading to a more professional user experience.
+    - **Status:** NOT STARTED
     - **Is recurring issue?** N
     - **Should Test frontend/backend/both after fix?** Frontend.
     - **Blocked on other issue:** None.
 
 **In progress Task List**:
 - **Task 1: (P1)** Backend Refactoring
-    - **Where to resume:** Continue extracting endpoints from  into modular files in . The file has grown again with new endpoints.
-    - **What will be achieved with this?** A more maintainable, scalable, and less error-prone backend codebase.
+    - **Where to resume:** Continue extracting endpoints from  into modular files in .
+    - **What will be achieved with this?** A more maintainable and scalable backend.
     - **Status:** IN PROGRESS
     - **Should Test frontend/backend/both after fix?** Backend.
     - **Blocked on something:** Blocked by P0/P1 bug fixes.
 
 - **Task 2: (P1)** Frontend Refactoring
-    - **Where to resume:** Continue breaking down the  monolith. This is now more critical than ever, as the file has absorbed all the new features from this session and is likely well over 7,000 lines.
+    - **Where to resume:** Continue breaking down the  monolith.
     - **What will be achieved with this?** Improved frontend performance, readability, and maintainability.
     - **Status:** IN PROGRESS
     - **Should Test frontend/backend/both after fix?** Frontend.
@@ -147,86 +166,92 @@ Key achievements include:
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
+  - (P2) Fix accessibility warnings in the browser console.
   - (P2) Complete the backend refactoring of .
   - (P2) Complete the frontend refactoring of .
 - **Future Tasks:**
-  - (P3) Add a Create OC button directly on the Planilha de Contrato page for items that don't have an OC yet.
+  - (P3) Add a Create OC button directly on the Planilha de Contrato page.
   - (P3) Extend the Grouped View functionality to the Em Separação page.
 
 **Completed work in this session**
-- **Bug Fix: Correios API Integration:** Stabilized the tracking feature. The system now successfully tracks items associated with the user's contract and provides a manual lookup link for all other items.
-- **Bug Fix: Notas Fiscais Not Appearing:** Investigated and confirmed via  and the  that the backend endpoint is working correctly. The issue is considered resolved.
-- **Feature: Partial Shipment:** Implemented a feature allowing users to send a partial quantity of an item to Em Trânsito while the remainder stays in Em Separação.
-- **Feature: Bulk Actions on Em Trânsito:** Added a form to the Em Trânsito page to update tracking codes, freight costs, and status for multiple selected items simultaneously.
-- **Feature: Bulk Status Change on Em Separação:** Enhanced the existing bulk freight/tracking form to also allow changing the item status at the same time.
-- **Feature: Manual Status Change:** Added a button to each item on the Em Trânsito page to allow for individual manual status changes.
-- **UI: Separate NF Uploads:** Replaced the single sales invoice upload button with two distinct buttons for Subir PDF and Subir XML.
-- **UI: Address/CEP Lookup:** Added a CEP field and manual search button to the address editor.
-- **UI: Text Removal:** Removed the static EMPRESA OPTANTE PELO SIMPLES NACIONAL text from the invoice data section.
+- **Feature: Automatic CEP Lookup:** Implemented a feature to find a CEP from an address string and append it to the address text field upon editing.
+- **Feature: Bulk OC Update:** Added a new tab to the Create PO page for bulk-updating OCs via PDF uploads, including fixes for upload headers and timeouts.
+- **Feature: View All Notifications Modal:** Added a modal to view and search the complete history of notifications.
+- **Feature: Image Upload on OC Details:** Added the ability to upload, view, and delete item images on the  page.
+- **UI Refactor: Inline Sales Values:** Moved the Valor Unitário and Valor Total fields to be inline with other item details.
+- **UI Refactor: Dashboard Layout:** Moved admin-only sections on the Dashboard to the bottom of the page.
+- **Bug Fix: Commission Logic:** Implemented a hybrid backend logic for commissions (numeric lots vs.  field).
+- **Bug Fix: Item Status Saving:** Fixed a bug on the  page that prevented status updates from being saved for items on paginated pages.
+- **Bug Fix: CEP Backfill:** Created and executed a backend script to add CEPs to all existing OCs in the database.
 
 **Earlier issues found/mentioned but not fixed**
-- **Issue 1:** (P1) Editing duplicate items opens all instances for editing simultaneously. This is a recurring issue that has been deprioritized in favor of new features.
+- **Issue 1:** (P1) Editing duplicate items opens all instances.
+- **Issue 2:** (P2) Dashboard search by item code is not working.
+- **Issue 3:** (P2) Accessibility warnings in the console.
 
 **Known issue recurrence from previous fork**
 - **Issue recurrence in previous fork:** Editing duplicate items opens all of them.
-- **Recurrence count:** 7+
+- **Recurrence count:** 8+
 - **Status:** NOT STARTED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Robust API Fallback:** The agent implemented a solid fallback for the Correios API. It tries the authenticated endpoint first; if that fails due to the object not belonging to the contract, it provides a direct manual link for the user, ensuring functionality is never fully lost.
-- **Item Splitting (Partial Shipment):** A new backend endpoint () was created to duplicate an item document in MongoDB, splitting its quantity between the original and the new document, and updating their statuses accordingly.
-- **Component-Driven State Management:** New features were added by introducing new state variables (e.g., , ) and functions at the top level of  and passing them down as props to child components like  and various modals.
+- **Logic Mismatch:** The primary unresolved issue stems from a mismatch between frontend filtering logic () and backend calculation logic (), causing data discrepancies for the user.
+- **Hybrid Calculation:** The commission system now uses a hybrid model, checking for a specific lot number pattern () and falling back to the  field if the pattern doesn't match. This logic needs to be replicated on the frontend.
+- **File Upload Handling:** The agent debugged and fixed issues with  uploads by letting the browser set the  header automatically and by significantly increasing the request timeout in the  utility.
 
 **key DB schema**
 - No changes to the database schema were made in this session.
 
 **All files of reference**
-- : **CRITICAL**. This monolithic file was the target of almost all feature implementations and modifications in this session. Its size and complexity have increased significantly.
-- : **CRITICAL**. Modified extensively to add multiple new endpoints for partial shipments and bulk updates (, , , ).
-- : Modified to include a status dropdown.
-- : Overwritten and modified to include freight costs and a status dropdown.
-- : Modified to add a manual status change dropdown.
-- : Modified to handle the SRO-009: Objeto não pertence ao contrato error gracefully.
+- : **CRITICAL.** The source of the current P0 bug. Its filtering logic must be fixed.
+- : **CRITICAL.** Contains the correct commission logic that needs to be replicated. Was modified to fix bugs and add endpoints.
+- : Contains the new bulk-update feature.
+- : Contains the new image upload feature and the fix for the status-saving bug.
+- : Contains the new View All notifications modal.
+- : Contains the fix for file upload timeouts.
+- : The main monolith, modified for several UI tweaks and bug fixes.
 
 **Areas that need refactoring**:
-- : **CRITICAL PRIORITY.** This file is now dangerously large and complex. It urgently needs to be broken down into smaller, manageable components to improve performance and maintainability.
-- : **CRITICAL PRIORITY.** This file also continues to grow. The refactoring effort to move routes into separate files must be resumed.
+- : **CRITICAL PRIORITY.** This file continues to grow, making it the primary source of bugs and performance degradation.
+- : **CRITICAL PRIORITY.** The backend monolith also needs to be broken down into a route-based structure.
 
 **key api endpoints**
-- : (NEW) Splits an item for partial shipment.
-- : (NEW) Updates the status for multiple items in bulk.
-- : (NEW) Updates tracking code and freight for multiple items on the Em Trânsito page.
-- : (NEW) Takes an address string and returns a likely CEP using the ViaCEP API.
+- : (NEW) Endpoint for the bulk OC update feature.
+- : (NEW) A one-off utility script to backfill CEPs.
+- : (NEW) Fetches the complete notification history.
+- : (MODIFIED) Updated to use the correct hybrid commission logic.
+- : (MODIFIED) Updated to use the correct hybrid commission logic.
+- : The endpoint used to fix the status saving bug on the  page.
 
 **Critical Info for New Agent**
-- **IMMEDIATE PRIORITY:** Complete the **automatic CEP lookup** feature. The backend is done; you need to wire up the frontend in  to call the  endpoint when the address editor is displayed and populate the CEP field.
-- **USER PRIORITIES:** The user has consistently prioritized new features over fixing technical debt. After the CEP feature, the next logical P1 issue is the long-standing bug with **editing duplicate items**.
-- **TECHNICAL DEBT:** The  and  monoliths have grown significantly. You must advocate for and continue the refactoring tasks to prevent the application from becoming unmaintainable. The performance issues on the Em Separação page are a direct symptom of this debt.
+- **IMMEDIATE PRIORITY (P0):** The user is blocked and confused by the commission calculation. You MUST fix the filtering logic in  to perfectly mirror the hybrid (lot-based + -based) logic from the backend. This will ensure the verification page (Resumo Completo) shows the exact same items that are being counted for commission in the Admin Panel.
+- **User-Centric Debugging:** The user provides excellent feedback with screenshots. Always analyze their images carefully. The core of the last bug was realizing the user was looking at one page (Resumo Completo) to verify data calculated from another (Admin Panel), and the two pages had different data sources.
+- **Prioritization:** The user consistently prioritizes workflow features and bug fixes over technical debt. Address the P0 commission bug first, then propose fixing the long-standing P1 duplicate item editing bug. Technical debt tasks like refactoring should be framed as necessary for stability and performance.
 
 **documents and test reports created in this job**
-- 
+-  (updated with completed features)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Request):** Asked for automatic CEP lookup from the address string. (IN PROGRESS)
-2.  **User (Request):** Asked for three UI changes: separate XML upload, CEP lookup, and removal of a text string from the invoice data section. (COMPLETED)
-3.  **User (Request):** Asked to add bulk status change functionality to the Em Trânsito page. (COMPLETED)
-4.  **User (Request):** Asked for a Partial Shipment feature. (COMPLETED)
-5.  **User (Clarification):** Confirmed the Partial Shipment should be implemented like the existing Partial Purchase feature. (COMPLETED)
-6.  **User (Request):** Asked to add a status change option to the bulk freight/tracking form on the Em Separação page. (COMPLETED)
-7.  **User (Clarification):** Rejected the inline editing of freight/tracking and asked for the bulk form from Em Separação to be replicated on the Em Trânsito page. (COMPLETED)
-8.  **User (Request):** Asked for the ability to edit the freight value on the Em Trânsito page. (IMPLEMENTED, THEN REVERTED in favor of a better solution).
-9.  **User (Request):** Asked for a button to manually change the status of items on the Em Trânsito page. (COMPLETED)
-10. **User (Clarification):** Explained their use case for the Correios API, which led the agent to the final, correct implementation. (COMPLETED)
+1.  **User (Bug Report):** The commission calculation is wrong. Provided screenshots showing many Em Trânsito items for a user, but the commission panel shows very few. (IN PROGRESS)
+2.  **User (Bug Report):** Resumo Completo page shows items as Em Trânsito, but the agent says they are Pendente in the DB. (This was the key to finding the logic mismatch). (IN PROGRESS)
+3.  **User (Bug Report):** Changing item status on the  page isn't working for some items. (COMPLETED)
+4.  **User (Feature Request):** Add image upload to the  page. (COMPLETED)
+5.  **User (Bug Report):** The file upload for bulk OC updates times out. (COMPLETED)
+6.  **User (Bug Report):** The file upload for bulk OC updates shows an [object Object] error. (COMPLETED)
+7.  **User (Feature Request):** Add a Ver Todas button to notifications to open a searchable popup. (COMPLETED)
+8.  **User (Feature Request):** Move the Backup and Popular DB sections to the bottom of the dashboard. (COMPLETED)
+9.  **User (Feature Request):** Add a bulk Atualizar OC feature to upload multiple PDFs at once. (COMPLETED)
+10. **User (Bug Report):** Updating an OC via PDF upload doesn't update the delivery address/date. The CEP also doesn't appear automatically on view. (COMPLETED)
 
 **Project Health Check:**
 - **Broken:**
-  - The implementation of automatic CEP lookup is half-finished.
+    - The user's ability to verify commission payments is broken due to a logic mismatch between the  page and the backend.
 - **Technical Debt:**
-  - **CRITICAL:**  is now a massive monolith (likely 7000+ lines) containing dozens of features, states, and modals. Its complexity is the primary source of bugs and performance issues. Refactoring is no longer optional; it's essential for project stability.
-  - **CRITICAL:**  has also grown with several new endpoints, making the need for modularization more urgent.
+    - **CRITICAL:**  and  are massive monoliths that are increasingly difficult and risky to modify.
+    - **MODERATE:** The application has several accessibility warnings in the console that should be addressed.
 
 **3rd Party Integrations**
 - **Resend:** For emails.
@@ -235,21 +260,21 @@ Key achievements include:
 - **openpyxl:** For parsing  files.
 - **pytesseract & Tesseract OCR:** For OCR on scanned PDFs.
 - **Correios Rastro API:** For automatic package tracking.
-- **ViaCEP (NEW):** Used for CEP lookup by address.
+- **ViaCEP:** For CEP lookup by address.
 
 **Testing status**
-- **Testing agent used after significant changes:** YES, the testing agent was used to confirm the P0 bug fix for Notas Fiscais.
+- **Testing agent used after significant changes:** NO
 - **Troubleshoot agent used after agent stuck in loop:** NO
 - **Test files created:** None.
-- **Known regressions:** None identified in this session.
+- **Known regressions:** None identified.
 
 **Credentials to test flow:**
 - **Admin Login (João):**
     - **Email:** 
     - **Password:** 
-- **Correios API (in ):**
-    - **User:** 
-    - **Token:** 
 
 **What agent forgot to execute**
-- The agent successfully implemented every new feature the user requested during the session. However, this came at the cost of pushing back on pre-existing issues and technical debt. The long-standing P1 bug (editing duplicate items opens all instances) and the P2 dashboard search bug remain untouched. The critical task of refactoring the frontend and backend monoliths was also postponed.</analysis>
+The agent successfully addressed all user requests from the session. The forgotten items are pre-existing issues from the last handoff that were deprioritized by the user's new requests, specifically:
+- Fixing the bug where editing duplicate items opens all instances.
+- Fixing the dashboard search functionality.
+- Making progress on the critical refactoring tasks for  and .</analysis>
