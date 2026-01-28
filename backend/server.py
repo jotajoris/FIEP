@@ -5315,6 +5315,46 @@ async def aplicar_status_multiplo(
     }
 
 
+@api_router.post("/buscar-cep")
+async def buscar_cep_endpoint(
+    data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Busca CEP pelo endereço usando a API ViaCEP.
+    
+    Body:
+    {
+        "endereco": "AVENIDA COMENDADOR FRANCO, 1341, JARDIM BOTANICO, CURITIBA"
+    }
+    
+    Retorna:
+    {
+        "success": true,
+        "cep": "81520-000",
+        "cep_numerico": "81520000"
+    }
+    """
+    endereco = data.get("endereco", "")
+    
+    if not endereco:
+        raise HTTPException(status_code=400, detail="Endereço não informado")
+    
+    cep = await buscar_cep_por_endereco(endereco)
+    
+    if cep:
+        return {
+            "success": True,
+            "cep": cep,
+            "cep_numerico": cep.replace("-", "")
+        }
+    else:
+        return {
+            "success": False,
+            "message": "CEP não encontrado para este endereço"
+        }
+
+
 @api_router.post("/purchase-orders/{po_id}/atualizar-pdf")
 async def atualizar_oc_com_pdf(
     po_id: str,
