@@ -5787,13 +5787,14 @@ async def atualizar_todas_ocs_com_pdfs(
                     if re.match(r'^([01]\d{5})$', check_line):
                         break
                     
-                    # Opção 1: NCM completo de 8 dígitos (começando com 8 ou 9)
-                    if re.match(r'^[89]\d{7}$', check_line):
+                    # Opção 1: NCM completo de 8 dígitos (pode começar com qualquer dígito 1-9)
+                    if re.match(r'^[1-9]\d{7}$', check_line):
                         ncm_por_item[codigo] = check_line
                         break
                     
                     # Opção 2: NCM dividido em duas linhas (6 dígitos + 2 dígitos)
-                    if re.match(r'^[89]\d{5}$', check_line):
+                    # NCM pode começar com qualquer dígito 1-9
+                    if re.match(r'^[1-9]\d{5}$', check_line):
                         if j+1 < len(lines):
                             next_line = lines[j+1].strip()
                             if re.match(r'^\d{2}$', next_line):
