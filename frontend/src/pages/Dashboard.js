@@ -374,16 +374,6 @@ const Dashboard = () => {
         <p className="page-subtitle">Visão geral das Ordens de Compra FIEP</p>
       </div>
 
-      {!seeded && isAdmin() && (
-        <div className="card" style={{ marginBottom: '2rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-          <h3 style={{ marginBottom: '1rem' }}>Primeiro acesso?</h3>
-          <p style={{ marginBottom: '1rem' }}>Popule o banco de dados com os itens de referência do Excel.</p>
-          <button onClick={seedDatabase} className="btn btn-secondary" data-testid="seed-database-btn">
-            Popular Banco de Dados
-          </button>
-        </div>
-      )}
-
       {stats && (
         <>
           <div className="stats-grid">
