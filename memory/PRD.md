@@ -23,7 +23,21 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.3.7 (27/01/2026)
+## Versão Atual: 3.3.8 (28/01/2026)
+
+### 📄 Upload Separado de PDF e XML para NF de Venda (28/01/2026)
+- ✅ **Dois botões separados**: "📄 Subir PDF" (verde) e "📋 Subir XML" (azul)
+- ✅ **Aceita ambos formatos** para NF de Venda (ON)
+
+### 🔍 Busca de CEP no Endereço de Entrega (28/01/2026)
+- ✅ **Campo de CEP** com máscara (8 dígitos)
+- ✅ **Botão "Buscar"** que consulta a API ViaCEP
+- ✅ **Preenchimento automático** do endereço completo ao buscar CEP
+- ✅ **Formato**: "LOGRADOURO, BAIRRO, CIDADE - UF, CEP XXXXX-XXX"
+
+### 📋 Dados Adicionais da NF - Atualização (28/01/2026)
+- ✅ **Removida** a linha "EMPRESA OPTANTE PELO SIMPLES NACIONAL"
+- ✅ **Mantido**: Endereço da entrega, NF referente à OC, DADOS BANCÁRIOS
 
 ### 🔄 Mudança de Status em Massa em "Em Trânsito" (27/01/2026)
 - ✅ **Dropdown de status** adicionado ao formulário de rastreio/frete em "Em Trânsito"
