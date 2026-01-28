@@ -14,11 +14,44 @@ const PERCENTUAL_COMISSAO = 1.5;
 // OCs cotadas por admin (João) - não geram comissão
 const OCS_EXCLUIDAS_COMISSAO = ['OC-2.118938', 'OC-2.118941'];
 
-// Função para extrair número do lote
+// Função para extrair número do lote (mesma lógica do backend)
 const extrairNumeroLote = (loteStr) => {
   if (!loteStr) return null;
-  const match = String(loteStr).match(/(\d+)/);
-  return match ? parseInt(match[1]) : null;
+  // Só considera como lote numérico se tiver o padrão "Lote XX" ou similar
+  const match = String(loteStr).match(/[Ll]ote\s*(\d+)/);
+  if (match) {
+    return parseInt(match[1]);
+  }
+  // Também aceita só o número se for curto (ex: "42")
+  if (String(loteStr).trim().length <= 5) {
+    const matchSimples = String(loteStr).trim().match(/^(\d+)$/);
+    if (matchSimples) {
+      return parseInt(matchSimples[1]);
+    }
+  }
+  return null;
+};
+
+// Função para verificar se o item pertence a uma pessoa (lógica híbrida)
+const itemPertenceAPessoa = (item, pessoa) => {
+  const numeroLote = extrairNumeroLote(item.lote);
+  const lotesDestaPessoa = LOTES_POR_PESSOA[pessoa.toUpperCase()] || [];
+  
+  // LÓGICA 1: Se tem lote numérico, usar mapeamento fixo
+  if (numeroLote !== null) {
+    return lotesDestaPessoa.includes(numeroLote);
+  }
+  
+  // LÓGICA 2: Se não tem lote numérico, usar campo responsavel
+  const responsavelItem = (item.responsavel || '').toUpperCase().trim();
+  const pessoaUpper = pessoa.toUpperCase().trim();
+  
+  // Excluir admins da comissão
+  if (['JOÃO', 'MATEUS', 'ADMIN'].includes(responsavelItem)) {
+    return false;
+  }
+  
+  return responsavelItem === pessoaUpper;
 };
 
 const AllItemsSummary = () => {
