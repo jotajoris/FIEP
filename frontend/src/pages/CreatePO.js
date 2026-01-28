@@ -4,7 +4,7 @@ import { apiPost, API, formatBRL } from '../utils/api';
 
 const CreatePO = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('pdf'); // 'pdf', 'manual', or 'atualizar'
+  const [activeTab, setActiveTab] = useState('pdf'); // 'pdf', 'manual', 'atualizar', or 'ncm'
   const [numeroOC, setNumeroOC] = useState('');
   const [enderecoEntrega, setEnderecoEntrega] = useState('');
   const [items, setItems] = useState([{
@@ -23,6 +23,11 @@ const CreatePO = () => {
   const [updateFiles, setUpdateFiles] = useState([]);
   const [updateResults, setUpdateResults] = useState(null);
   const [isDraggingUpdate, setIsDraggingUpdate] = useState(false);
+  
+  // Estados para atualização de NCM
+  const [ncmFiles, setNcmFiles] = useState([]);
+  const [ncmResults, setNcmResults] = useState(null);
+  const [isDraggingNcm, setIsDraggingNcm] = useState(false);
   
   // Estados para preview do PDF (modo single)
   const [pdfPreview, setPdfPreview] = useState(null);
