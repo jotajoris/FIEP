@@ -1530,6 +1530,236 @@ const CreatePO = () => {
                 )}
               </div>
             )}
+
+            {/* Aba Atualizar NCM */}
+            {activeTab === 'ncm' && (
+              <div>
+                <div style={{ 
+                  padding: '1rem', 
+                  background: '#e0e7ff', 
+                  borderRadius: '8px', 
+                  marginBottom: '1.5rem',
+                  border: '1px solid #6366f1'
+                }}>
+                  <h3 style={{ color: '#3730a3', marginBottom: '0.5rem' }}>🏷️ Atualizar NCM dos Itens</h3>
+                  <p style={{ color: '#4338ca', fontSize: '0.9rem' }}>
+                    Faça upload dos PDFs das OCs para extrair e atualizar o <strong>NCM (Nomenclatura Comum do Mercosul)</strong> de cada item.
+                    <br />
+                    <small>O NCM é um código de 8 dígitos usado na classificação fiscal dos produtos.</small>
+                  </p>
+                </div>
+
+                {/* Área de Drop */}
+                <div
+                  onDragEnter={handleNcmDragEnter}
+                  onDragLeave={handleNcmDragLeave}
+                  onDragOver={handleNcmDragOver}
+                  onDrop={handleNcmDrop}
+                  style={{
+                    border: `3px dashed ${isDraggingNcm ? '#6366f1' : '#e2e8f0'}`,
+                    borderRadius: '12px',
+                    padding: '3rem 2rem',
+                    textAlign: 'center',
+                    background: isDraggingNcm ? '#eef2ff' : '#fafafa',
+                    transition: 'all 0.3s ease',
+                    marginBottom: '1.5rem'
+                  }}
+                  data-testid="ncm-dropzone"
+                >
+                  <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🏷️</div>
+                  <h3 style={{ fontSize: '1.3rem', fontWeight: '700', marginBottom: '0.5rem', color: '#6366f1' }}>
+                    {isDraggingNcm ? 'Solte os PDFs aqui!' : 'Arraste os PDFs das OCs para extrair NCM'}
+                  </h3>
+                  <p style={{ color: '#718096', marginBottom: '1.5rem' }}>
+                    ou selecione os arquivos manualmente
+                  </p>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    multiple
+                    onChange={handleNcmFileSelect}
+                    style={{ display: 'none' }}
+                    id="ncm-pdf-input"
+                    data-testid="ncm-file-input"
+                  />
+                  <label 
+                    htmlFor="ncm-pdf-input" 
+                    className="btn"
+                    style={{ 
+                      padding: '0.75rem 2rem', 
+                      cursor: 'pointer',
+                      background: '#6366f1',
+                      color: 'white',
+                      fontWeight: '600',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    📁 Selecionar PDFs
+                  </label>
+                </div>
+
+                {/* Lista de arquivos selecionados */}
+                {ncmFiles.length > 0 && (
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                      <h4 style={{ margin: 0 }}>📋 {ncmFiles.length} arquivo(s) selecionado(s):</h4>
+                      <button 
+                        onClick={clearNcmFiles}
+                        className="btn btn-secondary"
+                        style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}
+                      >
+                        Limpar tudo
+                      </button>
+                    </div>
+                    <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                      {ncmFiles.map((file, idx) => (
+                        <div 
+                          key={idx} 
+                          style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center',
+                            padding: '0.5rem 1rem',
+                            borderBottom: idx < ncmFiles.length - 1 ? '1px solid #e2e8f0' : 'none',
+                            background: idx % 2 === 0 ? '#f8f9fa' : 'white'
+                          }}
+                        >
+                          <span>📄 {file.name}</span>
+                          <button 
+                            onClick={() => removeNcmFile(idx)}
+                            style={{ 
+                              background: 'none', 
+                              border: 'none', 
+                              color: '#ef4444', 
+                              cursor: 'pointer',
+                              fontSize: '1.2rem'
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Botão de Atualizar NCM */}
+                {ncmFiles.length > 0 && !ncmResults && (
+                  <div style={{ textAlign: 'center' }}>
+                    <button
+                      onClick={handleUpdateNcm}
+                      disabled={loading}
+                      className="btn btn-primary"
+                      style={{ 
+                        padding: '1rem 3rem', 
+                        fontSize: '1.1rem',
+                        background: '#6366f1'
+                      }}
+                      data-testid="btn-atualizar-ncm"
+                    >
+                      {loading ? '⏳ Processando...' : `🏷️ Extrair NCM de ${ncmFiles.length} PDF(s)`}
+                    </button>
+                  </div>
+                )}
+
+                {/* Resultados da Atualização NCM */}
+                {ncmResults && (
+                  <div style={{ 
+                    background: '#f0fdf4', 
+                    border: '1px solid #22c55e', 
+                    borderRadius: '8px', 
+                    padding: '1.5rem'
+                  }}>
+                    <h3 style={{ color: '#166534', marginBottom: '1rem' }}>
+                      ✓ NCM Extraídos com Sucesso
+                    </h3>
+                    
+                    {/* Resumo */}
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(3, 1fr)', 
+                      gap: '1rem', 
+                      marginBottom: '1rem' 
+                    }}>
+                      <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#6366f1' }}>
+                          {ncmResults.total_arquivos}
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: '#64748b' }}>PDFs Processados</div>
+                      </div>
+                      <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#22c55e' }}>
+                          {ncmResults.total_ncm_atualizados}
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: '#64748b' }}>Itens Atualizados</div>
+                      </div>
+                      <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#f59e0b' }}>
+                          {ncmResults.resultados?.filter(r => !r.success).length || 0}
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: '#64748b' }}>Erros</div>
+                      </div>
+                    </div>
+
+                    {/* Detalhes por OC */}
+                    {ncmResults.resultados?.length > 0 && (
+                      <div style={{ marginTop: '1rem' }}>
+                        <h4 style={{ marginBottom: '0.5rem', color: '#374151' }}>Detalhes por OC:</h4>
+                        {ncmResults.resultados.map((item, idx) => (
+                          <div 
+                            key={idx} 
+                            style={{ 
+                              padding: '0.75rem', 
+                              background: item.success ? '#dcfce7' : '#fee2e2',
+                              marginBottom: '0.5rem',
+                              borderRadius: '4px',
+                              fontSize: '0.9rem'
+                            }}
+                          >
+                            <strong>{item.numero_oc || item.arquivo}</strong>
+                            {item.success ? (
+                              <>
+                                <span style={{ color: '#166534' }}> - ✓ {item.ncm_encontrados} NCMs encontrados, {item.items_atualizados} itens atualizados</span>
+                                {item.ncm_por_item && Object.keys(item.ncm_por_item).length > 0 && (
+                                  <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#4b5563' }}>
+                                    {Object.entries(item.ncm_por_item).slice(0, 5).map(([codigo, ncm]) => (
+                                      <span key={codigo} style={{ marginRight: '1rem' }}>
+                                        {codigo}: <strong style={{ color: '#6366f1' }}>{ncm}</strong>
+                                      </span>
+                                    ))}
+                                    {Object.keys(item.ncm_por_item).length > 5 && (
+                                      <span>...e mais {Object.keys(item.ncm_por_item).length - 5}</span>
+                                    )}
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <span style={{ color: '#991b1b' }}> - ✗ {item.erro}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', borderTop: '1px solid #e2e8f0', paddingTop: '1rem', marginTop: '1rem' }}>
+                      <button 
+                        onClick={clearNcmFiles}
+                        className="btn btn-secondary"
+                      >
+                        Processar mais PDFs
+                      </button>
+                      <button 
+                        onClick={() => navigate('/items/em_separacao')}
+                        className="btn btn-primary"
+                        style={{ background: '#6366f1' }}
+                      >
+                        Ver Em Separação
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
