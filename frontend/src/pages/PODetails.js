@@ -5,6 +5,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { v4 as uuidv4 } from 'uuid';
 import Pagination from '../components/Pagination';
 
+// URL do backend para imagens
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
+
 // Helper para calcular contagem regressiva e status de atraso
 const calcularStatusEntrega = (dataEntrega) => {
   if (!dataEntrega) return null;
