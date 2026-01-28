@@ -7,7 +7,12 @@ export const API_URL = API; // Alias para componentes que usam API_URL
 
 // Configuração padrão com timeout
 const axiosConfig = {
-  timeout: 30000, // 30 segundos
+  timeout: 30000, // 30 segundos para requisições normais
+};
+
+// Timeout maior para uploads de arquivos
+const uploadConfig = {
+  timeout: 300000, // 5 minutos para uploads
 };
 
 export const getAuthHeaders = (isFormData = false) => {
@@ -28,7 +33,8 @@ export const apiGet = (url) => {
 
 export const apiPost = (url, data) => {
   const isFormData = data instanceof FormData;
-  return axios.post(url, data, { ...axiosConfig, headers: getAuthHeaders(isFormData) });
+  const config = isFormData ? uploadConfig : axiosConfig;
+  return axios.post(url, data, { ...config, headers: getAuthHeaders(isFormData) });
 };
 
 export const apiPatch = (url, data) => {
