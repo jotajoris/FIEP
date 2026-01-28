@@ -5368,6 +5368,8 @@ Chave PIX: 46.663.556/0001-69`;
                       <span><strong>Quantidade:</strong> {item.quantidade} {item.unidade}</span>
                       <span><strong>Lote:</strong> {item.lote}</span>
                       {item.marca_modelo && <span><strong>Marca/Modelo:</strong> {item.marca_modelo}</span>}
+                      {item.preco_venda && <span><strong>Valor Unit.:</strong> <strong style={{ color: '#3b82f6' }}>{formatBRL(item.preco_venda)}</strong></span>}
+                      {item.preco_venda && <span><strong>Valor Total:</strong> <strong style={{ color: '#22c55e' }}>{formatBRL((item.preco_venda || 0) * (item.quantidade || 0))}</strong></span>}
                     </div>
                   </div>
                 </div>
