@@ -403,6 +403,86 @@ const CreatePO = () => {
     });
   };
 
+  // ============== FUNÇÕES PARA ATUALIZAR OCs ==============
+  
+  const handleUpdateDragEnter = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingUpdate(true);
+  }, []);
+
+  const handleUpdateDragLeave = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingUpdate(false);
+  }, []);
+
+  const handleUpdateDragOver = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleUpdateDrop = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingUpdate(false);
+    
+    const files = Array.from(e.dataTransfer.files).filter(
+      f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+    );
+    
+    if (files.length > 0) {
+      setUpdateFiles(prev => [...prev, ...files]);
+    }
+  }, []);
+
+  const handleUpdateFileSelect = (e) => {
+    const files = Array.from(e.target.files).filter(
+      f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+    );
+    if (files.length > 0) {
+      setUpdateFiles(prev => [...prev, ...files]);
+    }
+  };
+
+  const removeUpdateFile = (index) => {
+    setUpdateFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const clearUpdateFiles = () => {
+    setUpdateFiles([]);
+    setUpdateResults(null);
+  };
+
+  const handleUpdateOCs = async () => {
+    if (updateFiles.length === 0) {
+      alert('Selecione pelo menos um arquivo PDF');
+      return;
+    }
+
+    setLoading(true);
+    setUpdateResults(null);
+
+    try {
+      const formData = new FormData();
+      updateFiles.forEach(file => {
+        formData.append('files', file);
+      });
+
+      const response = await apiPost(`${API}/admin/atualizar-todas-ocs-pdf`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      setUpdateResults(response.data);
+      setUpdateFiles([]);
+    } catch (error) {
+      console.error('Erro ao atualizar OCs:', error);
+      alert(error.response?.data?.detail || 'Erro ao atualizar OCs');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div data-testid="create-po-page">
       <div className="page-header">
