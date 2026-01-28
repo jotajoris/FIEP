@@ -760,6 +760,19 @@ const CreatePO = () => {
               >
                 📝 Cadastro Manual
               </button>
+              <button
+                onClick={() => setActiveTab('atualizar')}
+                className={activeTab === 'atualizar' ? 'btn btn-primary' : 'btn btn-secondary'}
+                style={{ 
+                  borderRadius: '8px 8px 0 0', 
+                  borderBottom: activeTab === 'atualizar' ? '3px solid #f59e0b' : 'none',
+                  padding: '0.75rem 2rem',
+                  background: activeTab === 'atualizar' ? '#f59e0b' : undefined
+                }}
+                data-testid="tab-atualizar"
+              >
+                🔄 Atualizar OC
+              </button>
             </div>
 
             {/* Formulário Manual */}
