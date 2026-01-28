@@ -114,6 +114,10 @@ const ItemsByStatus = () => {
   const [imagemExpandida, setImagemExpandida] = useState(null);  // URL da imagem para popup expandido
   const [dragOver, setDragOver] = useState(null);  // _uniqueId do item com drag over
 
+  // Estados para CEP
+  const [cepTemp, setCepTemp] = useState('');  // CEP temporário durante edição
+  const [buscandoCep, setBuscandoCep] = useState(false);  // Loading ao buscar CEP
+
   // Estados para modal de Envio Parcial
   const [showEnvioParcialModal, setShowEnvioParcialModal] = useState(null);  // item para envio parcial
   const [envioParcialData, setEnvioParcialData] = useState({
