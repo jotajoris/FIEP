@@ -949,10 +949,10 @@ const PODetails = () => {
                   </div>
 
                   <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
-                    <button onClick={cancelEdit} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }} data-testid={`cancel-edit-${index}`}>
+                    <button onClick={cancelEdit} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }} data-testid={`cancel-edit-${realIndex}`}>
                       Cancelar
                     </button>
-                    <button onClick={() => saveEdit(item, index)} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }} data-testid={`save-edit-${index}`}>
+                    <button onClick={() => saveEdit(item, realIndex)} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }} data-testid={`save-edit-${realIndex}`}>
                       Salvar
                     </button>
                   </div>
