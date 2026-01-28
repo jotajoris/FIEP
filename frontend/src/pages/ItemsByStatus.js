@@ -3879,33 +3879,70 @@ Chave PIX: 46.663.556/0001-69`;
                             {oc.itensRestantes} item(s) ainda sem NF de Venda
                           </p>
                         )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const input = document.createElement('input');
-                            input.type = 'file';
-                            input.accept = '.pdf,.xml';
-                            input.onchange = (ev) => {
-                              if (ev.target.files && ev.target.files[0]) {
-                                uploadNFVendaOC(oc.po_id, ev.target.files[0], oc.items);
-                              }
-                            };
-                            input.click();
-                          }}
-                          disabled={uploadingNFVendaOC === oc.po_id}
-                          style={{ 
-                            padding: '0.6rem 1.5rem', 
-                            fontSize: '0.9rem', 
-                            background: uploadingNFVendaOC === oc.po_id ? '#9ca3af' : '#22c55e', 
-                            color: 'white', 
-                            border: 'none', 
-                            borderRadius: '8px',
-                            cursor: uploadingNFVendaOC === oc.po_id ? 'not-allowed' : 'pointer',
-                            fontWeight: '600'
-                          }}
-                        >
-                          {uploadingNFVendaOC === oc.po_id ? '⏳ Enviando...' : getItensSelecionados(oc.po_id).size > 0 ? `+ Adicionar NF para ${getItensSelecionados(oc.po_id).size} item(s) selecionado(s)` : '+ Adicionar NF de Venda (todos os itens)'}
+                        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                          {/* Botão para PDF */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = '.pdf';
+                              input.onchange = (ev) => {
+                                if (ev.target.files && ev.target.files[0]) {
+                                  uploadNFVendaOC(oc.po_id, ev.target.files[0], oc.items);
+                                }
+                              };
+                              input.click();
+                            }}
+                            disabled={uploadingNFVendaOC === oc.po_id}
+                            style={{ 
+                              padding: '0.6rem 1.2rem', 
+                              fontSize: '0.9rem', 
+                              background: uploadingNFVendaOC === oc.po_id ? '#9ca3af' : '#22c55e', 
+                              color: 'white', 
+                              border: 'none', 
+                              borderRadius: '8px',
+                              cursor: uploadingNFVendaOC === oc.po_id ? 'not-allowed' : 'pointer',
+                              fontWeight: '600'
+                            }}
+                          >
+                            {uploadingNFVendaOC === oc.po_id ? '⏳ Enviando...' : '📄 Subir PDF'}
                           </button>
+                          
+                          {/* Botão para XML */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = '.xml';
+                              input.onchange = (ev) => {
+                                if (ev.target.files && ev.target.files[0]) {
+                                  uploadNFVendaOC(oc.po_id, ev.target.files[0], oc.items);
+                                }
+                              };
+                              input.click();
+                            }}
+                            disabled={uploadingNFVendaOC === oc.po_id}
+                            style={{ 
+                              padding: '0.6rem 1.2rem', 
+                              fontSize: '0.9rem', 
+                              background: uploadingNFVendaOC === oc.po_id ? '#9ca3af' : '#3b82f6', 
+                              color: 'white', 
+                              border: 'none', 
+                              borderRadius: '8px',
+                              cursor: uploadingNFVendaOC === oc.po_id ? 'not-allowed' : 'pointer',
+                              fontWeight: '600'
+                            }}
+                          >
+                            📋 Subir XML
+                          </button>
+                        </div>
+                        {getItensSelecionados(oc.po_id).size > 0 && (
+                          <p style={{ fontSize: '0.8rem', color: '#16a34a', margin: '0.5rem 0 0 0' }}>
+                            📌 {getItensSelecionados(oc.po_id).size} item(s) selecionado(s)
+                          </p>
+                        )}
                         </div>
                     </div>
 
