@@ -477,7 +477,20 @@ const CreatePO = () => {
       setUpdateFiles([]);
     } catch (error) {
       console.error('Erro ao atualizar OCs:', error);
-      alert(error.response?.data?.detail || 'Erro ao atualizar OCs');
+      const errorData = error.response?.data;
+      let errorMessage = 'Erro ao atualizar OCs';
+      
+      if (typeof errorData === 'string') {
+        errorMessage = errorData;
+      } else if (errorData?.detail) {
+        errorMessage = typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail);
+      } else if (errorData?.message) {
+        errorMessage = errorData.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
