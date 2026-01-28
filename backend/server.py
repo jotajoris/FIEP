@@ -118,6 +118,87 @@ def get_responsible_by_lot(lot_number: int) -> str:
     return LOT_TO_OWNER.get(lot_number, "Não atribuído")
 
 
+async def buscar_cep_por_endereco(endereco: str) -> Optional[str]:
+    """
+    Busca CEP pelo endereço usando a API ViaCEP.
+    Retorna o CEP formatado (XXXXX-XXX) ou None se não encontrado.
+    """
+    import httpx
+    
+    if not endereco or len(endereco) < 10:
+        return None
+    
+    endereco_upper = endereco.upper().strip()
+    
+    # Lista de cidades conhecidas e seus estados (foco na região de Curitiba)
+    cidades_uf = {
+        'CURITIBA': 'PR', 'SAO JOSE DOS PINHAIS': 'PR', 'PINHAIS': 'PR', 
+        'COLOMBO': 'PR', 'ARAUCARIA': 'PR', 'CAMPO LARGO': 'PR',
+        'PIRAQUARA': 'PR', 'ALMIRANTE TAMANDARE': 'PR', 'FAZENDA RIO GRANDE': 'PR',
+        'LONDRINA': 'PR', 'MARINGA': 'PR', 'FOZ DO IGUACU': 'PR', 'CASCAVEL': 'PR',
+        'SAO PAULO': 'SP', 'RIO DE JANEIRO': 'RJ', 'BELO HORIZONTE': 'MG',
+        'PORTO ALEGRE': 'RS', 'FLORIANOPOLIS': 'SC', 'BRASILIA': 'DF',
+    }
+    
+    # Tentar extrair UF do endereço
+    uf = None
+    cidade = None
+    
+    # Procurar UF explícita (ex: "- PR" ou "/PR")
+    uf_match = re.search(r'[-/,\s]([A-Z]{2})[\s,]*$', endereco_upper)
+    if uf_match:
+        uf = uf_match.group(1)
+    
+    # Procurar cidade conhecida no endereço
+    for cidade_nome, cidade_uf in cidades_uf.items():
+        if cidade_nome in endereco_upper:
+            cidade = cidade_nome
+            if not uf:
+                uf = cidade_uf
+            break
+    
+    if not cidade or not uf:
+        logger.info(f"Cidade/UF não identificada no endereço: {endereco}")
+        return None
+    
+    # Extrair logradouro (primeira parte antes da vírgula)
+    partes = endereco_upper.split(',')
+    logradouro_completo = partes[0].strip() if partes else ''
+    
+    # Remover prefixos comuns e pegar palavras significativas
+    logradouro = re.sub(
+        r'^(RUA|AVENIDA|AV\.?|ALAMEDA|AL\.?|TRAVESSA|TV\.?|PRACA|PC\.?|ESTRADA|EST\.?|RODOVIA|ROD\.?)\s+', 
+        '', 
+        logradouro_completo
+    )
+    logradouro_busca = ' '.join(logradouro.split()[:2])  # Primeiras 2 palavras
+    
+    if not logradouro_busca:
+        return None
+    
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            # Normalizar para URL
+            cidade_url = cidade.replace(' ', '%20')
+            logradouro_url = logradouro_busca.replace(' ', '%20')
+            
+            url = f'https://viacep.com.br/ws/{uf}/{cidade_url}/{logradouro_url}/json/'
+            logger.info(f"Buscando CEP: {url}")
+            
+            response = await client.get(url)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list) and len(data) > 0:
+                    cep = data[0].get('cep', '')
+                    logger.info(f"CEP encontrado: {cep}")
+                    return cep
+    except Exception as e:
+        logger.error(f"Erro ao buscar CEP: {e}")
+    
+    return None
+
+
 async def reverter_uso_estoque(item: dict, po_id: str, numero_oc: str) -> dict:
     """
     Reverte o uso de estoque quando um item é movido de volta para pendente/cotado.
