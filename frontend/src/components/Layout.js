@@ -77,11 +77,41 @@ const Layout = ({ children }) => {
     try {
       await apiPost(`${API}/notificacoes/marcar-todas-lidas`, {});
       setNotificacoes(prev => prev.map(n => ({ ...n, lida: true })));
+      setTodasNotificacoes(prev => prev.map(n => ({ ...n, lida: true })));
       setNotificacoesCount(0);
     } catch (error) {
       console.error('Erro ao marcar todas como lidas:', error);
     }
   };
+
+  // Abrir modal "Ver todas" com todas as notificações
+  const abrirVerTodas = async () => {
+    setShowNotificacoes(false);
+    setShowModalNotificacoes(true);
+    setLoadingTodasNotificacoes(true);
+    try {
+      const response = await apiGet(`${API}/notificacoes?limit=500`);
+      setTodasNotificacoes(response.data);
+    } catch (error) {
+      console.error('Erro ao carregar todas notificações:', error);
+    } finally {
+      setLoadingTodasNotificacoes(false);
+    }
+  };
+
+  // Filtrar notificações por pesquisa
+  const notificacoesFiltradas = todasNotificacoes.filter(notif => {
+    if (!searchNotificacoes.trim()) return true;
+    const search = searchNotificacoes.toLowerCase();
+    return (
+      (notif.numero_oc && notif.numero_oc.toLowerCase().includes(search)) ||
+      (notif.codigo_item && notif.codigo_item.toLowerCase().includes(search)) ||
+      (notif.codigo_rastreio && notif.codigo_rastreio.toLowerCase().includes(search)) ||
+      (notif.descricao_item && notif.descricao_item.toLowerCase().includes(search)) ||
+      (notif.titulo && notif.titulo.toLowerCase().includes(search)) ||
+      (notif.mensagem && notif.mensagem.toLowerCase().includes(search))
+    );
+  });
 
   // Fechar dropdown ao clicar fora
   useEffect(() => {
