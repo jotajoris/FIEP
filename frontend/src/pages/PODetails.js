@@ -639,20 +639,106 @@ const PODetails = () => {
         </h2>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {po.items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((item, index) => (
+          {po.items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((item, index) => {
+            const realIndex = (currentPage - 1) * itemsPerPage + index;
+            return (
             <div key={index} className="card" style={{ background: '#f7fafc', border: '1px solid #e2e8f0' }} data-testid={`item-card-${item.codigo_item}`}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
-                <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.5rem' }}>
-                    Código: {item.codigo_item}
-                  </h3>
-                  <p style={{ color: '#4a5568', marginBottom: '0.5rem' }}>{item.descricao}</p>
-                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.9rem', color: '#718096' }}>
-                    <span><strong>Lote:</strong> {item.lote}</span>
-                    <span><strong>Região:</strong> {item.regiao}</span>
-                    <span><strong>Responsável:</strong> <strong style={{ color: '#667eea' }}>{item.responsavel}</strong></span>
-                    <span><strong>Quantidade:</strong> {item.quantidade} {item.unidade}</span>
-                    {item.marca_modelo && <span><strong>Marca/Modelo:</strong> {item.marca_modelo}</span>}
+                <div style={{ display: 'flex', gap: '1rem', flex: 1 }}>
+                  {/* Área de foto do item */}
+                  <div style={{ 
+                    width: '80px', 
+                    minWidth: '80px',
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center',
+                    gap: '0.25rem'
+                  }}>
+                    {item.imagem_url ? (
+                      <div style={{ position: 'relative' }}>
+                        <img 
+                          src={`${BACKEND_URL}${item.imagem_url}?t=${Date.now()}`}
+                          alt={`Foto do item ${item.codigo_item}`}
+                          style={{ 
+                            width: '70px', 
+                            height: '70px', 
+                            objectFit: 'cover', 
+                            borderRadius: '8px',
+                            border: '2px solid #e2e8f0',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => setImagemExpandida(`${BACKEND_URL}${item.imagem_url}?t=${Date.now()}`)}
+                        />
+                        <button
+                          onClick={() => handleDeleteImage(item, realIndex)}
+                          disabled={uploadingImage === realIndex}
+                          style={{
+                            position: 'absolute',
+                            top: '-6px',
+                            right: '-6px',
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '50%',
+                            background: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '0.7rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title="Remover foto"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ) : (
+                      <label style={{ 
+                        width: '70px', 
+                        height: '70px', 
+                        border: '2px dashed #cbd5e0',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        background: '#f8fafc',
+                        transition: 'all 0.2s'
+                      }}>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={(e) => handleImageUpload(item, e.target.files[0], realIndex)}
+                          disabled={uploadingImage === realIndex}
+                        />
+                        {uploadingImage === realIndex ? (
+                          <span style={{ fontSize: '0.7rem', color: '#718096' }}>⏳</span>
+                        ) : (
+                          <>
+                            <span style={{ fontSize: '1.2rem' }}>📷</span>
+                            <span style={{ fontSize: '0.6rem', color: '#718096', textAlign: 'center' }}>Adicionar foto</span>
+                          </>
+                        )}
+                      </label>
+                    )}
+                  </div>
+
+                  {/* Informações do item */}
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.5rem' }}>
+                      Código: {item.codigo_item}
+                    </h3>
+                    <p style={{ color: '#4a5568', marginBottom: '0.5rem' }}>{item.descricao}</p>
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.9rem', color: '#718096' }}>
+                      <span><strong>Lote:</strong> {item.lote}</span>
+                      <span><strong>Região:</strong> {item.regiao}</span>
+                      <span><strong>Responsável:</strong> <strong style={{ color: '#667eea' }}>{item.responsavel}</strong></span>
+                      <span><strong>Quantidade:</strong> {item.quantidade} {item.unidade}</span>
+                      {item.marca_modelo && <span><strong>Marca/Modelo:</strong> {item.marca_modelo}</span>}
+                    </div>
                   </div>
                 </div>
                 <div>
@@ -660,7 +746,7 @@ const PODetails = () => {
                 </div>
               </div>
 
-              {editingItem === index ? (
+              {editingItem === realIndex ? (
                 <div style={{ marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: '8px' }}>
                   {/* Status e campos admin */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
