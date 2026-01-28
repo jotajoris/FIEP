@@ -87,6 +87,10 @@ const PODetails = () => {
   // Estado para atualização com PDF
   const [atualizandoPDF, setAtualizandoPDF] = useState(false);
   
+  // Estado para upload de imagem
+  const [uploadingImage, setUploadingImage] = useState(null);
+  const [imagemExpandida, setImagemExpandida] = useState(null);
+  
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
