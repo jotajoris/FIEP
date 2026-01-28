@@ -12,6 +12,12 @@ const Layout = ({ children }) => {
   const [showNotificacoes, setShowNotificacoes] = useState(false);
   const notificacoesRef = useRef(null);
   
+  // Estados para o modal "Ver todas"
+  const [showModalNotificacoes, setShowModalNotificacoes] = useState(false);
+  const [todasNotificacoes, setTodasNotificacoes] = useState([]);
+  const [searchNotificacoes, setSearchNotificacoes] = useState('');
+  const [loadingTodasNotificacoes, setLoadingTodasNotificacoes] = useState(false);
+  
   const isActive = (path) => {
     return location.pathname === path ? 'active' : '';
   };
