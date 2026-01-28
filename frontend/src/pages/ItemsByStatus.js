@@ -2121,7 +2121,8 @@ Chave PIX: 46.663.556/0001-69`;
       try {
         const cepEncontrado = await buscarCepPeloEndereco(item.endereco_entrega);
         if (cepEncontrado) {
-          setCepTemp(cepEncontrado);
+          // Remover hífen se existir (API pode retornar "80215-090" ou "80215090")
+          setCepTemp(cepEncontrado.replace('-', ''));
         }
       } catch (error) {
         console.error('Erro ao buscar CEP automaticamente:', error);
