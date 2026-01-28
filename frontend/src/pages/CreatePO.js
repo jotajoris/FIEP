@@ -1216,8 +1216,8 @@ const CreatePO = () => {
                 }}>
                   <h3 style={{ color: '#92400e', marginBottom: '0.5rem' }}>🔄 Atualizar OCs Existentes</h3>
                   <p style={{ color: '#78350f', fontSize: '0.9rem' }}>
-                    Faça upload dos PDFs das OCs que já existem no sistema para atualizar dados como:
-                    <strong> Endereço de Entrega</strong>, <strong>Data de Entrega</strong> e outros campos.
+                    Faça upload dos PDFs das OCs que já existem no sistema para atualizar:
+                    <strong> Endereço de Entrega</strong>, <strong>Data de Entrega</strong> e <strong style={{ color: '#6366f1' }}>NCM dos itens</strong>.
                     <br />
                     <small>Os dados dos itens (status, preços, fornecedores, NFs) serão preservados.</small>
                   </p>
