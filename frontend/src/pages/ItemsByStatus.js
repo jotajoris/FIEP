@@ -2525,25 +2525,16 @@ Chave PIX: 46.663.556/0001-69`;
   const renderItemDetails = (item) => {
     return (
       <>
-        {/* Fontes de Compra */}
-        {item.fontes_compra && item.fontes_compra.length > 0 && (
-          <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
-            <div style={{ fontWeight: '600', color: '#166534', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-              🛒 Locais de Compra ({item.fontes_compra.length})
+        {/* Valores de Venda - Mostrar apenas preço de venda unitário e total */}
+        {item.preco_venda && (
+          <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
+            <div style={{ fontWeight: '600', color: '#1e40af', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+              💰 Valores de Venda
             </div>
-            {item.fontes_compra.map((fc, idx) => (
-              <div key={fc.id || idx} style={{ fontSize: '0.85rem', color: '#4a5568', marginBottom: '0.25rem' }}>
-                <span><strong>Qtd:</strong> {fc.quantidade}</span>
-                <span style={{ marginLeft: '1rem' }}><strong>Preço:</strong> {formatBRL(fc.preco_unitario)}</span>
-                <span style={{ marginLeft: '1rem' }}><strong>Frete:</strong> {formatBRL(fc.frete)}</span>
-                {fc.fornecedor && <span style={{ marginLeft: '1rem' }}><strong>Fornecedor:</strong> {fc.fornecedor}</span>}
-                {fc.link && (
-                  <a href={fc.link} target="_blank" rel="noopener noreferrer" style={{ marginLeft: '1rem', color: '#667eea' }}>
-                    Ver link
-                  </a>
-                )}
-              </div>
-            ))}
+            <div style={{ fontSize: '0.85rem', color: '#1e3a8a', display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+              <span><strong>Valor Unitário:</strong> {formatBRL(item.preco_venda)}</span>
+              <span><strong>Valor Total:</strong> <strong style={{ color: '#3b82f6' }}>{formatBRL((item.preco_venda || 0) * (item.quantidade || 0))}</strong></span>
+            </div>
           </div>
         )}
 
