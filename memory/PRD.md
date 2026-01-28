@@ -29,13 +29,11 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 - ✅ **Campo NCM adicionado ao modelo POItem** - Código NCM de 8 dígitos (Nomenclatura Comum do Mercosul)
 - ✅ **Parser de PDF atualizado** - Extrai automaticamente o NCM de cada item ao criar OCs
 - ✅ **Suporte a NCM dividido** - Detecta NCMs em duas linhas (ex: "903033" + "29" = "90303329")
-- ✅ **Nova aba "Atualizar NCM"** na página Nova OC para extrair NCMs de OCs existentes
-- ✅ **Endpoint `/api/admin/atualizar-ncm-em-massa`** - Processa múltiplos PDFs e atualiza NCMs por código_item
+- ✅ **Atualização integrada** - Aba "Atualizar OC" agora também extrai e atualiza NCMs automaticamente
 - ✅ **Exibição na UI** - NCM aparece ao lado do código do item na página "Em Separação"
   - Formato: `Código: XXXXXX  NCM: YYYYYYYY`
   - Cor destacada em roxo (#6366f1)
-- ✅ **Testado com sucesso** - OC-3.100569: 8 NCMs extraídos e atualizados corretamente
-  - Exemplo: Item 105532 → NCM 90303329
+- ✅ **Resultados detalhados** - Mostra quantidade de NCMs encontrados e atualizados no resumo
 
 ---
 
