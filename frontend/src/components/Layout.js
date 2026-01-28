@@ -240,22 +240,38 @@ const Layout = ({ children }) => {
                         <span style={{ fontWeight: '600', color: '#2d3748' }}>
                           Notificações
                         </span>
-                        {notificacoesCount > 0 && (
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
                           <button
-                            onClick={marcarTodasComoLidas}
+                            onClick={abrirVerTodas}
                             style={{
                               background: 'none',
                               border: 'none',
-                              color: '#667eea',
+                              color: '#3b82f6',
                               cursor: 'pointer',
                               fontSize: '0.8rem',
                               fontWeight: '500'
                             }}
-                            data-testid="mark-all-read"
+                            data-testid="view-all-notifications"
                           >
-                            Marcar todas como lidas
+                            Ver todas
                           </button>
-                        )}
+                          {notificacoesCount > 0 && (
+                            <button
+                              onClick={marcarTodasComoLidas}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#667eea',
+                                cursor: 'pointer',
+                                fontSize: '0.8rem',
+                                fontWeight: '500'
+                              }}
+                              data-testid="mark-all-read"
+                            >
+                              Marcar todas lidas
+                            </button>
+                          )}
+                        </div>
                       </div>
 
                       {/* Lista de Notificações */}
