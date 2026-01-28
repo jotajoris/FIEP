@@ -23,7 +23,23 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.3.11 (28/01/2026)
+## Versão Atual: 3.3.12 (28/01/2026)
+
+### 🏷️ Extração e Exibição de NCM (28/01/2026)
+- ✅ **Campo NCM adicionado ao modelo POItem** - Código NCM de 8 dígitos (Nomenclatura Comum do Mercosul)
+- ✅ **Parser de PDF atualizado** - Extrai automaticamente o NCM de cada item ao criar OCs
+- ✅ **Suporte a NCM dividido** - Detecta NCMs em duas linhas (ex: "903033" + "29" = "90303329")
+- ✅ **Nova aba "Atualizar NCM"** na página Nova OC para extrair NCMs de OCs existentes
+- ✅ **Endpoint `/api/admin/atualizar-ncm-em-massa`** - Processa múltiplos PDFs e atualiza NCMs por código_item
+- ✅ **Exibição na UI** - NCM aparece ao lado do código do item na página "Em Separação"
+  - Formato: `Código: XXXXXX  NCM: YYYYYYYY`
+  - Cor destacada em roxo (#6366f1)
+- ✅ **Testado com sucesso** - OC-3.100569: 8 NCMs extraídos e atualizados corretamente
+  - Exemplo: Item 105532 → NCM 90303329
+
+---
+
+## Versão: 3.3.11 (28/01/2026)
 
 ### 🔧 Correção do Filtro de Comissões - "Resumo Completo" (28/01/2026)
 - ✅ **Bug corrigido**: O filtro de "Responsável" na página "Resumo Completo" agora usa a mesma lógica híbrida do cálculo de comissões
