@@ -5450,15 +5450,22 @@ async def atualizar_oc_com_pdf(
     updates = {}
     campos_atualizados = []
     
-    # Atualizar endereço se estava vazio
+    # Atualizar endereço - SEMPRE atualiza se o PDF tiver o endereço
     endereco_atual = existing_po.get('endereco_entrega', '').strip()
-    if not endereco_atual and novo_endereco:
-        updates['endereco_entrega'] = novo_endereco
-        campos_atualizados.append(f"endereco_entrega: {novo_endereco}")
+    if novo_endereco:
+        # Adicionar CEP ao endereço se não tiver
+        if not re.search(r'CEP[:\s]*\d{5}-?\d{3}', novo_endereco, re.IGNORECASE):
+            cep = buscar_cep_por_endereco(novo_endereco)
+            if cep:
+                novo_endereco = f"{novo_endereco}, CEP: {cep}"
+        
+        if novo_endereco != endereco_atual:
+            updates['endereco_entrega'] = novo_endereco
+            campos_atualizados.append(f"endereco_entrega: {novo_endereco}")
     
-    # Atualizar data de entrega se estava vazia
+    # Atualizar data de entrega - SEMPRE atualiza se o PDF tiver a data
     data_atual = existing_po.get('data_entrega', '').strip() if existing_po.get('data_entrega') else ''
-    if not data_atual and nova_data_entrega:
+    if nova_data_entrega and nova_data_entrega != data_atual:
         updates['data_entrega'] = nova_data_entrega
         campos_atualizados.append(f"data_entrega: {nova_data_entrega}")
     
