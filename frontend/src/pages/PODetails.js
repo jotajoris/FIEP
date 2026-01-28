@@ -196,6 +196,91 @@ const PODetails = () => {
     }
   };
 
+  // Função para upload de imagem do item
+  const handleImageUpload = async (item, file, itemIndex) => {
+    if (!file) return;
+    
+    // Validar tipo
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Tipo de arquivo não permitido. Use: JPEG, PNG, WebP ou GIF');
+      return;
+    }
+    
+    // Validar tamanho (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Arquivo muito grande. Máximo: 5MB');
+      return;
+    }
+    
+    setUploadingImage(itemIndex);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${API}/purchase-orders/${id}/items/by-index/${itemIndex}/imagem`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        }
+      );
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Erro ao enviar imagem');
+      }
+      
+      // Recarregar a OC para mostrar a nova imagem
+      await loadPO();
+      
+      alert(`✅ Imagem salva com sucesso!\n\nA imagem foi vinculada ao código ${item.codigo_item} e aparecerá automaticamente em todas as OCs.`);
+    } catch (error) {
+      console.error('Erro ao enviar imagem:', error);
+      alert('Erro ao enviar imagem: ' + error.message);
+    } finally {
+      setUploadingImage(null);
+    }
+  };
+
+  // Função para deletar imagem do item
+  const handleDeleteImage = async (item, itemIndex) => {
+    if (!window.confirm(`Remover imagem do item ${item.codigo_item}?\n\nA imagem será removida de TODAS as OCs com este código.`)) return;
+    
+    setUploadingImage(itemIndex);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${API}/purchase-orders/${id}/items/by-index/${itemIndex}/imagem`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Erro ao remover imagem');
+      }
+      
+      await loadPO();
+      alert('✅ Imagem removida com sucesso!');
+    } catch (error) {
+      console.error('Erro ao remover imagem:', error);
+      alert('Erro ao remover imagem: ' + error.message);
+    } finally {
+      setUploadingImage(null);
+    }
+  };
+
   const handleDelete = async () => {
     if (!window.confirm('Tem certeza que deseja deletar esta Ordem de Compra? Esta ação não pode ser desfeita.')) {
       return;
