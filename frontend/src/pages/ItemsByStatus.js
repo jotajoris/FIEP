@@ -2107,31 +2107,32 @@ Chave PIX: 46.663.556/0001-69`;
 
   const startEditEndereco = async (item) => {
     setEditingEndereco(item._uniqueId);
-    setEnderecoTemp(item.endereco_entrega || '');
-    // Extrair CEP do endereço se existir (formato: xxxxx-xxx ou xxxxxxxx)
-    const cepMatch = (item.endereco_entrega || '').match(/\d{5}-?\d{3}/);
+    let endereco = item.endereco_entrega || '';
     
-    if (cepMatch) {
-      // Se já tem CEP no endereço, usar ele
-      setCepTemp(cepMatch[0].replace('-', ''));
-    } else if (item.endereco_entrega && item.endereco_entrega.length > 10) {
-      // Se não tem CEP, buscar automaticamente pelo endereço
-      setCepTemp(''); // Limpar enquanto busca
+    // Verificar se já tem CEP no endereço
+    const cepMatch = endereco.match(/CEP[:\s]*\d{5}-?\d{3}/i);
+    
+    if (!cepMatch && endereco.length > 10) {
+      // Se não tem CEP, buscar automaticamente e adicionar ao endereço
       setBuscandoCep(true);
       try {
-        const cepEncontrado = await buscarCepPeloEndereco(item.endereco_entrega);
+        const cepEncontrado = await buscarCepPeloEndereco(endereco);
         if (cepEncontrado) {
-          // Remover hífen se existir (API pode retornar "80215-090" ou "80215090")
-          setCepTemp(cepEncontrado.replace('-', ''));
+          // Formatar o CEP corretamente
+          const cepFormatado = cepEncontrado.replace('-', '');
+          const cepComHifen = `${cepFormatado.substring(0,5)}-${cepFormatado.substring(5)}`;
+          // Adicionar CEP ao final do endereço
+          endereco = `${endereco}, CEP: ${cepComHifen}`;
         }
       } catch (error) {
         console.error('Erro ao buscar CEP automaticamente:', error);
       } finally {
         setBuscandoCep(false);
       }
-    } else {
-      setCepTemp('');
     }
+    
+    setEnderecoTemp(endereco);
+    setCepTemp('');
   };
 
   const cancelEditEndereco = () => {
