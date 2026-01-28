@@ -469,9 +469,7 @@ const CreatePO = () => {
         formData.append('files', file);
       });
 
-      const response = await apiPost(`${API}/admin/atualizar-todas-ocs-pdf`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const response = await apiPost(`${API}/admin/atualizar-todas-ocs-pdf`, formData);
 
       setUpdateResults(response.data);
       setUpdateFiles([]);
