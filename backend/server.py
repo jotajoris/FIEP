@@ -5756,15 +5756,20 @@ async def atualizar_todas_ocs_com_pdfs(
             "arquivo": file.filename,
             "numero_oc": numero_oc,
             "success": True,
-            "campos_atualizados": campos_atualizados if campos_atualizados else ["Nenhum campo precisou ser atualizado"]
+            "campos_atualizados": campos_atualizados,
+            "message": f"Atualizado: {', '.join(campos_atualizados)}" if campos_atualizados else "Sem alterações"
         })
     
-    atualizadas = sum(1 for r in resultados if r.get('success') and r.get('campos_atualizados', [''])[0] != "Nenhum campo precisou ser atualizado")
+    atualizados = sum(1 for r in resultados if r.get('success') and r.get('campos_atualizados'))
+    sem_alteracao = sum(1 for r in resultados if r.get('success') and not r.get('campos_atualizados'))
+    erros = sum(1 for r in resultados if not r.get('success'))
     
     return {
         "success": True,
         "total_arquivos": len(files),
-        "ocs_atualizadas": atualizadas,
+        "atualizados": atualizados,
+        "sem_alteracao": sem_alteracao,
+        "erros": erros,
         "resultados": resultados
     }
 
