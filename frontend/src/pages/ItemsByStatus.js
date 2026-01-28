@@ -2813,11 +2813,40 @@ Chave PIX: 46.663.556/0001-69`;
               </div>
               {editingEndereco === item._uniqueId ? (
                 <div>
+                  {/* Campo de CEP com busca */}
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      placeholder="Digite o CEP"
+                      value={cepTemp}
+                      onChange={(e) => setCepTemp(e.target.value.replace(/\D/g, '').substring(0, 8))}
+                      className="form-input"
+                      style={{ width: '120px', fontSize: '0.9rem' }}
+                      maxLength={8}
+                    />
+                    <button 
+                      onClick={buscarEnderecoPorCep}
+                      disabled={buscandoCep || cepTemp.length < 8}
+                      style={{ 
+                        padding: '0.4rem 0.8rem', 
+                        fontSize: '0.8rem', 
+                        background: buscandoCep || cepTemp.length < 8 ? '#9ca3af' : '#3b82f6', 
+                        color: 'white', 
+                        border: 'none', 
+                        borderRadius: '4px', 
+                        cursor: buscandoCep || cepTemp.length < 8 ? 'not-allowed' : 'pointer',
+                        fontWeight: '600'
+                      }}
+                    >
+                      {buscandoCep ? '⏳' : '🔍 Buscar'}
+                    </button>
+                  </div>
                   <textarea
                     value={enderecoTemp}
                     onChange={(e) => setEnderecoTemp(e.target.value)}
                     className="form-input"
                     style={{ width: '100%', minHeight: '60px', marginBottom: '0.5rem' }}
+                    placeholder="Endereço completo com CEP"
                   />
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <button onClick={() => saveEndereco(item)} style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', background: '#22c55e', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
