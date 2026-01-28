@@ -416,6 +416,209 @@ const Layout = ({ children }) => {
       <main className="main-content">
         {children}
       </main>
+
+      {/* Modal Ver Todas Notificações */}
+      {showModalNotificacoes && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000
+          }}
+          onClick={() => setShowModalNotificacoes(false)}
+        >
+          <div 
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              width: '90%',
+              maxWidth: '700px',
+              maxHeight: '85vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header do Modal */}
+            <div style={{
+              padding: '1.25rem 1.5rem',
+              borderBottom: '1px solid #e2e8f0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              background: '#f7fafc',
+              borderRadius: '12px 12px 0 0'
+            }}>
+              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '600', color: '#2d3748' }}>
+                🔔 Todas as Notificações
+              </h2>
+              <button
+                onClick={() => setShowModalNotificacoes(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: '#718096',
+                  lineHeight: 1
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Campo de Pesquisa */}
+            <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #e2e8f0' }}>
+              <input
+                type="text"
+                placeholder="🔍 Pesquisar por OC, código do item, rastreio ou nome..."
+                value={searchNotificacoes}
+                onChange={(e) => setSearchNotificacoes(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '0.95rem',
+                  outline: 'none',
+                  transition: 'border-color 0.2s'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                data-testid="search-notifications"
+              />
+              {searchNotificacoes && (
+                <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#718096' }}>
+                  {notificacoesFiltradas.length} resultado(s) encontrado(s)
+                </div>
+              )}
+            </div>
+
+            {/* Lista de Notificações */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '0' }}>
+              {loadingTodasNotificacoes ? (
+                <div style={{ padding: '3rem', textAlign: 'center', color: '#718096' }}>
+                  ⏳ Carregando notificações...
+                </div>
+              ) : notificacoesFiltradas.length === 0 ? (
+                <div style={{ padding: '3rem', textAlign: 'center', color: '#718096' }}>
+                  {searchNotificacoes ? 'Nenhuma notificação encontrada para esta pesquisa' : 'Nenhuma notificação'}
+                </div>
+              ) : (
+                notificacoesFiltradas.map((notif) => (
+                  <div
+                    key={notif.id}
+                    onClick={() => !notif.lida && marcarComoLida(notif.id)}
+                    style={{
+                      padding: '1rem 1.5rem',
+                      borderBottom: '1px solid #f0f0f0',
+                      cursor: notif.lida ? 'default' : 'pointer',
+                      background: notif.lida ? 'white' : '#f0f7ff',
+                      transition: 'background 0.2s'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                      <span style={{ fontSize: '1.5rem' }}>
+                        {notif.tipo === 'entrega' ? '✅' : 
+                         notif.tipo === 'saiu_entrega' ? '🚚' : 
+                         notif.tipo === 'tentativa' ? '⚠️' : '🔔'}
+                      </span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{
+                          fontWeight: notif.lida ? '400' : '600',
+                          color: notif.tipo === 'entrega' ? '#16a34a' : 
+                                 notif.tipo === 'saiu_entrega' ? '#2563eb' : 
+                                 notif.tipo === 'tentativa' ? '#d97706' : '#2d3748',
+                          fontSize: '1rem',
+                          marginBottom: '0.25rem'
+                        }}>
+                          {notif.titulo}
+                        </div>
+                        {notif.mensagem && (
+                          <div style={{
+                            fontSize: '0.9rem',
+                            color: '#4a5568',
+                            marginBottom: '0.5rem'
+                          }}>
+                            {notif.mensagem}
+                          </div>
+                        )}
+                        <div style={{
+                          fontSize: '0.85rem',
+                          color: '#4a5568',
+                          marginBottom: '0.25rem',
+                          display: 'flex',
+                          gap: '1rem',
+                          flexWrap: 'wrap'
+                        }}>
+                          <span><strong>OC:</strong> {notif.numero_oc}</span>
+                          <span><strong>Item:</strong> {notif.codigo_item}</span>
+                          {notif.codigo_rastreio && (
+                            <span><strong>Rastreio:</strong> {notif.codigo_rastreio}</span>
+                          )}
+                        </div>
+                        <div style={{
+                          fontSize: '0.85rem',
+                          color: '#718096'
+                        }}>
+                          {notif.descricao_item}
+                        </div>
+                        <div style={{
+                          fontSize: '0.8rem',
+                          color: '#a0aec0',
+                          marginTop: '0.5rem'
+                        }}>
+                          {new Date(notif.created_at).toLocaleString('pt-BR')}
+                        </div>
+                      </div>
+                      {!notif.lida && (
+                        <span style={{
+                          width: '10px',
+                          height: '10px',
+                          borderRadius: '50%',
+                          background: '#667eea',
+                          flexShrink: 0,
+                          marginTop: '6px'
+                        }} />
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Footer do Modal */}
+            <div style={{
+              padding: '1rem 1.5rem',
+              borderTop: '1px solid #e2e8f0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              background: '#f7fafc',
+              borderRadius: '0 0 12px 12px'
+            }}>
+              <span style={{ fontSize: '0.9rem', color: '#718096' }}>
+                {todasNotificacoes.length} notificação(ões) total
+              </span>
+              <button
+                onClick={() => setShowModalNotificacoes(false)}
+                className="btn btn-primary"
+                style={{ padding: '0.5rem 1.5rem' }}
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
