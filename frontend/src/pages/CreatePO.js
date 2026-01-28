@@ -784,6 +784,19 @@ const CreatePO = () => {
               >
                 🔄 Atualizar OC
               </button>
+              <button
+                onClick={() => setActiveTab('ncm')}
+                className={activeTab === 'ncm' ? 'btn btn-primary' : 'btn btn-secondary'}
+                style={{ 
+                  borderRadius: '8px 8px 0 0', 
+                  borderBottom: activeTab === 'ncm' ? '3px solid #6366f1' : 'none',
+                  padding: '0.75rem 2rem',
+                  background: activeTab === 'ncm' ? '#6366f1' : undefined
+                }}
+                data-testid="tab-ncm"
+              >
+                🏷️ Atualizar NCM
+              </button>
             </div>
 
             {/* Formulário Manual */}
