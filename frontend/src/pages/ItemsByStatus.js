@@ -6322,53 +6322,20 @@ Chave PIX: 46.663.556/0001-69`;
                                 
                                 {editingEndereco === item._uniqueId ? (
                                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    {/* Campo de CEP com busca */}
-                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                      <div style={{ position: 'relative' }}>
-                                        <input
-                                          type="text"
-                                          placeholder={buscandoCep ? "Buscando..." : "CEP"}
-                                          value={cepTemp}
-                                          onChange={(e) => setCepTemp(e.target.value.replace(/\D/g, '').substring(0, 8))}
-                                          className="form-input"
-                                          style={{ 
-                                            width: '130px', 
-                                            fontSize: '0.9rem',
-                                            background: buscandoCep ? '#f0f9ff' : 'white'
-                                          }}
-                                          maxLength={8}
-                                          disabled={buscandoCep}
-                                        />
-                                        {buscandoCep && (
-                                          <span style={{ 
-                                            position: 'absolute', 
-                                            right: '8px', 
-                                            top: '50%', 
-                                            transform: 'translateY(-50%)',
-                                            fontSize: '0.8rem'
-                                          }}>⏳</span>
-                                        )}
+                                    {buscandoCep && (
+                                      <div style={{ 
+                                        padding: '0.5rem', 
+                                        background: '#f0f9ff', 
+                                        borderRadius: '4px', 
+                                        fontSize: '0.85rem',
+                                        color: '#3b82f6',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem'
+                                      }}>
+                                        ⏳ Buscando CEP automaticamente...
                                       </div>
-                                      <button 
-                                        onClick={buscarEnderecoPorCep}
-                                        disabled={buscandoCep || cepTemp.length < 8}
-                                        style={{ 
-                                          padding: '0.4rem 0.8rem', 
-                                          fontSize: '0.8rem', 
-                                          background: buscandoCep || cepTemp.length < 8 ? '#9ca3af' : '#3b82f6', 
-                                          color: 'white', 
-                                          border: 'none', 
-                                          borderRadius: '4px', 
-                                          cursor: buscandoCep || cepTemp.length < 8 ? 'not-allowed' : 'pointer',
-                                          fontWeight: '600'
-                                        }}
-                                      >
-                                        {buscandoCep ? '⏳' : '🔍 Buscar CEP'}
-                                      </button>
-                                      {cepTemp && cepTemp.length === 8 && !buscandoCep && (
-                                        <span style={{ fontSize: '0.75rem', color: '#16a34a' }}>✓ CEP encontrado</span>
-                                      )}
-                                    </div>
+                                    )}
                                     <textarea
                                       value={enderecoTemp}
                                       onChange={(e) => setEnderecoTemp(e.target.value)}
@@ -6376,10 +6343,18 @@ Chave PIX: 46.663.556/0001-69`;
                                       rows={3}
                                       style={{ width: '100%', textTransform: 'uppercase' }}
                                       placeholder="Endereço completo com CEP..."
+                                      disabled={buscandoCep}
                                     />
                                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                                       <button onClick={cancelEditEndereco} className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Cancelar</button>
-                                      <button onClick={() => saveEndereco(item)} className="btn btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Salvar</button>
+                                      <button 
+                                        onClick={() => saveEndereco(item)} 
+                                        className="btn btn-primary" 
+                                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                                        disabled={buscandoCep}
+                                      >
+                                        Salvar
+                                      </button>
                                     </div>
                                   </div>
                                 ) : (
