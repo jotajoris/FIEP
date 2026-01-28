@@ -557,10 +557,10 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 - [ ] **Bug NFs não salvando**: Notas Fiscais de fornecedor não aparecem no painel Admin após upload
 
 ### P1 - Média Prioridade
-- [ ] **Bug edição duplicada**: Editar item duplicado abre todas as instâncias simultaneamente
+- [x] **Bug edição duplicada**: ✅ CORRIGIDO - Editar item duplicado abre todas as instâncias simultaneamente
 
 ### P2 - Baixa Prioridade
-- [ ] **Busca Dashboard**: Busca por código de item no Dashboard não funciona
+- [x] **Busca Dashboard**: ✅ CORRIGIDO - Busca por código de item no Dashboard não funciona
 - [ ] **Performance Em Separação**: Página lenta ao expandir OC com muitos itens
 
 ### P3 - Backlog (Adiadas pelo usuário)
