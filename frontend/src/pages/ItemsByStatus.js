@@ -2874,15 +2874,31 @@ Chave PIX: 46.663.556/0001-69`;
                 <div>
                   {/* Campo de CEP com busca */}
                   <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
-                    <input
-                      type="text"
-                      placeholder="Digite o CEP"
-                      value={cepTemp}
-                      onChange={(e) => setCepTemp(e.target.value.replace(/\D/g, '').substring(0, 8))}
-                      className="form-input"
-                      style={{ width: '120px', fontSize: '0.9rem' }}
-                      maxLength={8}
-                    />
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        placeholder={buscandoCep ? "Buscando..." : "CEP"}
+                        value={cepTemp}
+                        onChange={(e) => setCepTemp(e.target.value.replace(/\D/g, '').substring(0, 8))}
+                        className="form-input"
+                        style={{ 
+                          width: '130px', 
+                          fontSize: '0.9rem',
+                          background: buscandoCep ? '#f0f9ff' : 'white'
+                        }}
+                        maxLength={8}
+                        disabled={buscandoCep}
+                      />
+                      {buscandoCep && (
+                        <span style={{ 
+                          position: 'absolute', 
+                          right: '8px', 
+                          top: '50%', 
+                          transform: 'translateY(-50%)',
+                          fontSize: '0.8rem'
+                        }}>⏳</span>
+                      )}
+                    </div>
                     <button 
                       onClick={buscarEnderecoPorCep}
                       disabled={buscandoCep || cepTemp.length < 8}
@@ -2899,6 +2915,9 @@ Chave PIX: 46.663.556/0001-69`;
                     >
                       {buscandoCep ? '⏳' : '🔍 Buscar'}
                     </button>
+                    {cepTemp && cepTemp.length === 8 && !buscandoCep && (
+                      <span style={{ fontSize: '0.75rem', color: '#16a34a' }}>✓ CEP encontrado</span>
+                    )}
                   </div>
                   <textarea
                     value={enderecoTemp}
