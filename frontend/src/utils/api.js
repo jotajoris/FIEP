@@ -39,7 +39,8 @@ export const apiPost = (url, data) => {
 
 export const apiPatch = (url, data) => {
   const isFormData = data instanceof FormData;
-  return axios.patch(url, data, { ...axiosConfig, headers: getAuthHeaders(isFormData) });
+  const config = isFormData ? uploadConfig : axiosConfig;
+  return axios.patch(url, data, { ...config, headers: getAuthHeaders(isFormData) });
 };
 
 export const apiDelete = (url) => {
