@@ -4551,13 +4551,14 @@ class ComissaoUpdate(BaseModel):
 
 @api_router.get("/admin/comissoes")
 async def get_comissoes(current_user: dict = Depends(require_admin)):
-    """Obter dados de comissões por responsável baseado em lotes específicos
+    """Obter dados de comissões por responsável
     
     Sistema de Comissões:
     - Comissão fixa de 1.5% sobre o VALOR TOTAL DA VENDA
     - Apenas para itens com status "entregue" ou "em_transito"
-    - Baseado em LOTES específicos atribuídos a cada pessoa
-    - Apenas usuários não-admin (Maria, Mylena, Fabio)
+    - Lógica híbrida:
+      1. Itens com lote numérico (ex: "Lote 42") → Usa mapeamento fixo de lotes por pessoa
+      2. Itens sem lote numérico (ex: "CHAMAMENTO PÚBLICO...") → Usa campo responsavel do item
     """
     
     # Mapeamento fixo de LOTES por pessoa (baseado na cotação original)
@@ -4580,15 +4581,36 @@ async def get_comissoes(current_user: dict = Depends(require_admin)):
         if not lote_str:
             return None
         import re
-        match = re.search(r'(\d+)', str(lote_str))
-        return int(match.group(1)) if match else None
+        # Só considera como lote numérico se tiver o padrão "Lote XX" ou similar
+        match = re.search(r'[Ll]ote\s*(\d+)', str(lote_str))
+        if match:
+            return int(match.group(1))
+        # Também aceita só o número se for curto (ex: "42")
+        if len(str(lote_str).strip()) <= 5:
+            match = re.search(r'^(\d+)$', str(lote_str).strip())
+            if match:
+                return int(match.group(1))
+        return None
+    
+    def normalizar_responsavel(resp):
+        """Normaliza o nome do responsável para maiúsculas"""
+        if not resp:
+            return None
+        return resp.strip().upper()
     
     # Obter todas as OCs
     pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(length=1000)
     
-    # Calcular valor de venda por pessoa baseado nos lotes
-    valor_venda_por_pessoa = {nome: 0 for nome in LOTES_POR_PESSOA.keys()}
-    itens_por_pessoa = {nome: [] for nome in LOTES_POR_PESSOA.keys()}
+    # Dicionários para acumular valores por pessoa
+    valor_venda_por_pessoa = {}
+    itens_por_pessoa = {}
+    lotes_por_pessoa = {}
+    
+    # Inicializar com as pessoas que têm lotes fixos
+    for nome in LOTES_POR_PESSOA.keys():
+        valor_venda_por_pessoa[nome] = 0
+        itens_por_pessoa[nome] = []
+        lotes_por_pessoa[nome] = LOTES_POR_PESSOA[nome].copy()
     
     for po in pos:
         numero_oc = po.get('numero_oc', '')
@@ -4602,28 +4624,47 @@ async def get_comissoes(current_user: dict = Depends(require_admin)):
             # Apenas itens "entregue" ou "em_transito" geram comissão
             if item_status not in ['entregue', 'em_transito']:
                 continue
-                
-            numero_lote = extrair_numero_lote(item.get('lote', ''))
-            if numero_lote is None:
-                continue
             
-            # Verificar a qual pessoa pertence este lote
-            for pessoa, lotes in LOTES_POR_PESSOA.items():
-                if numero_lote in lotes:
-                    # Calcular valor total de venda do item
-                    preco_venda = item.get('preco_venda', 0) or 0
-                    quantidade = item.get('quantidade', 1) or 1
-                    valor_total_venda = preco_venda * quantidade
-                    
-                    valor_venda_por_pessoa[pessoa] += valor_total_venda
-                    itens_por_pessoa[pessoa].append({
-                        'numero_oc': numero_oc,
-                        'codigo_item': item.get('codigo_item'),
-                        'lote': item.get('lote'),
-                        'valor_venda': valor_total_venda,
-                        'status': item_status
-                    })
-                    break  # Cada lote pertence a apenas uma pessoa
+            # Calcular valor total de venda do item
+            preco_venda = item.get('preco_venda', 0) or 0
+            quantidade = item.get('quantidade', 1) or 1
+            valor_total_venda = preco_venda * quantidade
+            
+            lote_str = item.get('lote', '')
+            numero_lote = extrair_numero_lote(lote_str)
+            
+            pessoa_responsavel = None
+            
+            # LÓGICA 1: Se tem lote numérico, usar mapeamento fixo
+            if numero_lote is not None:
+                for pessoa, lotes in LOTES_POR_PESSOA.items():
+                    if numero_lote in lotes:
+                        pessoa_responsavel = pessoa
+                        break
+            
+            # LÓGICA 2: Se não tem lote numérico, usar campo responsavel
+            if pessoa_responsavel is None:
+                responsavel_item = normalizar_responsavel(item.get('responsavel', ''))
+                if responsavel_item and responsavel_item not in ['JOÃO', 'MATEUS', 'ADMIN']:
+                    pessoa_responsavel = responsavel_item
+            
+            # Se encontrou um responsável, contabilizar
+            if pessoa_responsavel:
+                # Inicializar se for pessoa nova
+                if pessoa_responsavel not in valor_venda_por_pessoa:
+                    valor_venda_por_pessoa[pessoa_responsavel] = 0
+                    itens_por_pessoa[pessoa_responsavel] = []
+                    lotes_por_pessoa[pessoa_responsavel] = []
+                
+                valor_venda_por_pessoa[pessoa_responsavel] += valor_total_venda
+                itens_por_pessoa[pessoa_responsavel].append({
+                    'numero_oc': numero_oc,
+                    'codigo_item': item.get('codigo_item'),
+                    'lote': lote_str,
+                    'valor_venda': valor_total_venda,
+                    'status': item_status,
+                    'fonte': 'lote' if numero_lote is not None else 'responsavel'
+                })
     
     # Montar resposta
     resultado = []
@@ -4635,7 +4676,7 @@ async def get_comissoes(current_user: dict = Depends(require_admin)):
             'valor_venda_total': valor_venda,
             'percentual_comissao': PERCENTUAL_COMISSAO,
             'valor_comissao': valor_comissao,
-            'lotes_atribuidos': LOTES_POR_PESSOA[pessoa],
+            'lotes_atribuidos': lotes_por_pessoa.get(pessoa, []),
             'qtd_itens': len(itens_por_pessoa[pessoa])
         })
     
