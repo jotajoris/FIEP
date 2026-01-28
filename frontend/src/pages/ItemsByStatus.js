@@ -2355,6 +2355,11 @@ Chave PIX: 46.663.556/0001-69`;
           }}>
             <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>
               Código: {item.codigo_item}
+              {item.ncm && (
+                <span style={{ marginLeft: '1rem', fontWeight: '500', color: '#6366f1' }}>
+                  NCM: {item.ncm}
+                </span>
+              )}
             </div>
             <div style={{ fontSize: '0.9rem', color: '#64748b', lineHeight: '1.4' }}>
               {item.descricao}
