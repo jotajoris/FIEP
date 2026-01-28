@@ -5340,7 +5340,7 @@ async def buscar_cep_endpoint(
     if not endereco:
         raise HTTPException(status_code=400, detail="Endereço não informado")
     
-    cep = await buscar_cep_por_endereco(endereco)
+    cep = buscar_cep_por_endereco(endereco)
     
     if cep:
         return {
