@@ -2082,8 +2082,7 @@ const ItemsByStatus = () => {
     const numeroOC = item.numero_oc ? item.numero_oc.replace(/^OC-/i, '') : '';
     const endereco = item.endereco_entrega || 'ENDEREÇO NÃO INFORMADO';
     
-    return `EMPRESA OPTANTE PELO SIMPLES NACIONAL
-Endereço da entrega: ${endereco}
+    return `Endereço da entrega: ${endereco}
 NF referente à OC - ${numeroOC}
 DADOS BANCÁRIOS
 Banco: 341 - Itaú Unibanco
