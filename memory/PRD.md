@@ -23,7 +23,15 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.3.8 (28/01/2026)
+## Versão Atual: 3.3.9 (28/01/2026)
+
+### 🔍 Busca Automática de CEP pelo Endereço (28/01/2026)
+- ✅ **Busca automática ao abrir editor** - Quando o usuário clica em "Editar" no endereço, o sistema busca automaticamente o CEP
+- ✅ **Backend endpoint `/api/buscar-cep`** - Recebe endereço e retorna CEP correspondente
+- ✅ **Integração com ViaCEP** - Busca por logradouro/cidade/estado
+- ✅ **Seleção inteligente por número** - Quando há múltiplos CEPs para o mesmo logradouro, seleciona o correto pelo número do endereço
+- ✅ **Campo de CEP preenchido automaticamente** - O usuário vê o CEP já preenchido ao abrir a edição
+- ✅ **Indicador visual de busca** - Mostra spinner enquanto busca o CEP
 
 ### 📄 Upload Separado de PDF e XML para NF de Venda (28/01/2026)
 - ✅ **Dois botões separados**: "📄 Subir PDF" (verde) e "📋 Subir XML" (azul)
