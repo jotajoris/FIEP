@@ -4310,6 +4310,11 @@ Chave PIX: 46.663.556/0001-69`;
                                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
                                       <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0 }}>
                                         Código: {item.codigo_item}
+                                        {item.ncm && (
+                                          <span style={{ marginLeft: '0.75rem', fontWeight: '500', color: '#6366f1', fontSize: '0.9rem' }}>
+                                            NCM: {item.ncm}
+                                          </span>
+                                        )}
                                       </h3>
                                       {jaTemNF && (
                                         <span style={{ 
