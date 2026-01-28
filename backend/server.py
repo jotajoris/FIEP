@@ -5499,6 +5499,60 @@ async def atualizar_oc_com_pdf(
     }
 
 
+@api_router.post("/admin/atualizar-ceps-enderecos")
+async def atualizar_ceps_todos_enderecos(
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Atualiza todos os endereços de entrega das OCs adicionando o CEP automaticamente
+    onde ainda não existe.
+    """
+    
+    # Buscar todas as OCs que têm endereço mas não têm CEP
+    ocs_cursor = db.purchase_orders.find(
+        {"endereco_entrega": {"$exists": True, "$ne": None, "$ne": ""}},
+        {"_id": 0, "id": 1, "numero_oc": 1, "endereco_entrega": 1}
+    )
+    
+    atualizados = 0
+    erros = 0
+    detalhes = []
+    
+    async for oc in ocs_cursor:
+        endereco = oc.get('endereco_entrega', '')
+        
+        # Verificar se já tem CEP
+        if re.search(r'CEP[:\s]*\d{5}-?\d{3}', endereco, re.IGNORECASE):
+            continue
+        
+        # Buscar CEP
+        cep = buscar_cep_por_endereco(endereco)
+        if cep:
+            novo_endereco = f"{endereco}, CEP: {cep}"
+            await db.purchase_orders.update_one(
+                {"id": oc['id']},
+                {"$set": {"endereco_entrega": novo_endereco}}
+            )
+            atualizados += 1
+            detalhes.append({
+                "numero_oc": oc['numero_oc'],
+                "cep_adicionado": cep
+            })
+        else:
+            erros += 1
+            detalhes.append({
+                "numero_oc": oc['numero_oc'],
+                "erro": "CEP não encontrado"
+            })
+    
+    return {
+        "success": True,
+        "atualizados": atualizados,
+        "erros": erros,
+        "detalhes": detalhes[:20]  # Limitar a 20 para não poluir resposta
+    }
+
+
 @api_router.post("/admin/atualizar-todas-ocs-pdf")
 async def atualizar_todas_ocs_com_pdfs(
     files: List[UploadFile] = File(...),
