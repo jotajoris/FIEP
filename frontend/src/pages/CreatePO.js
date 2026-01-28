@@ -4,7 +4,7 @@ import { apiPost, API, formatBRL } from '../utils/api';
 
 const CreatePO = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('pdf'); // 'pdf' or 'manual'
+  const [activeTab, setActiveTab] = useState('pdf'); // 'pdf', 'manual', or 'atualizar'
   const [numeroOC, setNumeroOC] = useState('');
   const [enderecoEntrega, setEnderecoEntrega] = useState('');
   const [items, setItems] = useState([{
@@ -18,6 +18,11 @@ const CreatePO = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [uploadMode, setUploadMode] = useState('single'); // 'single' ou 'multiple'
   const [multipleResults, setMultipleResults] = useState(null); // Resultados do upload múltiplo
+  
+  // Estados para atualização de OCs
+  const [updateFiles, setUpdateFiles] = useState([]);
+  const [updateResults, setUpdateResults] = useState(null);
+  const [isDraggingUpdate, setIsDraggingUpdate] = useState(false);
   
   // Estados para preview do PDF (modo single)
   const [pdfPreview, setPdfPreview] = useState(null);
