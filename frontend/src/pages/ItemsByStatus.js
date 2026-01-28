@@ -2105,12 +2105,32 @@ Chave PIX: 46.663.556/0001-69`;
     });
   };
 
-  const startEditEndereco = (item) => {
+  const startEditEndereco = async (item) => {
     setEditingEndereco(item._uniqueId);
     setEnderecoTemp(item.endereco_entrega || '');
     // Extrair CEP do endereço se existir (formato: xxxxx-xxx ou xxxxxxxx)
     const cepMatch = (item.endereco_entrega || '').match(/\d{5}-?\d{3}/);
-    setCepTemp(cepMatch ? cepMatch[0].replace('-', '') : '');
+    
+    if (cepMatch) {
+      // Se já tem CEP no endereço, usar ele
+      setCepTemp(cepMatch[0].replace('-', ''));
+    } else if (item.endereco_entrega && item.endereco_entrega.length > 10) {
+      // Se não tem CEP, buscar automaticamente pelo endereço
+      setCepTemp(''); // Limpar enquanto busca
+      setBuscandoCep(true);
+      try {
+        const cepEncontrado = await buscarCepPeloEndereco(item.endereco_entrega);
+        if (cepEncontrado) {
+          setCepTemp(cepEncontrado);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar CEP automaticamente:', error);
+      } finally {
+        setBuscandoCep(false);
+      }
+    } else {
+      setCepTemp('');
+    }
   };
 
   const cancelEditEndereco = () => {
