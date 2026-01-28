@@ -5771,6 +5771,7 @@ async def atualizar_todas_ocs_com_pdfs(
         
         # ========== EXTRAIR NCM POR ITEM ==========
         ncm_por_item = {}
+        lines = full_text.split('\n')
         for i, line in enumerate(lines):
             line_stripped = line.strip()
             
