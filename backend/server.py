@@ -5469,12 +5469,21 @@ async def atualizar_oc_com_pdf(
         updates['data_entrega'] = nova_data_entrega
         campos_atualizados.append(f"data_entrega: {nova_data_entrega}")
     
+    # Retornar informações de debug também
+    debug_info = {
+        "endereco_extraido_pdf": novo_endereco or "Não encontrado no PDF",
+        "data_extraida_pdf": nova_data_entrega or "Não encontrada no PDF",
+        "endereco_atual_oc": endereco_atual or "Vazio",
+        "data_atual_oc": data_atual or "Vazia"
+    }
+    
     if not updates:
         return {
             "success": True,
-            "message": "Nenhum campo precisou ser atualizado (todos já estão preenchidos)",
+            "message": "Nenhum campo precisou ser atualizado (todos já estão preenchidos ou não foram encontrados no PDF)",
             "numero_oc": existing_po['numero_oc'],
-            "campos_atualizados": []
+            "campos_atualizados": [],
+            "debug": debug_info
         }
     
     # Aplicar atualizações
@@ -5488,6 +5497,7 @@ async def atualizar_oc_com_pdf(
         "message": f"OC {existing_po['numero_oc']} atualizada com sucesso!",
         "numero_oc": existing_po['numero_oc'],
         "campos_atualizados": campos_atualizados,
+        "debug": debug_info,
         "dados_preservados": [
             "Status de todos os itens",
             "Responsáveis dos itens",
