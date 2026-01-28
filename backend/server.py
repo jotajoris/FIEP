@@ -5769,6 +5769,37 @@ async def atualizar_todas_ocs_com_pdfs(
                 except:
                     pass
         
+        # ========== EXTRAIR NCM POR ITEM ==========
+        ncm_por_item = {}
+        for i, line in enumerate(lines):
+            line_stripped = line.strip()
+            
+            # Procurar código de 6 dígitos que começa com 0 ou 1
+            if re.match(r'^([01]\d{5})$', line_stripped):
+                codigo = line_stripped
+                
+                # Procurar NCM nas próximas linhas
+                for j in range(i+1, min(i+40, len(lines))):
+                    check_line = lines[j].strip()
+                    
+                    # Se encontrar outro código de produto, parar
+                    if re.match(r'^([01]\d{5})$', check_line):
+                        break
+                    
+                    # Opção 1: NCM completo de 8 dígitos (começando com 8 ou 9)
+                    if re.match(r'^[89]\d{7}$', check_line):
+                        ncm_por_item[codigo] = check_line
+                        break
+                    
+                    # Opção 2: NCM dividido em duas linhas (6 dígitos + 2 dígitos)
+                    if re.match(r'^[89]\d{5}$', check_line):
+                        if j+1 < len(lines):
+                            next_line = lines[j+1].strip()
+                            if re.match(r'^\d{2}$', next_line):
+                                ncm_completo = check_line + next_line
+                                ncm_por_item[codigo] = ncm_completo
+                                break
+        
         # Preparar atualizações
         updates = {}
         campos_atualizados = []
@@ -5792,6 +5823,24 @@ async def atualizar_todas_ocs_com_pdfs(
             updates['data_entrega'] = nova_data_entrega
             campos_atualizados.append(f"data_entrega: {nova_data_entrega}")
         
+        # Atualizar NCM dos itens
+        ncm_atualizados = 0
+        if ncm_por_item:
+            items_modified = False
+            for item in existing_po.get('items', []):
+                codigo_item = item.get('codigo_item', '')
+                if codigo_item in ncm_por_item:
+                    ncm_atual = item.get('ncm', '')
+                    ncm_novo = ncm_por_item[codigo_item]
+                    if ncm_atual != ncm_novo:
+                        item['ncm'] = ncm_novo
+                        ncm_atualizados += 1
+                        items_modified = True
+            
+            if items_modified:
+                updates['items'] = existing_po['items']
+                campos_atualizados.append(f"NCM: {ncm_atualizados} itens")
+        
         if updates:
             await db.purchase_orders.update_one(
                 {"id": existing_po['id']},
@@ -5803,12 +5852,15 @@ async def atualizar_todas_ocs_com_pdfs(
             "numero_oc": numero_oc,
             "success": True,
             "campos_atualizados": campos_atualizados,
+            "ncm_encontrados": len(ncm_por_item),
+            "ncm_atualizados": ncm_atualizados,
             "message": f"Atualizado: {', '.join(campos_atualizados)}" if campos_atualizados else "Sem alterações"
         })
     
     atualizados = sum(1 for r in resultados if r.get('success') and r.get('campos_atualizados'))
     sem_alteracao = sum(1 for r in resultados if r.get('success') and not r.get('campos_atualizados'))
     erros = sum(1 for r in resultados if not r.get('success'))
+    total_ncm = sum(r.get('ncm_atualizados', 0) for r in resultados if r.get('success'))
     
     return {
         "success": True,
@@ -5816,6 +5868,7 @@ async def atualizar_todas_ocs_com_pdfs(
         "atualizados": atualizados,
         "sem_alteracao": sem_alteracao,
         "erros": erros,
+        "total_ncm_atualizados": total_ncm,
         "resultados": resultados
     }
 
