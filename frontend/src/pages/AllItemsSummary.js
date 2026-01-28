@@ -95,12 +95,19 @@ const AllItemsSummary = () => {
   };
 
   const filteredItems = allItems.filter(item => {
-    if (filterResponsavel !== 'todos' && item.responsavel !== filterResponsavel) {
-      return false;
-    }
+    // Filtro de status
     if (filterStatus !== 'todos' && item.status !== filterStatus) {
       return false;
     }
+    
+    // Filtro de responsável usando a mesma lógica híbrida das comissões
+    if (filterResponsavel !== 'todos') {
+      // Usa a função itemPertenceAPessoa para garantir consistência com o cálculo de comissões
+      if (!itemPertenceAPessoa(item, filterResponsavel)) {
+        return false;
+      }
+    }
+    
     return true;
   });
 
