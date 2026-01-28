@@ -23,7 +23,20 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.3.10 (28/01/2026)
+## Versão Atual: 3.3.11 (28/01/2026)
+
+### 🔧 Correção do Filtro de Comissões - "Resumo Completo" (28/01/2026)
+- ✅ **Bug corrigido**: O filtro de "Responsável" na página "Resumo Completo" agora usa a mesma lógica híbrida do cálculo de comissões
+- ✅ **Lógica híbrida implementada no frontend**:
+  - Itens com lote numérico (ex: "Lote 42") → Usa mapeamento fixo de lotes por pessoa
+  - Itens sem lote numérico → Usa campo `responsavel` do item
+- ✅ **Consistência garantida**: Os valores de comissão mostrados no "Resumo Completo" agora são idênticos aos do "Painel Admin"
+- ✅ **Função `itemPertenceAPessoa`**: Criada e utilizada para filtrar itens de forma consistente
+- ✅ **Verificação**: Maria - R$ 2,09 de comissão (1 item em trânsito/entregue) - valores idênticos em ambas as páginas
+
+---
+
+## Versão: 3.3.10 (28/01/2026)
 
 ### 🔍 Busca Automática de CEP pelo Endereço (28/01/2026)
 - ✅ **Busca automática ao abrir editor** - Quando o usuário clica em "Editar" no endereço, o sistema busca automaticamente o CEP
