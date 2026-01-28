@@ -5972,10 +5972,21 @@ async def atualizar_ncm_em_massa(
                     if re.match(r'^([01]\d{5})$', check_line):
                         break
                     
-                    # Capturar NCM (8 dígitos começando com 8 ou 9)
+                    # Opção 1: NCM completo de 8 dígitos (começando com 8 ou 9)
                     if re.match(r'^[89]\d{7}$', check_line):
                         ncm_por_item[codigo] = check_line
                         break
+                    
+                    # Opção 2: NCM dividido em duas linhas (6 dígitos + 2 dígitos)
+                    # Ex: linha "903033" seguida de "29" = "90303329"
+                    if re.match(r'^[89]\d{5}$', check_line):
+                        # Verificar se próxima linha tem 2 dígitos
+                        if j+1 < len(lines):
+                            next_line = lines[j+1].strip()
+                            if re.match(r'^\d{2}$', next_line):
+                                ncm_completo = check_line + next_line
+                                ncm_por_item[codigo] = ncm_completo
+                                break
         
         if not ncm_por_item:
             resultados.append({
