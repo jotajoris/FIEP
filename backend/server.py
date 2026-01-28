@@ -694,7 +694,9 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                                     if len(check_line) > 2 and not re.match(r'^[\d.,]+$', check_line):
                                         if check_line not in ['UN', 'UND', 'UNID', 'KG', 'PC', 'M', 'L', 'CX', 'PAR', 'KIT']:
                                             if 'Descritivo Completo' not in check_line and 'CFOP' not in check_line:
-                                                descricao_parts.append(check_line)
+                                                # Não incluir NCM na descrição (8 dígitos começando com 8 ou 9)
+                                                if not re.match(r'^[89]\d{7}$', check_line):
+                                                    descricao_parts.append(check_line)
                                     
                                     # Procurar quantidade (número isolado seguido de unidade)
                                     qty_match = re.match(r'^(\d+)$', check_line)
