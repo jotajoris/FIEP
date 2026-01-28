@@ -2108,11 +2108,45 @@ Chave PIX: 46.663.556/0001-69`;
   const startEditEndereco = (item) => {
     setEditingEndereco(item._uniqueId);
     setEnderecoTemp(item.endereco_entrega || '');
+    // Extrair CEP do endereço se existir (formato: xxxxx-xxx ou xxxxxxxx)
+    const cepMatch = (item.endereco_entrega || '').match(/\d{5}-?\d{3}/);
+    setCepTemp(cepMatch ? cepMatch[0].replace('-', '') : '');
   };
 
   const cancelEditEndereco = () => {
     setEditingEndereco(null);
     setEnderecoTemp('');
+    setCepTemp('');
+  };
+
+  // Buscar endereço pelo CEP usando ViaCEP (gratuita e sem autenticação)
+  const buscarEnderecoPorCep = async () => {
+    if (!cepTemp || cepTemp.length < 8) {
+      alert('Informe um CEP válido (8 dígitos)');
+      return;
+    }
+    
+    const cepLimpo = cepTemp.replace(/\D/g, '');
+    
+    setBuscandoCep(true);
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+      const data = await response.json();
+      
+      if (data.erro) {
+        alert('CEP não encontrado');
+        return;
+      }
+      
+      // Montar endereço completo
+      const endereco = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}, CEP ${cepLimpo.substring(0, 5)}-${cepLimpo.substring(5)}`.toUpperCase();
+      setEnderecoTemp(endereco);
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+      alert('Erro ao buscar CEP. Tente novamente.');
+    } finally {
+      setBuscandoCep(false);
+    }
   };
 
   const saveEndereco = async (item) => {
