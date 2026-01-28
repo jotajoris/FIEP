@@ -797,6 +797,69 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Área Admin - Backup (movido para o final) */}
+      {isAdmin() && (
+        <div className="card" style={{ 
+          marginTop: '2rem',
+          background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', 
+          color: 'white' 
+        }}>
+          <div style={{ marginBottom: '1rem' }}>
+            <h3 style={{ marginBottom: '0.5rem', fontSize: '1.2rem' }}>🔐 Backup do Sistema</h3>
+            <p style={{ fontSize: '0.9rem', opacity: 0.9 }}>
+              Exporte ou restaure todos os dados: OCs, itens, cotações, links, fornecedores, fretes, valores.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            <button 
+              onClick={exportBackup} 
+              className="btn"
+              style={{ 
+                background: 'white', 
+                color: '#059669',
+                padding: '0.75rem 1.5rem',
+                fontWeight: '600',
+                fontSize: '1rem'
+              }}
+              data-testid="export-backup-btn"
+            >
+              📥 Exportar Backup
+            </button>
+            <label 
+              className="btn"
+              style={{ 
+                background: '#fbbf24', 
+                color: '#78350f',
+                padding: '0.75rem 1.5rem',
+                fontWeight: '600',
+                fontSize: '1rem',
+                cursor: 'pointer'
+              }}
+              data-testid="restore-backup-btn"
+            >
+              📤 Restaurar Backup
+              <input 
+                type="file" 
+                accept=".json"
+                onChange={handleRestoreBackup}
+                style={{ display: 'none' }}
+              />
+            </label>
+          </div>
+        </div>
+      )}
+
+      {/* Área Admin - Popular Banco de Dados (movido para o final) */}
+      {!seeded && isAdmin() && (
+        <div className="card" style={{ marginTop: '2rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+          <h3 style={{ marginBottom: '1rem' }}>Primeiro acesso?</h3>
+          <p style={{ marginBottom: '1rem' }}>Popule o banco de dados com os itens de referência do Excel.</p>
+          <button onClick={seedDatabase} className="btn btn-secondary" data-testid="seed-database-btn">
+            Popular Banco de Dados
+          </button>
+        </div>
+      )}
     </div>
   );
 };
