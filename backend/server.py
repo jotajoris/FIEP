@@ -682,6 +682,7 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                                 unidade = "UN"
                                 descricao_parts = []
                                 preco_pdf = None  # Inicializar aqui
+                                ncm_item = None  # NCM do item
                                 
                                 for j in range(i+1, min(i+40, len(lines))):
                                     check_line = lines[j].strip()
@@ -689,6 +690,11 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                                     # Se encontrar outro código de produto, parar
                                     if re.match(r'^([01]\d{5})$', check_line):
                                         break
+                                    
+                                    # Capturar NCM (8 dígitos começando com 8 ou 9)
+                                    if re.match(r'^[89]\d{7}$', check_line) and ncm_item is None:
+                                        ncm_item = check_line
+                                        continue
                                     
                                     # Coletar descrição (até encontrar quantidade)
                                     if len(check_line) > 2 and not re.match(r'^[\d.,]+$', check_line):
@@ -758,6 +764,9 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                                                 item_data["preco_venda_pdf"] = preco_pdf
                                         except NameError:
                                             pass
+                                        # Adicionar NCM se encontrado
+                                        if ncm_item:
+                                            item_data["ncm"] = ncm_item
                                         items.append(item_data)
                         except ValueError:
                             pass
