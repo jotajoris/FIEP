@@ -10,14 +10,16 @@ const axiosConfig = {
   timeout: 30000, // 30 segundos
 };
 
-export const getAuthHeaders = () => {
+export const getAuthHeaders = (isFormData = false) => {
   const token = localStorage.getItem('token');
-  return token ? { 
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json'
-  } : {
-    'Content-Type': 'application/json'
-  };
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  
+  // Não definir Content-Type para FormData (axios define automaticamente com boundary)
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+  
+  return headers;
 };
 
 export const apiGet = (url) => {
@@ -25,11 +27,13 @@ export const apiGet = (url) => {
 };
 
 export const apiPost = (url, data) => {
-  return axios.post(url, data, { ...axiosConfig, headers: getAuthHeaders() });
+  const isFormData = data instanceof FormData;
+  return axios.post(url, data, { ...axiosConfig, headers: getAuthHeaders(isFormData) });
 };
 
 export const apiPatch = (url, data) => {
-  return axios.patch(url, data, { ...axiosConfig, headers: getAuthHeaders() });
+  const isFormData = data instanceof FormData;
+  return axios.patch(url, data, { ...axiosConfig, headers: getAuthHeaders(isFormData) });
 };
 
 export const apiDelete = (url) => {
