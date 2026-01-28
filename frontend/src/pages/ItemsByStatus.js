@@ -6232,7 +6232,6 @@ Chave PIX: 46.663.556/0001-69`;
                                   color: '#1f2937',
                                   border: '1px solid #e5e7eb'
                                 }}>
-                                  <div style={{ marginBottom: '0.5rem' }}>EMPRESA OPTANTE PELO SIMPLES NACIONAL</div>
                                   <div style={{ marginBottom: '0.5rem' }}><strong>Endereço da entrega: {item.endereco_entrega || 'NÃO INFORMADO'}</strong></div>
                                   <div style={{ marginBottom: '0.5rem' }}>NF referente à OC - {item.numero_oc ? item.numero_oc.replace(/^OC-/i, '') : ''}</div>
                                   <div style={{ marginTop: '0.75rem', paddingTop: '0.5rem', borderTop: '1px dashed #d1d5db' }}>
