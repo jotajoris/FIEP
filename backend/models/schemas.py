@@ -130,6 +130,7 @@ class POItem(BaseModel):
     endereco_entrega: str = ""
     responsavel: str = ""
     status: ItemStatus = ItemStatus.PENDENTE
+    ncm: Optional[str] = None  # Código NCM de 8 dígitos (extraído da OC)
     link_compra: Optional[str] = None
     preco_compra: Optional[float] = None
     preco_venda: Optional[float] = None
