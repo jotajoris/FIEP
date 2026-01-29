@@ -177,8 +177,7 @@ const ItemsByStatus = () => {
     loadImagensItens();
     setSelectedItems(new Set());  // Limpar seleção ao trocar de status
     setCurrentPage(1);  // Reset página ao trocar de status
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
   
   // Carregar mapa de imagens por código
   const loadImagensItens = async () => {
