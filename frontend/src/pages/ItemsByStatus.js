@@ -2904,7 +2904,7 @@ Chave PIX: 46.663.556/0001-69`;
                 </div>
               ) : (
                 <div style={{ color: '#1e3a5f', fontSize: '0.9rem', fontWeight: '500' }}>
-                  {item.endereco_entrega || 'Não informado'}
+                  {item.endereco_entrega_oc || item.endereco_entrega || 'Não informado'}
                 </div>
               )}
             </div>
