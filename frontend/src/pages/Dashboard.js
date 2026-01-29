@@ -684,7 +684,7 @@ const Dashboard = () => {
           </div>
           
           {/* Pesquisa por descrição/nome do item */}
-          <div style={{ flex: '1', minWidth: '180px' }}>
+          <div style={{ flex: '1', minWidth: '180px', position: 'relative' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
               📦 Nome Item
             </label>
@@ -697,6 +697,57 @@ const Dashboard = () => {
               style={{ width: '100%' }}
               data-testid="search-descricao-input"
             />
+            {/* Resumo de quantidade por descrição */}
+            {resumoDescricaoItem && (
+              <div style={{ 
+                marginTop: '0.5rem', 
+                padding: '0.75rem', 
+                background: '#fef3c7', 
+                borderRadius: '8px',
+                border: '1px solid #f59e0b',
+                fontSize: '0.8rem',
+                position: 'absolute',
+                zIndex: 100,
+                minWidth: '320px',
+                maxWidth: '400px',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+              }}>
+                <div style={{ fontWeight: '700', color: '#92400e', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>📦 Pesquisa: "{searchDescricaoItem}"</span>
+                  <button
+                    onClick={() => setResumoDescricaoItem(null)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}
+                  >×</button>
+                </div>
+                <div style={{ maxHeight: '180px', overflowY: 'auto' }}>
+                  {resumoDescricaoItem.porOC.map((item, idx) => (
+                    <div key={idx} style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      padding: '0.35rem 0',
+                      borderBottom: idx < resumoDescricaoItem.porOC.length - 1 ? '1px solid #fde68a' : 'none',
+                      gap: '0.5rem'
+                    }}>
+                      <span style={{ color: '#374151', fontSize: '0.75rem' }}>
+                        {item.numero_oc} <span style={{ color: '#6b7280' }}>({item.codigo_item})</span>
+                      </span>
+                      <span style={{ fontWeight: '600', color: '#0369a1', whiteSpace: 'nowrap' }}>{item.quantidade} un</span>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ 
+                  marginTop: '0.5rem', 
+                  paddingTop: '0.5rem', 
+                  borderTop: '2px solid #f59e0b',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontWeight: '700'
+                }}>
+                  <span style={{ color: '#92400e' }}>TOTAL (não entregues):</span>
+                  <span style={{ color: '#dc2626', fontSize: '1rem' }}>{resumoDescricaoItem.total} un</span>
+                </div>
+              </div>
+            )}
           </div>
           
           {/* Filtro por responsável */}
