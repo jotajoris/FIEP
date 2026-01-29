@@ -66,107 +66,105 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchCodigoItem, setSearchCodigoItem] = useState('');
   const [searchDescricaoItem, setSearchDescricaoItem] = useState('');  // Pesquisa por descrição/nome do item
+  const [searchMarcaModelo, setSearchMarcaModelo] = useState('');  // Pesquisa por marca/modelo
   const [searchResponsavel, setSearchResponsavel] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   
-  // Resumo de quantidade por código de item
+  // Resumos de quantidade
   const [resumoCodigoItem, setResumoCodigoItem] = useState(null);
-  
-  // Resumo de quantidade por descrição/nome do item
   const [resumoDescricaoItem, setResumoDescricaoItem] = useState(null);
+  const [resumoMarcaModelo, setResumoMarcaModelo] = useState(null);
   
   // Loading de filtro (para feedback visual)
   const [filtering, setFiltering] = useState(false);
 
-  // Calcular resumo quando código do item mudar
-  useEffect(() => {
-    if (searchCodigoItem && searchCodigoItem.trim().length >= 3) {
-      const termo = searchCodigoItem.toLowerCase().trim();
-      const resumo = { porOC: [], total: 0, codigoExato: null };
-      
-      orders.forEach(order => {
-        order.items?.forEach(item => {
-          // Verificar se o código bate
-          if (item.codigo_item?.toLowerCase().includes(termo)) {
-            // Excluir itens em_transito e entregue
-            if (item.status !== 'em_transito' && item.status !== 'entregue') {
-              // Se é match exato, guardar o código
-              if (item.codigo_item?.toLowerCase() === termo) {
-                resumo.codigoExato = item.codigo_item;
-              }
-              
-              // Encontrar ou criar entrada para esta OC
-              let ocEntry = resumo.porOC.find(o => o.numero_oc === order.numero_oc);
-              if (!ocEntry) {
-                ocEntry = { 
-                  numero_oc: order.numero_oc, 
-                  quantidade: 0, 
-                  status: item.status,
-                  codigo_item: item.codigo_item
-                };
-                resumo.porOC.push(ocEntry);
-              }
-              ocEntry.quantidade += item.quantidade || 1;
-              resumo.total += item.quantidade || 1;
-            }
+  // Função para obter emoji do status
+  const getStatusEmoji = (status) => {
+    const emojis = {
+      'pendente': '⏳',
+      'cotado': '💰',
+      'comprado': '🛒',
+      'em_separacao': '📦',
+      'em_transito': '🚚',
+      'entregue': '✅'
+    };
+    return emojis[status] || '❓';
+  };
+
+  // Função genérica para calcular resumo
+  const calcularResumo = (termo, campo) => {
+    if (!termo || termo.trim().length < 3) return null;
+    
+    const termoLower = termo.toLowerCase().trim();
+    const resumo = { 
+      pendentes: [], // pendente, cotado, comprado, em_separacao
+      finalizados: [], // em_transito, entregue
+      totalPendentes: 0,
+      totalFinalizados: 0,
+      termoEncontrado: null
+    };
+    
+    orders.forEach(order => {
+      order.items?.forEach(item => {
+        let valor = '';
+        if (campo === 'codigo') valor = item.codigo_item || '';
+        else if (campo === 'descricao') valor = item.descricao || '';
+        else if (campo === 'marca') valor = item.marca_modelo || '';
+        
+        if (valor.toLowerCase().includes(termoLower)) {
+          // Guardar primeiro termo encontrado
+          if (!resumo.termoEncontrado) {
+            if (campo === 'codigo') resumo.termoEncontrado = item.codigo_item;
+            else if (campo === 'descricao') resumo.termoEncontrado = item.descricao?.substring(0, 40) + '...';
+            else if (campo === 'marca') resumo.termoEncontrado = item.marca_modelo;
           }
-        });
+          
+          const isFinalizado = item.status === 'em_transito' || item.status === 'entregue';
+          const lista = isFinalizado ? resumo.finalizados : resumo.pendentes;
+          
+          // Encontrar ou criar entrada para esta OC + codigo
+          let ocEntry = lista.find(o => o.numero_oc === order.numero_oc && o.codigo_item === item.codigo_item);
+          if (!ocEntry) {
+            ocEntry = { 
+              numero_oc: order.numero_oc, 
+              quantidade: 0, 
+              status: item.status,
+              codigo_item: item.codigo_item,
+              descricao: item.descricao?.substring(0, 25) + '...'
+            };
+            lista.push(ocEntry);
+          }
+          ocEntry.quantidade += item.quantidade || 1;
+          
+          if (isFinalizado) {
+            resumo.totalFinalizados += item.quantidade || 1;
+          } else {
+            resumo.totalPendentes += item.quantidade || 1;
+          }
+        }
       });
-      
-      // Ordenar por número da OC
-      resumo.porOC.sort((a, b) => a.numero_oc?.localeCompare(b.numero_oc));
-      
-      setResumoCodigoItem(resumo.porOC.length > 0 ? resumo : null);
-    } else {
-      setResumoCodigoItem(null);
-    }
+    });
+    
+    // Ordenar por número da OC
+    resumo.pendentes.sort((a, b) => a.numero_oc?.localeCompare(b.numero_oc));
+    resumo.finalizados.sort((a, b) => a.numero_oc?.localeCompare(b.numero_oc));
+    
+    return (resumo.pendentes.length > 0 || resumo.finalizados.length > 0) ? resumo : null;
+  };
+
+  // Calcular resumos quando os termos mudarem
+  useEffect(() => {
+    setResumoCodigoItem(calcularResumo(searchCodigoItem, 'codigo'));
   }, [searchCodigoItem, orders]);
 
-  // Calcular resumo quando descrição do item mudar
   useEffect(() => {
-    if (searchDescricaoItem && searchDescricaoItem.trim().length >= 3) {
-      const termo = searchDescricaoItem.toLowerCase().trim();
-      const resumo = { porOC: [], total: 0, descricaoEncontrada: null };
-      
-      orders.forEach(order => {
-        order.items?.forEach(item => {
-          // Verificar se a descrição bate
-          if (item.descricao?.toLowerCase().includes(termo)) {
-            // Excluir itens em_transito e entregue
-            if (item.status !== 'em_transito' && item.status !== 'entregue') {
-              // Guardar primeira descrição encontrada
-              if (!resumo.descricaoEncontrada) {
-                resumo.descricaoEncontrada = item.descricao?.substring(0, 50) + '...';
-              }
-              
-              // Encontrar ou criar entrada para esta OC
-              let ocEntry = resumo.porOC.find(o => o.numero_oc === order.numero_oc && o.codigo_item === item.codigo_item);
-              if (!ocEntry) {
-                ocEntry = { 
-                  numero_oc: order.numero_oc, 
-                  quantidade: 0, 
-                  status: item.status,
-                  codigo_item: item.codigo_item,
-                  descricao: item.descricao?.substring(0, 30) + '...'
-                };
-                resumo.porOC.push(ocEntry);
-              }
-              ocEntry.quantidade += item.quantidade || 1;
-              resumo.total += item.quantidade || 1;
-            }
-          }
-        });
-      });
-      
-      // Ordenar por número da OC
-      resumo.porOC.sort((a, b) => a.numero_oc?.localeCompare(b.numero_oc));
-      
-      setResumoDescricaoItem(resumo.porOC.length > 0 ? resumo : null);
-    } else {
-      setResumoDescricaoItem(null);
-    }
+    setResumoDescricaoItem(calcularResumo(searchDescricaoItem, 'descricao'));
   }, [searchDescricaoItem, orders]);
+
+  useEffect(() => {
+    setResumoMarcaModelo(calcularResumo(searchMarcaModelo, 'marca'));
+  }, [searchMarcaModelo, orders]);
 
   useEffect(() => {
     loadData();
