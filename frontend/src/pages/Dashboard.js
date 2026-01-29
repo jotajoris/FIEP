@@ -690,16 +690,19 @@ const Dashboard = () => {
           
           {/* Pesquisa por marca/modelo */}
           <div style={{ flex: '1', minWidth: '150px', position: 'relative' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
+            <label htmlFor="search-marca" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
               🏷️ Marca/Modelo
             </label>
             <input
+              id="search-marca"
+              name="search-marca"
               type="text"
               placeholder="Ex: FLUKE..."
               value={searchMarcaModelo}
               onChange={(e) => setSearchMarcaModelo(e.target.value)}
               className="form-input"
               style={{ width: '100%' }}
+              autoComplete="off"
               data-testid="search-marca-input"
             />
             {/* Resumo de quantidade por marca/modelo */}
@@ -716,10 +719,12 @@ const Dashboard = () => {
           
           {/* Filtro por responsável */}
           <div style={{ flex: '1', minWidth: '140px' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
+            <label htmlFor="search-responsavel" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
               👤 Responsável
             </label>
             <select
+              id="search-responsavel"
+              name="search-responsavel"
               value={searchResponsavel}
               onChange={(e) => setSearchResponsavel(e.target.value)}
               className="form-input"
@@ -738,10 +743,12 @@ const Dashboard = () => {
           
           {/* Filtro por data inicial */}
           <div style={{ minWidth: '130px' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
+            <label htmlFor="date-from" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
               📅 De
             </label>
             <input
+              id="date-from"
+              name="date-from"
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
@@ -753,10 +760,12 @@ const Dashboard = () => {
           
           {/* Filtro por data final */}
           <div style={{ minWidth: '130px' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
+            <label htmlFor="date-to" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
               📅 Até
             </label>
             <input
+              id="date-to"
+              name="date-to"
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
