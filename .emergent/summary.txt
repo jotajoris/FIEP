@@ -59,172 +59,179 @@ The user requested a web platform to manage purchase orders (OCs) for their clie
 - Add image upload/view/delete functionality to the OC Details page ().
 - Reorganize the Dashboard to move admin-only sections to the bottom.
 - Implement a hybrid commission logic (lot number vs.  field).
-- **Display NCM code next to the item code on various pages.**
-- **Automatically extract NCM from OC PDFs during creation and update flows.**
-- **On the Dashboard, create an advanced search summary popup for item code, item name, and brand/model.**
-- **The summary popup must:**
-    - **Show a total quantity for items not yet delivered or in transit.**
-    - **Separate items into Pending and Finalized (in-transit/delivered) groups.**
-    - **Display a status emoji next to each item (⏳, 💰, 🛒, 📦, 🚚, ✅).**
-    - **Include a clickable link to the OC details page for each item.**
-    - **Sort items by status: Pendente, Cotado, Comprado, Em Separação.**
-    - **Display a legend explaining the emojis.**
+- Display NCM code next to the item code on various pages.
+- Automatically extract NCM from OC PDFs during creation and update flows.
+- On the Dashboard, create an advanced search summary popup for item code, item name, and brand/model.
+- The summary popup must:
+    - Show a total quantity for items not yet delivered or in transit.
+    - Separate items into Pending and Finalized (in-transit/delivered) groups.
+    - Display a status emoji next to each item (⏳, 💰, 🛒, 📦, 🚚, ✅).
+    - Include a clickable link to the OC details page for each item.
+    - Sort items by status: Pendente, Cotado, Comprado, Em Separação.
+    - Display a legend explaining the emojis.
+- **Prevent Google Translate from breaking the React application's DOM.**
+- **Fix browser console accessibility warnings (missing form field attributes).**
+- **On the Em Separação page, group items with the same code *within the same OC* to allow for unified actions.**
 
 **User's preferred language**:
 The user's primary language is **Portuguese (Brazil)**. The next agent MUST respond in Portuguese.
 
 **what currently exists?**
-A full-stack Purchase Order management application (FastAPI + React). This session focused on resolving a critical bug in the commission calculation and then rapidly iterating on several new user-requested features. Key accomplishments include fixing the commission logic discrepancy, implementing robust NCM code extraction from PDFs, fixing CEP lookup/display bugs, and building a highly detailed, multi-field search summary feature on the Dashboard.
+A full-stack Purchase Order management application (FastAPI + React). This session was highly productive, addressing multiple user requests in parallel with a major architectural refactoring effort. The agent completed the dashboard search feature, fixed critical UI bugs related to Google Translate and accessibility, and initiated a large-scale refactoring of both the backend () and a monolithic frontend component ().
 
 **Last working item**:
-- **Last item agent was working:** Finalizing the search summary popups on the Dashboard page. The user requested two final improvements: sorting the listed items by status (Pendente, Cotado, etc.) and adding a legend to explain what each status emoji means.
+- **Last item agent was working:** Implementing a feature on the Em Separação page to group items that have the same item code within the same Purchase Order. This allows the user to process identical items in a single action.
 - **Status:** IN PROGRESS
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** screenshot tool. The agent needs to navigate to the Dashboard (), perform a search in the Código Item, Nome Item, and Marca/Modelo fields, and capture a screenshot of the resulting popup to verify that the items are correctly sorted by status and that the emoji legend is visible and accurate.
+- **Which testing method agent to use?** screenshot tool. The agent needs to navigate to , expand an OC known to have items with duplicate codes, click the new Agrupar por Código button, and capture a screenshot to verify that the items are correctly grouped and their quantities are summed up.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P0)** Finalize Dashboard Search Summary Popups.
-- **Issue 2: (P1)** Performance issues on Em Separação page due to the  monolith.
-- **Issue 3: (P2)** Accessibility warnings (e.g., missing labels, IDs) appear in the browser console.
+- **Issue 1: (P0)** Complete Group by Code feature in .
+- **Issue 2: (P1)** Performance and maintainability issues due to  monolith.
+- **Issue 3: (P1)** Code duplication and maintainability issues due to  monolith.
+- **Issue 4: (P2)** Long-standing bug where editing a duplicate item opens all instances.
 
 **Issues Detail:**
-- **Issue 1: Finalize Dashboard Search Summary Popups**
-    - **Attempted fixes:** The agent successfully implemented the base functionality for the popups, including separating pending/finalized items and adding emojis. The code for sorting and adding a legend was also implemented.
+- **Issue 1: Complete Group by Code feature**
+    - **Attempted fixes:** The agent has added a state toggle (), a UI button to trigger it, and the frontend logic to group items by  using . The implementation is mid-way through.
     - **Next debug checklist:**
-        1.  Navigate to the Dashboard page ().
-        2.  Use the  to perform a search for an item code (e.g., 089435).
-        3.  Verify from the screenshot that the popup appears and contains:
-            - A legend explaining the emojis (e.g., ⏳ Pendente, 💰 Cotado).
-            - The list of pending items sorted correctly: all Pendente items first, then Cotado, then Comprado, etc.
-        4.  Repeat the verification for the Nome Item and Marca/Modelo search fields.
-    - **Why fix this issue and what will be achieved with the fix?** This completes the user's current feature request, making the search summary tool fully functional and easy to understand.
+        1.  Verify the rendering logic in  correctly switches between the normal item list and the new grouped item list when the  state changes.
+        2.  Ensure the grouped item view displays the summed quantity and that actions (like changing status) apply to all original items in that group.
+        3.  Test with the  to confirm the UI reflects the grouped state correctly.
+    - **Why fix this issue and what will be achieved with the fix?** Fulfills a direct user request to improve workflow efficiency on a key page by reducing repetitive actions.
     - **Status:** IN PROGRESS
     - **Is recurring issue?** N
     - **Should Test frontend/backend/both after fix?** Frontend.
     - **Blocked on other issue:** None.
 
 - **Issue 2: Performance issues on Em Separação page**
-    - **Attempted fixes:** None in this session.
-    - **Next debug checklist:** Continue refactoring by extracting major UI sections (modals, forms, item rendering loops) from  into separate, memoized components.
-    - **Why fix this issue and what will be achieved with the fix?** Improves usability on a critical page that is slow and difficult to maintain.
-    - **Status:** NOT STARTED
+    - **Attempted fixes:** The agent created several new, smaller components (, , ) to break down  and successfully integrated , reducing the file size by over 200 lines.
+    - **Next debug checklist:** Continue the refactoring by replacing the inline JSX for the item edit form and the NF upload section with the  and  components.
+    - **Why fix this issue and what will be achieved with the fix?** Drastically improves frontend performance, readability, and maintainability on a critical page, making future changes faster and safer.
+    - **Status:** IN PROGRESS
     - **Is recurring issue?** N
     - **Should Test frontend/backend/both after fix?** Frontend.
     - **Blocked on other issue:** None.
 
-- **Issue 3: Accessibility warnings in the console**
-    - **Attempted fixes:** None.
-    - **Next debug checklist:** Add uid=0(root) gid=0(root) groups=0(root), , and  attributes to form fields and labels throughout the application, particularly in  and .
-    - **Why fix this issue and what will be achieved with the fix?** Improves accessibility and removes console noise, leading to a more professional user experience.
-    - **Status:** NOT STARTED
+- **Issue 3: Code duplication and maintainability issues due to  monolith**
+    - **Attempted fixes:** The agent successfully created new, modular route files (, , , etc.) and moved the corresponding endpoint logic into them. The new routers were correctly included in the main FastAPI app.
+    - **Next debug checklist:** **Crucially, the old endpoint functions have not been removed from **. The next step is to carefully delete the now-duplicated functions from  to realize the benefits of the refactoring and reduce the file size.
+    - **Why fix this issue and what will be achieved with the fix?** Resolves major technical debt, making the backend more scalable, easier to debug, and safer to modify. It eliminates the risk of having two different versions of the same endpoint.
+    - **Status:** IN PROGRESS
     - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** Backend.
+    - **Blocked on other issue:** None.
+
+- **Issue 4: Editing duplicate items opens all instances**
+    - **Attempted fixes:** None. This is a long-standing issue from previous sessions.
+    - **Next debug checklist:** Re-create the scenario by having two identical items in an OC. Open one for editing and verify if the modal/form incorrectly affects both. The fix will likely involve ensuring unique keys/IDs are used for modals and state management.
+    - **Why fix this issue and what will be achieved with the fix?** Fixes a confusing and error-prone UI behavior.
+    - **Status:** NOT STARTED
+    - **Is recurring issue?** Y
     - **Should Test frontend/backend/both after fix?** Frontend.
     - **Blocked on other issue:** None.
 
 **In progress Task List**:
-- **Task 1: (P1)** Backend Refactoring
-    - **Where to resume:** Continue extracting endpoints from  into modular files in .
-    - **What will be achieved with this?** A more maintainable and scalable backend.
-    - **Status:** IN PROGRESS
-    - **Should Test frontend/backend/both after fix?** Backend.
-    - **Blocked on something:** Blocked by P0 feature completion.
-
-- **Task 2: (P1)** Frontend Refactoring
-    - **Where to resume:** Continue breaking down the  monolith. The  file is also becoming a candidate for refactoring, as the search summary logic could be extracted into a reusable component.
-    - **What will be achieved with this?** Improved frontend performance, readability, and maintainability.
+- **Task 1: (P0)** Integrate item grouping logic into .
+    - **Where to resume:** In , finalize the JSX that renders the grouped items and ensure all associated actions (e.g., changing status) correctly apply to the entire group.
+    - **What will be achieved with this?** A more efficient user workflow for the Em Separação status.
     - **Status:** IN PROGRESS
     - **Should Test frontend/backend/both after fix?** Frontend.
-    - **Blocked on something:** Blocked by P0 feature completion.
+    - **Blocked on something:** None.
+
+- **Task 2: (P1)** Complete Frontend Refactoring of .
+    - **Where to resume:** Integrate the remaining pre-built components (, ) into , replacing the large blocks of inline JSX.
+    - **What will be achieved with this?** A significantly smaller, faster, and more maintainable  page component.
+    - **Status:** IN PROGRESS
+    - **Should Test frontend/backend/both after fix?** Frontend.
+    - **Blocked on something:** Blocked by P0 task completion.
+
+- **Task 3: (P1)** Complete Backend Refactoring of .
+    - **Where to resume:** In , carefully delete the endpoint functions that have already been moved to the new route modules in .
+    - **What will be achieved with this?** A clean, modular backend architecture and a much smaller  file, eliminating duplicated code.
+    - **Status:** IN PROGRESS
+    - **Should Test frontend/backend/both after fix?** Backend.
+    - **Blocked on something:** Blocked by P0 task completion.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-  - (P1) Address performance issues on Em Separação page by refactoring .
-  - (P2) Fix accessibility warnings in the browser console.
-  - (P2) Complete the backend refactoring of .
-- **Future Tasks:**
   - (P3) Add a Create OC button directly on the Planilha de Contrato page.
+- **Future Tasks:**
   - (P3) Extend the Grouped View functionality to the Em Separação page.
 
 **Completed work in this session**
-- **Bug Fix: Commission Calculation (P0):** Aligned the frontend filtering logic in  with the backend's hybrid commission logic, resolving data discrepancies.
-- **Feature: NCM Extraction & Display:**
-  - Added an  field to the item data model.
-  - Modified the PDF parsers ( and ) to robustly extract 8-digit NCM codes, even when split across lines or starting with any digit from 1-9.
-  - Integrated NCM extraction directly into the Atualizar OC flow.
-  - Added NCM display next to the item code on the  page.
-- **Feature: Advanced Dashboard Search Summary:**
-  - Implemented search summary popups for item code, item name, and brand/model.
-  - The summary shows a breakdown of quantities per OC, separating pending from finalized items.
-  - Added status emojis (⏳, 💰, 🛒, etc.) and clickable links to each OC.
-- **Bug Fix: CEP Lookup:** Corrected the ViaCEP API call logic in  to handle full street names (e.g., Avenida Aviação), ensuring CEPs are found and appended when updating an OC.
-- **Bug Fix: CEP Display:** Fixed an issue on the  page by ensuring the Dados Adicionais da NF section consistently displays the parent OC's address, which contains the CEP.
+- **Feature: Dashboard Search Popups (P0):** Fully completed and verified the advanced search popups on the Dashboard, including sorting by status and adding an emoji legend.
+- **Refactoring: Reusable Search Component:** Extracted the duplicated search popup logic from  into a reusable  component, reducing the dashboard's line count by ~200 lines.
+- **Bug Fix: Google Translate Conflict:** Implemented a robust fix in  and  to prevent Google Translate from manipulating the DOM and breaking the React application.
+- **Bug Fix: Accessibility Warnings:** Resolved numerous accessibility warnings in the browser console by adding uid=0(root) gid=0(root) groups=0(root), , , and  attributes to form elements in , , and .
+- **Investigation: Missing Invoices:** Diagnosed that the user's report of missing invoices was due to a data discrepancy between their production environment () and the agent's preview environment. Proved that the upload functionality is working correctly in the preview environment by performing a test upload.
+- **Architectural Refactoring (Phase 1-4):**
+  - **Backend:** Created modular route files for , , , , , and , moving dozens of endpoints out of the  monolith.
+  - **Frontend:** Began breaking down the  monolith by creating several smaller, focused components (, , etc.) and successfully integrated the first one.
 
 **Earlier issues found/mentioned but not fixed**
-- **Issue 1:** (P1) Editing duplicate items opens all instances. The user mentioned this was fixed, but it's a long-standing recurring issue and should be verified.
-- **Issue 2:** (P2) Dashboard search by item code is not working. The user mentioned this was fixed. The new search summary feature likely supersedes or resolves this.
+- **Issue 1:** (P2) Editing duplicate items opens all instances. This long-standing recurring issue remains unresolved and unverified.
 
 **Known issue recurrence from previous fork**
 - **Issue recurrence in previous fork:** Editing duplicate items opens all of them.
-- **Recurrence count:** 9+
-- **Status:** NOT STARTED (User claimed it was fixed, but it has not been addressed in this or recent sessions).
+- **Recurrence count:** 10+
+- **Status:** NOT STARTED.
 
 **Code Architecture**
-ncm: str
+
 
 **Key Technical Concepts**
-- **Robust Regex for PDF Parsing:** The agent iteratively improved regex patterns in  to correctly extract NCM codes that were split across lines (e.g.,  and ) and that started with digits other than 8 or 9 (e.g., ).
-- **Dynamic Frontend Components:** The  page now contains complex logic to render dynamic summary popups based on user input across three different search fields, using a shared data source and  hooks.
-- **Data Consistency Across Components:** A bug where a CEP was missing was solved by ensuring a child component ( modal) used a prop passed from its parent () rather than its own potentially stale data ().
-- **Backend API Expansion:** The  endpoint was modified to return , , and  for each item, enabling the new dashboard search feature without requiring additional API calls.
+- **Component Refactoring:** Extracting duplicated UI into a reusable React component () and breaking down a monolithic page into smaller, manageable components.
+- **Architectural Refactoring:** Decomposing a monolithic backend API () into feature-specific router files (, etc.) for improved separation of concerns.
+- **DOM Conflict Resolution:** Preventing conflicts with third-party scripts (like Google Translate) that manipulate the DOM directly by adding  and the  class to key HTML elements.
+- **Environment-based Debugging:** Correctly identifying that a user-reported data issue was caused by the user viewing a different environment (production) than the agent was working in (preview).
+- **Frontend Data Grouping:** Using  to group an array of item objects by a common key () to aggregate data for the UI.
+- **Web Accessibility (a11y):** Fixing console warnings by adding appropriate attributes like uid=0(root) gid=0(root) groups=0(root), , , and  to form elements.
 
 **key DB schema**
-- ** (in )**:
-  -  was added to store the 8-digit NCM code for an item.
+- No changes to the database schema in this session.
 
 **All files of reference**
-- : **CRITICAL.** Contains the new search summary feature that is the current focus.
-- : **CRITICAL.** Contains the updated PDF parsing logic for NCMs, the expanded  API endpoint, and the corrected CEP lookup function.
-- : Contains the UI for displaying the NCM and the fix for showing the CEP in the invoice details.
-- : Contains the UI for the integrated Atualizar OC flow which now also updates NCMs.
-- : Contains the updated  data model.
+- : **CRITICAL.** The target of the current feature implementation and ongoing refactoring effort.
+- : The source of the completed refactoring for search popups.
+- : **CRITICAL.** The target of the backend refactoring. Contains duplicated code that needs to be removed.
+- : Contains the fix for the Google Translate bug.
+- : The new reusable component for dashboard search.
+- The new files under  and .
 
 **Areas that need refactoring**:
-- : Remains a critical monolith.
-- : Remains a critical monolith.
-- : The logic for the three search summary popups is duplicated and could be extracted into a single, reusable component to improve maintainability.
+- : **CRITICAL.** The file still contains all the original endpoint code that has been copied to new route modules. This duplicated code MUST be removed to complete the refactoring and avoid bugs.
+- : **CRITICAL.** Remains a monolith (>6,500 lines). The agent has created the components to break it down but has only integrated one. This work must continue.
 
 **key api endpoints**
-- : **MODIFIED.** Now returns , , and  for each item in the payload.
-- : **MODIFIED.** Now includes logic to parse and update the  for all items within the uploaded OC PDFs.
+- No new API endpoints were created. Existing endpoints were moved from  to new modular router files under .
 
 **Critical Info for New Agent**
-- **IMMEDIATE PRIORITY (P0):** The user's last request was to add sorting by status and an emoji legend to the three search popups on the Dashboard. You must implement and verify this change first.
-- **USER INTERACTION:** The user is highly engaged and provides feature requests in rapid succession. Be prepared to implement, test, and then receive immediate feedback for further iteration.
-- **Verify User Claims:** The user mentioned that some long-standing bugs (like the duplicate item edit issue) were fixed. Do not assume this is correct. These issues should be independently verified before being marked as resolved in the PRD.
-- **NCM & CEP Logic:** The logic for extracting NCMs from PDFs and looking up CEPs from addresses was refined multiple times. Refer to the current implementation in  as the source of truth before making changes.
+- **IMMEDIATE PRIORITY (P0):** Your first task is to finish the Group by Code feature in . The user wants to see items with the same code within one OC grouped together on the Em Separação page. The previous agent has already started this.
+- **REFACTORING DEBT:** The most critical technical debt is the duplicated code in . After the P0 task, you must prioritize removing the old functions from  that now live in the  modules. Then, continue integrating the new components into .
+- **USER ENVIRONMENT:** Be aware that the user is viewing a production site () which is different from your preview environment. If they report data discrepancies, it is likely due to this difference. The code you write needs to be deployed by the user to their production server to take effect there.
 
 **documents and test reports created in this job**
--  (updated with completed features and bug fixes)
+-  (updated multiple times with completed features and refactoring progress)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** I want the search summary popups to be sorted by status (pendente, cotado, etc.), have a legend for the emojis, and apply this to all three search fields. (IN PROGRESS)
-2.  **User:** For the search summary, show all items, but separate pending from delivered/in-transit. Add status emojis. Also add a search field for brand/model. (COMPLETED)
-3.  **User:** Add clickable links to the OCs in the search summary popups, opening in a new tab. (COMPLETED)
-4.  **User:** Can you add the same search summary mechanism to the item name/description field? (COMPLETED)
-5.  **User:** In the dashboard item code search, show a summary of how many units are in each OC (for non-delivered items). (COMPLETED)
-6.  **User:** The CEP is not appearing in the DADOS ADICIONAIS DA NF section within the Em Separação page. (COMPLETED)
-7.  **User:** The CEP is not being added to the address when I update an OC using the Atualizar OC feature. (COMPLETED)
-8.  **User:** The NCM extraction is failing for several of my OCs. (COMPLETED)
-9.  **User:** I don't want a separate tab for updating NCMs. It should be part of the existing Atualizar OC flow. (COMPLETED)
-10. **User:** I need you to extract the NCM code from the OC PDF and display it next to the item code. (COMPLETED)
+1.  **User:** I need items with the same code inside the same OC to be unified on the Em Separação page. (IN PROGRESS)
+2.  **User:** These accessibility warnings in the console are bothering me. (COMPLETED)
+3.  **User:** Continue with the refactoring. (COMPLETED - Phase 4)
+4.  **User:** Yes, you can continue refactoring. (COMPLETED - Phase 2)
+5.  **User:** Okay, continue. (COMPLETED - Phase 1)
+6.  **User:** Let's refactor to make the site lighter. (STARTED)
+7.  **User:** I'm still only seeing a few invoices. (INVESTIGATED - Environment mismatch)
+8.  **User:** The site breaks and goes white when I use Google Translate. (COMPLETED)
+9.  **User:** Invoices are still not being saved in the admin panel. (INVESTIGATED - Data was lost on deploy, not a bug. Upload functionality confirmed working).
+10. **User:** Yes, you can refactor the search popups into a reusable component. (COMPLETED)
 
 **Project Health Check:**
-- **Broken:**
-    - Nothing is critically broken. The P0 commission bug from the previous session was resolved.
+- **Broken:** Nothing is critically broken.
 - **Technical Debt:**
-    - **CRITICAL:**  and  are large monoliths that complicate development and debugging.
-    - **HIGH:**  now has significant duplicated code for the three search summary popups. This should be refactored into a reusable component.
+    - **CRITICAL:**  contains thousands of lines of duplicated code that has been moved to modules but not yet deleted from the original file. This is a high-risk situation.
+    - **CRITICAL:**  is a massive 6,500+ line monolith that is slow and difficult to maintain. A refactoring plan is in progress but far from complete.
 
 **3rd Party Integrations**
 - **Resend:** For emails.
@@ -247,4 +254,5 @@ ncm: str
     - **Password:** 
 
 **What agent forgot to execute**
-- The agent implemented the code for the final user request (sorting and legend in search popups) but did not perform a final visual verification with the  before finishing. This final verification step is still pending.</analysis>
+- The agent is in the middle of implementing the item grouping feature. It has not been forgotten, but it is the immediate next step.
+- The most significant pending action is to **delete the duplicated code** from  after it was moved to new modules. While the app works, this leaves a major source of technical debt and potential bugs.</analysis>
