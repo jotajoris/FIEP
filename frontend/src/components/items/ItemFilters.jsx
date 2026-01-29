@@ -172,6 +172,8 @@ const ItemFilters = ({
               🏪 Fornecedor:
             </label>
             <select
+              id="filter-fornecedor"
+              name="filter-fornecedor"
               value={filterFornecedor}
               onChange={(e) => setFilterFornecedor(e.target.value)}
               className="form-input"
