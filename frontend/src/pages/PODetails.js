@@ -873,7 +873,7 @@ const PODetails = () => {
                         className="form-input"
                         value={formData.status}
                         onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                        data-testid={`select-status-${item.codigo_item}`}
+                        data-testid={`select-status-${groupItem.codigo_item}`}
                       >
                         <option value="pendente">Pendente</option>
                         <option value="cotado">Cotado</option>
@@ -894,7 +894,7 @@ const PODetails = () => {
                             className="form-input"
                             value={formData.preco_venda}
                             onChange={(e) => setFormData({ ...formData, preco_venda: e.target.value })}
-                            data-testid={`input-preco-venda-${item.codigo_item}`}
+                            data-testid={`input-preco-venda-${groupItem.codigo_item}`}
                           />
                         </div>
                         <div className="form-group">
@@ -905,7 +905,7 @@ const PODetails = () => {
                             className="form-input"
                             value={formData.imposto}
                             onChange={(e) => setFormData({ ...formData, imposto: e.target.value })}
-                            data-testid={`input-imposto-${item.codigo_item}`}
+                            data-testid={`input-imposto-${groupItem.codigo_item}`}
                           />
                         </div>
                         <div className="form-group">
@@ -916,7 +916,7 @@ const PODetails = () => {
                             className="form-input"
                             value={formData.frete_envio}
                             onChange={(e) => setFormData({ ...formData, frete_envio: e.target.value })}
-                            data-testid={`input-frete-envio-${item.codigo_item}`}
+                            data-testid={`input-frete-envio-${groupItem.codigo_item}`}
                           />
                         </div>
                       </>
@@ -934,7 +934,7 @@ const PODetails = () => {
                         onClick={addFonteCompra}
                         className="btn btn-secondary"
                         style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
-                        data-testid={`add-fonte-${item.codigo_item}`}
+                        data-testid={`add-fonte-${groupItem.codigo_item}`}
                       >
                         + Adicionar Local
                       </button>
