@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { apiGet, apiPost, apiDelete, API, formatBRL } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import Pagination from '../components/Pagination';
+import SearchSummaryPopup from '../components/SearchSummaryPopup';
 
 // Helper para calcular status de entrega
 const calcularStatusEntrega = (dataEntrega, statusCount = {}) => {
