@@ -146,9 +146,18 @@ const Dashboard = () => {
       });
     });
     
-    // Ordenar por número da OC
-    resumo.pendentes.sort((a, b) => a.numero_oc?.localeCompare(b.numero_oc));
-    resumo.finalizados.sort((a, b) => a.numero_oc?.localeCompare(b.numero_oc));
+    // Ordenar por status: pendente → cotado → comprado → em_separacao
+    const statusOrder = { 'pendente': 1, 'cotado': 2, 'comprado': 3, 'em_separacao': 4, 'em_transito': 5, 'entregue': 6 };
+    resumo.pendentes.sort((a, b) => {
+      const statusDiff = (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99);
+      if (statusDiff !== 0) return statusDiff;
+      return a.numero_oc?.localeCompare(b.numero_oc);
+    });
+    resumo.finalizados.sort((a, b) => {
+      const statusDiff = (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99);
+      if (statusDiff !== 0) return statusDiff;
+      return a.numero_oc?.localeCompare(b.numero_oc);
+    });
     
     return (resumo.pendentes.length > 0 || resumo.finalizados.length > 0) ? resumo : null;
   };
