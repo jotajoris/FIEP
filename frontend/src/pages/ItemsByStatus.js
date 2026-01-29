@@ -4219,7 +4219,7 @@ Chave PIX: 46.663.556/0001-69`;
                                         
                                         {/* Botão editar */}
                                         <button
-                                          onClick={() => handleEditClick(item)}
+                                          onClick={() => startEdit(item)}
                                           style={{
                                             padding: '0.25rem 0.5rem',
                                             background: '#f3f4f6',
