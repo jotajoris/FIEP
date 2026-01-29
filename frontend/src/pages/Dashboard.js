@@ -70,8 +70,55 @@ const Dashboard = () => {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   
+  // Resumo de quantidade por código de item
+  const [resumoCodigoItem, setResumoCodigoItem] = useState(null);
+  
   // Loading de filtro (para feedback visual)
   const [filtering, setFiltering] = useState(false);
+
+  // Calcular resumo quando código do item mudar
+  useEffect(() => {
+    if (searchCodigoItem && searchCodigoItem.trim().length >= 3) {
+      const termo = searchCodigoItem.toLowerCase().trim();
+      const resumo = { porOC: [], total: 0, codigoExato: null };
+      
+      orders.forEach(order => {
+        order.items?.forEach(item => {
+          // Verificar se o código bate
+          if (item.codigo_item?.toLowerCase().includes(termo)) {
+            // Excluir itens em_transito e entregue
+            if (item.status !== 'em_transito' && item.status !== 'entregue') {
+              // Se é match exato, guardar o código
+              if (item.codigo_item?.toLowerCase() === termo) {
+                resumo.codigoExato = item.codigo_item;
+              }
+              
+              // Encontrar ou criar entrada para esta OC
+              let ocEntry = resumo.porOC.find(o => o.numero_oc === order.numero_oc);
+              if (!ocEntry) {
+                ocEntry = { 
+                  numero_oc: order.numero_oc, 
+                  quantidade: 0, 
+                  status: item.status,
+                  codigo_item: item.codigo_item
+                };
+                resumo.porOC.push(ocEntry);
+              }
+              ocEntry.quantidade += item.quantidade || 1;
+              resumo.total += item.quantidade || 1;
+            }
+          }
+        });
+      });
+      
+      // Ordenar por número da OC
+      resumo.porOC.sort((a, b) => a.numero_oc?.localeCompare(b.numero_oc));
+      
+      setResumoCodigoItem(resumo.porOC.length > 0 ? resumo : null);
+    } else {
+      setResumoCodigoItem(null);
+    }
+  }, [searchCodigoItem, orders]);
 
   useEffect(() => {
     loadData();
