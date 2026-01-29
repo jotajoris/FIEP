@@ -1340,35 +1340,37 @@ const ItemsByStatus = () => {
     setUploadingNF(`${item._uniqueId}-${tipo}`);
     
     try {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const base64 = e.target.result.split(',')[1];
-        const contentType = file.type || (fileExtension === '.xml' ? 'text/xml' : 'application/pdf');
-        
-        const ncm = ncmManual[`${item._uniqueId}-${tipo}`] || null;
-        
-        const payload = {
-          filename: file.name,
-          content_type: contentType,
-          file_data: base64,
-          ncm_manual: ncm,
-          tipo: tipo
-        };
-        
-        const response = await apiPost(
-          `${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}/notas-fiscais`,
-          payload
-        );
-        
-        alert(`Nota fiscal adicionada! NCM: ${response.data.ncm}`);
-        setNcmManual(prev => ({ ...prev, [`${item._uniqueId}-${tipo}`]: '' }));
-        // Recarregar apenas este item para manter seção expandida
-        await reloadSingleItem(item.po_id, item._itemIndexInPO, item._uniqueId);
+      // Usar Promise para aguardar a leitura do arquivo
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result.split(',')[1]);
+        reader.onerror = (e) => reject(new Error('Erro ao ler arquivo'));
+        reader.readAsDataURL(file);
+      });
+      
+      const contentType = file.type || (fileExtension === '.xml' ? 'text/xml' : 'application/pdf');
+      const ncm = ncmManual[`${item._uniqueId}-${tipo}`] || null;
+      
+      const payload = {
+        filename: file.name,
+        content_type: contentType,
+        file_data: base64,
+        ncm_manual: ncm,
+        tipo: tipo
       };
-      reader.readAsDataURL(file);
+      
+      const response = await apiPost(
+        `${API}/purchase-orders/${item.po_id}/items/by-index/${item._itemIndexInPO}/notas-fiscais`,
+        payload
+      );
+      
+      alert(`Nota fiscal adicionada! NCM: ${response.data.ncm || 'Não detectado'}`);
+      setNcmManual(prev => ({ ...prev, [`${item._uniqueId}-${tipo}`]: '' }));
+      // Recarregar apenas este item para manter seção expandida
+      await reloadSingleItem(item.po_id, item._itemIndexInPO, item._uniqueId);
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
-      alert('Erro ao fazer upload da nota fiscal.');
+      alert(`Erro ao fazer upload da nota fiscal: ${error.response?.data?.detail || error.message}`);
     } finally {
       setUploadingNF(null);
       // Limpar input
