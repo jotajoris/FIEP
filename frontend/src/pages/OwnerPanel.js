@@ -8,9 +8,11 @@ const OwnerPanel = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('todos');
 
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     loadItems();
-  }, [name]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [name]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const loadItems = async () => {
     try {
