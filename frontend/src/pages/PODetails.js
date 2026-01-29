@@ -98,6 +98,56 @@ const PODetails = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
+  // Agrupamento automático de itens com mesmo código (para Em Separação)
+  const itensAgrupados = useMemo(() => {
+    if (!po?.items) return [];
+    
+    // Agrupar itens pelo código
+    const grouped = {};
+    po.items.forEach((item, originalIndex) => {
+      const codigo = item.codigo_item || 'sem_codigo';
+      if (!grouped[codigo]) {
+        grouped[codigo] = {
+          codigo_item: codigo,
+          items: [],
+          originalIndices: []
+        };
+      }
+      grouped[codigo].items.push(item);
+      grouped[codigo].originalIndices.push(originalIndex);
+    });
+    
+    // Converter para array mantendo a ordem do primeiro item de cada grupo
+    const result = [];
+    const processedCodes = new Set();
+    
+    po.items.forEach((item, originalIndex) => {
+      const codigo = item.codigo_item || 'sem_codigo';
+      if (!processedCodes.has(codigo)) {
+        processedCodes.add(codigo);
+        const group = grouped[codigo];
+        
+        // Calcular totais do grupo
+        const quantidades = group.items.map(i => i.quantidade || 1);
+        const quantidadeTotal = quantidades.reduce((sum, q) => sum + q, 0);
+        const temMultiplos = group.items.length > 1;
+        const quantidadeFormatada = temMultiplos ? quantidades.join('+') : String(quantidades[0]);
+        
+        result.push({
+          ...group,
+          quantidades,
+          quantidadeTotal,
+          temMultiplos,
+          quantidadeFormatada,
+          firstItem: group.items[0],
+          firstIndex: group.originalIndices[0]
+        });
+      }
+    });
+    
+    return result;
+  }, [po?.items]);
+
   useEffect(() => {
     loadPO();
     // eslint-disable-next-line react-hooks/exhaustive-deps
