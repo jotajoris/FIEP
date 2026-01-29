@@ -585,6 +585,54 @@ const Dashboard = () => {
               style={{ width: '100%' }}
               data-testid="search-codigo-input"
             />
+            {/* Resumo de quantidade por OC */}
+            {resumoCodigoItem && (
+              <div style={{ 
+                marginTop: '0.5rem', 
+                padding: '0.75rem', 
+                background: '#f0fdf4', 
+                borderRadius: '8px',
+                border: '1px solid #22c55e',
+                fontSize: '0.8rem',
+                position: 'absolute',
+                zIndex: 100,
+                minWidth: '280px',
+                maxWidth: '350px',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+              }}>
+                <div style={{ fontWeight: '700', color: '#166534', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>📦 Código: {resumoCodigoItem.codigoExato || searchCodigoItem.toUpperCase()}</span>
+                  <button
+                    onClick={() => setResumoCodigoItem(null)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}
+                  >×</button>
+                </div>
+                <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                  {resumoCodigoItem.porOC.map((item, idx) => (
+                    <div key={idx} style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      padding: '0.25rem 0',
+                      borderBottom: idx < resumoCodigoItem.porOC.length - 1 ? '1px solid #dcfce7' : 'none'
+                    }}>
+                      <span style={{ color: '#374151' }}>{item.numero_oc}</span>
+                      <span style={{ fontWeight: '600', color: '#0369a1' }}>{item.quantidade} un</span>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ 
+                  marginTop: '0.5rem', 
+                  paddingTop: '0.5rem', 
+                  borderTop: '2px solid #22c55e',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontWeight: '700'
+                }}>
+                  <span style={{ color: '#166534' }}>TOTAL (não entregues):</span>
+                  <span style={{ color: '#dc2626', fontSize: '1rem' }}>{resumoCodigoItem.total} un</span>
+                </div>
+              </div>
+            )}
           </div>
           
           {/* Pesquisa por descrição/nome do item */}
