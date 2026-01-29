@@ -636,62 +636,100 @@ const Dashboard = () => {
               <div style={{ 
                 marginTop: '0.5rem', 
                 padding: '0.75rem', 
-                background: '#f0fdf4', 
+                background: '#f8fafc', 
                 borderRadius: '8px',
-                border: '1px solid #22c55e',
+                border: '1px solid #94a3b8',
                 fontSize: '0.8rem',
                 position: 'absolute',
                 zIndex: 100,
-                minWidth: '280px',
-                maxWidth: '350px',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                minWidth: '320px',
+                maxWidth: '400px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
               }}>
-                <div style={{ fontWeight: '700', color: '#166534', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>📦 Código: {resumoCodigoItem.codigoExato || searchCodigoItem.toUpperCase()}</span>
+                <div style={{ fontWeight: '700', color: '#1e293b', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>🔍 Código: {resumoCodigoItem.termoEncontrado || searchCodigoItem.toUpperCase()}</span>
                   <button
                     onClick={() => setResumoCodigoItem(null)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}
                   >×</button>
                 </div>
-                <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
-                  {resumoCodigoItem.porOC.map((item, idx) => (
-                    <div key={idx} style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      padding: '0.25rem 0',
-                      borderBottom: idx < resumoCodigoItem.porOC.length - 1 ? '1px solid #dcfce7' : 'none',
-                      alignItems: 'center'
-                    }}>
-                      <a 
-                        href={`/po/${orders.find(o => o.numero_oc === item.numero_oc)?.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ 
-                          color: '#2563eb', 
-                          textDecoration: 'none',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.25rem'
-                        }}
-                        title="Abrir OC em nova guia"
-                      >
-                        {item.numero_oc}
-                        <span style={{ fontSize: '0.7rem' }}>↗</span>
-                      </a>
-                      <span style={{ fontWeight: '600', color: '#0369a1' }}>{item.quantidade} un</span>
+                
+                {/* Seção: Pendentes (não finalizados) */}
+                {resumoCodigoItem.pendentes.length > 0 && (
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    <div style={{ fontWeight: '600', color: '#166534', fontSize: '0.75rem', marginBottom: '0.25rem', background: '#dcfce7', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
+                      📋 PENDENTES ({resumoCodigoItem.totalPendentes} un)
                     </div>
-                  ))}
-                </div>
+                    <div style={{ maxHeight: '100px', overflowY: 'auto' }}>
+                      {resumoCodigoItem.pendentes.map((item, idx) => (
+                        <div key={idx} style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          padding: '0.2rem 0',
+                          borderBottom: idx < resumoCodigoItem.pendentes.length - 1 ? '1px solid #e2e8f0' : 'none',
+                          alignItems: 'center'
+                        }}>
+                          <a 
+                            href={`/po/${orders.find(o => o.numero_oc === item.numero_oc)?.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: '#2563eb', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                            title="Abrir OC em nova guia"
+                          >
+                            <span>{getStatusEmoji(item.status)}</span>
+                            {item.numero_oc}
+                            <span style={{ fontSize: '0.65rem' }}>↗</span>
+                          </a>
+                          <span style={{ fontWeight: '600', color: '#0369a1' }}>{item.quantidade} un</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Seção: Finalizados (em trânsito + entregues) */}
+                {resumoCodigoItem.finalizados.length > 0 && (
+                  <div style={{ marginBottom: '0.5rem' }}>
+                    <div style={{ fontWeight: '600', color: '#64748b', fontSize: '0.75rem', marginBottom: '0.25rem', background: '#f1f5f9', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
+                      ✅ FINALIZADOS ({resumoCodigoItem.totalFinalizados} un)
+                    </div>
+                    <div style={{ maxHeight: '80px', overflowY: 'auto', opacity: 0.7 }}>
+                      {resumoCodigoItem.finalizados.map((item, idx) => (
+                        <div key={idx} style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          padding: '0.2rem 0',
+                          borderBottom: idx < resumoCodigoItem.finalizados.length - 1 ? '1px solid #e2e8f0' : 'none',
+                          alignItems: 'center'
+                        }}>
+                          <a 
+                            href={`/po/${orders.find(o => o.numero_oc === item.numero_oc)?.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: '#64748b', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                            title="Abrir OC em nova guia"
+                          >
+                            <span>{getStatusEmoji(item.status)}</span>
+                            {item.numero_oc}
+                            <span style={{ fontSize: '0.65rem' }}>↗</span>
+                          </a>
+                          <span style={{ fontWeight: '600', color: '#64748b' }}>{item.quantidade} un</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Total geral */}
                 <div style={{ 
-                  marginTop: '0.5rem', 
                   paddingTop: '0.5rem', 
-                  borderTop: '2px solid #22c55e',
+                  borderTop: '2px solid #94a3b8',
                   display: 'flex',
                   justifyContent: 'space-between',
                   fontWeight: '700'
                 }}>
-                  <span style={{ color: '#166534' }}>TOTAL (não entregues):</span>
-                  <span style={{ color: '#dc2626', fontSize: '1rem' }}>{resumoCodigoItem.total} un</span>
+                  <span style={{ color: '#1e293b' }}>TOTAL GERAL:</span>
+                  <span style={{ color: '#dc2626', fontSize: '1rem' }}>{resumoCodigoItem.totalPendentes + resumoCodigoItem.totalFinalizados} un</span>
                 </div>
               </div>
             )}
