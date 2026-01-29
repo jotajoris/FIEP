@@ -7253,6 +7253,9 @@ async def startup_event():
 init_admin_routes(db, LOT_ASSIGNMENTS, LOT_TO_OWNER, EXCLUDED_OCS_FROM_COMMISSION)
 init_backup_routes(db)
 init_fornecedores_routes(db)
+init_dashboard_routes(db)
+init_estoque_routes(db)
+init_limites_routes(db)
 
 # Incluir routers modulares no api_router
 api_router.include_router(auth_router)
@@ -7261,6 +7264,9 @@ api_router.include_router(notificacao_router)
 api_router.include_router(admin_router)
 api_router.include_router(backup_router)
 api_router.include_router(fornecedores_router)
+api_router.include_router(dashboard_router)
+api_router.include_router(estoque_router)
+api_router.include_router(limites_router)
 
 # Include the router in the main app
 app.include_router(api_router)
