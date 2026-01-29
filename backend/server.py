@@ -62,6 +62,9 @@ from routes.notificacao_routes import router as notificacao_router
 from routes.admin_routes import router as admin_router, init_admin_routes
 from routes.backup_routes import router as backup_router, init_backup_routes
 from routes.fornecedores_routes import router as fornecedores_router, init_fornecedores_routes
+from routes.dashboard_routes import router as dashboard_router, init_dashboard_routes
+from routes.estoque_routes import router as estoque_router, init_estoque_routes
+from routes.limites_routes import router as limites_router, init_limites_routes
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
