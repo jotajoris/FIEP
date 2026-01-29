@@ -6361,7 +6361,7 @@ Chave PIX: 46.663.556/0001-69`;
             setEstoqueDetalhes(null);
             setQuantidadeUsar(0);
           }}
-          onSuccess={() => fetchItems()}
+          onSuccess={() => loadItems()}
         />
       )}
       
