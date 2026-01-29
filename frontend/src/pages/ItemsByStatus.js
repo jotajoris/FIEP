@@ -2276,58 +2276,9 @@ Chave PIX: 46.663.556/0001-69`;
     }
   };
 
-  const fecharModalUsarEstoque = () => {
-    setShowUsarEstoqueModal(null);
-    setEstoqueDetalhes(null);
-    setQuantidadeUsar(0);
-  };
+  // Funções de modal de estoque movidas para UsarEstoqueModal componente
 
-  const confirmarUsarEstoque = async () => {
-    if (!showUsarEstoqueModal || quantidadeUsar <= 0) return;
-    
-    setUsandoEstoque(true);
-    try {
-      const response = await apiPost(`${API}/estoque/usar`, {
-        po_id: showUsarEstoqueModal.po_id,
-        item_index: showUsarEstoqueModal._itemIndexInPO,
-        quantidade_usar: quantidadeUsar
-      });
-      
-      const resultado = response.data;
-      
-      if (resultado.success) {
-        alert(resultado.mensagem);
-        fecharModalUsarEstoque();
-        loadItems(); // Recarregar lista
-      }
-    } catch (error) {
-      console.error('Erro ao usar estoque:', error);
-      alert('Erro ao usar estoque: ' + (error.response?.data?.detail || error.message));
-    } finally {
-      setUsandoEstoque(false);
-    }
-  };
-
-  // Renderiza o Modal de Usar Estoque
-  const renderModalUsarEstoque = () => {
-    if (!showUsarEstoqueModal || !estoqueDetalhes) return null;
-    
-    const item = showUsarEstoqueModal;
-    const qtdNecessaria = item.quantidade || 0;
-    
-    // Para itens pendentes/cotados, ignorar quantidade_do_estoque anterior
-    const statusPodeUsarEstoque = ['pendente', 'cotado'];
-    const ignorarQtdAnterior = statusPodeUsarEstoque.includes(item.status);
-    
-    const qtdJaAtendida = ignorarQtdAnterior ? 0 : (item.quantidade_do_estoque || 0);
-    const qtdFaltante = qtdNecessaria - qtdJaAtendida;
-    const qtdDisponivel = estoqueDetalhes.total_disponivel || 0;
-    const maxUsar = Math.min(qtdDisponivel, qtdFaltante); // Não pode usar mais do que precisa
-    const atendeTudo = quantidadeUsar >= qtdFaltante;
-    
-    return (
-      <div style={{
-        position: 'fixed',
+  // Função para renderizar o conteúdo completo de um item (edição, NF, etc)
         top: 0,
         left: 0,
         right: 0,
