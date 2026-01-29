@@ -661,9 +661,25 @@ const Dashboard = () => {
                       display: 'flex', 
                       justifyContent: 'space-between', 
                       padding: '0.25rem 0',
-                      borderBottom: idx < resumoCodigoItem.porOC.length - 1 ? '1px solid #dcfce7' : 'none'
+                      borderBottom: idx < resumoCodigoItem.porOC.length - 1 ? '1px solid #dcfce7' : 'none',
+                      alignItems: 'center'
                     }}>
-                      <span style={{ color: '#374151' }}>{item.numero_oc}</span>
+                      <a 
+                        href={`/po/${orders.find(o => o.numero_oc === item.numero_oc)?.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ 
+                          color: '#2563eb', 
+                          textDecoration: 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem'
+                        }}
+                        title="Abrir OC em nova guia"
+                      >
+                        {item.numero_oc}
+                        <span style={{ fontSize: '0.7rem' }}>↗</span>
+                      </a>
                       <span style={{ fontWeight: '600', color: '#0369a1' }}>{item.quantidade} un</span>
                     </div>
                   ))}
