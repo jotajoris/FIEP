@@ -4248,7 +4248,7 @@ Chave PIX: 46.663.556/0001-69`;
                         const isSelectedForRastreio = itensParaRastreio[oc.po_id]?.has(item._itemIndexInPO) || false;
                         const jaTemNF = oc.itensComNFIndices && oc.itensComNFIndices.has(item._itemIndexInPO);
                         
-                        {/* VISUALIZAÇÃO SIMPLIFICADA PARA EM TRÂNSITO */}
+                        // VISUALIZAÇÃO SIMPLIFICADA PARA EM TRÂNSITO
                         if (status === 'em_transito') {
                           return (
                             <RastreioItemCard
@@ -4263,7 +4263,7 @@ Chave PIX: 46.663.556/0001-69`;
                           );
                         }
                         
-                        {/* VISUALIZAÇÃO COMPLETA PARA EM SEPARAÇÃO */}
+                        // VISUALIZAÇÃO COMPLETA PARA EM SEPARAÇÃO
                         return (
                           <div 
                             key={item._uniqueId} 
