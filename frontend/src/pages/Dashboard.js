@@ -572,7 +572,7 @@ const Dashboard = () => {
           </div>
           
           {/* Pesquisa por código do item */}
-          <div style={{ flex: '1', minWidth: '150px' }}>
+          <div style={{ flex: '1', minWidth: '150px', position: 'relative' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
               🔍 Código Item
             </label>
