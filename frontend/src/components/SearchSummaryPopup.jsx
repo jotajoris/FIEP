@@ -38,7 +38,7 @@ const SearchSummaryPopup = ({
         justifyContent: 'space-between', 
         alignItems: 'center' 
       }}>
-        <span>{icon} {label}: "{resumo.termoEncontrado || termo}"</span>
+        <span>{icon} {label}: &quot;{resumo.termoEncontrado || termo}&quot;</span>
         <button
           onClick={onClose}
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}
