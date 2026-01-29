@@ -71,12 +71,14 @@ const Login = () => {
             <label className="form-label" htmlFor="email">Email</label>
             <input
               id="email"
+              name="email"
               type="email"
               className="form-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="seu@email.com"
               required
+              autoComplete="email"
               data-testid="input-email"
             />
           </div>
@@ -85,12 +87,14 @@ const Login = () => {
             <label className="form-label" htmlFor="password">Senha</label>
             <input
               id="password"
+              name="password"
               type="password"
               className="form-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
+              autoComplete="current-password"
               data-testid="input-password"
             />
           </div>
