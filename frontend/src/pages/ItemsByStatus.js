@@ -4083,13 +4083,14 @@ Chave PIX: 46.663.556/0001-69`;
                                   </div>
                                 </div>
                                 
-                                {/* Seleção em massa para o grupo */}
+                                {/* Seleção em massa - só aparece quando há múltiplos itens */}
+                                {temMultiplos && (
                                 <div style={{ 
                                   display: 'flex', 
                                   gap: '1rem', 
                                   flexWrap: 'wrap',
                                   padding: '0.75rem',
-                                  background: '#e0e7ff',
+                                  background: '#fed7aa',
                                   borderRadius: '6px',
                                   marginBottom: '1rem'
                                 }}>
@@ -4161,6 +4162,7 @@ Chave PIX: 46.663.556/0001-69`;
                                     </>
                                   )}
                                 </div>
+                                )}
                                 
                                 {/* Lista de itens do grupo */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
