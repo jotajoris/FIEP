@@ -6446,7 +6446,7 @@ Chave PIX: 46.663.556/0001-69`;
                 />
                 {envioParcialData.quantidade_enviar && (
                   <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: '#6b7280' }}>
-                    📋 {showEnvioParcialModal.quantidade - parseInt(envioParcialData.quantidade_enviar || 0)} unidades permanecerão em "Em Separação"
+                    📋 {showEnvioParcialModal.quantidade - parseInt(envioParcialData.quantidade_enviar || 0)} unidades permanecerão em &quot;Em Separação&quot;
                   </p>
                 )}
               </div>
