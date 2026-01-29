@@ -2084,7 +2084,8 @@ const ItemsByStatus = () => {
   const gerarDadosAdicionaisNF = (item) => {
     // Extrair apenas o número da OC (ex: "OC-2.118938" -> "2.118938")
     const numeroOC = item.numero_oc ? item.numero_oc.replace(/^OC-/i, '') : '';
-    const endereco = item.endereco_entrega || 'ENDEREÇO NÃO INFORMADO';
+    // Preferir endereço da OC (que pode ter CEP) sobre o do item
+    const endereco = item.endereco_entrega_oc || item.endereco_entrega || 'ENDEREÇO NÃO INFORMADO';
     
     return `Endereço da entrega: ${endereco}
 NF referente à OC - ${numeroOC}
