@@ -23,7 +23,22 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.3.18 (29/01/2026)
+## Versão Atual: 3.3.19 (29/01/2026)
+
+### 🔧 Correções de Acessibilidade (29/01/2026)
+**Campos de formulário corrigidos:**
+- ✅ **Dashboard.js** - Adicionado `id`, `name`, `htmlFor` e `autocomplete` aos campos de busca
+- ✅ **Login.js** - Adicionado `name` e `autocomplete` aos campos de email/senha
+- ✅ **ItemFilters.jsx** - Adicionado `id`, `name`, `htmlFor` e `autocomplete` a todos os filtros
+
+**Problemas corrigidos:**
+- ✅ "A form field element should have an id or name attribute"
+- ✅ "No label associated with a form field"
+- ✅ "An element doesn't have an autocomplete attribute"
+
+---
+
+## Versão: 3.3.18 (29/01/2026)
 
 ### 🏗️ Refatoração de Arquitetura - Fase 4: Integração (29/01/2026)
 **Integração de Componentes no ItemsByStatus.js:**
