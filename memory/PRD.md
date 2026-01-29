@@ -23,7 +23,30 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.3.16 (29/01/2026)
+## Versão Atual: 3.3.17 (29/01/2026)
+
+### 🏗️ Refatoração de Arquitetura - Fase 3 (29/01/2026)
+**Frontend - Novos Componentes Criados:**
+- ✅ **`NFUploadSection.jsx`** (~280 linhas) - Upload/download de NFs encapsulado
+- ✅ **`UsarEstoqueModal.jsx`** (~270 linhas) - Modal completo de usar estoque
+- ✅ **`ItemEditForm.jsx`** (~380 linhas) - Formulário de edição encapsulado
+- 📊 **Total de código componentizado**: ~1.657 linhas (pronto para integrar)
+
+**Componentes prontos para uso:**
+```javascript
+import { 
+  ItemFilters,      // Filtros de busca
+  OCCard,           // Card de OC
+  ItemCard,         // Card de item
+  NFUploadSection,  // Upload de NFs
+  UsarEstoqueModal, // Modal de estoque
+  ItemEditForm      // Formulário de edição
+} from '../components/ItemsByStatus';
+```
+
+---
+
+## Versão: 3.3.16 (29/01/2026)
 
 ### 🏗️ Refatoração de Arquitetura - Fase 2 (29/01/2026)
 **Backend - Novos Módulos de Rotas:**
