@@ -1048,11 +1048,11 @@ const PODetails = () => {
                       }}>
                         {(() => {
                           const { totalQtd, totalCusto, totalFrete } = calcularTotalFontes();
-                          const qtdRestante = (formData.quantidade_total || item.quantidade) - totalQtd;
+                          const qtdRestante = (formData.quantidade_total || groupItem.quantidade) - totalQtd;
                           return (
                             <>
                               <span>
-                                <strong>Total Qtd:</strong> {totalQtd} / {formData.quantidade_total || item.quantidade}
+                                <strong>Total Qtd:</strong> {totalQtd} / {formData.quantidade_total || groupItem.quantidade}
                                 {qtdRestante > 0 && <span style={{ color: '#f59e0b' }}> (faltam {qtdRestante})</span>}
                                 {qtdRestante < 0 && <span style={{ color: '#ef4444' }}> (excedeu {Math.abs(qtdRestante)})</span>}
                               </span>
@@ -1066,10 +1066,10 @@ const PODetails = () => {
                   </div>
 
                   <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
-                    <button onClick={cancelEdit} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }} data-testid={`cancel-edit-${realIndex}`}>
+                    <button onClick={cancelEdit} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }} data-testid={`cancel-edit-${itemRealIndex}`}>
                       Cancelar
                     </button>
-                    <button onClick={() => saveEdit(item, realIndex)} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }} data-testid={`save-edit-${realIndex}`}>
+                    <button onClick={() => saveEdit(groupItem, itemRealIndex)} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }} data-testid={`save-edit-${itemRealIndex}`}>
                       Salvar
                     </button>
                   </div>
@@ -1077,12 +1077,12 @@ const PODetails = () => {
               ) : (
                 <div style={{ marginTop: '1rem' }}>
                   {/* Mostrar fontes de compra se existirem */}
-                  {item.fontes_compra && item.fontes_compra.length > 0 && (
+                  {groupItem.fontes_compra && groupItem.fontes_compra.length > 0 && (
                     <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#e8f4fd', borderRadius: '8px' }}>
                       <div style={{ fontWeight: '600', marginBottom: '0.5rem', color: '#4a5568', fontSize: '0.9rem' }}>
-                        📦 Locais de Compra ({item.fontes_compra.length})
+                        📦 Locais de Compra ({groupItem.fontes_compra.length})
                       </div>
-                      {item.fontes_compra.map((fc, idx) => (
+                      {groupItem.fontes_compra.map((fc, idx) => (
                         <div key={fc.id || idx} style={{ 
                           display: 'flex', 
                           gap: '1rem', 
@@ -1109,23 +1109,26 @@ const PODetails = () => {
                   
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.9rem', flexWrap: 'wrap' }}>
-                      {item.preco_venda && (
+                      {groupItem.preco_venda && (
                         <span>
-                          <strong>Preço Venda:</strong> {formatBRL(item.preco_venda)}
-                          {item.quantidade && <small> (Total: {formatBRL(item.preco_venda * item.quantidade)})</small>}
+                          <strong>Preço Venda:</strong> {formatBRL(groupItem.preco_venda)}
+                          {groupItem.quantidade && <small> (Total: {formatBRL(groupItem.preco_venda * groupItem.quantidade)})</small>}
                         </span>
                       )}
-                      {item.preco_compra && <span><strong>Compra Média:</strong> {formatBRL(item.preco_compra)}</span>}
-                      {item.frete_compra && <span><strong>Frete Compra:</strong> {formatBRL(item.frete_compra)}</span>}
-                      {isAdmin() && item.frete_envio && <span><strong>Frete Envio:</strong> {formatBRL(item.frete_envio)}</span>}
-                      {isAdmin() && item.lucro_liquido !== undefined && item.lucro_liquido !== null && <span><strong>Lucro:</strong> <span style={{ color: item.lucro_liquido > 0 ? '#10b981' : '#ef4444', fontWeight: '700' }}>{formatBRL(item.lucro_liquido)}</span></span>}
+                      {groupItem.preco_compra && <span><strong>Compra Média:</strong> {formatBRL(groupItem.preco_compra)}</span>}
+                      {groupItem.frete_compra && <span><strong>Frete Compra:</strong> {formatBRL(groupItem.frete_compra)}</span>}
+                      {isAdmin() && groupItem.frete_envio && <span><strong>Frete Envio:</strong> {formatBRL(groupItem.frete_envio)}</span>}
+                      {isAdmin() && groupItem.lucro_liquido !== undefined && groupItem.lucro_liquido !== null && <span><strong>Lucro:</strong> <span style={{ color: groupItem.lucro_liquido > 0 ? '#10b981' : '#ef4444', fontWeight: '700' }}>{formatBRL(groupItem.lucro_liquido)}</span></span>}
                     </div>
-                    <button onClick={() => startEdit(item, realIndex)} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} data-testid={`edit-item-${realIndex}`}>
+                    <button onClick={() => startEdit(groupItem, itemRealIndex)} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} data-testid={`edit-item-${itemRealIndex}`}>
                       Editar
                     </button>
                   </div>
                 </div>
               )}
+                </div>
+                );
+              })}
             </div>
           );
           })}
