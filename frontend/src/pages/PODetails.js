@@ -100,6 +100,7 @@ const PODetails = () => {
 
   useEffect(() => {
     loadPO();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const loadPO = async () => {

@@ -10,6 +10,7 @@ const OwnerPanel = () => {
 
   useEffect(() => {
     loadItems();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name]);
 
   const loadItems = async () => {

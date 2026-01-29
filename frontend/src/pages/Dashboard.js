@@ -164,14 +164,17 @@ const Dashboard = () => {
   };
 
   // Calcular resumos quando os termos mudarem
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setResumoCodigoItem(calcularResumo(searchCodigoItem, 'codigo'));
   }, [searchCodigoItem, orders]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setResumoDescricaoItem(calcularResumo(searchDescricaoItem, 'descricao'));
   }, [searchDescricaoItem, orders]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setResumoMarcaModelo(calcularResumo(searchMarcaModelo, 'marca'));
   }, [searchMarcaModelo, orders]);

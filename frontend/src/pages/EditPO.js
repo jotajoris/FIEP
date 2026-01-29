@@ -144,6 +144,7 @@ const EditPO = () => {
       return;
     }
     loadOrder();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, isAdmin, navigate]);
 
   const loadOrder = async () => {
