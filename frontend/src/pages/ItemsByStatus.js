@@ -4002,7 +4002,246 @@ Chave PIX: 46.663.556/0001-69`;
 
                     {/* Lista de Itens da OC */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      {oc.items.map((item) => {
+                      {/* Lógica de agrupamento por código */}
+                      {(() => {
+                        // Se agrupamento está ativo, agrupa itens por código
+                        if (status === 'em_separacao' && agruparPorCodigoOC[oc.po_id]) {
+                          const itensAgrupados = {};
+                          oc.items.forEach(item => {
+                            const codigo = item.codigo_item || 'sem_codigo';
+                            if (!itensAgrupados[codigo]) {
+                              itensAgrupados[codigo] = [];
+                            }
+                            itensAgrupados[codigo].push(item);
+                          });
+                          
+                          return Object.entries(itensAgrupados).map(([codigo, itensDoGrupo]) => {
+                            const quantidadeTotal = itensDoGrupo.reduce((sum, i) => sum + (i.quantidade || 1), 0);
+                            const todosComNF = itensDoGrupo.every(i => oc.itensComNFIndices?.has(i._itemIndexInPO));
+                            const algumSelecionadoNF = itensDoGrupo.some(i => getItensSelecionados(oc.po_id).has(i._uniqueId));
+                            const algumSelecionadoFrete = itensDoGrupo.some(i => itensParaFrete[oc.po_id]?.has(i._itemIndexInPO));
+                            const algumSelecionadoStatus = itensDoGrupo.some(i => itensParaStatus[oc.po_id]?.has(i._itemIndexInPO));
+                            
+                            return (
+                              <div 
+                                key={codigo}
+                                className="card"
+                                style={{
+                                  background: todosComNF ? '#dcfce7' : algumSelecionadoNF ? '#f0fdf4' : algumSelecionadoFrete ? '#fef9c3' : algumSelecionadoStatus ? '#f3e8ff' : '#f0f4ff',
+                                  border: todosComNF ? '2px solid #16a34a' : algumSelecionadoNF ? '2px solid #22c55e' : algumSelecionadoFrete ? '2px solid #f59e0b' : algumSelecionadoStatus ? '2px solid #8b5cf6' : '2px solid #6366f1'
+                                }}
+                                data-testid={`grupo-${codigo}`}
+                              >
+                                {/* Header do grupo */}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <div style={{
+                                      background: '#6366f1',
+                                      color: 'white',
+                                      padding: '0.5rem 1rem',
+                                      borderRadius: '8px',
+                                      fontWeight: '700'
+                                    }}>
+                                      {itensDoGrupo.length}x
+                                    </div>
+                                    <div>
+                                      <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700' }}>
+                                        Código: {codigo}
+                                      </h3>
+                                      <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', color: '#6b7280' }}>
+                                        {itensDoGrupo[0]?.descricao?.substring(0, 80)}...
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div style={{ textAlign: 'right' }}>
+                                    <div style={{ fontSize: '1.1rem', fontWeight: '700', color: '#1f2937' }}>
+                                      Qtd Total: {quantidadeTotal}
+                                    </div>
+                                    <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                                      {itensDoGrupo.length} item(ns) agrupado(s)
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {/* Seleção em massa para o grupo */}
+                                <div style={{ 
+                                  display: 'flex', 
+                                  gap: '1rem', 
+                                  flexWrap: 'wrap',
+                                  padding: '0.75rem',
+                                  background: '#e0e7ff',
+                                  borderRadius: '6px',
+                                  marginBottom: '1rem'
+                                }}>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      itensDoGrupo.forEach(item => {
+                                        if (!getItensSelecionados(oc.po_id).has(item._uniqueId)) {
+                                          toggleItemParaNFVenda(oc.po_id, item._uniqueId);
+                                        }
+                                      });
+                                    }}
+                                    style={{
+                                      padding: '0.4rem 0.8rem',
+                                      background: '#22c55e',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '4px',
+                                      cursor: 'pointer',
+                                      fontSize: '0.8rem'
+                                    }}
+                                  >
+                                    ✅ Selecionar Todos p/ NF
+                                  </button>
+                                  {isAdmin() && (
+                                    <>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          itensDoGrupo.forEach(item => {
+                                            if (!itensParaFrete[oc.po_id]?.has(item._itemIndexInPO)) {
+                                              toggleItemParaFrete(oc.po_id, item._itemIndexInPO);
+                                            }
+                                          });
+                                        }}
+                                        style={{
+                                          padding: '0.4rem 0.8rem',
+                                          background: '#f59e0b',
+                                          color: 'white',
+                                          border: 'none',
+                                          borderRadius: '4px',
+                                          cursor: 'pointer',
+                                          fontSize: '0.8rem'
+                                        }}
+                                      >
+                                        🚚 Selecionar Todos p/ Frete
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          itensDoGrupo.forEach(item => {
+                                            if (!itensParaStatus[oc.po_id]?.has(item._itemIndexInPO)) {
+                                              toggleItemParaStatus(oc.po_id, item._itemIndexInPO);
+                                            }
+                                          });
+                                        }}
+                                        style={{
+                                          padding: '0.4rem 0.8rem',
+                                          background: '#8b5cf6',
+                                          color: 'white',
+                                          border: 'none',
+                                          borderRadius: '4px',
+                                          cursor: 'pointer',
+                                          fontSize: '0.8rem'
+                                        }}
+                                      >
+                                        🔄 Selecionar Todos p/ Status
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                                
+                                {/* Lista de itens do grupo */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                  {itensDoGrupo.map((item, idx) => {
+                                    const isSelectedForNF = getItensSelecionados(oc.po_id).has(item._uniqueId);
+                                    const isSelectedForFrete = itensParaFrete[oc.po_id]?.has(item._itemIndexInPO) || false;
+                                    const isSelectedForStatus = itensParaStatus[oc.po_id]?.has(item._itemIndexInPO) || false;
+                                    const jaTemNF = oc.itensComNFIndices && oc.itensComNFIndices.has(item._itemIndexInPO);
+                                    
+                                    return (
+                                      <div 
+                                        key={item._uniqueId}
+                                        style={{
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '0.75rem',
+                                          padding: '0.5rem',
+                                          background: jaTemNF ? '#dcfce7' : isSelectedForNF ? '#d1fae5' : 'white',
+                                          borderRadius: '4px',
+                                          border: '1px solid #e5e7eb'
+                                        }}
+                                      >
+                                        {/* Checkboxes */}
+                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                          <input
+                                            type="checkbox"
+                                            checked={isSelectedForNF}
+                                            onChange={() => toggleItemParaNFVenda(oc.po_id, item._uniqueId)}
+                                            style={{ width: '16px', height: '16px', accentColor: '#22c55e' }}
+                                            title="NF"
+                                          />
+                                          {isAdmin() && (
+                                            <>
+                                              <input
+                                                type="checkbox"
+                                                checked={isSelectedForFrete}
+                                                onChange={() => toggleItemParaFrete(oc.po_id, item._itemIndexInPO)}
+                                                style={{ width: '16px', height: '16px', accentColor: '#f59e0b' }}
+                                                title="Frete"
+                                              />
+                                              <input
+                                                type="checkbox"
+                                                checked={isSelectedForStatus}
+                                                onChange={() => toggleItemParaStatus(oc.po_id, item._itemIndexInPO)}
+                                                style={{ width: '16px', height: '16px', accentColor: '#8b5cf6' }}
+                                                title="Status"
+                                              />
+                                            </>
+                                          )}
+                                        </div>
+                                        
+                                        {/* Info do item */}
+                                        <div style={{ flex: 1, fontSize: '0.85rem' }}>
+                                          <span style={{ fontWeight: '600' }}>#{idx + 1}</span>
+                                          <span style={{ marginLeft: '0.5rem', color: '#6b7280' }}>
+                                            Qtd: {item.quantidade || 1}
+                                          </span>
+                                          {item.fornecedor && (
+                                            <span style={{ marginLeft: '0.5rem', color: '#059669' }}>
+                                              | {item.fornecedor}
+                                            </span>
+                                          )}
+                                          {jaTemNF && (
+                                            <span style={{ marginLeft: '0.5rem', color: '#16a34a', fontWeight: '600' }}>
+                                              ✓ NF
+                                            </span>
+                                          )}
+                                        </div>
+                                        
+                                        {/* Preço */}
+                                        {item.preco > 0 && (
+                                          <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#dc2626' }}>
+                                            {formatBRL(item.preco)}
+                                          </div>
+                                        )}
+                                        
+                                        {/* Botão editar */}
+                                        <button
+                                          onClick={() => handleEditClick(item)}
+                                          style={{
+                                            padding: '0.25rem 0.5rem',
+                                            background: '#f3f4f6',
+                                            border: '1px solid #d1d5db',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            fontSize: '0.75rem'
+                                          }}
+                                        >
+                                          ✏️
+                                        </button>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          });
+                        }
+                        
+                        // Visualização normal (não agrupada)
+                        return oc.items.map((item) => {
                         const isSelectedForNF = getItensSelecionados(oc.po_id).has(item._uniqueId);
                         const isSelectedForFrete = itensParaFrete[oc.po_id]?.has(item._itemIndexInPO) || false;
                         const isSelectedForStatus = itensParaStatus[oc.po_id]?.has(item._itemIndexInPO) || false;
