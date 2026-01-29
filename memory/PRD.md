@@ -23,7 +23,29 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.3.14 (29/01/2026)
+## Versão Atual: 3.3.15 (29/01/2026)
+
+### 🏗️ Refatoração de Arquitetura (29/01/2026)
+**Backend (server.py: 7.297 linhas → Modularizado):**
+- ✅ **`admin_routes.py`** - Rotas de comissões, NFs, pagamentos (~270 linhas extraídas)
+- ✅ **`backup_routes.py`** - Rotas de backup/restore (~90 linhas extraídas)
+- ✅ **`fornecedores_routes.py`** - Rotas de fornecedores e CEP (~80 linhas extraídas)
+- 📁 **Estrutura**: `/app/backend/routes/` com 7 módulos de rotas
+
+**Frontend (ItemsByStatus.js: 6.825 linhas → Componentes):**
+- ✅ **`ItemFilters.jsx`** - Componente de filtros reutilizável (~160 linhas)
+- ✅ **`OCCard.jsx`** - Card de OC com informações e ações (~180 linhas)
+- ✅ **`ItemCard.jsx`** - Card de item individual (~200 linhas)
+- ✅ **`useItemFilters.js`** - Hook para lógica de filtros (~110 linhas)
+- ✅ **`useNotasFiscais.js`** - Hook para upload/download de NFs (~120 linhas)
+- 📁 **Estrutura**: `/app/frontend/src/components/ItemsByStatus/` e `/app/frontend/src/hooks/`
+
+**Correções:**
+- ✅ **Bug de tradução** - Adicionado `translate="no"` para prevenir problemas com Google Translate
+
+---
+
+## Versão: 3.3.14 (29/01/2026)
 
 ### 🔧 Refatoração e Correções (29/01/2026)
 - ✅ **Componente `SearchSummaryPopup.jsx` criado** - Popup reutilizável para busca no Dashboard
