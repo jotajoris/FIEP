@@ -23,7 +23,23 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.3.13 (29/01/2026)
+## Versão Atual: 3.3.14 (29/01/2026)
+
+### 🔧 Refatoração e Correções (29/01/2026)
+- ✅ **Componente `SearchSummaryPopup.jsx` criado** - Popup reutilizável para busca no Dashboard
+  - Removidas ~200 linhas de código duplicado do Dashboard.js
+  - Dashboard.js reduzido de ~1200 para ~1016 linhas
+- ✅ **Correção do upload de NFs** - Corrigido bug onde erros no upload não eram capturados
+  - O `FileReader.onload` agora usa Promise para tratamento correto de erros
+  - Mensagem de erro mais detalhada para o usuário
+- ✅ **Verificação das NFs no Admin** - Confirmado que o sistema está funcionando
+  - 2 NFs de Compra no banco de dados
+  - 0 NFs de Venda no banco de dados
+  - Dados anteriores (10+ NFs) foram perdidos em deploy/reset anterior
+
+---
+
+## Versão: 3.3.13 (29/01/2026)
 
 ### 🔍 Popups de Resumo de Busca Avançada no Dashboard (29/01/2026)
 - ✅ **Busca por Código do Item** - Popup mostra resumo de quantidade por OC para itens com código buscado
