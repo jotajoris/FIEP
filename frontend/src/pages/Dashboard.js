@@ -164,19 +164,19 @@ const Dashboard = () => {
   };
 
   // Calcular resumos quando os termos mudarem
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setResumoCodigoItem(calcularResumo(searchCodigoItem, 'codigo'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchCodigoItem, orders]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setResumoDescricaoItem(calcularResumo(searchDescricaoItem, 'descricao'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchDescricaoItem, orders]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setResumoMarcaModelo(calcularResumo(searchMarcaModelo, 'marca'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchMarcaModelo, orders]);
 
   useEffect(() => {
