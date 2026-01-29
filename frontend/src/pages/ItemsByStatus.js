@@ -4227,37 +4227,22 @@ Chave PIX: 46.663.556/0001-69`;
                           });
                         }
                         
-                        // Visualização normal (não agrupada)
+                        // Visualização normal para EM TRÂNSITO (não agrupa)
                         return oc.items.map((item) => {
-                        const isSelectedForNF = getItensSelecionados(oc.po_id).has(item._uniqueId);
-                        const isSelectedForFrete = itensParaFrete[oc.po_id]?.has(item._itemIndexInPO) || false;
-                        const isSelectedForStatus = itensParaStatus[oc.po_id]?.has(item._itemIndexInPO) || false;
                         const isSelectedForRastreio = itensParaRastreio[oc.po_id]?.has(item._itemIndexInPO) || false;
-                        const jaTemNF = oc.itensComNFIndices && oc.itensComNFIndices.has(item._itemIndexInPO);
                         
                         // VISUALIZAÇÃO SIMPLIFICADA PARA EM TRÂNSITO
-                        if (status === 'em_transito') {
-                          return (
-                            <RastreioItemCard
-                              key={item._uniqueId}
-                              item={item}
-                              isSelected={isSelectedForRastreio}
-                              onToggleSelect={() => toggleItemParaRastreio(oc.po_id, item._itemIndexInPO)}
-                              onMudarStatus={mudarStatusItemManual}
-                              isAdmin={isAdmin()}
-                              formatBRL={formatBRL}
-                            />
-                          );
-                        }
-                        
-                        // VISUALIZAÇÃO COMPLETA PARA EM SEPARAÇÃO
                         return (
-                          <div 
-                            key={item._uniqueId} 
-                            className="card" 
-                            style={{ 
-                              background: jaTemNF ? '#dcfce7' : isSelectedForNF ? '#f0fdf4' : isSelectedForFrete ? '#fef9c3' : isSelectedForStatus ? '#f3e8ff' : isSelectedForRastreio ? '#f5f3ff' : 'white', 
-                              border: jaTemNF ? '2px solid #16a34a' : isSelectedForNF ? '2px solid #22c55e' : isSelectedForFrete ? '2px solid #f59e0b' : isSelectedForStatus ? '2px solid #8b5cf6' : isSelectedForRastreio ? '2px solid #7c3aed' : '1px solid #e2e8f0'
+                          <RastreioItemCard
+                            key={item._uniqueId}
+                            item={item}
+                            isSelected={isSelectedForRastreio}
+                            onToggleSelect={() => toggleItemParaRastreio(oc.po_id, item._itemIndexInPO)}
+                            onMudarStatus={mudarStatusItemManual}
+                            isAdmin={isAdmin()}
+                            formatBRL={formatBRL}
+                          />
+                        );
                             }} 
                             data-testid={`item-card-${item._uniqueId}`}
                           >
