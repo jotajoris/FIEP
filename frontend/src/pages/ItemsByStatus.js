@@ -66,6 +66,7 @@ const ItemsByStatus = () => {
   const [ocNFsVenda, setOcNFsVenda] = useState({});  // {po_id: [nfs]} - Lista de todas NFs de Venda por OC
   const [ocProntoDespacho, setOcProntoDespacho] = useState({});  // {po_id: boolean} - Status pronto despacho por OC
   const [itensParaNFVenda, setItensParaNFVenda] = useState({});  // {po_id: Set(uniqueId)} - Itens selecionados para NF de Venda
+  const [agruparPorCodigoOC, setAgruparPorCodigoOC] = useState({});  // {po_id: boolean} - Agrupar itens por código dentro da OC
   
   // Paginação para Em Separação
   const [emSeparacaoPage, setEmSeparacaoPage] = useState(1);
