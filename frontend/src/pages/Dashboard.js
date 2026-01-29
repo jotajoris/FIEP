@@ -613,32 +613,38 @@ const Dashboard = () => {
         }}>
           {/* Pesquisa por número da OC */}
           <div style={{ flex: '1', minWidth: '150px' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
+            <label htmlFor="search-oc" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
               📋 Número OC
             </label>
             <input
+              id="search-oc"
+              name="search-oc"
               type="text"
               placeholder="Ex: OC-2.118..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="form-input"
               style={{ width: '100%' }}
+              autoComplete="off"
               data-testid="search-oc-input"
             />
           </div>
           
           {/* Pesquisa por código do item */}
           <div style={{ flex: '1', minWidth: '150px', position: 'relative' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
+            <label htmlFor="search-codigo" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
               🔍 Código Item
             </label>
             <input
+              id="search-codigo"
+              name="search-codigo"
               type="text"
               placeholder="Ex: 114641..."
               value={searchCodigoItem}
               onChange={(e) => setSearchCodigoItem(e.target.value)}
               className="form-input"
               style={{ width: '100%' }}
+              autoComplete="off"
               data-testid="search-codigo-input"
             />
             {/* Resumo de quantidade por OC */}
@@ -655,16 +661,19 @@ const Dashboard = () => {
           
           {/* Pesquisa por descrição/nome do item */}
           <div style={{ flex: '1', minWidth: '180px', position: 'relative' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
+            <label htmlFor="search-descricao" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>
               📦 Nome Item
             </label>
             <input
+              id="search-descricao"
+              name="search-descricao"
               type="text"
               placeholder="Ex: SENSOR..."
               value={searchDescricaoItem}
               onChange={(e) => setSearchDescricaoItem(e.target.value)}
               className="form-input"
               style={{ width: '100%' }}
+              autoComplete="off"
               data-testid="search-descricao-input"
             />
             {/* Resumo de quantidade por descrição */}
