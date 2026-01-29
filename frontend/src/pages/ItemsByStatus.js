@@ -4002,10 +4002,10 @@ Chave PIX: 46.663.556/0001-69`;
 
                     {/* Lista de Itens da OC */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      {/* Lógica de agrupamento por código */}
+                      {/* Lógica de agrupamento AUTOMÁTICO por código */}
                       {(() => {
-                        // Se agrupamento está ativo, agrupa itens por código
-                        if (status === 'em_separacao' && agruparPorCodigoOC[oc.po_id]) {
+                        // SEMPRE agrupa automaticamente itens por código na página Em Separação
+                        if (status === 'em_separacao') {
                           const itensAgrupados = {};
                           oc.items.forEach(item => {
                             const codigo = item.codigo_item || 'sem_codigo';
@@ -4016,7 +4016,12 @@ Chave PIX: 46.663.556/0001-69`;
                           });
                           
                           return Object.entries(itensAgrupados).map(([codigo, itensDoGrupo]) => {
-                            const quantidadeTotal = itensDoGrupo.reduce((sum, i) => sum + (i.quantidade || 1), 0);
+                            const quantidades = itensDoGrupo.map(i => i.quantidade || 1);
+                            const quantidadeTotal = quantidades.reduce((sum, q) => sum + q, 0);
+                            const temMultiplos = itensDoGrupo.length > 1;
+                            // Formato "20+20+10" quando tem múltiplos itens
+                            const quantidadeFormatada = temMultiplos ? quantidades.join('+') : quantidades[0];
+                            
                             const todosComNF = itensDoGrupo.every(i => oc.itensComNFIndices?.has(i._itemIndexInPO));
                             const algumSelecionadoNF = itensDoGrupo.some(i => getItensSelecionados(oc.po_id).has(i._uniqueId));
                             const algumSelecionadoFrete = itensDoGrupo.some(i => itensParaFrete[oc.po_id]?.has(i._itemIndexInPO));
@@ -4027,39 +4032,54 @@ Chave PIX: 46.663.556/0001-69`;
                                 key={codigo}
                                 className="card"
                                 style={{
-                                  background: todosComNF ? '#dcfce7' : algumSelecionadoNF ? '#f0fdf4' : algumSelecionadoFrete ? '#fef9c3' : algumSelecionadoStatus ? '#f3e8ff' : '#f0f4ff',
-                                  border: todosComNF ? '2px solid #16a34a' : algumSelecionadoNF ? '2px solid #22c55e' : algumSelecionadoFrete ? '2px solid #f59e0b' : algumSelecionadoStatus ? '2px solid #8b5cf6' : '2px solid #6366f1'
+                                  // Itens duplicados ficam LARANJA
+                                  background: todosComNF ? '#dcfce7' : temMultiplos ? '#fff7ed' : algumSelecionadoNF ? '#f0fdf4' : algumSelecionadoFrete ? '#fef9c3' : algumSelecionadoStatus ? '#f3e8ff' : '#f8fafc',
+                                  border: todosComNF ? '2px solid #16a34a' : temMultiplos ? '2px solid #f97316' : algumSelecionadoNF ? '2px solid #22c55e' : algumSelecionadoFrete ? '2px solid #f59e0b' : algumSelecionadoStatus ? '2px solid #8b5cf6' : '1px solid #e2e8f0'
                                 }}
                                 data-testid={`grupo-${codigo}`}
                               >
                                 {/* Header do grupo */}
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: temMultiplos ? '1rem' : '0.5rem' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                    <div style={{
-                                      background: '#6366f1',
-                                      color: 'white',
-                                      padding: '0.5rem 1rem',
-                                      borderRadius: '8px',
-                                      fontWeight: '700'
-                                    }}>
-                                      {itensDoGrupo.length}x
-                                    </div>
+                                    {/* Badge só aparece quando há múltiplos itens */}
+                                    {temMultiplos && (
+                                      <div style={{
+                                        background: '#f97316',
+                                        color: 'white',
+                                        padding: '0.5rem 1rem',
+                                        borderRadius: '8px',
+                                        fontWeight: '700'
+                                      }}>
+                                        {itensDoGrupo.length}x
+                                      </div>
+                                    )}
                                     <div>
                                       <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700' }}>
                                         Código: {codigo}
                                       </h3>
                                       <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', color: '#6b7280' }}>
-                                        {itensDoGrupo[0]?.descricao?.substring(0, 80)}...
+                                        {itensDoGrupo[0]?.descricao?.substring(0, 100)}{itensDoGrupo[0]?.descricao?.length > 100 ? '...' : ''}
                                       </p>
                                     </div>
                                   </div>
                                   <div style={{ textAlign: 'right' }}>
-                                    <div style={{ fontSize: '1.1rem', fontWeight: '700', color: '#1f2937' }}>
-                                      Qtd Total: {quantidadeTotal}
+                                    {/* Quantidade no formato "20+20" em LARANJA quando tem múltiplos */}
+                                    <div style={{ 
+                                      fontSize: '1.1rem', 
+                                      fontWeight: '700', 
+                                      color: temMultiplos ? '#ea580c' : '#1f2937',
+                                      background: temMultiplos ? '#ffedd5' : 'transparent',
+                                      padding: temMultiplos ? '0.25rem 0.75rem' : '0',
+                                      borderRadius: '6px',
+                                      display: 'inline-block'
+                                    }}>
+                                      {temMultiplos ? `${quantidadeFormatada} = ${quantidadeTotal}` : quantidadeTotal} {itensDoGrupo[0]?.unidade || 'UN'}
                                     </div>
-                                    <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
-                                      {itensDoGrupo.length} item(ns) agrupado(s)
-                                    </div>
+                                    {temMultiplos && (
+                                      <div style={{ fontSize: '0.8rem', color: '#c2410c', marginTop: '0.25rem' }}>
+                                        {itensDoGrupo.length} registros agrupados
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                                 
