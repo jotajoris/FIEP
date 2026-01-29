@@ -651,8 +651,8 @@ const Dashboard = () => {
                 fontSize: '0.8rem',
                 position: 'absolute',
                 zIndex: 100,
-                minWidth: '320px',
-                maxWidth: '400px',
+                minWidth: '350px',
+                maxWidth: '420px',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
               }}>
                 <div style={{ fontWeight: '700', color: '#1e293b', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -663,13 +663,33 @@ const Dashboard = () => {
                   >×</button>
                 </div>
                 
+                {/* Legenda dos emojis */}
+                <div style={{ 
+                  display: 'flex', 
+                  gap: '0.5rem', 
+                  flexWrap: 'wrap',
+                  marginBottom: '0.5rem', 
+                  padding: '0.35rem', 
+                  background: '#e2e8f0', 
+                  borderRadius: '4px',
+                  fontSize: '0.65rem',
+                  color: '#475569'
+                }}>
+                  <span>⏳Pend.</span>
+                  <span>💰Cot.</span>
+                  <span>🛒Comp.</span>
+                  <span>📦Sep.</span>
+                  <span style={{ color: '#94a3b8' }}>🚚Trâns.</span>
+                  <span style={{ color: '#94a3b8' }}>✅Entreg.</span>
+                </div>
+                
                 {/* Seção: Pendentes (não finalizados) */}
                 {resumoCodigoItem.pendentes.length > 0 && (
                   <div style={{ marginBottom: '0.75rem' }}>
                     <div style={{ fontWeight: '600', color: '#166534', fontSize: '0.75rem', marginBottom: '0.25rem', background: '#dcfce7', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
                       📋 PENDENTES ({resumoCodigoItem.totalPendentes} un)
                     </div>
-                    <div style={{ maxHeight: '100px', overflowY: 'auto' }}>
+                    <div style={{ maxHeight: '120px', overflowY: 'auto' }}>
                       {resumoCodigoItem.pendentes.map((item, idx) => (
                         <div key={idx} style={{ 
                           display: 'flex', 
