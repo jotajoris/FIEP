@@ -23,7 +23,25 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.3.12 (28/01/2026)
+## Versão Atual: 3.3.13 (29/01/2026)
+
+### 🔍 Popups de Resumo de Busca Avançada no Dashboard (29/01/2026)
+- ✅ **Busca por Código do Item** - Popup mostra resumo de quantidade por OC para itens com código buscado
+- ✅ **Busca por Nome/Descrição do Item** - Popup mostra resumo para itens que contêm o texto buscado
+- ✅ **Busca por Marca/Modelo** - Popup mostra resumo para itens com marca/modelo correspondente
+- ✅ **Separação Pendentes/Finalizados** - Itens divididos em duas seções:
+  - PENDENTES: Itens com status pendente, cotado, comprado, em_separacao
+  - FINALIZADOS: Itens com status em_transito ou entregue
+- ✅ **Emojis de Status** - Cada item mostra emoji indicando seu status atual:
+  - ⏳ Pendente | 💰 Cotado | 🛒 Comprado | 📦 Em Separação | 🚚 Em Trânsito | ✅ Entregue
+- ✅ **Ordenação por Status** - Itens ordenados: Pendente → Cotado → Comprado → Em Separação
+- ✅ **Legenda dos Emojis** - Barra explicativa no topo do popup mostrando significado de cada emoji
+- ✅ **Links Clicáveis** - Cada OC no popup abre em nova aba ao clicar
+- ✅ **Contagem de Quantidades** - Total de unidades pendentes e finalizadas por item
+
+---
+
+## Versão: 3.3.12 (28/01/2026)
 
 ### 🏷️ Extração e Exibição de NCM (28/01/2026)
 - ✅ **Campo NCM adicionado ao modelo POItem** - Código NCM de 8 dígitos (Nomenclatura Comum do Mercosul)
