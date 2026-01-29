@@ -86,40 +86,49 @@ const ItemFilters = ({
             📦 Pesquisar Nome do Item:
           </label>
           <input
+            id="filter-search-nome"
+            name="filter-search-nome"
             type="text"
             value={searchDescricao}
             onChange={(e) => setSearchDescricao(e.target.value)}
             placeholder="Digite o nome/descrição..."
             className="form-input"
             style={{ width: '100%', padding: '0.5rem 1rem' }}
+            autoComplete="off"
             data-testid="search-descricao"
           />
         </div>
         <div>
-          <label style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.85rem', display: 'block', marginBottom: '0.5rem' }}>
+          <label htmlFor="filter-search-marca" style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.85rem', display: 'block', marginBottom: '0.5rem' }}>
             🏷️ Pesquisar Marca:
           </label>
           <input
+            id="filter-search-marca"
+            name="filter-search-marca"
             type="text"
             value={searchMarca}
             onChange={(e) => setSearchMarca(e.target.value)}
             placeholder="Digite a marca..."
             className="form-input"
             style={{ width: '100%', padding: '0.5rem 1rem' }}
+            autoComplete="off"
             data-testid="search-marca"
           />
         </div>
         <div>
-          <label style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.85rem', display: 'block', marginBottom: '0.5rem' }}>
+          <label htmlFor="filter-search-link" style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.85rem', display: 'block', marginBottom: '0.5rem' }}>
             🔗 Pesquisar Link:
           </label>
           <input
+            id="filter-search-link"
+            name="filter-search-link"
             type="text"
             value={searchLink}
             onChange={(e) => setSearchLink(e.target.value)}
             placeholder="Digite parte do link..."
             className="form-input"
             style={{ width: '100%', padding: '0.5rem 1rem' }}
+            autoComplete="off"
             data-testid="search-link"
           />
         </div>
@@ -135,10 +144,12 @@ const ItemFilters = ({
         {/* Filtro por Responsável */}
         {responsaveisDisponiveis.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <label style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.85rem' }}>
+            <label htmlFor="filter-responsavel" style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.85rem' }}>
               👤 Responsável:
             </label>
             <select
+              id="filter-responsavel"
+              name="filter-responsavel"
               value={filterResponsavel}
               onChange={(e) => setFilterResponsavel(e.target.value)}
               className="form-input"
@@ -157,7 +168,7 @@ const ItemFilters = ({
         {/* Filtro por Fornecedor - apenas admin */}
         {isAdmin && fornecedoresDisponiveis.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <label style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.85rem' }}>
+            <label htmlFor="filter-fornecedor" style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.85rem' }}>
               🏪 Fornecedor:
             </label>
             <select
