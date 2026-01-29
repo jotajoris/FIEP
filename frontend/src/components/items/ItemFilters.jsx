@@ -48,35 +48,41 @@ const ItemFilters = ({
         marginBottom: '1rem'
       }}>
         <div>
-          <label style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.85rem', display: 'block', marginBottom: '0.5rem' }}>
+          <label htmlFor="filter-search-codigo" style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.85rem', display: 'block', marginBottom: '0.5rem' }}>
             🔍 Pesquisar Código do Item:
           </label>
           <input
+            id="filter-search-codigo"
+            name="filter-search-codigo"
             type="text"
             value={searchCodigo}
             onChange={(e) => setSearchCodigo(e.target.value)}
             placeholder="Digite o código..."
             className="form-input"
             style={{ width: '100%', padding: '0.5rem 1rem' }}
+            autoComplete="off"
             data-testid="search-codigo"
           />
         </div>
         <div>
-          <label style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.85rem', display: 'block', marginBottom: '0.5rem' }}>
+          <label htmlFor="filter-search-oc" style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.85rem', display: 'block', marginBottom: '0.5rem' }}>
             📋 Pesquisar OC:
           </label>
           <input
+            id="filter-search-oc"
+            name="filter-search-oc"
             type="text"
             value={searchOC}
             onChange={(e) => setSearchOC(e.target.value)}
             placeholder="Digite o número da OC..."
             className="form-input"
             style={{ width: '100%', padding: '0.5rem 1rem' }}
+            autoComplete="off"
             data-testid="search-oc"
           />
         </div>
         <div>
-          <label style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.85rem', display: 'block', marginBottom: '0.5rem' }}>
+          <label htmlFor="filter-search-nome" style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.85rem', display: 'block', marginBottom: '0.5rem' }}>
             📦 Pesquisar Nome do Item:
           </label>
           <input
