@@ -1182,9 +1182,9 @@ const PODetails = () => {
           )}
           
           {/* Paginação */}
-          {po.items.length > 5 && (
+          {itensAgrupados.length > 5 && (
             <Pagination
-              totalItems={po.items.length}
+              totalItems={itensAgrupados.length}
               currentPage={currentPage}
               itemsPerPage={itemsPerPage}
               onPageChange={setCurrentPage}
