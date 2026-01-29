@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prevent Google Translate from breaking React */
+/* The notranslate class prevents Google Translate from modifying these elements */
+.notranslate {
+    translate: no;
+}
+
+/* Protect dynamic content from translation */
+[data-testid], 
+input, 
+textarea, 
+select,
+button,
+.form-input,
+.stat-value,
+.stat-label {
+    translate: no;
+}
+
 body {
     margin: 0;
     font-family:
