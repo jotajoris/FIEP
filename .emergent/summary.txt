@@ -52,86 +52,59 @@ The user requested a web platform to manage purchase orders (OCs) for their clie
 - Implement a Partial Shipment feature to move a specific quantity of an item from Em Separação to Em Trânsito, leaving the remainder.
 - Add a separate upload button for XML files for sales invoices (NF de Venda).
 - Remove the static text EMPRESA OPTANTE PELO SIMPLES NACIONAL from the additional invoice data section.
-- **Implement automatic CEP lookup that appends the CEP to the address string, rather than using a separate field.**
-- **Display Valor de Venda Unitário and Valor de Venda Total inline with other item details, removing the separate Valores de Venda box.**
-- **Add a feature to bulk-update existing OCs by re-uploading their PDFs.**
-- **Add a Ver Todas modal to the notifications dropdown, showing a full, searchable history.**
-- **Add image upload/view/delete functionality to the OC Details page ().**
-- **Reorganize the Dashboard to move admin-only sections to the bottom.**
-- **Implement a hybrid commission logic: use lot number ranges for numeric lots and fall back to the  field for non-numeric lots (e.g., CHAMAMENTO PÚBLICO...).**
+- Implement automatic CEP lookup that appends the CEP to the address string.
+- Display Valor de Venda Unitário and Valor de Venda Total inline with other item details.
+- Add a feature to bulk-update existing OCs by re-uploading their PDFs.
+- Add a Ver Todas modal to the notifications dropdown, showing a full, searchable history.
+- Add image upload/view/delete functionality to the OC Details page ().
+- Reorganize the Dashboard to move admin-only sections to the bottom.
+- Implement a hybrid commission logic (lot number vs.  field).
+- **Display NCM code next to the item code on various pages.**
+- **Automatically extract NCM from OC PDFs during creation and update flows.**
+- **On the Dashboard, create an advanced search summary popup for item code, item name, and brand/model.**
+- **The summary popup must:**
+    - **Show a total quantity for items not yet delivered or in transit.**
+    - **Separate items into Pending and Finalized (in-transit/delivered) groups.**
+    - **Display a status emoji next to each item (⏳, 💰, 🛒, 📦, 🚚, ✅).**
+    - **Include a clickable link to the OC details page for each item.**
+    - **Sort items by status: Pendente, Cotado, Comprado, Em Separação.**
+    - **Display a legend explaining the emojis.**
 
 **User's preferred language**:
 The user's primary language is **Portuguese (Brazil)**. The next agent MUST respond in Portuguese.
 
 **what currently exists?**
-A full-stack Purchase Order management application (FastAPI + React). This session was highly interactive, focusing on implementing several new features and fixing bugs based on immediate user feedback.
-
-Key achievements include:
-- **CEP Automation:** A CEP lookup feature was implemented. After user feedback, it was modified to automatically append the found CEP to the address text field instead of populating a separate input. A one-off backend script was also created and run to backfill CEPs for all existing OCs.
-- **Bulk OC Update:** A new Atualizar OC tab was added to the  page, allowing admins to drag-and-drop multiple PDFs to update existing OCs' delivery addresses and dates. Bugs related to file upload headers and request timeouts were also fixed.
-- **UI/UX Enhancements:**
-  - The item details view was refactored to show sales values inline, improving information density.
-  - The Dashboard was reorganized to move admin sections to the bottom, preventing them from overlapping toast notifications.
-  - A Ver Todas modal with a search bar was added to the notifications system for a complete history view.
-  - Image upload functionality was successfully added to the  page.
-- **Bug Fixes:**
-  - A critical bug preventing item status updates on the  page (due to incorrect pagination indexing) was resolved.
-  - The commission calculation logic was investigated and partially fixed. A hybrid model (lot number vs.  field) was implemented in the backend.
+A full-stack Purchase Order management application (FastAPI + React). This session focused on resolving a critical bug in the commission calculation and then rapidly iterating on several new user-requested features. Key accomplishments include fixing the commission logic discrepancy, implementing robust NCM code extraction from PDFs, fixing CEP lookup/display bugs, and building a highly detailed, multi-field search summary feature on the Dashboard.
 
 **Last working item**:
-- **Last item agent was working:** The user reported that the commission values in the Admin Panel were still incorrect because the items listed on the Resumo Completo page (which they use for verification) didn't match the items being counted for commission. The agent investigated and discovered a logic mismatch: the  page was using a loose filter to identify a user's items, while the backend commission calculation used a stricter, hybrid logic. This discrepancy is the root cause of the user's confusion.
-- **Status:** NOT STARTED
+- **Last item agent was working:** Finalizing the search summary popups on the Dashboard page. The user requested two final improvements: sorting the listed items by status (Pendente, Cotado, etc.) and adding a legend to explain what each status emoji means.
+- **Status:** IN PROGRESS
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** Frontend testing agent. The agent must first align the filtering logic in  with the backend's commission logic. Then, the test should verify that for a given user (e.g., Maria), the list of Em Trânsito and Entregue items on the Resumo Completo page exactly matches the list of items being used to calculate her commission on the Admin Panel.
+- **Which testing method agent to use?** screenshot tool. The agent needs to navigate to the Dashboard (), perform a search in the Código Item, Nome Item, and Marca/Modelo fields, and capture a screenshot of the resulting popup to verify that the items are correctly sorted by status and that the emoji legend is visible and accurate.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P0)** Resumo Completo page shows incorrect items for commission verification.
-- **Issue 2: (P1)** Editing an item that appears in multiple OCs (duplicate) opens all instances for editing simultaneously.
-- **Issue 3: (P2)** Dashboard search by item code is not working.
-- **Issue 4: (P2)** Performance issues on Em Separação page due to the  monolith.
-- **Issue 5: (P2)** Accessibility warnings (e.g., missing labels, IDs) appear in the browser console.
+- **Issue 1: (P0)** Finalize Dashboard Search Summary Popups.
+- **Issue 2: (P1)** Performance issues on Em Separação page due to the  monolith.
+- **Issue 3: (P2)** Accessibility warnings (e.g., missing labels, IDs) appear in the browser console.
 
 **Issues Detail:**
-- **Issue 1: Resumo Completo page shows incorrect items for commission verification**
-    - **Attempted fixes:** The agent correctly identified that the filtering logic in  is different from the logic in the backend commission endpoints (, ).
+- **Issue 1: Finalize Dashboard Search Summary Popups**
+    - **Attempted fixes:** The agent successfully implemented the base functionality for the popups, including separating pending/finalized items and adding emojis. The code for sorting and adding a legend was also implemented.
     - **Next debug checklist:**
-        1.  View .
-        2.  Locate the filtering logic that determines which items are displayed.
-        3.  Replace the current loose filtering () with the same hybrid logic used in the backend:
-            - First, try to match the strict Lote XX pattern.
-            - If it matches, use the lot ranges to assign the responsible person.
-            - If it does not match, fall back to checking the item's  field.
-        4.  Ensure the frontend logic correctly mirrors the Python backend logic.
-    - **Why fix this issue and what will be achieved with the fix?** This is the user's current P0 blocker. Fixing it will resolve the confusion around commission calculations and restore trust in the financial data presented.
-    - **Status:** NOT STARTED
+        1.  Navigate to the Dashboard page ().
+        2.  Use the  to perform a search for an item code (e.g., 089435).
+        3.  Verify from the screenshot that the popup appears and contains:
+            - A legend explaining the emojis (e.g., ⏳ Pendente, 💰 Cotado).
+            - The list of pending items sorted correctly: all Pendente items first, then Cotado, then Comprado, etc.
+        4.  Repeat the verification for the Nome Item and Marca/Modelo search fields.
+    - **Why fix this issue and what will be achieved with the fix?** This completes the user's current feature request, making the search summary tool fully functional and easy to understand.
+    - **Status:** IN PROGRESS
     - **Is recurring issue?** N
     - **Should Test frontend/backend/both after fix?** Frontend.
     - **Blocked on other issue:** None.
 
-- **Issue 2: Editing duplicate items opens all instances for editing**
-    - **Attempted fixes:** None in this session.
-    - **Next debug checklist:**
-        1. Investigate state management in .
-        2. The  state likely uses a non-unique identifier like . Refactor it to use the  of the specific item instance to control edit mode visibility.
-    - **Why fix this issue and what will be achieved with the fix?** Fixes a long-standing, highly frustrating UI bug.
-    - **Status:** NOT STARTED
-    - **Is recurring issue?** Y
-    - **Should Test frontend/backend/both after fix?** Frontend.
-    - **Blocked on other issue:** None.
-
-- **Issue 3: Dashboard search by item code is not working**
-    - **Attempted fixes:** None in this session.
-    - **Next debug checklist:**
-        1. Verify frontend logic in  is correctly filtering based on user input.
-        2. Inspect the API response from  to ensure it contains the necessary item data.
-    - **Why fix this issue and what will be achieved with the fix?** Restores a core navigation feature.
-    - **Status:** NOT STARTED
-    - **Is recurring issue?** N
-    - **Should Test frontend/backend/both after fix?** Frontend.
-    - **Blocked on other issue:** None.
-
-- **Issue 4: Performance issues on Em Separação page**
+- **Issue 2: Performance issues on Em Separação page**
     - **Attempted fixes:** None in this session.
     - **Next debug checklist:** Continue refactoring by extracting major UI sections (modals, forms, item rendering loops) from  into separate, memoized components.
     - **Why fix this issue and what will be achieved with the fix?** Improves usability on a critical page that is slow and difficult to maintain.
@@ -140,8 +113,8 @@ Key achievements include:
     - **Should Test frontend/backend/both after fix?** Frontend.
     - **Blocked on other issue:** None.
 
-- **Issue 5: Accessibility warnings in the console**
-    - **Attempted fixes:** None. The agent identified them but the user has not prioritized a fix.
+- **Issue 3: Accessibility warnings in the console**
+    - **Attempted fixes:** None.
     - **Next debug checklist:** Add uid=0(root) gid=0(root) groups=0(root), , and  attributes to form fields and labels throughout the application, particularly in  and .
     - **Why fix this issue and what will be achieved with the fix?** Improves accessibility and removes console noise, leading to a more professional user experience.
     - **Status:** NOT STARTED
@@ -155,103 +128,103 @@ Key achievements include:
     - **What will be achieved with this?** A more maintainable and scalable backend.
     - **Status:** IN PROGRESS
     - **Should Test frontend/backend/both after fix?** Backend.
-    - **Blocked on something:** Blocked by P0/P1 bug fixes.
+    - **Blocked on something:** Blocked by P0 feature completion.
 
 - **Task 2: (P1)** Frontend Refactoring
-    - **Where to resume:** Continue breaking down the  monolith.
+    - **Where to resume:** Continue breaking down the  monolith. The  file is also becoming a candidate for refactoring, as the search summary logic could be extracted into a reusable component.
     - **What will be achieved with this?** Improved frontend performance, readability, and maintainability.
     - **Status:** IN PROGRESS
     - **Should Test frontend/backend/both after fix?** Frontend.
-    - **Blocked on something:** Blocked by P0/P1 bug fixes.
+    - **Blocked on something:** Blocked by P0 feature completion.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
+  - (P1) Address performance issues on Em Separação page by refactoring .
   - (P2) Fix accessibility warnings in the browser console.
   - (P2) Complete the backend refactoring of .
-  - (P2) Complete the frontend refactoring of .
 - **Future Tasks:**
   - (P3) Add a Create OC button directly on the Planilha de Contrato page.
   - (P3) Extend the Grouped View functionality to the Em Separação page.
 
 **Completed work in this session**
-- **Feature: Automatic CEP Lookup:** Implemented a feature to find a CEP from an address string and append it to the address text field upon editing.
-- **Feature: Bulk OC Update:** Added a new tab to the Create PO page for bulk-updating OCs via PDF uploads, including fixes for upload headers and timeouts.
-- **Feature: View All Notifications Modal:** Added a modal to view and search the complete history of notifications.
-- **Feature: Image Upload on OC Details:** Added the ability to upload, view, and delete item images on the  page.
-- **UI Refactor: Inline Sales Values:** Moved the Valor Unitário and Valor Total fields to be inline with other item details.
-- **UI Refactor: Dashboard Layout:** Moved admin-only sections on the Dashboard to the bottom of the page.
-- **Bug Fix: Commission Logic:** Implemented a hybrid backend logic for commissions (numeric lots vs.  field).
-- **Bug Fix: Item Status Saving:** Fixed a bug on the  page that prevented status updates from being saved for items on paginated pages.
-- **Bug Fix: CEP Backfill:** Created and executed a backend script to add CEPs to all existing OCs in the database.
+- **Bug Fix: Commission Calculation (P0):** Aligned the frontend filtering logic in  with the backend's hybrid commission logic, resolving data discrepancies.
+- **Feature: NCM Extraction & Display:**
+  - Added an  field to the item data model.
+  - Modified the PDF parsers ( and ) to robustly extract 8-digit NCM codes, even when split across lines or starting with any digit from 1-9.
+  - Integrated NCM extraction directly into the Atualizar OC flow.
+  - Added NCM display next to the item code on the  page.
+- **Feature: Advanced Dashboard Search Summary:**
+  - Implemented search summary popups for item code, item name, and brand/model.
+  - The summary shows a breakdown of quantities per OC, separating pending from finalized items.
+  - Added status emojis (⏳, 💰, 🛒, etc.) and clickable links to each OC.
+- **Bug Fix: CEP Lookup:** Corrected the ViaCEP API call logic in  to handle full street names (e.g., Avenida Aviação), ensuring CEPs are found and appended when updating an OC.
+- **Bug Fix: CEP Display:** Fixed an issue on the  page by ensuring the Dados Adicionais da NF section consistently displays the parent OC's address, which contains the CEP.
 
 **Earlier issues found/mentioned but not fixed**
-- **Issue 1:** (P1) Editing duplicate items opens all instances.
-- **Issue 2:** (P2) Dashboard search by item code is not working.
-- **Issue 3:** (P2) Accessibility warnings in the console.
+- **Issue 1:** (P1) Editing duplicate items opens all instances. The user mentioned this was fixed, but it's a long-standing recurring issue and should be verified.
+- **Issue 2:** (P2) Dashboard search by item code is not working. The user mentioned this was fixed. The new search summary feature likely supersedes or resolves this.
 
 **Known issue recurrence from previous fork**
 - **Issue recurrence in previous fork:** Editing duplicate items opens all of them.
-- **Recurrence count:** 8+
-- **Status:** NOT STARTED
+- **Recurrence count:** 9+
+- **Status:** NOT STARTED (User claimed it was fixed, but it has not been addressed in this or recent sessions).
 
 **Code Architecture**
-
+ncm: str
 
 **Key Technical Concepts**
-- **Logic Mismatch:** The primary unresolved issue stems from a mismatch between frontend filtering logic () and backend calculation logic (), causing data discrepancies for the user.
-- **Hybrid Calculation:** The commission system now uses a hybrid model, checking for a specific lot number pattern () and falling back to the  field if the pattern doesn't match. This logic needs to be replicated on the frontend.
-- **File Upload Handling:** The agent debugged and fixed issues with  uploads by letting the browser set the  header automatically and by significantly increasing the request timeout in the  utility.
+- **Robust Regex for PDF Parsing:** The agent iteratively improved regex patterns in  to correctly extract NCM codes that were split across lines (e.g.,  and ) and that started with digits other than 8 or 9 (e.g., ).
+- **Dynamic Frontend Components:** The  page now contains complex logic to render dynamic summary popups based on user input across three different search fields, using a shared data source and  hooks.
+- **Data Consistency Across Components:** A bug where a CEP was missing was solved by ensuring a child component ( modal) used a prop passed from its parent () rather than its own potentially stale data ().
+- **Backend API Expansion:** The  endpoint was modified to return , , and  for each item, enabling the new dashboard search feature without requiring additional API calls.
 
 **key DB schema**
-- No changes to the database schema were made in this session.
+- ** (in )**:
+  -  was added to store the 8-digit NCM code for an item.
 
 **All files of reference**
-- : **CRITICAL.** The source of the current P0 bug. Its filtering logic must be fixed.
-- : **CRITICAL.** Contains the correct commission logic that needs to be replicated. Was modified to fix bugs and add endpoints.
-- : Contains the new bulk-update feature.
-- : Contains the new image upload feature and the fix for the status-saving bug.
-- : Contains the new View All notifications modal.
-- : Contains the fix for file upload timeouts.
-- : The main monolith, modified for several UI tweaks and bug fixes.
+- : **CRITICAL.** Contains the new search summary feature that is the current focus.
+- : **CRITICAL.** Contains the updated PDF parsing logic for NCMs, the expanded  API endpoint, and the corrected CEP lookup function.
+- : Contains the UI for displaying the NCM and the fix for showing the CEP in the invoice details.
+- : Contains the UI for the integrated Atualizar OC flow which now also updates NCMs.
+- : Contains the updated  data model.
 
 **Areas that need refactoring**:
-- : **CRITICAL PRIORITY.** This file continues to grow, making it the primary source of bugs and performance degradation.
-- : **CRITICAL PRIORITY.** The backend monolith also needs to be broken down into a route-based structure.
+- : Remains a critical monolith.
+- : Remains a critical monolith.
+- : The logic for the three search summary popups is duplicated and could be extracted into a single, reusable component to improve maintainability.
 
 **key api endpoints**
-- : (NEW) Endpoint for the bulk OC update feature.
-- : (NEW) A one-off utility script to backfill CEPs.
-- : (NEW) Fetches the complete notification history.
-- : (MODIFIED) Updated to use the correct hybrid commission logic.
-- : (MODIFIED) Updated to use the correct hybrid commission logic.
-- : The endpoint used to fix the status saving bug on the  page.
+- : **MODIFIED.** Now returns , , and  for each item in the payload.
+- : **MODIFIED.** Now includes logic to parse and update the  for all items within the uploaded OC PDFs.
 
 **Critical Info for New Agent**
-- **IMMEDIATE PRIORITY (P0):** The user is blocked and confused by the commission calculation. You MUST fix the filtering logic in  to perfectly mirror the hybrid (lot-based + -based) logic from the backend. This will ensure the verification page (Resumo Completo) shows the exact same items that are being counted for commission in the Admin Panel.
-- **User-Centric Debugging:** The user provides excellent feedback with screenshots. Always analyze their images carefully. The core of the last bug was realizing the user was looking at one page (Resumo Completo) to verify data calculated from another (Admin Panel), and the two pages had different data sources.
-- **Prioritization:** The user consistently prioritizes workflow features and bug fixes over technical debt. Address the P0 commission bug first, then propose fixing the long-standing P1 duplicate item editing bug. Technical debt tasks like refactoring should be framed as necessary for stability and performance.
+- **IMMEDIATE PRIORITY (P0):** The user's last request was to add sorting by status and an emoji legend to the three search popups on the Dashboard. You must implement and verify this change first.
+- **USER INTERACTION:** The user is highly engaged and provides feature requests in rapid succession. Be prepared to implement, test, and then receive immediate feedback for further iteration.
+- **Verify User Claims:** The user mentioned that some long-standing bugs (like the duplicate item edit issue) were fixed. Do not assume this is correct. These issues should be independently verified before being marked as resolved in the PRD.
+- **NCM & CEP Logic:** The logic for extracting NCMs from PDFs and looking up CEPs from addresses was refined multiple times. Refer to the current implementation in  as the source of truth before making changes.
 
 **documents and test reports created in this job**
--  (updated with completed features)
+-  (updated with completed features and bug fixes)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Bug Report):** The commission calculation is wrong. Provided screenshots showing many Em Trânsito items for a user, but the commission panel shows very few. (IN PROGRESS)
-2.  **User (Bug Report):** Resumo Completo page shows items as Em Trânsito, but the agent says they are Pendente in the DB. (This was the key to finding the logic mismatch). (IN PROGRESS)
-3.  **User (Bug Report):** Changing item status on the  page isn't working for some items. (COMPLETED)
-4.  **User (Feature Request):** Add image upload to the  page. (COMPLETED)
-5.  **User (Bug Report):** The file upload for bulk OC updates times out. (COMPLETED)
-6.  **User (Bug Report):** The file upload for bulk OC updates shows an [object Object] error. (COMPLETED)
-7.  **User (Feature Request):** Add a Ver Todas button to notifications to open a searchable popup. (COMPLETED)
-8.  **User (Feature Request):** Move the Backup and Popular DB sections to the bottom of the dashboard. (COMPLETED)
-9.  **User (Feature Request):** Add a bulk Atualizar OC feature to upload multiple PDFs at once. (COMPLETED)
-10. **User (Bug Report):** Updating an OC via PDF upload doesn't update the delivery address/date. The CEP also doesn't appear automatically on view. (COMPLETED)
+1.  **User:** I want the search summary popups to be sorted by status (pendente, cotado, etc.), have a legend for the emojis, and apply this to all three search fields. (IN PROGRESS)
+2.  **User:** For the search summary, show all items, but separate pending from delivered/in-transit. Add status emojis. Also add a search field for brand/model. (COMPLETED)
+3.  **User:** Add clickable links to the OCs in the search summary popups, opening in a new tab. (COMPLETED)
+4.  **User:** Can you add the same search summary mechanism to the item name/description field? (COMPLETED)
+5.  **User:** In the dashboard item code search, show a summary of how many units are in each OC (for non-delivered items). (COMPLETED)
+6.  **User:** The CEP is not appearing in the DADOS ADICIONAIS DA NF section within the Em Separação page. (COMPLETED)
+7.  **User:** The CEP is not being added to the address when I update an OC using the Atualizar OC feature. (COMPLETED)
+8.  **User:** The NCM extraction is failing for several of my OCs. (COMPLETED)
+9.  **User:** I don't want a separate tab for updating NCMs. It should be part of the existing Atualizar OC flow. (COMPLETED)
+10. **User:** I need you to extract the NCM code from the OC PDF and display it next to the item code. (COMPLETED)
 
 **Project Health Check:**
 - **Broken:**
-    - The user's ability to verify commission payments is broken due to a logic mismatch between the  page and the backend.
+    - Nothing is critically broken. The P0 commission bug from the previous session was resolved.
 - **Technical Debt:**
-    - **CRITICAL:**  and  are massive monoliths that are increasingly difficult and risky to modify.
-    - **MODERATE:** The application has several accessibility warnings in the console that should be addressed.
+    - **CRITICAL:**  and  are large monoliths that complicate development and debugging.
+    - **HIGH:**  now has significant duplicated code for the three search summary popups. This should be refactored into a reusable component.
 
 **3rd Party Integrations**
 - **Resend:** For emails.
@@ -274,7 +247,4 @@ Key achievements include:
     - **Password:** 
 
 **What agent forgot to execute**
-The agent successfully addressed all user requests from the session. The forgotten items are pre-existing issues from the last handoff that were deprioritized by the user's new requests, specifically:
-- Fixing the bug where editing duplicate items opens all instances.
-- Fixing the dashboard search functionality.
-- Making progress on the critical refactoring tasks for  and .</analysis>
+- The agent implemented the code for the final user request (sorting and legend in search popups) but did not perform a final visual verification with the  before finishing. This final verification step is still pending.</analysis>
