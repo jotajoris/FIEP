@@ -846,24 +846,24 @@ const PODetails = () => {
                   {/* Informações do item */}
                   <div style={{ flex: 1 }}>
                     <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.5rem' }}>
-                      Código: {item.codigo_item}
+                      Código: {groupItem.codigo_item}
                     </h3>
-                    <p style={{ color: '#4a5568', marginBottom: '0.5rem' }}>{item.descricao}</p>
+                    <p style={{ color: '#4a5568', marginBottom: '0.5rem' }}>{groupItem.descricao}</p>
                     <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.9rem', color: '#718096' }}>
-                      <span><strong>Lote:</strong> {item.lote}</span>
-                      <span><strong>Região:</strong> {item.regiao}</span>
-                      <span><strong>Responsável:</strong> <strong style={{ color: '#667eea' }}>{item.responsavel}</strong></span>
-                      <span><strong>Quantidade:</strong> {item.quantidade} {item.unidade}</span>
-                      {item.marca_modelo && <span><strong>Marca/Modelo:</strong> {item.marca_modelo}</span>}
+                      <span><strong>Lote:</strong> {groupItem.lote}</span>
+                      <span><strong>Região:</strong> {groupItem.regiao}</span>
+                      <span><strong>Responsável:</strong> <strong style={{ color: '#667eea' }}>{groupItem.responsavel}</strong></span>
+                      <span><strong>Quantidade:</strong> {groupItem.quantidade} {groupItem.unidade}</span>
+                      {groupItem.marca_modelo && <span><strong>Marca/Modelo:</strong> {groupItem.marca_modelo}</span>}
                     </div>
                   </div>
                 </div>
                 <div>
-                  {getStatusBadge(item.status)}
+                  {getStatusBadge(groupItem.status)}
                 </div>
               </div>
 
-              {editingItem === realIndex ? (
+              {editingItem === itemRealIndex ? (
                 <div style={{ marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: '8px' }}>
                   {/* Status e campos admin */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
