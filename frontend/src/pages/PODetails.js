@@ -687,13 +687,79 @@ const PODetails = () => {
       <div className="card">
         <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1.5rem' }}>
           Itens da Ordem de Compra ({po.items.length})
+          {itensAgrupados.some(g => g.temMultiplos) && (
+            <span style={{ 
+              fontSize: '0.9rem', 
+              fontWeight: '500', 
+              color: '#ea580c',
+              marginLeft: '0.75rem'
+            }}>
+              ({itensAgrupados.length} códigos únicos)
+            </span>
+          )}
         </h2>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {po.items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((item, index) => {
-            const realIndex = (currentPage - 1) * itemsPerPage + index;
+          {itensAgrupados.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((group, groupIndex) => {
+            const item = group.firstItem;
+            const realIndex = group.firstIndex;
+            
             return (
-            <div key={index} className="card" style={{ background: '#f7fafc', border: '1px solid #e2e8f0' }} data-testid={`item-card-${item.codigo_item}`}>
+            <div 
+              key={group.codigo_item} 
+              className="card" 
+              style={{ 
+                background: group.temMultiplos ? '#fff7ed' : '#f7fafc', 
+                border: group.temMultiplos ? '2px solid #f97316' : '1px solid #e2e8f0' 
+              }} 
+              data-testid={`item-card-${item.codigo_item}`}
+            >
+              {/* HEADER COM AGRUPAMENTO - Mostra quando há múltiplos itens */}
+              {group.temMultiplos && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  marginBottom: '1rem',
+                  padding: '0.75rem',
+                  background: '#fed7aa',
+                  borderRadius: '8px'
+                }}>
+                  <div style={{
+                    background: '#f97316',
+                    color: 'white',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '8px',
+                    fontWeight: '700',
+                    fontSize: '1.1rem'
+                  }}>
+                    {group.items.length}x
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: '700', color: '#c2410c', fontSize: '1rem' }}>
+                      Itens agrupados: {group.quantidadeFormatada} = {group.quantidadeTotal} {item.unidade || 'UN'}
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#9a3412' }}>
+                      {group.items.length} registros com código {group.codigo_item}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Renderizar cada item do grupo */}
+              {group.items.map((groupItem, itemIdx) => {
+                const itemRealIndex = group.originalIndices[itemIdx];
+                const isLastItem = itemIdx === group.items.length - 1;
+                
+                return (
+                <div 
+                  key={itemIdx}
+                  style={{ 
+                    borderBottom: !isLastItem ? '1px dashed #e5e7eb' : 'none',
+                    paddingBottom: !isLastItem ? '1rem' : '0',
+                    marginBottom: !isLastItem ? '1rem' : '0'
+                  }}
+                >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', gap: '1rem', flex: 1 }}>
                   {/* Área de foto do item */}
@@ -705,11 +771,11 @@ const PODetails = () => {
                     alignItems: 'center',
                     gap: '0.25rem'
                   }}>
-                    {item.imagem_url ? (
+                    {groupItem.imagem_url ? (
                       <div style={{ position: 'relative' }}>
                         <img 
-                          src={`${BACKEND_URL}${item.imagem_url}?t=${Date.now()}`}
-                          alt={`Foto do item ${item.codigo_item}`}
+                          src={`${BACKEND_URL}${groupItem.imagem_url}?t=${Date.now()}`}
+                          alt={`Foto do item ${groupItem.codigo_item}`}
                           style={{ 
                             width: '70px', 
                             height: '70px', 
@@ -718,11 +784,11 @@ const PODetails = () => {
                             border: '2px solid #e2e8f0',
                             cursor: 'pointer'
                           }}
-                          onClick={() => setImagemExpandida(`${BACKEND_URL}${item.imagem_url}?t=${Date.now()}`)}
+                          onClick={() => setImagemExpandida(`${BACKEND_URL}${groupItem.imagem_url}?t=${Date.now()}`)}
                         />
                         <button
-                          onClick={() => handleDeleteImage(item, realIndex)}
-                          disabled={uploadingImage === realIndex}
+                          onClick={() => handleDeleteImage(groupItem, itemRealIndex)}
+                          disabled={uploadingImage === itemRealIndex}
                           style={{
                             position: 'absolute',
                             top: '-6px',
