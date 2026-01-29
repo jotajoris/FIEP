@@ -6593,8 +6593,18 @@ Chave PIX: 46.663.556/0001-69`;
         )}
       </div>
       
-      {/* Modal de Usar do Estoque */}
-      {renderModalUsarEstoque()}
+      {/* Modal de Usar do Estoque - Componente refatorado */}
+      {showUsarEstoqueModal && (
+        <UsarEstoqueModal
+          item={showUsarEstoqueModal}
+          onClose={() => {
+            setShowUsarEstoqueModal(null);
+            setEstoqueDetalhes(null);
+            setQuantidadeUsar(0);
+          }}
+          onSuccess={() => fetchItems()}
+        />
+      )}
       
       {/* Modal de Imagem Expandida */}
       {/* Modal de Envio Parcial */}
