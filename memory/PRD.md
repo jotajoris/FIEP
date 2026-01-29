@@ -90,13 +90,23 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 
 ## Changelog Recente
 
-### 2025-01-29
+### 2025-01-29 (Sessão atual)
+- ✅ **Verificada funcionalidade "Agrupar por Código" - COMPLETA e FUNCIONAL**
+  - Toggle funciona corretamente em Pendentes (234 grupos) e Cotados (3 grupos)
+  - Visualização agrupada mostra itens de diferentes OCs com mesmo código
+  - Badges: quantidade de OCs, total, contrato, estoque disponível
+  - Expansão de grupos com detalhes por OC
+  - Botões "Cotar Todos" / "Comprar Todos" funcionando
+  - Edição em grupo e individual implementadas
+  - Compra parcial disponível na visualização agrupada
+
+### 2025-01-29 (Sessão anterior)
 - ✅ Corrigido erro de sintaxe em `ItemsByStatus.js` (comentários JSX, fechamento de IIFE)
 - ✅ Corrigido referência `handleEditClick` → `startEdit`
 - ✅ Corrigido warnings ESLint em 5 arquivos (useEffect dependencies)
 - ✅ Build do frontend compilando com sucesso
 
-### Sessão Anterior
+### Sessões Anteriores
 - ✅ Popups de pesquisa avançada no Dashboard
 - ✅ Correção do bug do Google Translate
 - ✅ Correção dos avisos de acessibilidade
@@ -105,11 +115,12 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 ## Tarefas Pendentes
 
 ### P0 (Crítico)
-- [ ] Finalizar "Agrupar por Código" na página Em Separação
+- [x] ~~Finalizar "Agrupar por Código" para Pendentes/Cotados~~ ✅ COMPLETO
+- [ ] Implementar "Agrupar por Código" na página Em Separação (dentro da mesma OC)
 
 ### P1 (Alta Prioridade)
-- [ ] Remover código duplicado do `server.py` (refatoração)
-- [ ] Integrar componentes restantes em `ItemsByStatus.js`
+- [ ] Remover código duplicado do `server.py` (refatoração backend)
+- [ ] Integrar componentes restantes em `ItemsByStatus.js` (refatoração frontend)
 
 ### P2 (Média Prioridade)
 - [ ] Corrigir bug: editar item duplicado abre todos os itens
