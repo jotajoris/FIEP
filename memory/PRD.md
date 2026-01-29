@@ -23,9 +23,29 @@ Plataforma web para gerenciamento de ordens de compra (OCs) do cliente FIEP.
 
 **Senha padrão:** on123456
 
-## Versão Atual: 3.3.15 (29/01/2026)
+## Versão Atual: 3.3.16 (29/01/2026)
 
-### 🏗️ Refatoração de Arquitetura (29/01/2026)
+### 🏗️ Refatoração de Arquitetura - Fase 2 (29/01/2026)
+**Backend - Novos Módulos de Rotas:**
+- ✅ **`dashboard_routes.py`** - Estatísticas, duplicados, referências (~160 linhas)
+- ✅ **`estoque_routes.py`** - Gestão de estoque (~225 linhas)
+- ✅ **`limites_routes.py`** - Limites contratuais (~110 linhas)
+- 📁 **Total de módulos**: 11 arquivos em `/app/backend/routes/`
+- 📊 **Total de linhas modulares**: ~1.908 linhas
+
+**APIs Testadas e Funcionando:**
+- ✅ `/api/dashboard` - 54 OCs, 331 itens
+- ✅ `/api/admin/comissoes` - 3 responsáveis
+- ✅ `/api/backup/export` - Backup completo
+- ✅ `/api/estoque` - 2 itens em estoque
+- ✅ `/api/limites-contrato` - 1.385 limites
+- ✅ `/api/fornecedores` - Lista de fornecedores
+
+---
+
+## Versão: 3.3.15 (29/01/2026)
+
+### 🏗️ Refatoração de Arquitetura - Fase 1 (29/01/2026)
 **Backend (server.py: 7.297 linhas → Modularizado):**
 - ✅ **`admin_routes.py`** - Rotas de comissões, NFs, pagamentos (~270 linhas extraídas)
 - ✅ **`backup_routes.py`** - Rotas de backup/restore (~90 linhas extraídas)
