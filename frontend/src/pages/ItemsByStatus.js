@@ -27,6 +27,9 @@ import {
   statusOptions
 } from '../components/items';
 
+// Importar novos componentes refatorados
+import { UsarEstoqueModal } from '../components/ItemsByStatus';
+
 const ItemsByStatus = () => {
   const { status } = useParams();
   const navigate = useNavigate();
