@@ -3643,41 +3643,6 @@ Chave PIX: 46.663.556/0001-69`;
                 {expandedOC === oc.po_id && (
                   <div style={{ marginTop: '1rem', borderTop: '1px solid #e5e7eb', paddingTop: '1rem' }}>
                     
-                    {/* Botão para agrupar por código dentro da OC */}
-                    {status === 'em_separacao' && oc.items.length > 1 && (
-                      <div style={{ 
-                        marginBottom: '1rem', 
-                        display: 'flex', 
-                        justifyContent: 'flex-end' 
-                      }}>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setAgruparPorCodigoOC(prev => ({ 
-                              ...prev, 
-                              [oc.po_id]: !prev[oc.po_id] 
-                            }));
-                          }}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            background: agruparPorCodigoOC[oc.po_id] ? '#6366f1' : '#e5e7eb',
-                            color: agruparPorCodigoOC[oc.po_id] ? 'white' : '#374151',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '0.85rem',
-                            fontWeight: '500',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                          }}
-                          data-testid={`toggle-agrupar-${oc.po_id}`}
-                        >
-                          📦 {agruparPorCodigoOC[oc.po_id] ? 'Desagrupar Itens' : 'Agrupar por Código'}
-                        </button>
-                      </div>
-                    )}
-                    
                     {/* ======== SEÇÕES ESPECÍFICAS PARA EM SEPARAÇÃO ======== */}
                     {status === 'em_separacao' && (
                     <>
