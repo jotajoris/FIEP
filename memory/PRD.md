@@ -91,7 +91,7 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 ## Changelog Recente
 
 ### 2025-01-29 (Sessão atual)
-- ✅ **Verificada funcionalidade "Agrupar por Código" - COMPLETA e FUNCIONAL**
+- ✅ **Verificada funcionalidade "Agrupar por Código" em Pendentes/Cotados - COMPLETA**
   - Toggle funciona corretamente em Pendentes (234 grupos) e Cotados (3 grupos)
   - Visualização agrupada mostra itens de diferentes OCs com mesmo código
   - Badges: quantidade de OCs, total, contrato, estoque disponível
@@ -99,6 +99,14 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
   - Botões "Cotar Todos" / "Comprar Todos" funcionando
   - Edição em grupo e individual implementadas
   - Compra parcial disponível na visualização agrupada
+
+- ✅ **Agrupamento AUTOMÁTICO por código na página "Em Separação" - IMPLEMENTADO**
+  - Itens com mesmo código dentro da mesma OC são agrupados automaticamente (sem botão)
+  - Quantidade exibida no formato **"20+20 = 40"** quando há múltiplos registros
+  - Cards de itens agrupados têm fundo **laranja** (#fff7ed) e borda laranja (#f97316)
+  - Badge laranja com "2x" indicando número de registros agrupados
+  - Botões de seleção em massa (NF, Frete, Status) disponíveis para grupos
+  - Removido botão "Agrupar por Código" - agora é automático
 
 ### 2025-01-29 (Sessão anterior)
 - ✅ Corrigido erro de sintaxe em `ItemsByStatus.js` (comentários JSX, fechamento de IIFE)
