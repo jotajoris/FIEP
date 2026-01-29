@@ -4243,8 +4243,8 @@ Chave PIX: 46.663.556/0001-69`;
                             formatBRL={formatBRL}
                           />
                         );
-                            }} 
-                            data-testid={`item-card-${item._uniqueId}`}
+                      });
+                      })()}
                           >
                             {/* Checkboxes e Renderização do item */}
                             <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
