@@ -73,6 +73,9 @@ const Dashboard = () => {
   // Resumo de quantidade por código de item
   const [resumoCodigoItem, setResumoCodigoItem] = useState(null);
   
+  // Resumo de quantidade por descrição/nome do item
+  const [resumoDescricaoItem, setResumoDescricaoItem] = useState(null);
+  
   // Loading de filtro (para feedback visual)
   const [filtering, setFiltering] = useState(false);
 
@@ -119,6 +122,51 @@ const Dashboard = () => {
       setResumoCodigoItem(null);
     }
   }, [searchCodigoItem, orders]);
+
+  // Calcular resumo quando descrição do item mudar
+  useEffect(() => {
+    if (searchDescricaoItem && searchDescricaoItem.trim().length >= 3) {
+      const termo = searchDescricaoItem.toLowerCase().trim();
+      const resumo = { porOC: [], total: 0, descricaoEncontrada: null };
+      
+      orders.forEach(order => {
+        order.items?.forEach(item => {
+          // Verificar se a descrição bate
+          if (item.descricao?.toLowerCase().includes(termo)) {
+            // Excluir itens em_transito e entregue
+            if (item.status !== 'em_transito' && item.status !== 'entregue') {
+              // Guardar primeira descrição encontrada
+              if (!resumo.descricaoEncontrada) {
+                resumo.descricaoEncontrada = item.descricao?.substring(0, 50) + '...';
+              }
+              
+              // Encontrar ou criar entrada para esta OC
+              let ocEntry = resumo.porOC.find(o => o.numero_oc === order.numero_oc && o.codigo_item === item.codigo_item);
+              if (!ocEntry) {
+                ocEntry = { 
+                  numero_oc: order.numero_oc, 
+                  quantidade: 0, 
+                  status: item.status,
+                  codigo_item: item.codigo_item,
+                  descricao: item.descricao?.substring(0, 30) + '...'
+                };
+                resumo.porOC.push(ocEntry);
+              }
+              ocEntry.quantidade += item.quantidade || 1;
+              resumo.total += item.quantidade || 1;
+            }
+          }
+        });
+      });
+      
+      // Ordenar por número da OC
+      resumo.porOC.sort((a, b) => a.numero_oc?.localeCompare(b.numero_oc));
+      
+      setResumoDescricaoItem(resumo.porOC.length > 0 ? resumo : null);
+    } else {
+      setResumoDescricaoItem(null);
+    }
+  }, [searchDescricaoItem, orders]);
 
   useEffect(() => {
     loadData();
