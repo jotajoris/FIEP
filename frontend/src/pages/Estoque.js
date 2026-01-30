@@ -498,6 +498,12 @@ const Estoque = () => {
       item.fornecedor?.toLowerCase().includes(term)
     );
   });
+  
+  // Paginação
+  const totalPages = itemsPerPage === 'all' ? 1 : Math.ceil(filteredEstoque.length / itemsPerPage);
+  const paginatedEstoque = itemsPerPage === 'all' 
+    ? filteredEstoque 
+    : filteredEstoque.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   if (loading) {
     return (
