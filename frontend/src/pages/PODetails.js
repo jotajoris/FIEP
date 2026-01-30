@@ -879,6 +879,7 @@ const PODetails = () => {
                         <option value="cotado">Cotado</option>
                         <option value="comprado">Comprado</option>
                         <option value="em_separacao">Em Separação</option>
+                        <option value="pronto_envio">Pronto p/ Envio</option>
                         <option value="em_transito">Em Trânsito</option>
                         <option value="entregue">Entregue</option>
                       </select>
