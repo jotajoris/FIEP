@@ -2072,56 +2072,52 @@ const ItemsByStatus = () => {
     }
   };
 
-  // Toggle "Pronto para Despacho" da OC inteira - TAMBÉM muda status dos itens para pronto_envio
+  // Toggle "Pronto para Despacho" da OC inteira (apenas flag visual)
   const toggleProntoDespachoOC = async (poId) => {
     const currentValue = ocProntoDespacho[poId] || false;
-    const newValue = !currentValue;
+    try {
+      await apiPatch(`${API}/purchase-orders/${poId}/pronto-despacho`, {
+        pronto_despacho: !currentValue
+      });
+      // Atualizar estado local imediatamente para feedback visual
+      setOcProntoDespacho(prev => ({ ...prev, [poId]: !currentValue }));
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      alert('Erro ao atualizar status.');
+    }
+  };
+  
+  // Mover itens selecionados para "Pronto para Envio"
+  const moverParaProntoEnvio = async (poId) => {
+    const itensSelecionados = itensParaStatus[poId];
+    if (!itensSelecionados || itensSelecionados.size === 0) {
+      alert('⚠️ Selecione pelo menos um item para mover para "Pronto p/ Envio"');
+      return;
+    }
     
     try {
-      // Atualizar o flag pronto_despacho da OC
-      await apiPatch(`${API}/purchase-orders/${poId}/pronto-despacho`, {
-        pronto_despacho: newValue
-      });
-      
-      // Buscar a OC do servidor para ter os índices corretos
+      // Buscar a OC para ter os dados corretos
       const response = await apiGet(`${API}/purchase-orders/${poId}`);
       const ocData = response.data;
       
-      if (newValue) {
-        // Se está marcando como pronto, muda o status dos itens em_separacao para pronto_envio
-        if (ocData && ocData.items) {
-          for (let idx = 0; idx < ocData.items.length; idx++) {
-            const item = ocData.items[idx];
-            if (item.status === 'em_separacao') {
-              await apiPatch(`${API}/purchase-orders/${poId}/items/by-index/${idx}`, {
-                status: 'pronto_envio'
-              });
-            }
+      if (ocData && ocData.items) {
+        for (const idx of itensSelecionados) {
+          const item = ocData.items[idx];
+          if (item && item.status === 'em_separacao') {
+            await apiPatch(`${API}/purchase-orders/${poId}/items/by-index/${idx}`, {
+              status: 'pronto_envio'
+            });
           }
         }
-        alert('✅ OC marcada como pronta para envio! Os itens foram movidos para "Pronto p/ Envio".');
-        loadItems();
-      } else {
-        // Se está desmarcando, volta os itens pronto_envio para em_separacao
-        if (ocData && ocData.items) {
-          for (let idx = 0; idx < ocData.items.length; idx++) {
-            const item = ocData.items[idx];
-            if (item.status === 'pronto_envio') {
-              await apiPatch(`${API}/purchase-orders/${poId}/items/by-index/${idx}`, {
-                status: 'em_separacao'
-              });
-            }
-          }
-        }
-        alert('⏳ OC desmarcada. Os itens voltaram para "Em Separação".');
-        loadItems();
       }
       
-      // Atualizar estado local imediatamente para feedback visual
-      setOcProntoDespacho(prev => ({ ...prev, [poId]: newValue }));
+      alert(`✅ ${itensSelecionados.size} item(s) movido(s) para "Pronto p/ Envio"!`);
+      // Limpar seleção
+      setItensParaStatus(prev => ({ ...prev, [poId]: new Set() }));
+      loadItems();
     } catch (error) {
-      console.error('Erro ao atualizar status:', error);
-      alert('Erro ao atualizar status: ' + (error.message || 'Erro desconhecido'));
+      console.error('Erro ao mover itens:', error);
+      alert('Erro ao mover itens: ' + (error.message || 'Erro desconhecido'));
     }
   };
 
