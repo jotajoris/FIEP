@@ -155,9 +155,13 @@ const FreteRastreioForm = ({
               }}
             >
               <option value="">-- Manter atual --</option>
+              <option value="pendente">⏳ Pendente</option>
+              <option value="cotado">💰 Cotado</option>
+              <option value="comprado">🛒 Comprado</option>
+              <option value="em_separacao">📦 Em Separação</option>
+              <option value="pronto_envio">📤 Pronto p/ Envio</option>
               <option value="em_transito">🚚 Em Trânsito</option>
               <option value="entregue">✅ Entregue</option>
-              <option value="comprado">🛒 Comprado</option>
             </select>
             {novoStatus === 'em_transito' && (
               <span style={{ fontSize: '0.8rem', color: '#7c3aed', fontWeight: '500' }}>
