@@ -4375,6 +4375,100 @@ Chave PIX: 46.663.556/0001-69`}
                             );
                           });
                         }
+
+                        // VISUALIZAÇÃO SIMPLIFICADA PARA PRONTO PARA ENVIO
+                        if (status === 'pronto_envio') {
+                          return oc.items.map((item) => {
+                            const isSelectedForFrete = itensParaFrete[oc.po_id]?.has(item._itemIndexInPO) || false;
+                            const isSelectedForStatus = itensParaStatus[oc.po_id]?.has(item._itemIndexInPO) || false;
+                            
+                            return (
+                              <div 
+                                key={item._uniqueId}
+                                className="card"
+                                style={{
+                                  padding: '1rem',
+                                  background: isSelectedForStatus ? '#f3e8ff' : isSelectedForFrete ? '#fef9c3' : 'white',
+                                  borderRadius: '8px',
+                                  border: isSelectedForStatus ? '2px solid #8b5cf6' : isSelectedForFrete ? '2px solid #f59e0b' : '1px solid #e5e7eb'
+                                }}
+                              >
+                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                                  {/* Foto do item */}
+                                  <ItemImage
+                                    item={item}
+                                    imagensItens={imagensItens}
+                                    imageCacheTimestamp={imageCacheTimestamp}
+                                    onImageClick={(url) => setImagemExpandida(url)}
+                                    size="small"
+                                  />
+                                  
+                                  {/* Informações do item */}
+                                  <div style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                                      <div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                          <span style={{ fontWeight: '700', fontSize: '1rem', color: '#1f2937' }}>
+                                            {item.codigo_item}
+                                          </span>
+                                          <span style={{ 
+                                            background: '#14b8a6', 
+                                            color: 'white', 
+                                            padding: '0.15rem 0.5rem', 
+                                            borderRadius: '10px', 
+                                            fontSize: '0.7rem',
+                                            fontWeight: '600'
+                                          }}>
+                                            {item.quantidade || 1} {item.unidade || 'UN'}
+                                          </span>
+                                        </div>
+                                        <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', color: '#6b7280' }}>
+                                          {item.descricao?.substring(0, 80)}{item.descricao?.length > 80 ? '...' : ''}
+                                        </p>
+                                      </div>
+                                      
+                                      {/* Checkboxes com emojis */}
+                                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer', padding: '0.2rem 0.4rem', background: isSelectedForFrete ? '#fef9c3' : '#f3f4f6', borderRadius: '4px', fontSize: '0.75rem' }}>
+                                          <input
+                                            type="checkbox"
+                                            checked={isSelectedForFrete}
+                                            onChange={() => toggleItemParaFrete(oc.po_id, item._itemIndexInPO)}
+                                            style={{ width: '14px', height: '14px', accentColor: '#f59e0b' }}
+                                          />
+                                          🚚
+                                        </label>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer', padding: '0.2rem 0.4rem', background: isSelectedForStatus ? '#f3e8ff' : '#f3f4f6', borderRadius: '4px', fontSize: '0.75rem' }}>
+                                          <input
+                                            type="checkbox"
+                                            checked={isSelectedForStatus}
+                                            onChange={() => toggleItemParaStatus(oc.po_id, item._itemIndexInPO)}
+                                            style={{ width: '14px', height: '14px', accentColor: '#8b5cf6' }}
+                                          />
+                                          🔄
+                                        </label>
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Info de frete e rastreio */}
+                                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.8rem' }}>
+                                      {item.frete_envio > 0 && (
+                                        <span style={{ color: '#f59e0b', fontWeight: '600' }}>
+                                          🚚 Frete: {formatBRL(item.frete_envio)}
+                                        </span>
+                                      )}
+                                      {item.codigo_rastreio && (
+                                        <span style={{ color: '#3b82f6', fontWeight: '600' }}>
+                                          📦 {item.codigo_rastreio}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          });
+                        }
                         
                         // Visualização normal para EM TRÂNSITO (não agrupa)
                         return oc.items.map((item) => {
