@@ -486,73 +486,73 @@ const Dashboard = () => {
         <>
           <div className="stats-grid">
             {isAdmin() && (
-              <div className="stat-card" style={{ borderColor: '#667eea' }} data-testid="stat-total-ocs">
-                <div className="stat-label">Total OCs</div>
+              <div className="stat-card" style={{ borderColor: '#667eea', background: '#eef2ff', borderWidth: '2px' }} data-testid="stat-total-ocs">
+                <div className="stat-label" style={{ color: '#4338ca' }}>Total OCs</div>
                 <div className="stat-value" style={{ color: '#667eea' }}>{stats.total_ocs}</div>
               </div>
             )}
             <Link 
               to="/items/status/pendente" 
               className="stat-card" 
-              style={{ borderColor: '#f59e0b', cursor: 'pointer', textDecoration: 'none' }} 
+              style={{ borderColor: '#f59e0b', background: '#fef3c7', borderWidth: '2px', cursor: 'pointer', textDecoration: 'none' }} 
               data-testid="stat-pendentes"
             >
-              <div className="stat-label">Pendentes</div>
-              <div className="stat-value" style={{ color: '#f59e0b' }}>{stats.items_pendentes}</div>
+              <div className="stat-label" style={{ color: '#92400e' }}>Pendentes</div>
+              <div className="stat-value" style={{ color: '#d97706' }}>{stats.items_pendentes}</div>
             </Link>
             <Link 
               to="/items/status/cotado" 
               className="stat-card" 
-              style={{ borderColor: '#3b82f6', cursor: 'pointer', textDecoration: 'none' }} 
+              style={{ borderColor: '#3b82f6', background: '#dbeafe', borderWidth: '2px', cursor: 'pointer', textDecoration: 'none' }} 
               data-testid="stat-cotados"
             >
-              <div className="stat-label">Cotados</div>
-              <div className="stat-value" style={{ color: '#3b82f6' }}>{stats.items_cotados}</div>
+              <div className="stat-label" style={{ color: '#1e40af' }}>Cotados</div>
+              <div className="stat-value" style={{ color: '#2563eb' }}>{stats.items_cotados}</div>
             </Link>
             <Link 
               to="/items/status/comprado" 
               className="stat-card" 
-              style={{ borderColor: '#10b981', cursor: 'pointer', textDecoration: 'none' }} 
+              style={{ borderColor: '#10b981', background: '#d1fae5', borderWidth: '2px', cursor: 'pointer', textDecoration: 'none' }} 
               data-testid="stat-comprados"
             >
-              <div className="stat-label">Comprados</div>
-              <div className="stat-value" style={{ color: '#10b981' }}>{stats.items_comprados}</div>
+              <div className="stat-label" style={{ color: '#065f46' }}>Comprados</div>
+              <div className="stat-value" style={{ color: '#059669' }}>{stats.items_comprados}</div>
             </Link>
             <Link 
               to="/items/status/em_separacao" 
               className="stat-card" 
-              style={{ borderColor: '#f97316', cursor: 'pointer', textDecoration: 'none' }} 
+              style={{ borderColor: '#f97316', background: '#ffedd5', borderWidth: '2px', cursor: 'pointer', textDecoration: 'none' }} 
               data-testid="stat-em-separacao"
             >
-              <div className="stat-label">Em Separação</div>
-              <div className="stat-value" style={{ color: '#f97316' }}>{stats.items_em_separacao || 0}</div>
+              <div className="stat-label" style={{ color: '#9a3412' }}>Em Separação</div>
+              <div className="stat-value" style={{ color: '#ea580c' }}>{stats.items_em_separacao || 0}</div>
             </Link>
             <Link 
               to="/items/status/pronto_envio" 
               className="stat-card" 
-              style={{ borderColor: '#14b8a6', cursor: 'pointer', textDecoration: 'none' }} 
+              style={{ borderColor: '#14b8a6', background: '#ccfbf1', borderWidth: '2px', cursor: 'pointer', textDecoration: 'none' }} 
               data-testid="stat-pronto-envio"
             >
-              <div className="stat-label">Pronto p/ Envio</div>
-              <div className="stat-value" style={{ color: '#14b8a6' }}>{stats.items_pronto_envio || 0}</div>
+              <div className="stat-label" style={{ color: '#0f766e' }}>Pronto p/ Envio</div>
+              <div className="stat-value" style={{ color: '#0d9488' }}>{stats.items_pronto_envio || 0}</div>
             </Link>
             <Link 
               to="/items/status/em_transito" 
               className="stat-card" 
-              style={{ borderColor: '#8b5cf6', cursor: 'pointer', textDecoration: 'none' }} 
+              style={{ borderColor: '#8b5cf6', background: '#ede9fe', borderWidth: '2px', cursor: 'pointer', textDecoration: 'none' }} 
               data-testid="stat-em-transito"
             >
-              <div className="stat-label">Em Trânsito</div>
-              <div className="stat-value" style={{ color: '#8b5cf6' }}>{stats.items_em_transito || 0}</div>
+              <div className="stat-label" style={{ color: '#5b21b6' }}>Em Trânsito</div>
+              <div className="stat-value" style={{ color: '#7c3aed' }}>{stats.items_em_transito || 0}</div>
             </Link>
             <Link 
               to="/items/status/entregue" 
               className="stat-card" 
-              style={{ borderColor: '#22c55e', cursor: 'pointer', textDecoration: 'none' }} 
+              style={{ borderColor: '#22c55e', background: '#dcfce7', borderWidth: '2px', cursor: 'pointer', textDecoration: 'none' }} 
               data-testid="stat-entregues"
             >
-              <div className="stat-label">Entregues</div>
-              <div className="stat-value" style={{ color: '#22c55e' }}>{stats.items_entregues}</div>
+              <div className="stat-label" style={{ color: '#166534' }}>Entregues</div>
+              <div className="stat-value" style={{ color: '#16a34a' }}>{stats.items_entregues}</div>
             </Link>
           </div>
 
