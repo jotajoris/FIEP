@@ -4355,6 +4355,19 @@ async def copiar_imagem_item(
     return {"success": True, "message": "Imagem copiada com sucesso"}
 
 
+@api_router.get("/itens/imagens-disponiveis")
+async def get_itens_imagens_disponiveis(current_user: dict = Depends(get_current_user)):
+    """
+    Retorna lista de códigos de itens que possuem imagem.
+    """
+    cursor = db.imagens_itens.find({}, {"_id": 0, "codigo_item": 1})
+    imagens = await cursor.to_list(10000)
+    
+    codigos = [item['codigo_item'] for item in imagens if item.get('codigo_item')]
+    
+    return {"codigos": codigos}
+
+
 @api_router.get("/imagens-itens/mapa")
 async def get_mapa_imagens_itens(current_user: dict = Depends(get_current_user)):
     """
