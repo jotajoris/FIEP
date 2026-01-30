@@ -90,6 +90,23 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 
 ## Changelog Recente
 
+### 2025-01-30 (Sessão atual - Continuação 4)
+- ✅ **Página de Estoque melhorada:**
+  - Adicionada coluna de IMAGEM com miniatura do item (60x60px)
+  - Miniaturas clicáveis para ver imagem em tamanho real
+  - Botão de upload de foto diretamente na tabela
+  - Botão de excluir imagem (X vermelho)
+  - Paginação com opções: 5, 10, 15, 20, Tudo
+  - Navegação entre páginas com botões "Anterior" e "Próximo"
+  
+- ✅ **Adicionar itens manualmente ao estoque:**
+  - Modal para buscar item por código
+  - Se item já existe no estoque: mostra quantidade atual e permite adicionar mais
+  - Se item não existe: permite criar entrada manual com descrição e foto
+  - Campos: Quantidade, Preço unitário, Fornecedor
+  - Upload de foto diretamente no modal
+  - Endpoints backend criados: `/api/estoque/adicionar-manual` e `/api/estoque/adicionar-quantidade`
+
 ### 2025-01-30 (Sessão atual - Continuação 3)
 - ✅ **"Dados Adicionais da NF" movido para header da OC:**
   - Agora aparece no card da OC (área amarela) em vez de dentro do item
