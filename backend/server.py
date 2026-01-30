@@ -5719,7 +5719,7 @@ async def atualizar_oc_com_pdf(
             alteracoes = []
             
             # PREÇO DO PDF - SEMPRE atualiza
-            preco_pdf_novo = pdf_item.get('preco_pdf')
+            preco_pdf_novo = pdf_item.get('preco_pdf') or pdf_item.get('preco_venda_pdf')
             preco_pdf_atual = existing_item.get('preco_pdf')
             if preco_pdf_novo is not None and preco_pdf_novo != preco_pdf_atual:
                 updated_item['preco_pdf'] = preco_pdf_novo
