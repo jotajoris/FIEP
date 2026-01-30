@@ -3901,6 +3901,89 @@ Chave PIX: 46.663.556/0001-69`}
                       />
                     )}
 
+                    {/* ======== SEÇÃO PRONTO PARA ENVIO ======== */}
+                    {status === 'pronto_envio' && (
+                      <>
+                      {/* NF de Venda e XML para download */}
+                      {oc.notas_fiscais_venda && oc.notas_fiscais_venda.length > 0 && (
+                        <div style={{ 
+                          marginBottom: '1rem', 
+                          padding: '1rem', 
+                          background: '#dcfce7', 
+                          borderRadius: '8px',
+                          border: '2px solid #22c55e'
+                        }}>
+                          <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', fontWeight: '700', color: '#166534' }}>
+                            📄 NF de Venda ({oc.notas_fiscais_venda.length})
+                          </h4>
+                          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            {oc.notas_fiscais_venda.map((nf, nfIdx) => (
+                              <button
+                                key={nf.id || nfIdx}
+                                onClick={() => downloadNFVendaOC(oc.po_id, nf.filename)}
+                                style={{ 
+                                  padding: '0.4rem 0.8rem', 
+                                  fontSize: '0.85rem', 
+                                  background: nf.filename.endsWith('.xml') ? '#7c3aed' : '#667eea', 
+                                  color: 'white', 
+                                  border: 'none', 
+                                  borderRadius: '6px', 
+                                  cursor: 'pointer' 
+                                }}
+                              >
+                                {nf.filename.endsWith('.xml') ? '📑' : '📄'} {nf.filename}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Informações de Frete */}
+                      <div style={{ 
+                        marginBottom: '1rem', 
+                        padding: '1rem', 
+                        background: '#fef3c7', 
+                        borderRadius: '8px',
+                        border: '1px solid #fcd34d'
+                      }}>
+                        <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', fontWeight: '700', color: '#92400e' }}>
+                          🚚 Informações de Frete/Rastreio
+                        </h4>
+                        <FreteRastreioForm
+                          poId={oc.po_id}
+                          totalItens={oc.items.length}
+                          itensSelecionados={itensParaFrete[oc.po_id]}
+                          freteTotal={freteEnvioTotal[oc.po_id]}
+                          codigoRastreio={codigoRastreioLote[oc.po_id]}
+                          novoStatus={statusNoFrete[oc.po_id]}
+                          aplicando={aplicandoFrete === oc.po_id}
+                          onToggleAll={() => toggleAllItensParaFrete(oc.po_id, oc.items)}
+                          onFreteChange={(value) => setFreteEnvioTotal(prev => ({ ...prev, [oc.po_id]: value }))}
+                          onRastreioChange={(value) => setCodigoRastreioLote(prev => ({ ...prev, [oc.po_id]: value }))}
+                          onStatusChange={(value) => setStatusNoFrete(prev => ({ ...prev, [oc.po_id]: value }))}
+                          onAplicar={() => aplicarFreteERastreio(oc.po_id)}
+                        />
+                      </div>
+
+                      {/* Mudar Status em Massa */}
+                      {isAdmin() && (
+                        <MudarStatusForm
+                          poId={oc.po_id}
+                          numeroOC={oc.numero_oc}
+                          totalItens={oc.items.length}
+                          itensSelecionados={itensParaStatus[oc.po_id]}
+                          statusAtual={status}
+                          novoStatus={novoStatusMassa[oc.po_id]}
+                          aplicando={aplicandoStatusMassa === oc.po_id}
+                          onToggleAll={() => toggleAllItensParaStatus(oc.po_id, oc.items)}
+                          onStatusChange={(value) => setNovoStatusMassa(prev => ({ ...prev, [oc.po_id]: value }))}
+                          onAplicar={() => aplicarStatusEmMassa(oc.po_id, oc.numero_oc, oc.items.length)}
+                        />
+                      )}
+                      </>
+                    )}
+                    {/* ======== FIM SEÇÃO PRONTO PARA ENVIO ======== */}
+
                     {/* Lista de Itens da OC */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                       {/* Lógica de agrupamento AUTOMÁTICO por código */}
