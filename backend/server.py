@@ -13,6 +13,11 @@ import base64
 import shutil
 import io
 
+# APScheduler para agendamento de tarefas
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+import pytz
+
 # Configure logging FIRST - before any logger usage
 logging.basicConfig(
     level=logging.INFO,
