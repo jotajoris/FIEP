@@ -2083,30 +2083,31 @@ const ItemsByStatus = () => {
         pronto_despacho: newValue
       });
       
-      // Se está marcando como pronto, também muda o status dos itens em_separacao para pronto_envio
+      // Buscar a OC do servidor para ter os índices corretos
+      const response = await apiGet(`${API}/purchase-orders/${poId}`);
+      const ocData = response.data;
+      
       if (newValue) {
-        // Buscar a OC atual para pegar os índices dos itens em separação
-        const ocAtual = itemsGroupedByOC.find(oc => oc.po_id === poId);
-        if (ocAtual) {
-          // Mudar status de todos os itens em_separacao para pronto_envio
-          for (const item of ocAtual.items) {
+        // Se está marcando como pronto, muda o status dos itens em_separacao para pronto_envio
+        if (ocData && ocData.items) {
+          for (let idx = 0; idx < ocData.items.length; idx++) {
+            const item = ocData.items[idx];
             if (item.status === 'em_separacao') {
-              await apiPatch(`${API}/purchase-orders/${poId}/items/${item._itemIndexInPO}`, {
+              await apiPatch(`${API}/purchase-orders/${poId}/items/${idx}`, {
                 status: 'pronto_envio'
               });
             }
           }
         }
         alert('✅ OC marcada como pronta para envio! Os itens foram movidos para "Pronto p/ Envio".');
-        // Recarregar para atualizar a visualização
         fetchItems();
       } else {
-        // Se está desmarcando, volta os itens para em_separacao
-        const ocAtual = itemsGroupedByOC.find(oc => oc.po_id === poId);
-        if (ocAtual) {
-          for (const item of ocAtual.items) {
+        // Se está desmarcando, volta os itens pronto_envio para em_separacao
+        if (ocData && ocData.items) {
+          for (let idx = 0; idx < ocData.items.length; idx++) {
+            const item = ocData.items[idx];
             if (item.status === 'pronto_envio') {
-              await apiPatch(`${API}/purchase-orders/${poId}/items/${item._itemIndexInPO}`, {
+              await apiPatch(`${API}/purchase-orders/${poId}/items/${idx}`, {
                 status: 'em_separacao'
               });
             }
@@ -2120,7 +2121,7 @@ const ItemsByStatus = () => {
       setOcProntoDespacho(prev => ({ ...prev, [poId]: newValue }));
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
-      alert('Erro ao atualizar status.');
+      alert('Erro ao atualizar status: ' + (error.message || 'Erro desconhecido'));
     }
   };
 
