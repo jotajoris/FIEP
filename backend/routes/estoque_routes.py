@@ -224,3 +224,179 @@ async def resetar_uso_estoque(
         raise HTTPException(status_code=404, detail="Item não encontrado")
     
     return {"success": True, "message": "Uso de estoque resetado"}
+
+
+
+@router.post("/adicionar-manual")
+async def adicionar_estoque_manual(
+    data: dict,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Adiciona um item novo diretamente ao estoque (sem OC vinculada).
+    Cria uma OC virtual para armazenar o item.
+    """
+    codigo_item = data.get('codigo_item')
+    descricao = data.get('descricao', '')
+    quantidade = data.get('quantidade', 0)
+    preco_unitario = data.get('preco_unitario', 0)
+    fornecedor = data.get('fornecedor', 'ENTRADA MANUAL')
+    
+    if not codigo_item or quantidade <= 0:
+        raise HTTPException(status_code=400, detail="codigo_item e quantidade são obrigatórios")
+    
+    # Criar ou atualizar OC de estoque manual
+    oc_estoque = await db.purchase_orders.find_one({"numero_oc": "ESTOQUE-MANUAL"}, {"_id": 0})
+    
+    if not oc_estoque:
+        # Criar nova OC para estoque manual
+        import uuid
+        new_id = str(uuid.uuid4())
+        oc_estoque = {
+            "id": new_id,
+            "numero_oc": "ESTOQUE-MANUAL",
+            "data_criacao": datetime.now(timezone.utc).isoformat(),
+            "items": [],
+            "status": "ativo",
+            "observacao": "OC virtual para itens adicionados manualmente ao estoque"
+        }
+        await db.purchase_orders.insert_one(oc_estoque)
+        oc_estoque = await db.purchase_orders.find_one({"id": new_id}, {"_id": 0})
+    
+    # Verificar se item já existe nesta OC
+    items = oc_estoque.get('items', [])
+    item_existente_idx = None
+    for idx, item in enumerate(items):
+        if item.get('codigo_item') == codigo_item:
+            item_existente_idx = idx
+            break
+    
+    if item_existente_idx is not None:
+        # Adicionar à quantidade existente
+        qtd_atual = items[item_existente_idx].get('quantidade_comprada', items[item_existente_idx].get('quantidade', 0))
+        nova_qtd = qtd_atual + quantidade
+        
+        # Adicionar fonte de compra
+        if 'fontes_compra' not in items[item_existente_idx]:
+            items[item_existente_idx]['fontes_compra'] = []
+        
+        items[item_existente_idx]['fontes_compra'].append({
+            "id": str(datetime.now().timestamp()),
+            "quantidade": quantidade,
+            "preco_unitario": preco_unitario,
+            "fornecedor": fornecedor,
+            "data": datetime.now(timezone.utc).strftime('%Y-%m-%d')
+        })
+        items[item_existente_idx]['quantidade_comprada'] = nova_qtd
+        
+        await db.purchase_orders.update_one(
+            {"id": oc_estoque['id']},
+            {"$set": {"items": items}}
+        )
+    else:
+        # Criar novo item
+        novo_item = {
+            "codigo_item": codigo_item,
+            "descricao": descricao,
+            "quantidade": 0,  # Quantidade necessária é 0 (todo excedente vai para estoque)
+            "quantidade_comprada": quantidade,
+            "unidade": "UN",
+            "status": "em_separacao",
+            "preco": preco_unitario * quantidade,
+            "fontes_compra": [{
+                "id": str(datetime.now().timestamp()),
+                "quantidade": quantidade,
+                "preco_unitario": preco_unitario,
+                "fornecedor": fornecedor,
+                "data": datetime.now(timezone.utc).strftime('%Y-%m-%d')
+            }],
+            "observacao": f"Entrada manual - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}"
+        }
+        
+        await db.purchase_orders.update_one(
+            {"id": oc_estoque['id']},
+            {"$push": {"items": novo_item}}
+        )
+    
+    return {"success": True, "message": f"Adicionado {quantidade} UN de {codigo_item} ao estoque"}
+
+
+@router.post("/adicionar-quantidade")
+async def adicionar_quantidade_estoque(
+    data: dict,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Adiciona quantidade a um item já existente no estoque.
+    """
+    codigo_item = data.get('codigo_item')
+    quantidade = data.get('quantidade', 0)
+    preco_unitario = data.get('preco_unitario', 0)
+    fornecedor = data.get('fornecedor', 'ENTRADA MANUAL')
+    
+    if not codigo_item or quantidade <= 0:
+        raise HTTPException(status_code=400, detail="codigo_item e quantidade são obrigatórios")
+    
+    # Buscar item no estoque manual
+    oc_estoque = await db.purchase_orders.find_one({"numero_oc": "ESTOQUE-MANUAL"}, {"_id": 0})
+    
+    if oc_estoque:
+        items = oc_estoque.get('items', [])
+        for idx, item in enumerate(items):
+            if item.get('codigo_item') == codigo_item:
+                # Atualizar quantidade
+                qtd_atual = item.get('quantidade_comprada', item.get('quantidade', 0))
+                nova_qtd = qtd_atual + quantidade
+                
+                if 'fontes_compra' not in item:
+                    item['fontes_compra'] = []
+                
+                item['fontes_compra'].append({
+                    "id": str(datetime.now().timestamp()),
+                    "quantidade": quantidade,
+                    "preco_unitario": preco_unitario,
+                    "fornecedor": fornecedor,
+                    "data": datetime.now(timezone.utc).strftime('%Y-%m-%d')
+                })
+                item['quantidade_comprada'] = nova_qtd
+                items[idx] = item
+                
+                await db.purchase_orders.update_one(
+                    {"id": oc_estoque['id']},
+                    {"$set": {"items": items}}
+                )
+                
+                return {"success": True, "message": f"Adicionado +{quantidade} UN ao estoque de {codigo_item}"}
+    
+    # Se não encontrou no estoque manual, buscar em outras OCs
+    pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(5000)
+    
+    for po in pos:
+        items = po.get('items', [])
+        for idx, item in enumerate(items):
+            if item.get('codigo_item') == codigo_item:
+                qtd_atual = item.get('quantidade_comprada', item.get('quantidade', 0))
+                nova_qtd = qtd_atual + quantidade
+                
+                if 'fontes_compra' not in item:
+                    item['fontes_compra'] = []
+                
+                item['fontes_compra'].append({
+                    "id": str(datetime.now().timestamp()),
+                    "quantidade": quantidade,
+                    "preco_unitario": preco_unitario,
+                    "fornecedor": fornecedor,
+                    "data": datetime.now(timezone.utc).strftime('%Y-%m-%d')
+                })
+                
+                await db.purchase_orders.update_one(
+                    {"id": po['id']},
+                    {"$set": {
+                        f"items.{idx}.quantidade_comprada": nova_qtd,
+                        f"items.{idx}.fontes_compra": item['fontes_compra']
+                    }}
+                )
+                
+                return {"success": True, "message": f"Adicionado +{quantidade} UN ao estoque de {codigo_item}"}
+    
+    raise HTTPException(status_code=404, detail=f"Item {codigo_item} não encontrado")
