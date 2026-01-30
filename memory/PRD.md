@@ -90,7 +90,16 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 
 ## Changelog Recente
 
-### 2025-01-30 (Sessão atual)
+### 2025-01-30 (Sessão atual - Continuação)
+- ✅ **BUG FIX CRÍTICO: Edição de itens em "Em Separação" restaurada**
+  - **Problema:** Após adicionar agrupamento automático, os itens não podiam ser editados
+  - **Causa:** O código que renderiza itens agrupados não verificava `editingItem` para mostrar o formulário de edição
+  - **Solução:** Adicionada verificação condicional - quando um item está sendo editado, exibe `renderEditForm(item)` em vez da visualização compacta
+  - **Arquivo modificado:** `/app/frontend/src/pages/ItemsByStatus.js` (linha ~4228)
+  - Botões "Cancelar" e "Salvar" funcionando corretamente
+  - Formulário completo com todos os campos (Status, Preço, NF, Observação, Locais de Compra, etc.)
+
+### 2025-01-30 (Sessão anterior)
 - ✅ **Agrupamento automático por código em PODetails.js - IMPLEMENTADO**
   - Itens com mesmo código são agrupados automaticamente
   - Quantidade no formato "20+20 = 40 UN" em laranja
