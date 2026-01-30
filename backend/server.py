@@ -86,8 +86,8 @@ db = client[os.environ['DB_NAME']]
 # Create the main app without a prefix
 app = FastAPI()
 
-# Background task control
-rastreio_task = None
+# Scheduler para tarefas agendadas (verificação de rastreios)
+scheduler = AsyncIOScheduler()
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
