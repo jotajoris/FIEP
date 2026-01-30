@@ -90,7 +90,18 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 
 ## Changelog Recente
 
-### 2025-01-30 (Sessão atual - Continuação 4)
+### 2025-01-30 (Sessão atual - Continuação 5)
+- ✅ **Bug Fix: Frontend quebrado (página em branco)**
+  - Corrigido erro de sintaxe em `Estoque.js` - bloco `try` sem `catch/finally`
+  - Removido `}` extra na linha 240 que fechava a função prematuramente
+  - Dashboard e todas as páginas voltaram a funcionar normalmente
+
+- ✅ **Testado e validado:**
+  - Dashboard carregando com todas as estatísticas
+  - Página Estoque funcionando com listagem e paginação
+  - Adicionar quantidade a item existente no estoque funcionando via API
+
+### 2025-01-30 (Sessão anterior - Continuação 4)
 - ✅ **Página de Estoque melhorada:**
   - Adicionada coluna de IMAGEM com miniatura do item (60x60px)
   - Miniaturas clicáveis para ver imagem em tamanho real
