@@ -156,6 +156,46 @@ const PODetails = () => {
     return result;
   }, [po?.items]);
 
+  // Filtrar itens agrupados baseado nos filtros de pesquisa
+  const itensAgrupadosFiltrados = useMemo(() => {
+    if (!itensAgrupados) return [];
+    
+    return itensAgrupados.filter(group => {
+      const item = group.firstItem;
+      
+      // Filtro por código
+      if (filtros.codigo) {
+        const codigoMatch = (item.codigo_item || '').toLowerCase().includes(filtros.codigo.toLowerCase());
+        if (!codigoMatch) return false;
+      }
+      
+      // Filtro por descrição/nome
+      if (filtros.descricao) {
+        const descricaoMatch = (item.descricao || '').toLowerCase().includes(filtros.descricao.toLowerCase());
+        if (!descricaoMatch) return false;
+      }
+      
+      // Filtro por fornecedor
+      if (filtros.fornecedor) {
+        const fornecedorMatch = (item.fornecedor || '').toLowerCase().includes(filtros.fornecedor.toLowerCase());
+        if (!fornecedorMatch) return false;
+      }
+      
+      // Filtro por status
+      if (filtros.status) {
+        const statusMatch = (item.status || '').toLowerCase() === filtros.status.toLowerCase();
+        if (!statusMatch) return false;
+      }
+      
+      return true;
+    });
+  }, [itensAgrupados, filtros]);
+
+  // Reset página quando filtros mudam
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filtros]);
+
   useEffect(() => {
     loadPO();
     // eslint-disable-next-line react-hooks/exhaustive-deps
