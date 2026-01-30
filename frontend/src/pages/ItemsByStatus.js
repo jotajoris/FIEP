@@ -4230,7 +4230,45 @@ Chave PIX: 46.663.556/0001-69`;
                                     const isSelectedForFrete = itensParaFrete[oc.po_id]?.has(item._itemIndexInPO) || false;
                                     const isSelectedForStatus = itensParaStatus[oc.po_id]?.has(item._itemIndexInPO) || false;
                                     const jaTemNF = oc.itensComNFIndices && oc.itensComNFIndices.has(item._itemIndexInPO);
+                                    const isEditing = editingItem === item._uniqueId;
                                     
+                                    // Se está editando, mostrar formulário completo
+                                    if (isEditing) {
+                                      return (
+                                        <div 
+                                          key={item._uniqueId}
+                                          className="card"
+                                          style={{
+                                            background: '#f0f9ff',
+                                            border: '2px solid #3b82f6',
+                                            padding: '1rem'
+                                          }}
+                                        >
+                                          <div style={{ marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ fontWeight: '700', color: '#1e40af' }}>
+                                              ✏️ Editando Item #{idx + 1} - {item.codigo_item}
+                                            </span>
+                                            <button
+                                              onClick={cancelEdit}
+                                              style={{
+                                                background: '#ef4444',
+                                                color: 'white',
+                                                border: 'none',
+                                                padding: '0.25rem 0.75rem',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                fontSize: '0.85rem'
+                                              }}
+                                            >
+                                              ✕ Cancelar
+                                            </button>
+                                          </div>
+                                          {renderEditForm(item)}
+                                        </div>
+                                      );
+                                    }
+                                    
+                                    // Visualização compacta normal
                                     return (
                                       <div 
                                         key={item._uniqueId}
