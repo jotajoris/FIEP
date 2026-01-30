@@ -1813,17 +1813,21 @@ async def get_purchase_orders(
         pos = await db.purchase_orders.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
     
     for po in pos:
-        if isinstance(po['created_at'], str):
-            po['created_at'] = datetime.fromisoformat(po['created_at'])
+        if 'created_at' in po and po['created_at']:
+            if isinstance(po['created_at'], str):
+                try:
+                    po['created_at'] = datetime.fromisoformat(po['created_at'])
+                except:
+                    pass
         
         # Adicionar índice original a cada item ANTES de filtrar
-        for idx, item in enumerate(po['items']):
+        for idx, item in enumerate(po.get('items', [])):
             item['_originalIndex'] = idx
         
         # Se não for admin, filtrar apenas itens do responsável (case-insensitive)
         if current_user['role'] != 'admin' and current_user.get('owner_name'):
             user_name = current_user['owner_name'].strip().upper()
-            po['items'] = [item for item in po['items'] if (item.get('responsavel') or '').strip().upper() == user_name]
+            po['items'] = [item for item in po.get('items', []) if (item.get('responsavel') or '').strip().upper() == user_name]
     
     return {
         "data": pos,
