@@ -136,14 +136,15 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 
 ### P0 (Crítico)
 - [x] ~~Finalizar "Agrupar por Código" para Pendentes/Cotados~~ ✅ COMPLETO
-- [ ] Implementar "Agrupar por Código" na página Em Separação (dentro da mesma OC)
+- [x] ~~Bug: Edição de itens quebrada em "Em Separação"~~ ✅ CORRIGIDO
+- [x] ~~Implementar "Agrupar por Código" na página Em Separação (dentro da mesma OC)~~ ✅ IMPLEMENTADO
 
 ### P1 (Alta Prioridade)
 - [ ] Remover código duplicado do `server.py` (refatoração backend)
 - [ ] Integrar componentes restantes em `ItemsByStatus.js` (refatoração frontend)
 
 ### P2 (Média Prioridade)
-- [ ] Corrigir bug: editar item duplicado abre todos os itens
+- [ ] Corrigir bug: editar item duplicado abre todos os itens (recorrente)
 
 ### P3 (Backlog)
 - [ ] Botão "Criar OC" na página Planilha de Contrato
