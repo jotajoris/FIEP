@@ -1866,19 +1866,30 @@ async def get_purchase_orders_simple(
     
     result = []
     for po in pos:
-        if isinstance(po.get('created_at'), str):
-            po['created_at'] = datetime.fromisoformat(po['created_at'])
+        if 'created_at' in po and po.get('created_at'):
+            if isinstance(po['created_at'], str):
+                try:
+                    po['created_at'] = datetime.fromisoformat(po['created_at'])
+                except:
+                    po['created_at'] = datetime.now(timezone.utc)
+        else:
+            po['created_at'] = datetime.now(timezone.utc)
         
         # Filtro por número da OC
         if search_oc:
-            if search_oc.lower() not in po['numero_oc'].lower():
+            if search_oc.lower() not in po.get('numero_oc', '').lower():
                 continue
         
         # Filtro por data
         if date_from or date_to:
-            po_date = po['created_at']
+            po_date = po.get('created_at')
             if isinstance(po_date, str):
-                po_date = datetime.fromisoformat(po_date)
+                try:
+                    po_date = datetime.fromisoformat(po_date)
+                except:
+                    po_date = datetime.now(timezone.utc)
+            if not po_date:
+                po_date = datetime.now(timezone.utc)
             
             if date_from:
                 from_date = datetime.fromisoformat(date_from)
