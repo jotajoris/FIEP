@@ -3323,8 +3323,8 @@ Chave PIX: 46.663.556/0001-69`;
               : `Nenhum item com status "${status}" encontrado.`
             }
           </p>
-        ) : (status === 'em_separacao' || status === 'em_transito') ? (
-          /* ============ VISUALIZAÇÃO POR OC (Em Separação / Em Trânsito) ============ */
+        ) : (status === 'em_separacao' || status === 'em_transito' || status === 'pronto_envio') ? (
+          /* ============ VISUALIZAÇÃO POR OC (Em Separação / Em Trânsito / Pronto p/ Envio) ============ */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Contador e paginação no topo */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
