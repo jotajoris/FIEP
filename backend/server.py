@@ -3354,15 +3354,15 @@ async def verificar_rastreios_agendado():
                         {"id": po['id']},
                         {"$set": {"items": po['items']}}
                     )
-            
-            logger.info(
-                f"Verificação concluída. "
-                f"Verificados: {stats['verificados']}, "
-                f"Entregues: {stats['entregues']}, "
-                f"Saiu p/ Entrega: {stats['saiu_entrega']}, "
-                f"Tentativas: {stats['tentativa']}, "
-                f"Erros: {stats['erros']}"
-            )
+        
+        logger.info(
+            f"Verificação concluída. "
+            f"Verificados: {stats['verificados']}, "
+            f"Entregues: {stats['entregues']}, "
+            f"Saiu p/ Entrega: {stats['saiu_entrega']}, "
+            f"Tentativas: {stats['tentativa']}, "
+            f"Erros: {stats['erros']}"
+        )
                 
     except Exception as e:
         logger.error(f"Erro na verificação automática de rastreios: {str(e)}")
