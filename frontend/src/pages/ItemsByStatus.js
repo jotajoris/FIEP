@@ -4174,88 +4174,166 @@ Chave PIX: 46.663.556/0001-69`;
                                       );
                                     }
                                     
-                                    // Visualização compacta normal
+                                    // Visualização COMPLETA do item
                                     return (
                                       <div 
                                         key={item._uniqueId}
+                                        className="card"
                                         style={{
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          gap: '0.75rem',
-                                          padding: '0.5rem',
+                                          padding: '1rem',
                                           background: jaTemNF ? '#dcfce7' : isSelectedForNF ? '#d1fae5' : 'white',
-                                          borderRadius: '4px',
-                                          border: '1px solid #e5e7eb'
+                                          borderRadius: '8px',
+                                          border: jaTemNF ? '2px solid #16a34a' : isSelectedForNF ? '2px solid #22c55e' : '1px solid #e5e7eb'
                                         }}
                                       >
-                                        {/* Checkboxes */}
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                          <input
-                                            type="checkbox"
-                                            checked={isSelectedForNF}
-                                            onChange={() => toggleItemParaNFVenda(oc.po_id, item._uniqueId)}
-                                            style={{ width: '16px', height: '16px', accentColor: '#22c55e' }}
-                                            title="NF"
-                                          />
-                                          {isAdmin() && (
-                                            <>
+                                        {/* Header com checkboxes e badge */}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                            {/* Checkboxes */}
+                                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                                               <input
                                                 type="checkbox"
-                                                checked={isSelectedForFrete}
-                                                onChange={() => toggleItemParaFrete(oc.po_id, item._itemIndexInPO)}
-                                                style={{ width: '16px', height: '16px', accentColor: '#f59e0b' }}
-                                                title="Frete"
+                                                checked={isSelectedForNF}
+                                                onChange={() => toggleItemParaNFVenda(oc.po_id, item._uniqueId)}
+                                                style={{ width: '18px', height: '18px', accentColor: '#22c55e' }}
+                                                title="Selecionar para NF"
                                               />
-                                              <input
-                                                type="checkbox"
-                                                checked={isSelectedForStatus}
-                                                onChange={() => toggleItemParaStatus(oc.po_id, item._itemIndexInPO)}
-                                                style={{ width: '16px', height: '16px', accentColor: '#8b5cf6' }}
-                                                title="Status"
-                                              />
-                                            </>
-                                          )}
+                                              {isAdmin() && (
+                                                <>
+                                                  <input
+                                                    type="checkbox"
+                                                    checked={isSelectedForFrete}
+                                                    onChange={() => toggleItemParaFrete(oc.po_id, item._itemIndexInPO)}
+                                                    style={{ width: '18px', height: '18px', accentColor: '#f59e0b' }}
+                                                    title="Selecionar para Frete"
+                                                  />
+                                                  <input
+                                                    type="checkbox"
+                                                    checked={isSelectedForStatus}
+                                                    onChange={() => toggleItemParaStatus(oc.po_id, item._itemIndexInPO)}
+                                                    style={{ width: '18px', height: '18px', accentColor: '#8b5cf6' }}
+                                                    title="Selecionar para Status"
+                                                  />
+                                                </>
+                                              )}
+                                            </div>
+                                            <span style={{ 
+                                              background: '#667eea', 
+                                              color: 'white', 
+                                              padding: '0.25rem 0.75rem', 
+                                              borderRadius: '12px', 
+                                              fontSize: '0.85rem',
+                                              fontWeight: '600'
+                                            }}>
+                                              Item #{idx + 1}
+                                            </span>
+                                            {jaTemNF && (
+                                              <span style={{ 
+                                                background: '#22c55e', 
+                                                color: 'white', 
+                                                padding: '0.25rem 0.75rem', 
+                                                borderRadius: '12px', 
+                                                fontSize: '0.75rem',
+                                                fontWeight: '600'
+                                              }}>
+                                                ✓ NF OK
+                                              </span>
+                                            )}
+                                          </div>
+                                          <button
+                                            onClick={() => startEdit(item)}
+                                            className="btn btn-primary"
+                                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+                                          >
+                                            ✏️ Editar
+                                          </button>
                                         </div>
-                                        
-                                        {/* Info do item */}
-                                        <div style={{ flex: 1, fontSize: '0.85rem' }}>
-                                          <span style={{ fontWeight: '600' }}>#{idx + 1}</span>
-                                          <span style={{ marginLeft: '0.5rem', color: '#6b7280' }}>
-                                            Qtd: {item.quantidade || 1}
-                                          </span>
+
+                                        {/* Código e Descrição */}
+                                        <div style={{ marginBottom: '0.75rem' }}>
+                                          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.25rem' }}>
+                                            <span style={{ fontWeight: '700', fontSize: '1rem', color: '#1f2937' }}>
+                                              Código: {item.codigo_item}
+                                            </span>
+                                            {item.ncm && (
+                                              <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                                                NCM: {item.ncm}
+                                              </span>
+                                            )}
+                                          </div>
+                                          <p style={{ margin: 0, fontSize: '0.9rem', color: '#4b5563' }}>
+                                            {item.descricao}
+                                          </p>
+                                        </div>
+
+                                        {/* Grid de informações */}
+                                        <div style={{ 
+                                          display: 'grid', 
+                                          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+                                          gap: '0.75rem',
+                                          marginBottom: '0.75rem',
+                                          padding: '0.75rem',
+                                          background: '#f8fafc',
+                                          borderRadius: '8px'
+                                        }}>
+                                          <div>
+                                            <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '600' }}>QUANTIDADE</div>
+                                            <div style={{ fontSize: '1rem', fontWeight: '700', color: '#1f2937' }}>
+                                              {item.quantidade || 1} {item.unidade || 'UN'}
+                                            </div>
+                                          </div>
+                                          <div>
+                                            <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '600' }}>RESPONSÁVEL</div>
+                                            <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#4338ca' }}>
+                                              {item.responsavel || 'Não atribuído'}
+                                            </div>
+                                          </div>
+                                          {item.preco > 0 && (
+                                            <div>
+                                              <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '600' }}>VALOR COMPRA</div>
+                                              <div style={{ fontSize: '1rem', fontWeight: '700', color: '#dc2626' }}>
+                                                {formatBRL(item.preco)}
+                                              </div>
+                                            </div>
+                                          )}
+                                          {item.preco_venda > 0 && (
+                                            <div>
+                                              <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '600' }}>VALOR VENDA</div>
+                                              <div style={{ fontSize: '1rem', fontWeight: '700', color: '#059669' }}>
+                                                {formatBRL(item.preco_venda)}
+                                              </div>
+                                            </div>
+                                          )}
                                           {item.fornecedor && (
-                                            <span style={{ marginLeft: '0.5rem', color: '#059669' }}>
-                                              | {item.fornecedor}
-                                            </span>
-                                          )}
-                                          {jaTemNF && (
-                                            <span style={{ marginLeft: '0.5rem', color: '#16a34a', fontWeight: '600' }}>
-                                              ✓ NF
-                                            </span>
+                                            <div>
+                                              <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '600' }}>FORNECEDOR</div>
+                                              <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#0369a1' }}>
+                                                {item.fornecedor}
+                                              </div>
+                                            </div>
                                           )}
                                         </div>
-                                        
-                                        {/* Preço */}
-                                        {item.preco > 0 && (
-                                          <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#dc2626' }}>
-                                            {formatBRL(item.preco)}
+
+                                        {/* Observação (se houver) */}
+                                        {item.observacao && (
+                                          <div style={{ 
+                                            padding: '0.75rem', 
+                                            background: '#f0f9ff', 
+                                            borderRadius: '8px', 
+                                            border: '1px solid #bae6fd',
+                                            marginBottom: '0.75rem'
+                                          }}>
+                                            <div style={{ fontSize: '0.75rem', color: '#0369a1', fontWeight: '600', marginBottom: '0.25rem' }}>
+                                              💬 OBSERVAÇÃO
+                                            </div>
+                                            <div style={{ color: '#1e3a8a', fontSize: '0.9rem' }}>
+                                              {item.observacao}
+                                            </div>
                                           </div>
                                         )}
-                                        
-                                        {/* Botão editar */}
-                                        <button
-                                          onClick={() => startEdit(item)}
-                                          style={{
-                                            padding: '0.25rem 0.5rem',
-                                            background: '#f3f4f6',
-                                            border: '1px solid #d1d5db',
-                                            borderRadius: '4px',
-                                            cursor: 'pointer',
-                                            fontSize: '0.75rem'
-                                          }}
-                                        >
-                                          ✏️
-                                        </button>
+
+                                        {/* Seção de Gestão de NF */}
+                                        {renderNFSection(item)}
                                       </div>
                                     );
                                   })}
