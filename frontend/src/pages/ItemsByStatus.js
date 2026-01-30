@@ -2093,7 +2093,7 @@ const ItemsByStatus = () => {
           for (let idx = 0; idx < ocData.items.length; idx++) {
             const item = ocData.items[idx];
             if (item.status === 'em_separacao') {
-              await apiPatch(`${API}/purchase-orders/${poId}/items/${idx}`, {
+              await apiPatch(`${API}/purchase-orders/${poId}/items/by-index/${idx}`, {
                 status: 'pronto_envio'
               });
             }
@@ -2107,7 +2107,7 @@ const ItemsByStatus = () => {
           for (let idx = 0; idx < ocData.items.length; idx++) {
             const item = ocData.items[idx];
             if (item.status === 'pronto_envio') {
-              await apiPatch(`${API}/purchase-orders/${poId}/items/${idx}`, {
+              await apiPatch(`${API}/purchase-orders/${poId}/items/by-index/${idx}`, {
                 status: 'em_separacao'
               });
             }
