@@ -3720,6 +3720,81 @@ Chave PIX: 46.663.556/0001-69`;
                         </div>
                     </div>
 
+                    {/* ============== DADOS ADICIONAIS DA NF (ENDEREÇO + DADOS BANCÁRIOS) ============== */}
+                    <div style={{ 
+                      marginBottom: '1.5rem', 
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                      gap: '1rem'
+                    }}>
+                      {/* Endereço de Entrega da OC */}
+                      <div style={{ 
+                        padding: '1rem', 
+                        background: '#dbeafe', 
+                        borderRadius: '8px',
+                        border: '1px solid #93c5fd'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                          <div style={{ fontSize: '0.9rem', color: '#1e40af', fontWeight: '700' }}>
+                            📍 ENDEREÇO DE ENTREGA
+                          </div>
+                        </div>
+                        <div style={{ color: '#1e3a5f', fontSize: '0.9rem', fontWeight: '500' }}>
+                          {oc.endereco_entrega || 'Não informado'}
+                        </div>
+                      </div>
+                      
+                      {/* Dados Adicionais da NF */}
+                      <div style={{ 
+                        padding: '1rem', 
+                        background: '#fef9c3', 
+                        borderRadius: '8px',
+                        border: '1px solid #fde047'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                          <div style={{ fontSize: '0.9rem', color: '#854d0e', fontWeight: '700' }}>
+                            📝 DADOS ADICIONAIS DA NF
+                          </div>
+                          <button
+                            onClick={() => {
+                              const numeroOC = oc.numero_oc ? oc.numero_oc.replace(/^OC-/i, '') : '';
+                              const endereco = oc.endereco_entrega || 'ENDEREÇO NÃO INFORMADO';
+                              const texto = `Endereço da entrega: ${endereco}
+NF referente à OC - ${numeroOC}
+DADOS BANCÁRIOS
+Banco: 341 - Itaú Unibanco
+Conta: 98814-9
+Agência: 3978
+Chave PIX: 46.663.556/0001-69`;
+                              navigator.clipboard.writeText(texto).then(() => {
+                                alert('Dados Adicionais copiados!');
+                              });
+                            }}
+                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', background: '#eab308', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                          >
+                            📋 Copiar
+                          </button>
+                        </div>
+                        <pre style={{ 
+                          whiteSpace: 'pre-wrap', 
+                          fontSize: '0.75rem', 
+                          color: '#713f12',
+                          background: 'white',
+                          padding: '0.5rem',
+                          borderRadius: '4px',
+                          margin: 0
+                        }}>
+{`Endereço da entrega: ${oc.endereco_entrega || 'NÃO INFORMADO'}
+NF referente à OC - ${oc.numero_oc ? oc.numero_oc.replace(/^OC-/i, '') : ''}
+DADOS BANCÁRIOS
+Banco: 341 - Itaú Unibanco
+Conta: 98814-9
+Agência: 3978
+Chave PIX: 46.663.556/0001-69`}
+                        </pre>
+                      </div>
+                    </div>
+
                     {/* ============== SEÇÃO FRETE DE ENVIO EM LOTE ============== */}
                     {isAdmin() && (
                       <FreteRastreioForm
