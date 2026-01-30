@@ -1949,8 +1949,8 @@ async def get_purchase_orders_simple(
         
         result.append({
             "id": po['id'],
-            "numero_oc": po['numero_oc'],
-            "created_at": po['created_at'],
+            "numero_oc": po.get('numero_oc', ''),
+            "created_at": po.get('created_at', datetime.now(timezone.utc)),
             "data_entrega": po.get('data_entrega'),  # Data de entrega extraída do PDF
             "endereco_entrega": po.get('endereco_entrega'),  # Endereço de entrega extraído do PDF
             "cnpj_requisitante": po.get('cnpj_requisitante', ''),
