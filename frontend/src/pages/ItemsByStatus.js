@@ -2100,7 +2100,7 @@ const ItemsByStatus = () => {
           }
         }
         alert('✅ OC marcada como pronta para envio! Os itens foram movidos para "Pronto p/ Envio".');
-        fetchItems();
+        loadItems();
       } else {
         // Se está desmarcando, volta os itens pronto_envio para em_separacao
         if (ocData && ocData.items) {
@@ -2114,7 +2114,7 @@ const ItemsByStatus = () => {
           }
         }
         alert('⏳ OC desmarcada. Os itens voltaram para "Em Separação".');
-        fetchItems();
+        loadItems();
       }
       
       // Atualizar estado local imediatamente para feedback visual
