@@ -7255,7 +7255,6 @@ async def get_estoque_detalhes(codigo_item: str, current_user: dict = Depends(ge
 @app.on_event("startup")
 async def startup_event():
     """Iniciar job de verificação de rastreios e criar índices no MongoDB"""
-    global rastreio_task
     
     # Criar índices para otimizar queries
     try:
@@ -7282,10 +7281,23 @@ async def startup_event():
     except Exception as e:
         logging.getLogger(__name__).warning(f"Erro ao criar índices: {e}")
     
-    # Job de verificação de rastreios DESABILITADO no startup para evitar lentidão
-    # A verificação ainda pode ser feita manualmente via endpoint /api/rastreios/verificar-todos
-    # rastreio_task = asyncio.create_task(verificar_rastreios_em_transito())
-    logging.getLogger(__name__).info("Job de verificação de rastreios desabilitado no startup (usar endpoint manual)")
+    # Agendar verificação de rastreios para 15h horário de Brasília (18h UTC)
+    brasilia_tz = pytz.timezone('America/Sao_Paulo')
+    scheduler.add_job(
+        verificar_rastreios_agendado,
+        CronTrigger(hour=15, minute=0, timezone=brasilia_tz),
+        id='verificar_rastreios_diario',
+        name='Verificação diária de rastreios às 15h Brasília',
+        replace_existing=True
+    )
+    scheduler.start()
+    logging.getLogger(__name__).info("Scheduler iniciado - Verificação de rastreios agendada para 15:00 (Brasília)")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Desligar o scheduler ao encerrar a aplicação"""
+    scheduler.shutdown()
 
 # Inicializar routers modulares com database e constantes
 init_admin_routes(db, LOT_ASSIGNMENTS, LOT_TO_OWNER, EXCLUDED_OCS_FROM_COMMISSION)
