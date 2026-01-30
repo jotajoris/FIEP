@@ -215,50 +215,137 @@ const Estoque = () => {
     try {
       const token = localStorage.getItem('token');
       
-      // Buscar OC completa
-      const poResponse = await axios.get(`${API}/api/purchase-orders/${itemEncontrado.po_id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      const po = poResponse.data;
-      const item = po.items[itemEncontrado.item_index];
-      
-      // Calcular nova quantidade total comprada
-      const fontes = item.fontes_compra || [];
-      const qtdAtual = fontes.length > 0 
-        ? fontes.reduce((sum, f) => sum + (f.quantidade || 0), 0)
-        : (item.quantidade_comprada || item.quantidade || 0);
-      
-      const novaQtdTotal = qtdAtual + addQuantidade;
-      
-      // Adicionar nova fonte de compra
-      if (!item.fontes_compra) {
-        item.fontes_compra = [];
+      // Se é um item novo (não existe em nenhuma OC)
+      if (itemEncontrado.isNew) {
+        // Criar entrada direta no estoque
+        await axios.post(`${API}/api/estoque/adicionar-manual`, {
+          codigo_item: codigoBusca,
+          descricao: addDescricao,
+          quantidade: addQuantidade,
+          preco_unitario: addPreco,
+          fornecedor: addFornecedor
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        alert(`Adicionado ${addQuantidade} UN do item ${codigoBusca} ao estoque!`);
+      } else {
+        // Buscar OC completa
+        const poResponse = await axios.get(`${API}/api/purchase-orders/${itemEncontrado.po_id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        const po = poResponse.data;
+        const item = po.items[itemEncontrado.item_index];
+        
+        // Calcular nova quantidade total comprada
+        const fontes = item.fontes_compra || [];
+        const qtdAtual = fontes.length > 0 
+          ? fontes.reduce((sum, f) => sum + (f.quantidade || 0), 0)
+          : (item.quantidade_comprada || item.quantidade || 0);
+        
+        const novaQtdTotal = qtdAtual + addQuantidade;
+        
+        // Adicionar nova fonte de compra
+        if (!item.fontes_compra) {
+          item.fontes_compra = [];
+        }
+        
+        item.fontes_compra.push({
+          id: Date.now().toString(),
+          quantidade: addQuantidade,
+          preco_unitario: addPreco,
+          frete: 0,
+          fornecedor: addFornecedor,
+          link: ''
+        });
+        
+        // Atualizar quantidade_comprada
+        item.quantidade_comprada = novaQtdTotal;
+        
+        // Salvar
+        await axios.patch(`${API}/api/purchase-orders/${itemEncontrado.po_id}`, {
+          items: po.items
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        alert(`Adicionado ${addQuantidade} UN ao estoque do item ${itemEncontrado.codigo_item}!`);
       }
       
-      item.fontes_compra.push({
-        id: Date.now().toString(),
-        quantidade: addQuantidade,
-        preco_unitario: addPreco,
-        frete: 0,
-        fornecedor: addFornecedor,
-        link: ''
-      });
-      
-      // Atualizar quantidade_comprada
-      item.quantidade_comprada = novaQtdTotal;
-      
-      // Salvar
-      await axios.patch(`${API}/api/purchase-orders/${itemEncontrado.po_id}`, {
-        items: po.items
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      alert(`Adicionado ${addQuantidade} UN ao estoque do item ${itemEncontrado.codigo_item}!`);
       setShowAddModal(false);
       setCodigoBusca('');
       setItemEncontrado(null);
+      setItemExistenteEstoque(null);
+      setAddQuantidade(0);
+      setAddPreco(0);
+      setAddDescricao('');
+      loadEstoque();
+    } catch (error) {
+      console.error('Erro ao adicionar ao estoque:', error);
+      alert('Erro ao adicionar ao estoque: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setSalvando(false);
+    }
+  };
+  
+  // Adicionar quantidade a item existente no estoque
+  const adicionarAoEstoqueExistente = async () => {
+    if (!itemExistenteEstoque || addQuantidade <= 0) return;
+    
+    setSalvando(true);
+    try {
+      const token = localStorage.getItem('token');
+      const oc = itemExistenteEstoque.ocs_origem?.[0];
+      
+      if (oc) {
+        // Atualizar via OC
+        const poResponse = await axios.get(`${API}/api/purchase-orders/${oc.po_id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        const po = poResponse.data;
+        const item = po.items[oc.item_index];
+        
+        // Adicionar nova fonte de compra
+        if (!item.fontes_compra) {
+          item.fontes_compra = [];
+        }
+        
+        item.fontes_compra.push({
+          id: Date.now().toString(),
+          quantidade: addQuantidade,
+          preco_unitario: addPreco,
+          frete: 0,
+          fornecedor: addFornecedor,
+          link: ''
+        });
+        
+        // Atualizar quantidade_comprada
+        item.quantidade_comprada = (item.quantidade_comprada || item.quantidade || 0) + addQuantidade;
+        
+        await axios.patch(`${API}/api/purchase-orders/${oc.po_id}`, {
+          items: po.items
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } else {
+        // Adicionar direto no estoque
+        await axios.post(`${API}/api/estoque/adicionar-quantidade`, {
+          codigo_item: itemExistenteEstoque.codigo_item,
+          quantidade: addQuantidade,
+          preco_unitario: addPreco,
+          fornecedor: addFornecedor
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+      
+      alert(`Adicionado +${addQuantidade} UN ao estoque do item ${itemExistenteEstoque.codigo_item}!`);
+      setShowAddModal(false);
+      setCodigoBusca('');
+      setItemEncontrado(null);
+      setItemExistenteEstoque(null);
       setAddQuantidade(0);
       setAddPreco(0);
       loadEstoque();
@@ -267,6 +354,52 @@ const Estoque = () => {
       alert('Erro ao adicionar ao estoque: ' + (error.response?.data?.detail || error.message));
     } finally {
       setSalvando(false);
+    }
+  };
+  
+  // Upload de imagem do item
+  const handleUploadImagem = async (codigoItem, file) => {
+    if (!file) return;
+    
+    setUploadingImage(true);
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      await axios.post(`${API}/api/itens/${codigoItem}/imagem`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      setImagensCache(prev => ({ ...prev, [codigoItem]: true }));
+      setImageCacheTimestamp(Date.now());
+      alert('Imagem enviada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao enviar imagem:', error);
+      alert('Erro ao enviar imagem: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+  
+  // Excluir imagem do item
+  const handleDeleteImagem = async (codigoItem) => {
+    if (!window.confirm('Excluir imagem deste item?')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/api/itens/${codigoItem}/imagem`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setImagensCache(prev => ({ ...prev, [codigoItem]: false }));
+      setImageCacheTimestamp(Date.now());
+      alert('Imagem removida!');
+    } catch (error) {
+      console.error('Erro ao excluir imagem:', error);
     }
   };
 
