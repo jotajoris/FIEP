@@ -3893,9 +3893,16 @@ Chave PIX: 46.663.556/0001-69`;
                           }}
                         />
                         <span style={{ color: oc.pronto_despacho ? '#16a34a' : '#dc2626' }}>
-                          {oc.pronto_despacho ? '✅ NF Emitida / Pronto para Despacho' : '⏳ NF Emitida / Pronto para Despacho'}
+                          {oc.pronto_despacho 
+                            ? '✅ Pronto para Envio (itens movidos)' 
+                            : '📦 Marcar como Pronto para Envio'}
                         </span>
                       </label>
+                      <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.5rem', marginLeft: '2rem' }}>
+                        {oc.pronto_despacho 
+                          ? 'Os itens desta OC estão no status "Pronto p/ Envio"'
+                          : 'Ao marcar, todos os itens serão movidos para "Pronto p/ Envio"'}
+                      </p>
                     </div>
 
                     {/* ============== SEÇÃO FRETE DE ENVIO EM LOTE ============== */}
