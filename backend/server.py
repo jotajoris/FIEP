@@ -2683,6 +2683,7 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     items_cotados = sum(1 for item in all_items if item['status'] == ItemStatus.COTADO)
     items_comprados = sum(1 for item in all_items if item['status'] == ItemStatus.COMPRADO)
     items_em_separacao = sum(1 for item in all_items if item['status'] == ItemStatus.EM_SEPARACAO)
+    items_pronto_envio = sum(1 for item in all_items if item['status'] == ItemStatus.PRONTO_ENVIO)
     items_em_transito = sum(1 for item in all_items if item['status'] == ItemStatus.EM_TRANSITO)
     items_entregues = sum(1 for item in all_items if item['status'] == ItemStatus.ENTREGUE)
     
@@ -2698,6 +2699,7 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
                 "cotado": sum(1 for item in owner_items if item['status'] == ItemStatus.COTADO),
                 "comprado": sum(1 for item in owner_items if item['status'] == ItemStatus.COMPRADO),
                 "em_separacao": sum(1 for item in owner_items if item['status'] == ItemStatus.EM_SEPARACAO),
+                "pronto_envio": sum(1 for item in owner_items if item['status'] == ItemStatus.PRONTO_ENVIO),
                 "em_transito": sum(1 for item in owner_items if item['status'] == ItemStatus.EM_TRANSITO),
                 "entregue": sum(1 for item in owner_items if item['status'] == ItemStatus.ENTREGUE)
             }
@@ -2713,6 +2715,7 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
                 "cotado": sum(1 for item in owner_items if item['status'] == ItemStatus.COTADO),
                 "comprado": sum(1 for item in owner_items if item['status'] == ItemStatus.COMPRADO),
                 "em_separacao": sum(1 for item in owner_items if item['status'] == ItemStatus.EM_SEPARACAO),
+                "pronto_envio": sum(1 for item in owner_items if item['status'] == ItemStatus.PRONTO_ENVIO),
                 "em_transito": sum(1 for item in owner_items if item['status'] == ItemStatus.EM_TRANSITO),
                 "entregue": sum(1 for item in owner_items if item['status'] == ItemStatus.ENTREGUE)
             }
@@ -2724,6 +2727,7 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         items_cotados=items_cotados,
         items_comprados=items_comprados,
         items_em_separacao=items_em_separacao,
+        items_pronto_envio=items_pronto_envio,
         items_em_transito=items_em_transito,
         items_entregues=items_entregues,
         items_por_responsavel=items_por_responsavel
