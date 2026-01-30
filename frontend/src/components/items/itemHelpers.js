@@ -87,6 +87,7 @@ export const statusLabels = {
   cotado: 'Cotados',
   comprado: 'Comprados',
   em_separacao: 'Em Separação',
+  pronto_envio: 'Pronto p/ Envio',
   em_transito: 'Em Trânsito',
   entregue: 'Entregues'
 };
@@ -97,6 +98,7 @@ export const statusColors = {
   cotado: { bg: '#dbeafe', color: '#1e40af' },
   comprado: { bg: '#d1fae5', color: '#065f46' },
   em_separacao: { bg: '#fce7f3', color: '#9d174d' },
+  pronto_envio: { bg: '#ccfbf1', color: '#0f766e' },
   em_transito: { bg: '#e0e7ff', color: '#3730a3' },
   entregue: { bg: '#dcfce7', color: '#166534' }
 };
@@ -107,6 +109,7 @@ export const statusOptions = [
   { value: 'cotado', label: 'Cotado' },
   { value: 'comprado', label: 'Comprado' },
   { value: 'em_separacao', label: 'Em Separação' },
+  { value: 'pronto_envio', label: 'Pronto p/ Envio' },
   { value: 'em_transito', label: 'Em Trânsito' },
   { value: 'entregue', label: 'Entregue' }
 ];
