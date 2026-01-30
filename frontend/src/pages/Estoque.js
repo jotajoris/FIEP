@@ -266,50 +266,16 @@ const Estoque = () => {
     setSalvando(true);
     try {
       const token = localStorage.getItem('token');
-      const oc = itemExistenteEstoque.ocs_origem?.[0];
       
-      if (oc) {
-        // Atualizar via OC
-        const poResponse = await axios.get(`${API}/api/purchase-orders/${oc.po_id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        const po = poResponse.data;
-        const item = po.items[oc.item_index];
-        
-        // Adicionar nova fonte de compra
-        if (!item.fontes_compra) {
-          item.fontes_compra = [];
-        }
-        
-        item.fontes_compra.push({
-          id: Date.now().toString(),
-          quantidade: addQuantidade,
-          preco_unitario: addPreco,
-          frete: 0,
-          fornecedor: addFornecedor,
-          link: ''
-        });
-        
-        // Atualizar quantidade_comprada
-        item.quantidade_comprada = (item.quantidade_comprada || item.quantidade || 0) + addQuantidade;
-        
-        await axios.patch(`${API}/api/purchase-orders/${oc.po_id}`, {
-          items: po.items
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-      } else {
-        // Adicionar direto no estoque
-        await axios.post(`${API}/api/estoque/adicionar-quantidade`, {
-          codigo_item: itemExistenteEstoque.codigo_item,
-          quantidade: addQuantidade,
-          preco_unitario: addPreco,
-          fornecedor: addFornecedor
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-      }
+      // Sempre usar o endpoint de adicionar quantidade
+      await axios.post(`${API}/api/estoque/adicionar-quantidade`, {
+        codigo_item: itemExistenteEstoque.codigo_item,
+        quantidade: addQuantidade,
+        preco_unitario: addPreco,
+        fornecedor: addFornecedor
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       alert(`Adicionado +${addQuantidade} UN ao estoque do item ${itemExistenteEstoque.codigo_item}!`);
       setShowAddModal(false);
