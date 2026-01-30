@@ -3364,11 +3364,8 @@ async def verificar_rastreios_agendado():
                 f"Erros: {stats['erros']}"
             )
                 
-        except Exception as e:
-            logger.error(f"Erro na verificação automática de rastreios: {str(e)}")
-        
-        # Aguardar 24 horas antes da próxima verificação (1x ao dia)
-        await asyncio.sleep(86400)
+    except Exception as e:
+        logger.error(f"Erro na verificação automática de rastreios: {str(e)}")
 
 
 async def _criar_notificacao_rastreio(po: dict, item: dict, tipo: str, titulo: str, mensagem: str):
