@@ -5614,18 +5614,21 @@ async def atualizar_oc_com_pdf(
     """
     Atualizar uma OC existente com dados de um novo PDF.
     
-    Esta função PRESERVA todos os dados importantes dos itens:
+    PRESERVA dados que foram inseridos manualmente:
     - Status (pendente, cotado, comprado, etc.)
-    - Responsável
-    - Fontes de compra (fornecedor, preço, link)
+    - Fontes de compra (fornecedor, preço de compra, link) - se já preenchidos
     - Notas fiscais anexadas
     - Observações
     - Frete, valor unitário de venda, etc.
+    - Imagens
     
-    Atualiza apenas:
-    - Endereço de entrega (se estava vazio)
-    - Data de entrega (se estava vazia)
-    - Outros campos do cabeçalho da OC
+    ATUALIZA do PDF:
+    - Endereço de entrega
+    - Data de entrega
+    - CNPJ do requisitante
+    - Preço do PDF (preco_pdf) - SEMPRE atualiza se encontrado
+    - Quantidade - se diferente
+    - NCM - se encontrado
     """
     
     # Buscar OC existente
@@ -5639,68 +5642,30 @@ async def atualizar_oc_com_pdf(
     
     content = await file.read()
     
-    try:
-        pdf_doc = fitz.open(stream=content, filetype="pdf")
-        full_text = ""
-        for page in pdf_doc:
-            full_text += page.get_text()
-        pdf_doc.close()
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Erro ao ler PDF: {str(e)}")
+    # Usar a função de extração existente para pegar todos os dados
+    pdf_data = extract_oc_from_pdf(content)
     
-    # Extrair dados do PDF
-    # Endereço de Entrega
-    endereco_patterns = [
-        r'Endere[çc]o de Entrega[:\s]*(.*?)(?:\n\n|Linha|Item)',
-        r'Local de Entrega[:\s]*(.*?)(?:\n\n|Linha|Item)',
-        r'Entregar em[:\s]*(.*?)(?:\n\n|Linha|Item)'
-    ]
+    if not pdf_data.get('items'):
+        raise HTTPException(status_code=400, detail="Não foi possível extrair itens do PDF")
     
-    novo_endereco = ""
-    for pattern in endereco_patterns:
-        endereco_match = re.search(pattern, full_text, re.IGNORECASE | re.DOTALL)
-        if endereco_match:
-            novo_endereco = endereco_match.group(1).strip()
-            novo_endereco = ' '.join(novo_endereco.split()).upper()
-            break
+    # Criar lookup de itens do PDF por código
+    pdf_items_map = {}
+    for item in pdf_data['items']:
+        codigo = item.get('codigo_item', '')
+        if codigo:
+            if codigo not in pdf_items_map:
+                pdf_items_map[codigo] = []
+            pdf_items_map[codigo].append(item)
     
-    # Data de Entrega
-    nova_data_entrega = None
-    data_patterns = [
-        r'Data de Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
-        r'Data Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
-        r'Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
-        r'Prazo de Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
-        r'Dt\.\s*Entrega[:\s]*(\d{2}/\d{2}/\d{4})'
-    ]
-    
-    for pattern in data_patterns:
-        data_match = re.search(pattern, full_text, re.IGNORECASE)
-        if data_match:
-            try:
-                data_str = data_match.group(1)
-                dia, mes, ano = data_str.split('/')
-                nova_data_entrega = f"{ano}-{mes}-{dia}"
-                break
-            except:
-                pass
-    
-    # Se não encontrou, buscar na tabela de itens
-    if not nova_data_entrega:
-        date_after_req = re.findall(r'\d{1,2}\.\d{2}\.\d{6,}\s*(\d{2}/\d{2}/\d{4})', full_text)
-        if date_after_req:
-            try:
-                data_str = date_after_req[0]
-                dia, mes, ano = data_str.split('/')
-                nova_data_entrega = f"{ano}-{mes}-{dia}"
-            except:
-                pass
-    
-    # Preparar atualizações - SÓ atualiza campos vazios ou inexistentes
+    # Preparar atualizações
     updates = {}
     campos_atualizados = []
+    itens_atualizados = []
     
-    # Atualizar endereço - SEMPRE atualiza se o PDF tiver o endereço
+    # ============ ATUALIZAR CAMPOS DO CABEÇALHO ============
+    
+    # Endereço de Entrega
+    novo_endereco = pdf_data.get('endereco_entrega', '').strip()
     endereco_atual = existing_po.get('endereco_entrega', '').strip()
     if novo_endereco:
         # Adicionar CEP ao endereço se não tiver
@@ -5711,28 +5676,112 @@ async def atualizar_oc_com_pdf(
         
         if novo_endereco != endereco_atual:
             updates['endereco_entrega'] = novo_endereco
-            campos_atualizados.append(f"endereco_entrega: {novo_endereco}")
+            campos_atualizados.append(f"endereco_entrega")
     
-    # Atualizar data de entrega - SEMPRE atualiza se o PDF tiver a data
-    data_atual = existing_po.get('data_entrega', '').strip() if existing_po.get('data_entrega') else ''
+    # Data de Entrega
+    nova_data_entrega = pdf_data.get('data_entrega')
+    data_atual = existing_po.get('data_entrega', '')
     if nova_data_entrega and nova_data_entrega != data_atual:
         updates['data_entrega'] = nova_data_entrega
         campos_atualizados.append(f"data_entrega: {nova_data_entrega}")
     
-    # Retornar informações de debug também
+    # CNPJ Requisitante
+    novo_cnpj = pdf_data.get('cnpj_requisitante', '')
+    cnpj_atual = existing_po.get('cnpj_requisitante', '')
+    if novo_cnpj and novo_cnpj != cnpj_atual:
+        updates['cnpj_requisitante'] = novo_cnpj
+        campos_atualizados.append(f"cnpj_requisitante: {novo_cnpj}")
+    
+    # ============ ATUALIZAR ITENS ============
+    
+    # Mapear itens existentes para atualização
+    existing_items = existing_po.get('items', [])
+    updated_items = []
+    
+    for idx, existing_item in enumerate(existing_items):
+        codigo = existing_item.get('codigo_item', '')
+        pdf_matches = pdf_items_map.get(codigo, [])
+        
+        # Criar cópia do item existente
+        updated_item = dict(existing_item)
+        
+        if pdf_matches:
+            # Pegar o primeiro match (ou buscar por índice se houver múltiplos)
+            # Tentar corresponder pelo índice se houver múltiplos do mesmo código
+            pdf_item = pdf_matches[0]
+            if len(pdf_matches) > 1:
+                # Tentar encontrar pelo mesmo índice relativo
+                same_code_existing = [i for i, x in enumerate(existing_items) if x.get('codigo_item') == codigo]
+                item_order = same_code_existing.index(idx) if idx in same_code_existing else 0
+                if item_order < len(pdf_matches):
+                    pdf_item = pdf_matches[item_order]
+            
+            alteracoes = []
+            
+            # PREÇO DO PDF - SEMPRE atualiza
+            preco_pdf_novo = pdf_item.get('preco_pdf')
+            preco_pdf_atual = existing_item.get('preco_pdf')
+            if preco_pdf_novo is not None and preco_pdf_novo != preco_pdf_atual:
+                updated_item['preco_pdf'] = preco_pdf_novo
+                alteracoes.append(f"preco_pdf: {preco_pdf_atual} → {preco_pdf_novo}")
+            
+            # QUANTIDADE - atualiza se diferente
+            qtd_nova = pdf_item.get('quantidade')
+            qtd_atual = existing_item.get('quantidade')
+            if qtd_nova is not None and qtd_nova != qtd_atual:
+                updated_item['quantidade'] = qtd_nova
+                alteracoes.append(f"quantidade: {qtd_atual} → {qtd_nova}")
+            
+            # UNIDADE - atualiza se diferente
+            unidade_nova = pdf_item.get('unidade')
+            unidade_atual = existing_item.get('unidade')
+            if unidade_nova and unidade_nova != unidade_atual:
+                updated_item['unidade'] = unidade_nova
+                alteracoes.append(f"unidade: {unidade_atual} → {unidade_nova}")
+            
+            # NCM - atualiza se encontrado e diferente
+            ncm_novo = pdf_item.get('ncm')
+            ncm_atual = existing_item.get('ncm')
+            if ncm_novo and ncm_novo != ncm_atual:
+                updated_item['ncm'] = ncm_novo
+                alteracoes.append(f"ncm: {ncm_atual} → {ncm_novo}")
+            
+            # Descrição do PDF (não sobrescreve se já tem do Excel)
+            desc_pdf_nova = pdf_item.get('descricao', '')
+            if desc_pdf_nova and not existing_item.get('descricao_original_excel'):
+                # Só atualiza se não veio do Excel
+                pass  # Mantém a descrição existente
+            
+            if alteracoes:
+                itens_atualizados.append({
+                    "codigo": codigo,
+                    "idx": idx,
+                    "alteracoes": alteracoes
+                })
+        
+        updated_items.append(updated_item)
+    
+    # Se teve itens atualizados, adicionar à lista de updates
+    if itens_atualizados:
+        updates['items'] = updated_items
+        campos_atualizados.append(f"{len(itens_atualizados)} itens atualizados")
+    
+    # Debug info
     debug_info = {
-        "endereco_extraido_pdf": novo_endereco or "Não encontrado no PDF",
-        "data_extraida_pdf": nova_data_entrega or "Não encontrada no PDF",
-        "endereco_atual_oc": endereco_atual or "Vazio",
-        "data_atual_oc": data_atual or "Vazia"
+        "endereco_extraido_pdf": pdf_data.get('endereco_entrega') or "Não encontrado no PDF",
+        "data_extraida_pdf": pdf_data.get('data_entrega') or "Não encontrada no PDF",
+        "total_itens_pdf": len(pdf_data.get('items', [])),
+        "total_itens_oc": len(existing_items),
+        "itens_com_preco_no_pdf": sum(1 for i in pdf_data.get('items', []) if i.get('preco_pdf'))
     }
     
     if not updates:
         return {
             "success": True,
-            "message": "Nenhum campo precisou ser atualizado (todos já estão preenchidos ou não foram encontrados no PDF)",
+            "message": "Nenhum campo precisou ser atualizado",
             "numero_oc": existing_po['numero_oc'],
             "campos_atualizados": [],
+            "itens_atualizados": [],
             "debug": debug_info
         }
     
@@ -5747,14 +5796,16 @@ async def atualizar_oc_com_pdf(
         "message": f"OC {existing_po['numero_oc']} atualizada com sucesso!",
         "numero_oc": existing_po['numero_oc'],
         "campos_atualizados": campos_atualizados,
+        "itens_atualizados": itens_atualizados,
         "debug": debug_info,
         "dados_preservados": [
             "Status de todos os itens",
             "Responsáveis dos itens",
-            "Fontes de compra",
+            "Fontes de compra (fornecedor, preço, link)",
             "Notas fiscais",
             "Observações",
-            "Valores de frete e venda"
+            "Valores de frete e venda",
+            "Imagens"
         ]
     }
 
