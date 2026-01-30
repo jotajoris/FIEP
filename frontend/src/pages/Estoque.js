@@ -682,23 +682,22 @@ const Estoque = () => {
           </p>
         </div>
       ) : (
+        <>
         <div className="card">
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '600', width: '80px' }}>Imagem</th>
                 <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Código</th>
                 <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Descrição</th>
                 <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Qtd. Estoque</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Marca/Modelo</th>
                 <th style={{ padding: '1rem', textAlign: 'left', fontWeight: '600' }}>Fornecedor</th>
                 <th style={{ padding: '1rem', textAlign: 'right', fontWeight: '600' }}>Preço Unit.</th>
-                <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Link</th>
-                <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Imagem</th>
                 <th style={{ padding: '1rem', textAlign: 'center', fontWeight: '600' }}>Origem</th>
               </tr>
             </thead>
             <tbody>
-              {filteredEstoque.map((item, idx) => (
+              {paginatedEstoque.map((item, idx) => (
                 <tr 
                   key={idx} 
                   style={{ 
@@ -707,11 +706,95 @@ const Estoque = () => {
                   }}
                   data-testid={`estoque-row-${item.codigo_item}`}
                 >
+                  {/* Miniatura da Imagem */}
+                  <td style={{ padding: '0.5rem', textAlign: 'center' }}>
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                      {imagensCache[item.codigo_item] || item.imagem_url ? (
+                        <div style={{ position: 'relative' }}>
+                          <img 
+                            src={`${API}/api/itens/${item.codigo_item}/imagem?t=${imageCacheTimestamp}`}
+                            alt={item.codigo_item}
+                            style={{
+                              width: '60px',
+                              height: '60px',
+                              objectFit: 'cover',
+                              borderRadius: '8px',
+                              border: '2px solid #e2e8f0',
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => window.open(`${API}/api/itens/${item.codigo_item}/imagem?t=${imageCacheTimestamp}`, '_blank')}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                          <div style={{ display: 'none', width: '60px', height: '60px', background: '#f3f4f6', borderRadius: '8px', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: '1.5rem' }}>
+                            📷
+                          </div>
+                          <button
+                            onClick={() => handleDeleteImagem(item.codigo_item)}
+                            style={{
+                              position: 'absolute',
+                              top: '-5px',
+                              right: '-5px',
+                              width: '20px',
+                              height: '20px',
+                              borderRadius: '50%',
+                              border: 'none',
+                              background: '#ef4444',
+                              color: 'white',
+                              fontSize: '0.7rem',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                            title="Excluir imagem"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <label style={{
+                          width: '60px',
+                          height: '60px',
+                          background: '#f3f4f6',
+                          borderRadius: '8px',
+                          border: '2px dashed #d1d5db',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          color: '#9ca3af',
+                          fontSize: '1.2rem'
+                        }}
+                        title="Adicionar imagem"
+                        >
+                          📷
+                          <input
+                            type="file"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            onChange={(e) => {
+                              if (e.target.files[0]) {
+                                handleUploadImagem(item.codigo_item, e.target.files[0]);
+                              }
+                            }}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </td>
                   <td style={{ padding: '1rem', fontWeight: '600', color: '#1f2937' }}>
                     {item.codigo_item}
                   </td>
                   <td style={{ padding: '1rem', color: '#4b5563', maxWidth: '250px' }}>
                     {item.descricao?.substring(0, 80)}{item.descricao?.length > 80 ? '...' : ''}
+                    {item.marca_modelo && (
+                      <div style={{ fontSize: '0.8rem', color: '#9ca3af', marginTop: '0.25rem' }}>
+                        {item.marca_modelo}
+                      </div>
+                    )}
                   </td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>
                     <span style={{
@@ -726,40 +809,22 @@ const Estoque = () => {
                     </span>
                   </td>
                   <td style={{ padding: '1rem', color: '#6b7280' }}>
-                    {item.marca_modelo || '-'}
-                  </td>
-                  <td style={{ padding: '1rem', color: '#6b7280' }}>
                     {item.fornecedor || '-'}
+                    {item.link_compra && (
+                      <div style={{ marginTop: '0.25rem' }}>
+                        <a 
+                          href={item.link_compra} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ color: '#3b82f6', fontSize: '0.8rem' }}
+                        >
+                          🔗 Link
+                        </a>
+                      </div>
+                    )}
                   </td>
                   <td style={{ padding: '1rem', textAlign: 'right', fontWeight: '600', color: '#059669' }}>
                     {formatBRL(item.preco_unitario)}
-                  </td>
-                  <td style={{ padding: '1rem', textAlign: 'center' }}>
-                    {item.link_compra ? (
-                      <a 
-                        href={item.link_compra} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        style={{ color: '#3b82f6', textDecoration: 'underline' }}
-                      >
-                        🔗 Ver
-                      </a>
-                    ) : '-'}
-                  </td>
-                  <td style={{ padding: '1rem', textAlign: 'center' }}>
-                    {item.imagem_url ? (
-                      <a 
-                        href={`${API}${item.imagem_url}`}
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        style={{ color: '#8b5cf6', textDecoration: 'underline', fontWeight: '500' }}
-                        data-testid={`estoque-image-link-${item.codigo_item}`}
-                      >
-                        🖼️ Ver Imagem
-                      </a>
-                    ) : (
-                      <span style={{ color: '#9ca3af' }}>-</span>
-                    )}
                   </td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -845,6 +910,80 @@ const Estoque = () => {
             </tbody>
           </table>
         </div>
+        
+        {/* Paginação */}
+        {itemsPerPage !== 'all' && totalPages > 1 && (
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            gap: '0.5rem', 
+            marginTop: '1.5rem' 
+          }}>
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              style={{
+                padding: '0.5rem 1rem',
+                border: '2px solid #e2e8f0',
+                borderRadius: '6px',
+                background: currentPage === 1 ? '#f3f4f6' : 'white',
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                fontWeight: '500'
+              }}
+            >
+              ← Anterior
+            </button>
+            
+            <div style={{ display: 'flex', gap: '0.25rem' }}>
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(page => {
+                  if (totalPages <= 7) return true;
+                  if (page === 1 || page === totalPages) return true;
+                  if (page >= currentPage - 1 && page <= currentPage + 1) return true;
+                  return false;
+                })
+                .map((page, idx, arr) => (
+                  <React.Fragment key={page}>
+                    {idx > 0 && arr[idx - 1] !== page - 1 && (
+                      <span style={{ padding: '0.5rem', color: '#9ca3af' }}>...</span>
+                    )}
+                    <button
+                      onClick={() => setCurrentPage(page)}
+                      style={{
+                        padding: '0.5rem 0.75rem',
+                        border: page === currentPage ? '2px solid #3b82f6' : '2px solid #e2e8f0',
+                        borderRadius: '6px',
+                        background: page === currentPage ? '#3b82f6' : 'white',
+                        color: page === currentPage ? 'white' : '#374151',
+                        cursor: 'pointer',
+                        fontWeight: '600'
+                      }}
+                    >
+                      {page}
+                    </button>
+                  </React.Fragment>
+                ))
+              }
+            </div>
+            
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              style={{
+                padding: '0.5rem 1rem',
+                border: '2px solid #e2e8f0',
+                borderRadius: '6px',
+                background: currentPage === totalPages ? '#f3f4f6' : 'white',
+                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                fontWeight: '500'
+              }}
+            >
+              Próximo →
+            </button>
+          </div>
+        )}
+        </>
       )}
       
       {/* Modal de Edição de Estoque */}
