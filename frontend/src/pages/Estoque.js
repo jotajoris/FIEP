@@ -1160,27 +1160,64 @@ const Estoque = () => {
                   📦 Item já existe no estoque!
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                  {/* Miniatura */}
-                  <div style={{ 
-                    width: '70px', 
-                    height: '70px', 
-                    background: '#f3f4f6', 
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'hidden',
-                    border: '2px solid #e2e8f0'
-                  }}>
-                    {imagensCache[itemExistenteEstoque.codigo_item] || itemExistenteEstoque.imagem_url ? (
-                      <img 
-                        src={`${API}/api/itens/${itemExistenteEstoque.codigo_item}/imagem?t=${imageCacheTimestamp}`}
-                        alt={itemExistenteEstoque.codigo_item}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        onError={(e) => e.target.src = ''}
+                  {/* Miniatura com upload */}
+                  <div>
+                    <label style={{ 
+                      width: '80px', 
+                      height: '80px', 
+                      background: imagensCache[itemExistenteEstoque.codigo_item] || itemExistenteEstoque.imagem_url ? 'transparent' : '#f3f4f6', 
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      border: '2px dashed #d1d5db',
+                      cursor: 'pointer',
+                      position: 'relative'
+                    }}>
+                      {imagensCache[itemExistenteEstoque.codigo_item] || itemExistenteEstoque.imagem_url ? (
+                        <>
+                          <img 
+                            src={`${API}/api/itens/${itemExistenteEstoque.codigo_item}/imagem?t=${imageCacheTimestamp}`}
+                            alt={itemExistenteEstoque.codigo_item}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            onError={(e) => e.target.src = ''}
+                          />
+                          <div style={{
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            background: 'rgba(0,0,0,0.5)',
+                            color: 'white',
+                            fontSize: '0.65rem',
+                            textAlign: 'center',
+                            padding: '0.15rem'
+                          }}>
+                            Trocar
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{ textAlign: 'center', color: '#9ca3af' }}>
+                          <div style={{ fontSize: '1.5rem' }}>📷</div>
+                          <div style={{ fontSize: '0.65rem' }}>Adicionar</div>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          if (e.target.files[0]) {
+                            handleUploadImagem(itemExistenteEstoque.codigo_item, e.target.files[0]);
+                          }
+                        }}
                       />
-                    ) : (
-                      <span style={{ fontSize: '1.5rem', color: '#9ca3af' }}>📷</span>
+                    </label>
+                    {uploadingImage && (
+                      <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '0.25rem', textAlign: 'center' }}>
+                        Enviando...
+                      </div>
                     )}
                   </div>
                   <div style={{ flex: 1, fontSize: '0.9rem', color: '#374151' }}>
