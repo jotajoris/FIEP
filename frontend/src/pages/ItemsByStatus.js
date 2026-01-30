@@ -4149,31 +4149,45 @@ Chave PIX: 46.663.556/0001-69`;
                                         {/* Header com checkboxes e badge */}
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
                                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                            {/* Checkboxes */}
-                                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                              <input
-                                                type="checkbox"
-                                                checked={isSelectedForNF}
-                                                onChange={() => toggleItemParaNFVenda(oc.po_id, item._uniqueId)}
-                                                style={{ width: '18px', height: '18px', accentColor: '#22c55e' }}
-                                                title="Selecionar para NF"
-                                              />
+                                            {/* Foto do item */}
+                                            <ItemImage
+                                              item={item}
+                                              imagensItens={imagensItens}
+                                              imageCacheTimestamp={imageCacheTimestamp}
+                                              onImageClick={(url) => setImagemExpandida(url)}
+                                              size="small"
+                                            />
+                                            {/* Checkboxes com emojis */}
+                                            <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                                              <label style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer', padding: '0.2rem 0.4rem', background: isSelectedForNF ? '#dcfce7' : '#f3f4f6', borderRadius: '4px', fontSize: '0.75rem' }}>
+                                                <input
+                                                  type="checkbox"
+                                                  checked={isSelectedForNF}
+                                                  onChange={() => toggleItemParaNFVenda(oc.po_id, item._uniqueId)}
+                                                  style={{ width: '14px', height: '14px', accentColor: '#22c55e' }}
+                                                />
+                                                📄
+                                              </label>
                                               {isAdmin() && (
                                                 <>
-                                                  <input
-                                                    type="checkbox"
-                                                    checked={isSelectedForFrete}
-                                                    onChange={() => toggleItemParaFrete(oc.po_id, item._itemIndexInPO)}
-                                                    style={{ width: '18px', height: '18px', accentColor: '#f59e0b' }}
-                                                    title="Selecionar para Frete"
-                                                  />
-                                                  <input
-                                                    type="checkbox"
-                                                    checked={isSelectedForStatus}
-                                                    onChange={() => toggleItemParaStatus(oc.po_id, item._itemIndexInPO)}
-                                                    style={{ width: '18px', height: '18px', accentColor: '#8b5cf6' }}
-                                                    title="Selecionar para Status"
-                                                  />
+                                                  <label style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer', padding: '0.2rem 0.4rem', background: isSelectedForFrete ? '#fef9c3' : '#f3f4f6', borderRadius: '4px', fontSize: '0.75rem' }}>
+                                                    <input
+                                                      type="checkbox"
+                                                      checked={isSelectedForFrete}
+                                                      onChange={() => toggleItemParaFrete(oc.po_id, item._itemIndexInPO)}
+                                                      style={{ width: '14px', height: '14px', accentColor: '#f59e0b' }}
+                                                    />
+                                                    🚚
+                                                  </label>
+                                                  <label style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer', padding: '0.2rem 0.4rem', background: isSelectedForStatus ? '#f3e8ff' : '#f3f4f6', borderRadius: '4px', fontSize: '0.75rem' }}>
+                                                    <input
+                                                      type="checkbox"
+                                                      checked={isSelectedForStatus}
+                                                      onChange={() => toggleItemParaStatus(oc.po_id, item._itemIndexInPO)}
+                                                      style={{ width: '14px', height: '14px', accentColor: '#8b5cf6' }}
+                                                    />
+                                                    🔄
+                                                  </label>
                                                 </>
                                               )}
                                             </div>
