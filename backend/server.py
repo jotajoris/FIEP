@@ -5725,6 +5725,12 @@ async def atualizar_oc_com_pdf(
                 updated_item['preco_pdf'] = preco_pdf_novo
                 alteracoes.append(f"preco_pdf: {preco_pdf_atual} → {preco_pdf_novo}")
             
+            # PREÇO DE VENDA UNITÁRIO - preenche se estiver vazio e tiver preço no PDF
+            preco_venda_atual = existing_item.get('preco_venda_unitario')
+            if preco_pdf_novo is not None and not preco_venda_atual:
+                updated_item['preco_venda_unitario'] = preco_pdf_novo
+                alteracoes.append(f"preco_venda_unitario: {preco_venda_atual} → {preco_pdf_novo}")
+            
             # QUANTIDADE - atualiza se diferente
             qtd_nova = pdf_item.get('quantidade')
             qtd_atual = existing_item.get('quantidade')
