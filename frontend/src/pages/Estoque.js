@@ -1113,8 +1113,8 @@ const Estoque = () => {
             borderRadius: '16px',
             padding: '2rem',
             width: '90%',
-            maxWidth: '500px',
-            maxHeight: '80vh',
+            maxWidth: '550px',
+            maxHeight: '85vh',
             overflow: 'auto',
             boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
           }}>
@@ -1159,87 +1159,286 @@ const Estoque = () => {
                 </button>
               </div>
               <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.5rem' }}>
-                O item deve estar em status "Comprado" ou superior para aparecer no estoque
+                Se o código não existir, você poderá criar uma entrada manual
               </div>
             </div>
             
-            {/* Item encontrado */}
-            {itemEncontrado && (
+            {/* Item já existe no estoque */}
+            {itemExistenteEstoque && (
               <div style={{ 
-                background: '#f0fdf4', 
+                background: '#fef3c7', 
                 padding: '1rem', 
                 borderRadius: '8px',
                 marginBottom: '1.5rem',
-                border: '2px solid #22c55e'
+                border: '2px solid #f59e0b'
               }}>
-                <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>
-                  ✅ Item encontrado:
+                <div style={{ fontWeight: '600', marginBottom: '0.75rem', color: '#92400e' }}>
+                  📦 Item já existe no estoque!
                 </div>
-                <div style={{ fontSize: '0.9rem', color: '#374151' }}>
-                  <strong>Código:</strong> {itemEncontrado.codigo_item}<br />
-                  <strong>Descrição:</strong> {itemEncontrado.descricao?.substring(0, 80)}...<br />
-                  <strong>OC:</strong> {itemEncontrado.numero_oc}<br />
-                  <strong>Status:</strong> {itemEncontrado.status}
-                </div>
-                
-                {/* Quantidade a adicionar */}
-                <div style={{ marginTop: '1rem' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                    Quantidade a adicionar:
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={addQuantidade}
-                    onChange={(e) => setAddQuantidade(parseInt(e.target.value) || 0)}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      borderRadius: '8px',
-                      border: '2px solid #e2e8f0',
-                      fontSize: '1rem'
-                    }}
-                  />
-                </div>
-                
-                {/* Preço unitário */}
-                <div style={{ marginTop: '1rem' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                    Preço unitário (R$):
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={addPreco}
-                    onChange={(e) => setAddPreco(parseFloat(e.target.value) || 0)}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      borderRadius: '8px',
-                      border: '2px solid #e2e8f0',
-                      fontSize: '1rem'
-                    }}
-                  />
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                  {/* Miniatura */}
+                  <div style={{ 
+                    width: '70px', 
+                    height: '70px', 
+                    background: '#f3f4f6', 
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    border: '2px solid #e2e8f0'
+                  }}>
+                    {imagensCache[itemExistenteEstoque.codigo_item] || itemExistenteEstoque.imagem_url ? (
+                      <img 
+                        src={`${API}/api/itens/${itemExistenteEstoque.codigo_item}/imagem?t=${imageCacheTimestamp}`}
+                        alt={itemExistenteEstoque.codigo_item}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => e.target.src = ''}
+                      />
+                    ) : (
+                      <span style={{ fontSize: '1.5rem', color: '#9ca3af' }}>📷</span>
+                    )}
+                  </div>
+                  <div style={{ flex: 1, fontSize: '0.9rem', color: '#374151' }}>
+                    <strong>Código:</strong> {itemExistenteEstoque.codigo_item}<br />
+                    <strong>Descrição:</strong> {itemExistenteEstoque.descricao?.substring(0, 60)}...<br />
+                    <strong>Qtd. atual:</strong> <span style={{ color: '#059669', fontWeight: '700' }}>{itemExistenteEstoque.quantidade_estoque} {itemExistenteEstoque.unidade}</span>
+                  </div>
                 </div>
                 
-                {/* Fornecedor */}
-                <div style={{ marginTop: '1rem' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                    Fornecedor/Origem:
-                  </label>
-                  <input
-                    type="text"
-                    value={addFornecedor}
-                    onChange={(e) => setAddFornecedor(e.target.value.toUpperCase())}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
+                {/* Adicionar quantidade */}
+                <div style={{ marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: '8px' }}>
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500', fontSize: '0.9rem' }}>
+                      Quantidade a adicionar:
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={addQuantidade}
+                      onChange={(e) => setAddQuantidade(parseInt(e.target.value) || 0)}
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem',
+                        borderRadius: '6px',
+                        border: '2px solid #e2e8f0',
+                        fontSize: '1rem'
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500', fontSize: '0.85rem' }}>
+                        Preço unitário (R$):
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={addPreco}
+                        onChange={(e) => setAddPreco(parseFloat(e.target.value) || 0)}
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          borderRadius: '6px',
+                          border: '2px solid #e2e8f0'
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500', fontSize: '0.85rem' }}>
+                        Fornecedor:
+                      </label>
+                      <input
+                        type="text"
+                        value={addFornecedor}
+                        onChange={(e) => setAddFornecedor(e.target.value.toUpperCase())}
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          borderRadius: '6px',
+                          border: '2px solid #e2e8f0'
+                        }}
+                      />
+                    </div>
+                  </div>
+                  
+                  {addQuantidade > 0 && (
+                    <div style={{ 
+                      marginTop: '0.75rem', 
+                      padding: '0.5rem', 
+                      background: '#dcfce7', 
+                      borderRadius: '6px',
+                      fontSize: '0.9rem',
+                      color: '#166534',
+                      fontWeight: '600'
+                    }}>
+                      ✅ Novo total: {itemExistenteEstoque.quantidade_estoque + addQuantidade} {itemExistenteEstoque.unidade}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {/* Item encontrado em OC ou item novo */}
+            {itemEncontrado && !itemExistenteEstoque && (
+              <div style={{ 
+                background: itemEncontrado.isNew ? '#f0f9ff' : '#f0fdf4', 
+                padding: '1rem', 
+                borderRadius: '8px',
+                marginBottom: '1.5rem',
+                border: `2px solid ${itemEncontrado.isNew ? '#3b82f6' : '#22c55e'}`
+              }}>
+                <div style={{ fontWeight: '600', marginBottom: '0.75rem', color: itemEncontrado.isNew ? '#1e40af' : '#166534' }}>
+                  {itemEncontrado.isNew ? '🆕 Novo item - Preencha os dados:' : '✅ Item encontrado:'}
+                </div>
+                
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                  {/* Upload de foto */}
+                  <div>
+                    <label style={{
+                      width: '80px',
+                      height: '80px',
+                      background: imagensCache[codigoBusca] ? 'transparent' : '#f3f4f6',
                       borderRadius: '8px',
-                      border: '2px solid #e2e8f0',
-                      fontSize: '1rem'
-                    }}
-                  />
+                      border: '2px dashed #d1d5db',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      overflow: 'hidden',
+                      position: 'relative'
+                    }}>
+                      {imagensCache[codigoBusca] ? (
+                        <>
+                          <img 
+                            src={`${API}/api/itens/${codigoBusca}/imagem?t=${imageCacheTimestamp}`}
+                            alt={codigoBusca}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                          <div style={{
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            background: 'rgba(0,0,0,0.5)',
+                            color: 'white',
+                            fontSize: '0.65rem',
+                            textAlign: 'center',
+                            padding: '0.15rem'
+                          }}>
+                            Trocar
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{ textAlign: 'center', color: '#9ca3af' }}>
+                          <div style={{ fontSize: '1.5rem' }}>📷</div>
+                          <div style={{ fontSize: '0.65rem' }}>Adicionar</div>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          if (e.target.files[0]) {
+                            handleUploadImagem(codigoBusca, e.target.files[0]);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                  
+                  <div style={{ flex: 1, fontSize: '0.9rem', color: '#374151' }}>
+                    <strong>Código:</strong> {itemEncontrado.codigo_item}<br />
+                    {!itemEncontrado.isNew && (
+                      <>
+                        <strong>Descrição:</strong> {itemEncontrado.descricao?.substring(0, 60)}...<br />
+                        <strong>OC:</strong> {itemEncontrado.numero_oc}<br />
+                        <strong>Status:</strong> {itemEncontrado.status}
+                      </>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Campos para item novo */}
+                {itemEncontrado.isNew && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500', fontSize: '0.9rem' }}>
+                      Descrição do Item:
+                    </label>
+                    <textarea
+                      value={addDescricao}
+                      onChange={(e) => setAddDescricao(e.target.value.toUpperCase())}
+                      placeholder="Ex: CABO USB TIPO C 1M"
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem',
+                        borderRadius: '6px',
+                        border: '2px solid #e2e8f0',
+                        minHeight: '60px',
+                        resize: 'vertical'
+                      }}
+                    />
+                  </div>
+                )}
+                
+                {/* Quantidade, preço e fornecedor */}
+                <div style={{ marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: '8px' }}>
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500', fontSize: '0.9rem' }}>
+                      Quantidade a adicionar:
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={addQuantidade}
+                      onChange={(e) => setAddQuantidade(parseInt(e.target.value) || 0)}
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem',
+                        borderRadius: '6px',
+                        border: '2px solid #e2e8f0',
+                        fontSize: '1rem'
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500', fontSize: '0.85rem' }}>
+                        Preço unitário (R$):
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={addPreco}
+                        onChange={(e) => setAddPreco(parseFloat(e.target.value) || 0)}
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          borderRadius: '6px',
+                          border: '2px solid #e2e8f0'
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500', fontSize: '0.85rem' }}>
+                        Fornecedor:
+                      </label>
+                      <input
+                        type="text"
+                        value={addFornecedor}
+                        onChange={(e) => setAddFornecedor(e.target.value.toUpperCase())}
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          borderRadius: '6px',
+                          border: '2px solid #e2e8f0'
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -1251,8 +1450,10 @@ const Estoque = () => {
                   setShowAddModal(false);
                   setCodigoBusca('');
                   setItemEncontrado(null);
+                  setItemExistenteEstoque(null);
                   setAddQuantidade(0);
                   setAddPreco(0);
+                  setAddDescricao('');
                 }}
                 style={{
                   padding: '0.75rem 1.25rem',
@@ -1265,17 +1466,34 @@ const Estoque = () => {
               >
                 Cancelar
               </button>
-              {itemEncontrado && (
+              {itemExistenteEstoque && (
                 <button
-                  onClick={adicionarAoEstoque}
+                  onClick={adicionarAoEstoqueExistente}
                   disabled={salvando || addQuantidade <= 0}
                   style={{
                     padding: '0.75rem 1.25rem',
                     borderRadius: '8px',
                     border: 'none',
-                    background: salvando || addQuantidade <= 0 ? '#94a3b8' : '#10b981',
+                    background: salvando || addQuantidade <= 0 ? '#94a3b8' : '#f59e0b',
                     color: 'white',
                     cursor: salvando || addQuantidade <= 0 ? 'not-allowed' : 'pointer',
+                    fontWeight: '600'
+                  }}
+                >
+                  {salvando ? '⏳ Adicionando...' : `➕ Adicionar +${addQuantidade}`}
+                </button>
+              )}
+              {itemEncontrado && !itemExistenteEstoque && (
+                <button
+                  onClick={adicionarAoEstoque}
+                  disabled={salvando || addQuantidade <= 0 || (itemEncontrado.isNew && !addDescricao.trim())}
+                  style={{
+                    padding: '0.75rem 1.25rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: salvando || addQuantidade <= 0 || (itemEncontrado.isNew && !addDescricao.trim()) ? '#94a3b8' : '#10b981',
+                    color: 'white',
+                    cursor: salvando || addQuantidade <= 0 || (itemEncontrado.isNew && !addDescricao.trim()) ? 'not-allowed' : 'pointer',
                     fontWeight: '600'
                   }}
                 >
