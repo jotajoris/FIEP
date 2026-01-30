@@ -5879,7 +5879,8 @@ async def atualizar_todas_ocs_com_pdfs(
     Atualizar múltiplas OCs de uma vez com seus PDFs.
     Cada PDF deve corresponder a uma OC existente (pelo número da OC no PDF).
     
-    Preserva todos os dados dos itens, só atualiza campos vazios do cabeçalho.
+    Atualiza: Endereço, Data de Entrega, NCM, Preços dos itens (preco_pdf e preco_venda_unitario)
+    Preserva: Status, responsável, fontes de compra, notas fiscais, observações
     """
     
     resultados = []
@@ -5895,12 +5896,9 @@ async def atualizar_todas_ocs_com_pdfs(
         
         content = await file.read()
         
+        # Usar a função de extração completa
         try:
-            pdf_doc = fitz.open(stream=content, filetype="pdf")
-            full_text = ""
-            for page in pdf_doc:
-                full_text += page.get_text()
-            pdf_doc.close()
+            pdf_data = extract_oc_from_pdf(content)
         except Exception as e:
             resultados.append({
                 "arquivo": file.filename,
@@ -5910,19 +5908,7 @@ async def atualizar_todas_ocs_com_pdfs(
             continue
         
         # Extrair número da OC
-        oc_patterns = [
-            r'(?:OC|Ordem de Compra)[:\s\-]*(\d+[\.\-]?\d+)',
-            r'(?:N[úu]mero|N[°º])[:\s]*(\d+[\.\-]?\d+)',
-            r'(\d{1,2}\.\d{6,})'
-        ]
-        
-        numero_oc = None
-        for pattern in oc_patterns:
-            match = re.search(pattern, full_text, re.IGNORECASE)
-            if match:
-                numero_oc = f"OC-{match.group(1)}"
-                break
-        
+        numero_oc = pdf_data.get('numero_oc')
         if not numero_oc:
             resultados.append({
                 "arquivo": file.filename,
@@ -5942,94 +5928,26 @@ async def atualizar_todas_ocs_com_pdfs(
             })
             continue
         
-        # Extrair dados do PDF
-        # Endereço
-        endereco_patterns = [
-            r'Endere[çc]o de Entrega[:\s]*(.*?)(?:\n\n|Linha|Item)',
-            r'Local de Entrega[:\s]*(.*?)(?:\n\n|Linha|Item)',
-            r'Entregar em[:\s]*(.*?)(?:\n\n|Linha|Item)'
-        ]
-        
-        novo_endereco = ""
-        for pattern in endereco_patterns:
-            endereco_match = re.search(pattern, full_text, re.IGNORECASE | re.DOTALL)
-            if endereco_match:
-                novo_endereco = endereco_match.group(1).strip()
-                novo_endereco = ' '.join(novo_endereco.split()).upper()
-                break
-        
-        # Data de Entrega
-        nova_data_entrega = None
-        data_patterns = [
-            r'Data de Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
-            r'Data Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
-            r'Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
-            r'Prazo de Entrega[:\s]*(\d{2}/\d{2}/\d{4})',
-            r'Dt\.\s*Entrega[:\s]*(\d{2}/\d{2}/\d{4})'
-        ]
-        
-        for pattern in data_patterns:
-            data_match = re.search(pattern, full_text, re.IGNORECASE)
-            if data_match:
-                try:
-                    data_str = data_match.group(1)
-                    dia, mes, ano = data_str.split('/')
-                    nova_data_entrega = f"{ano}-{mes}-{dia}"
-                    break
-                except:
-                    pass
-        
-        if not nova_data_entrega:
-            date_after_req = re.findall(r'\d{1,2}\.\d{2}\.\d{6,}\s*(\d{2}/\d{2}/\d{4})', full_text)
-            if date_after_req:
-                try:
-                    data_str = date_after_req[0]
-                    dia, mes, ano = data_str.split('/')
-                    nova_data_entrega = f"{ano}-{mes}-{dia}"
-                except:
-                    pass
-        
-        # ========== EXTRAIR NCM POR ITEM ==========
-        ncm_por_item = {}
-        lines = full_text.split('\n')
-        for i, line in enumerate(lines):
-            line_stripped = line.strip()
-            
-            # Procurar código de 6 dígitos que começa com 0 ou 1
-            if re.match(r'^([01]\d{5})$', line_stripped):
-                codigo = line_stripped
-                
-                # Procurar NCM nas próximas linhas
-                for j in range(i+1, min(i+40, len(lines))):
-                    check_line = lines[j].strip()
-                    
-                    # Se encontrar outro código de produto, parar
-                    if re.match(r'^([01]\d{5})$', check_line):
-                        break
-                    
-                    # Opção 1: NCM completo de 8 dígitos (pode começar com qualquer dígito 1-9)
-                    if re.match(r'^[1-9]\d{7}$', check_line):
-                        ncm_por_item[codigo] = check_line
-                        break
-                    
-                    # Opção 2: NCM dividido em duas linhas (6 dígitos + 2 dígitos)
-                    # NCM pode começar com qualquer dígito 1-9
-                    if re.match(r'^[1-9]\d{5}$', check_line):
-                        if j+1 < len(lines):
-                            next_line = lines[j+1].strip()
-                            if re.match(r'^\d{2}$', next_line):
-                                ncm_completo = check_line + next_line
-                                ncm_por_item[codigo] = ncm_completo
-                                break
+        # Criar lookup de itens do PDF por código
+        pdf_items_map = {}
+        for item in pdf_data.get('items', []):
+            codigo = item.get('codigo_item', '')
+            if codigo:
+                if codigo not in pdf_items_map:
+                    pdf_items_map[codigo] = []
+                pdf_items_map[codigo].append(item)
         
         # Preparar atualizações
         updates = {}
         campos_atualizados = []
+        itens_atualizados = 0
         
-        # Atualizar endereço - SEMPRE atualiza se o PDF tiver o endereço
+        # ============ ATUALIZAR CABEÇALHO ============
+        
+        # Endereço de Entrega
+        novo_endereco = pdf_data.get('endereco_entrega', '').strip()
         endereco_atual = existing_po.get('endereco_entrega', '').strip()
         if novo_endereco:
-            # Adicionar CEP ao endereço se não tiver
             if not re.search(r'CEP[:\s]*\d{5}-?\d{3}', novo_endereco, re.IGNORECASE):
                 cep = buscar_cep_por_endereco(novo_endereco)
                 if cep:
@@ -6037,31 +5955,67 @@ async def atualizar_todas_ocs_com_pdfs(
             
             if novo_endereco != endereco_atual:
                 updates['endereco_entrega'] = novo_endereco
-                campos_atualizados.append(f"endereco: {novo_endereco[:50]}...")
+                campos_atualizados.append("endereco")
         
-        # Atualizar data de entrega - SEMPRE atualiza se o PDF tiver a data
-        data_atual = existing_po.get('data_entrega', '').strip() if existing_po.get('data_entrega') else ''
+        # Data de Entrega
+        nova_data_entrega = pdf_data.get('data_entrega')
+        data_atual = existing_po.get('data_entrega', '')
         if nova_data_entrega and nova_data_entrega != data_atual:
             updates['data_entrega'] = nova_data_entrega
-            campos_atualizados.append(f"data_entrega: {nova_data_entrega}")
+            campos_atualizados.append("data_entrega")
         
-        # Atualizar NCM dos itens
-        ncm_atualizados = 0
-        if ncm_por_item:
-            items_modified = False
-            for item in existing_po.get('items', []):
-                codigo_item = item.get('codigo_item', '')
-                if codigo_item in ncm_por_item:
-                    ncm_atual = item.get('ncm', '')
-                    ncm_novo = ncm_por_item[codigo_item]
-                    if ncm_atual != ncm_novo:
-                        item['ncm'] = ncm_novo
-                        ncm_atualizados += 1
-                        items_modified = True
+        # ============ ATUALIZAR ITENS ============
+        existing_items = existing_po.get('items', [])
+        updated_items = []
+        items_modified = False
+        
+        for idx, existing_item in enumerate(existing_items):
+            codigo = existing_item.get('codigo_item', '')
+            pdf_matches = pdf_items_map.get(codigo, [])
             
-            if items_modified:
-                updates['items'] = existing_po['items']
-                campos_atualizados.append(f"NCM: {ncm_atualizados} itens")
+            updated_item = dict(existing_item)
+            
+            if pdf_matches:
+                pdf_item = pdf_matches[0]
+                if len(pdf_matches) > 1:
+                    same_code_existing = [i for i, x in enumerate(existing_items) if x.get('codigo_item') == codigo]
+                    item_order = same_code_existing.index(idx) if idx in same_code_existing else 0
+                    if item_order < len(pdf_matches):
+                        pdf_item = pdf_matches[item_order]
+                
+                # PREÇO DO PDF
+                preco_pdf_novo = pdf_item.get('preco_pdf') or pdf_item.get('preco_venda_pdf')
+                preco_pdf_atual = existing_item.get('preco_pdf')
+                if preco_pdf_novo is not None and preco_pdf_novo != preco_pdf_atual:
+                    updated_item['preco_pdf'] = preco_pdf_novo
+                    items_modified = True
+                
+                # PREÇO DE VENDA UNITÁRIO (se vazio)
+                preco_venda_atual = existing_item.get('preco_venda_unitario')
+                if preco_pdf_novo is not None and not preco_venda_atual:
+                    updated_item['preco_venda_unitario'] = preco_pdf_novo
+                    items_modified = True
+                    itens_atualizados += 1
+                
+                # QUANTIDADE
+                qtd_nova = pdf_item.get('quantidade')
+                qtd_atual = existing_item.get('quantidade')
+                if qtd_nova is not None and qtd_nova != qtd_atual:
+                    updated_item['quantidade'] = qtd_nova
+                    items_modified = True
+                
+                # NCM
+                ncm_novo = pdf_item.get('ncm')
+                ncm_atual = existing_item.get('ncm')
+                if ncm_novo and ncm_novo != ncm_atual:
+                    updated_item['ncm'] = ncm_novo
+                    items_modified = True
+            
+            updated_items.append(updated_item)
+        
+        if items_modified:
+            updates['items'] = updated_items
+            campos_atualizados.append(f"{itens_atualizados} preços")
         
         if updates:
             await db.purchase_orders.update_one(
@@ -6074,15 +6028,14 @@ async def atualizar_todas_ocs_com_pdfs(
             "numero_oc": numero_oc,
             "success": True,
             "campos_atualizados": campos_atualizados,
-            "ncm_encontrados": len(ncm_por_item),
-            "ncm_atualizados": ncm_atualizados,
-            "message": f"Atualizado: {', '.join(campos_atualizados)}" if campos_atualizados else "Sem alterações"
+            "itens_com_preco_atualizado": itens_atualizados,
+            "message": f"Atualizado: {', '.join(campos_atualizados)}" if campos_atualizados else "Sem alterações necessárias"
         })
     
     atualizados = sum(1 for r in resultados if r.get('success') and r.get('campos_atualizados'))
     sem_alteracao = sum(1 for r in resultados if r.get('success') and not r.get('campos_atualizados'))
     erros = sum(1 for r in resultados if not r.get('success'))
-    total_ncm = sum(r.get('ncm_atualizados', 0) for r in resultados if r.get('success'))
+    total_precos = sum(r.get('itens_com_preco_atualizado', 0) for r in resultados if r.get('success'))
     
     return {
         "success": True,
@@ -6090,7 +6043,7 @@ async def atualizar_todas_ocs_com_pdfs(
         "atualizados": atualizados,
         "sem_alteracao": sem_alteracao,
         "erros": erros,
-        "total_ncm_atualizados": total_ncm,
+        "total_precos_atualizados": total_precos,
         "resultados": resultados
     }
 
