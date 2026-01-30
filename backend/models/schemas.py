@@ -211,6 +211,7 @@ class ResponsavelBreakdown(BaseModel):
     cotado: int = 0
     comprado: int = 0
     em_separacao: int = 0
+    pronto_envio: int = 0
     em_transito: int = 0
     entregue: int = 0
 
