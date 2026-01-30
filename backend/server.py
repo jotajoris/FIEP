@@ -7281,9 +7281,10 @@ async def startup_event():
     except Exception as e:
         logging.getLogger(__name__).warning(f"Erro ao criar índices: {e}")
     
-    # Iniciar job de verificação de rastreios
-    rastreio_task = asyncio.create_task(verificar_rastreios_em_transito())
-    logging.getLogger(__name__).info("Job de verificação de rastreios iniciado")
+    # Job de verificação de rastreios DESABILITADO no startup para evitar lentidão
+    # A verificação ainda pode ser feita manualmente via endpoint /api/rastreios/verificar-todos
+    # rastreio_task = asyncio.create_task(verificar_rastreios_em_transito())
+    logging.getLogger(__name__).info("Job de verificação de rastreios desabilitado no startup (usar endpoint manual)")
 
 # Inicializar routers modulares com database e constantes
 init_admin_routes(db, LOT_ASSIGNMENTS, LOT_TO_OWNER, EXCLUDED_OCS_FROM_COMMISSION)
