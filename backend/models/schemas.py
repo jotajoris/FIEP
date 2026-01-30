@@ -222,6 +222,7 @@ class DashboardStats(BaseModel):
     items_cotados: int
     items_comprados: int
     items_em_separacao: int
+    items_pronto_envio: int
     items_em_transito: int
     items_entregues: int
     items_por_responsavel: Dict[str, ResponsavelBreakdown]
