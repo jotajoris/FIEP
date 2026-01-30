@@ -167,6 +167,7 @@ const ItemsByStatus = () => {
     'cotado': 'Cotados',
     'comprado': 'Comprados',
     'em_separacao': 'Em Separação',
+    'pronto_envio': 'Pronto p/ Envio',
     'em_transito': 'Em Trânsito',
     'entregue': 'Entregues'
   };
