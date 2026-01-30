@@ -526,6 +526,15 @@ const Dashboard = () => {
               <div className="stat-value" style={{ color: '#f97316' }}>{stats.items_em_separacao || 0}</div>
             </Link>
             <Link 
+              to="/items/status/pronto_envio" 
+              className="stat-card" 
+              style={{ borderColor: '#14b8a6', cursor: 'pointer', textDecoration: 'none' }} 
+              data-testid="stat-pronto-envio"
+            >
+              <div className="stat-label">Pronto p/ Envio</div>
+              <div className="stat-value" style={{ color: '#14b8a6' }}>{stats.items_pronto_envio || 0}</div>
+            </Link>
+            <Link 
               to="/items/status/em_transito" 
               className="stat-card" 
               style={{ borderColor: '#8b5cf6', cursor: 'pointer', textDecoration: 'none' }} 
@@ -543,10 +552,6 @@ const Dashboard = () => {
               <div className="stat-label">Entregues</div>
               <div className="stat-value" style={{ color: '#22c55e' }}>{stats.items_entregues}</div>
             </Link>
-            <div className="stat-card" style={{ borderColor: '#6b7280' }} data-testid="stat-total-items">
-              <div className="stat-label">Total Itens</div>
-              <div className="stat-value" style={{ color: '#6b7280' }}>{stats.total_items}</div>
-            </div>
           </div>
 
           {isAdmin() && (
