@@ -230,42 +230,12 @@ const Estoque = () => {
         
         alert(`Adicionado ${addQuantidade} UN do item ${codigoBusca} ao estoque!`);
       } else {
-        // Buscar OC completa
-        const poResponse = await axios.get(`${API}/api/purchase-orders/${itemEncontrado.po_id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        const po = poResponse.data;
-        const item = po.items[itemEncontrado.item_index];
-        
-        // Calcular nova quantidade total comprada
-        const fontes = item.fontes_compra || [];
-        const qtdAtual = fontes.length > 0 
-          ? fontes.reduce((sum, f) => sum + (f.quantidade || 0), 0)
-          : (item.quantidade_comprada || item.quantidade || 0);
-        
-        const novaQtdTotal = qtdAtual + addQuantidade;
-        
-        // Adicionar nova fonte de compra
-        if (!item.fontes_compra) {
-          item.fontes_compra = [];
-        }
-        
-        item.fontes_compra.push({
-          id: Date.now().toString(),
+        // Item encontrado em OC - usar endpoint de adicionar quantidade
+        await axios.post(`${API}/api/estoque/adicionar-quantidade`, {
+          codigo_item: itemEncontrado.codigo_item,
           quantidade: addQuantidade,
           preco_unitario: addPreco,
-          frete: 0,
-          fornecedor: addFornecedor,
-          link: ''
-        });
-        
-        // Atualizar quantidade_comprada
-        item.quantidade_comprada = novaQtdTotal;
-        
-        // Salvar
-        await axios.patch(`${API}/api/purchase-orders/${itemEncontrado.po_id}`, {
-          items: po.items
+          fornecedor: addFornecedor
         }, {
           headers: { Authorization: `Bearer ${token}` }
         });
