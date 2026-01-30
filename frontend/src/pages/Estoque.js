@@ -237,7 +237,6 @@ const Estoque = () => {
         setBuscando(false);
         return;
       }
-      }
       
       // Item não encontrado - permitir adicionar manualmente
       setItemEncontrado({
