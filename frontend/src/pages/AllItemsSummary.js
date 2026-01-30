@@ -127,14 +127,14 @@ const AllItemsSummary = () => {
     return sum + (valorVenda * 0.11);
   }, 0);
   
-  // Lucro realizado (soma do lucro dos itens em separação + em trânsito + entregues)
+  // Lucro realizado (soma do lucro dos itens em separação + pronto envio + em trânsito + entregues)
   const totalLucroRealizado = filteredItems
-    .filter(item => item.status === 'em_separacao' || item.status === 'em_transito' || item.status === 'entregue')
+    .filter(item => item.status === 'em_separacao' || item.status === 'pronto_envio' || item.status === 'em_transito' || item.status === 'entregue')
     .reduce((sum, item) => sum + (item.lucro_liquido || 0), 0);
 
-  // Calcular total de comissões a pagar (baseado nos lotes, itens entregue/em_transito)
+  // Calcular total de comissões a pagar (baseado nos lotes, itens entregue/em_transito/pronto_envio)
   const totalComissoes = filteredItems
-    .filter(item => item.status === 'entregue' || item.status === 'em_transito')
+    .filter(item => item.status === 'entregue' || item.status === 'em_transito' || item.status === 'pronto_envio')
     .filter(item => !OCS_EXCLUIDAS_COMISSAO.includes(item.numero_oc)) // Excluir OCs do João
     .reduce((sum, item) => {
       const numeroLote = extrairNumeroLote(item.lote);
