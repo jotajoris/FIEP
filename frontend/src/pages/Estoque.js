@@ -129,7 +129,7 @@ const Estoque = () => {
         for (let idx = 0; idx < po.items.length; idx++) {
           const item = po.items[idx];
           if (item.codigo_item === codigoBusca && 
-              ['comprado', 'em_separacao', 'em_transito', 'entregue'].includes(item.status)) {
+              ['comprado', 'em_separacao', 'pronto_envio', 'em_transito', 'entregue'].includes(item.status)) {
             setItemEncontrado({
               ...item,
               po_id: po.id,
