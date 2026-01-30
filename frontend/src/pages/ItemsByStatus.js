@@ -3859,7 +3859,7 @@ Chave PIX: 46.663.556/0001-69`;
                         </div>
                     </div>
 
-                    {/* Checkbox Pronto para Despacho da OC */}
+                    {/* Checkbox Pronto para Despacho da OC (apenas indicador visual) */}
                     <div style={{ 
                       marginBottom: '1.5rem', 
                       padding: '1rem', 
@@ -3890,16 +3890,67 @@ Chave PIX: 46.663.556/0001-69`;
                           }}
                         />
                         <span style={{ color: oc.pronto_despacho ? '#16a34a' : '#dc2626' }}>
-                          {oc.pronto_despacho 
-                            ? '✅ Pronto para Envio (itens movidos)' 
-                            : '📦 Marcar como Pronto para Envio'}
+                          {oc.pronto_despacho ? '✅ NF Emitida / Pronto para Despacho' : '⏳ NF Emitida / Pronto para Despacho'}
                         </span>
                       </label>
-                      <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.5rem', marginLeft: '2rem' }}>
-                        {oc.pronto_despacho 
-                          ? 'Os itens desta OC estão no status "Pronto p/ Envio"'
-                          : 'Ao marcar, todos os itens serão movidos para "Pronto p/ Envio"'}
+                    </div>
+                    
+                    {/* ===== SEÇÃO MOVER PARA PRONTO P/ ENVIO ===== */}
+                    <div style={{ 
+                      marginBottom: '1.5rem', 
+                      padding: '1rem', 
+                      background: '#f5f3ff', 
+                      borderRadius: '8px',
+                      border: '2px solid #8b5cf6'
+                    }}>
+                      <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem', fontWeight: '700', color: '#5b21b6' }}>
+                        🚀 Mover para "Pronto p/ Envio"
+                      </h4>
+                      <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '0.75rem' }}>
+                        Selecione os itens usando o checkbox 🔄 e clique no botão abaixo para movê-los.
                       </p>
+                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleAllItensParaStatus(oc.po_id, oc.items);
+                          }}
+                          style={{ 
+                            padding: '0.5rem 1rem',
+                            background: oc.items.every(item => itensParaStatus[oc.po_id]?.has(item._itemIndexInPO)) ? '#7c3aed' : '#e9d5ff',
+                            color: oc.items.every(item => itensParaStatus[oc.po_id]?.has(item._itemIndexInPO)) ? 'white' : '#5b21b6',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '0.85rem',
+                            fontWeight: '600'
+                          }}
+                        >
+                          {oc.items.every(item => itensParaStatus[oc.po_id]?.has(item._itemIndexInPO)) ? '☑️ Desmarcar Todos' : '☐ Selecionar Todos'}
+                        </button>
+                        <span style={{ fontSize: '0.9rem', color: '#5b21b6', fontWeight: '600' }}>
+                          {itensParaStatus[oc.po_id]?.size || 0} de {oc.items.length} selecionados
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            moverParaProntoEnvio(oc.po_id);
+                          }}
+                          disabled={(itensParaStatus[oc.po_id]?.size || 0) === 0}
+                          style={{ 
+                            padding: '0.5rem 1.25rem',
+                            background: (itensParaStatus[oc.po_id]?.size || 0) > 0 ? '#8b5cf6' : '#d1d5db',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: (itensParaStatus[oc.po_id]?.size || 0) > 0 ? 'pointer' : 'not-allowed',
+                            fontSize: '0.9rem',
+                            fontWeight: '700'
+                          }}
+                        >
+                          🚀 Mover {itensParaStatus[oc.po_id]?.size || 0} itens para Pronto
+                        </button>
+                      </div>
                     </div>
 
                     {/* ============== SEÇÃO FRETE DE ENVIO EM LOTE ============== */}
