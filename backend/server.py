@@ -3244,33 +3244,32 @@ async def _executar_verificacao_rastreios_uma_vez():
 
 # ================== VERIFICAÇÃO AUTOMÁTICA DE RASTREIO ==================
 
-async def verificar_rastreios_em_transito():
+async def verificar_rastreios_agendado():
     """
     Verifica todos os itens em trânsito e atualiza status automaticamente.
     Cria notificações para: saiu para entrega, tentativa de entrega, entregue.
-    Executado 1x ao dia.
+    Executado 1x ao dia às 15h horário de Brasília.
     """
     logger = logging.getLogger(__name__)
     
-    while True:
-        try:
-            logger.info("Iniciando verificação automática de rastreios (API Correios)...")
-            
-            # Buscar todas as OCs com itens em trânsito
-            cursor = db.purchase_orders.find(
-                {"items.status": "em_transito"},
-                {"_id": 0}
-            )
-            
-            stats = {
-                "verificados": 0,
-                "entregues": 0,
-                "saiu_entrega": 0,
-                "tentativa": 0,
-                "erros": 0
-            }
-            
-            async for po in cursor:
+    try:
+        logger.info("Iniciando verificação automática de rastreios (API Correios) - Agendamento 15h Brasília...")
+        
+        # Buscar todas as OCs com itens em trânsito
+        cursor = db.purchase_orders.find(
+            {"items.status": "em_transito"},
+            {"_id": 0}
+        )
+        
+        stats = {
+            "verificados": 0,
+            "entregues": 0,
+            "saiu_entrega": 0,
+            "tentativa": 0,
+            "erros": 0
+        }
+        
+        async for po in cursor:
                 po_atualizado = False
                 
                 for item in po['items']:
