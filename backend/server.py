@@ -5990,9 +5990,9 @@ async def atualizar_todas_ocs_com_pdfs(
                     updated_item['preco_pdf'] = preco_pdf_novo
                     items_modified = True
                 
-                # PREÇO DE VENDA (se vazio)
+                # PREÇO DE VENDA - SEMPRE atualiza com valor do PDF se diferente
                 preco_venda_atual = existing_item.get('preco_venda')
-                if preco_pdf_novo is not None and not preco_venda_atual:
+                if preco_pdf_novo is not None and preco_pdf_novo != preco_venda_atual:
                     updated_item['preco_venda'] = preco_pdf_novo
                     items_modified = True
                     itens_atualizados += 1
