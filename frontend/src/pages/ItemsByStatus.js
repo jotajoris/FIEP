@@ -3443,23 +3443,122 @@ Chave PIX: 46.663.556/0001-69`;
                       </div>
                       
                       {/* Endereço de Entrega da OC */}
-                      {oc.endereco_entrega && (
-                        <div style={{ 
-                          display: 'flex', 
-                          alignItems: 'flex-start', 
-                          gap: '0.5rem', 
-                          marginBottom: '0.5rem',
-                          fontSize: '0.85rem',
-                          background: '#f0f9ff',
-                          padding: '0.4rem 0.6rem',
-                          borderRadius: '6px',
-                          border: '1px solid #bae6fd',
-                          maxWidth: '400px'
-                        }}>
-                          <span style={{ color: '#0369a1', fontWeight: '600' }}>📍</span>
-                          <span style={{ color: '#0c4a6e', overflow: 'hidden', textOverflow: 'ellipsis' }}>{oc.endereco_entrega}</span>
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem', 
+                        marginBottom: '0.5rem',
+                        fontSize: '0.85rem',
+                        background: '#dbeafe',
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '6px',
+                        border: '1px solid #93c5fd',
+                        maxWidth: '100%'
+                      }}>
+                        <span style={{ color: '#1e40af', fontWeight: '700' }}>📍</span>
+                        {editingEnderecoOC === oc.po_id ? (
+                          <div style={{ flex: 1, display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            <textarea
+                              value={enderecoOCTemp}
+                              onChange={(e) => setEnderecoOCTemp(e.target.value)}
+                              className="form-input"
+                              style={{ flex: 1, minHeight: '60px', textTransform: 'uppercase', fontSize: '0.85rem' }}
+                              placeholder="Endereço completo com CEP"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  const response = await apiPatch(`/purchase-orders/${oc.po_id}`, {
+                                    endereco_entrega: enderecoOCTemp
+                                  });
+                                  if (response.ok) {
+                                    alert('Endereço atualizado!');
+                                    setEditingEnderecoOC(null);
+                                    fetchItems();
+                                  }
+                                } catch (err) {
+                                  alert('Erro ao atualizar endereço');
+                                }
+                              }}
+                              style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', background: '#22c55e', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                            >
+                              ✓ Salvar
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setEditingEnderecoOC(null); }}
+                              style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', background: '#9ca3af', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <span style={{ color: '#1e3a5f', fontWeight: '500', flex: 1 }}>{oc.endereco_entrega || 'Não informado'}</span>
+                            <button
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                setEditingEnderecoOC(oc.po_id); 
+                                setEnderecoOCTemp(oc.endereco_entrega || ''); 
+                              }}
+                              style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                              ✏️ Edit
+                            </button>
+                          </>
+                        )}
+                      </div>
+                      
+                      {/* DADOS ADICIONAIS DA NF - em amarelo */}
+                      <div style={{ 
+                        background: '#fef9c3', 
+                        padding: '0.75rem',
+                        borderRadius: '6px',
+                        border: '1px solid #fde047',
+                        marginBottom: '0.5rem'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                          <span style={{ fontSize: '0.85rem', color: '#854d0e', fontWeight: '700' }}>
+                            📝 DADOS ADICIONAIS DA NF
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const numeroOC = oc.numero_oc ? oc.numero_oc.replace(/^OC-/i, '') : '';
+                              const endereco = oc.endereco_entrega || 'ENDEREÇO NÃO INFORMADO';
+                              const texto = `Endereço da entrega: ${endereco}
+NF referente à OC - ${numeroOC}
+DADOS BANCÁRIOS
+Banco: 341 - Itaú Unibanco
+Conta: 98814-9
+Agência: 3978
+Chave PIX: 46.663.556/0001-69`;
+                              navigator.clipboard.writeText(texto).then(() => {
+                                alert('Dados Adicionais copiados!');
+                              });
+                            }}
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', background: '#eab308', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                          >
+                            📋 Copiar
+                          </button>
                         </div>
-                      )}
+                        <pre style={{ 
+                          whiteSpace: 'pre-wrap', 
+                          fontSize: '0.75rem', 
+                          color: '#713f12',
+                          background: 'white',
+                          padding: '0.5rem',
+                          borderRadius: '4px',
+                          margin: 0
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        >
+{`Endereço: ${oc.endereco_entrega || 'NÃO INFORMADO'}
+OC: ${oc.numero_oc ? oc.numero_oc.replace(/^OC-/i, '') : ''}
+DADOS BANCÁRIOS - Banco: 341 Itaú | Ag: 3978 | Cc: 98814-9 | PIX: 46.663.556/0001-69`}
+                        </pre>
+                      </div>
                       
                       {/* Status de NFs */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.85rem' }}>
