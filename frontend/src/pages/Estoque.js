@@ -15,6 +15,10 @@ const Estoque = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [totalItens, setTotalItens] = useState(0);
   
+  // Estados para paginação
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  
   // Estados para edição
   const [editingOC, setEditingOC] = useState(null); // {po_id, item_index, quantidade_atual, quantidade_necessaria}
   const [novaQuantidade, setNovaQuantidade] = useState(0);
@@ -24,15 +28,24 @@ const Estoque = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [codigoBusca, setCodigoBusca] = useState('');
   const [itemEncontrado, setItemEncontrado] = useState(null);
+  const [itemExistenteEstoque, setItemExistenteEstoque] = useState(null); // Item já no estoque
   const [buscando, setBuscando] = useState(false);
   const [addQuantidade, setAddQuantidade] = useState(0);
   const [addPreco, setAddPreco] = useState(0);
   const [addFornecedor, setAddFornecedor] = useState('ENTRADA MANUAL');
+  const [addDescricao, setAddDescricao] = useState('');
+  const [imagemPreview, setImagemPreview] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const imageInputRef = React.useRef(null);
   
   // Estados para upload de planilha de limites do contrato
   const [uploadingLimites, setUploadingLimites] = useState(false);
   const [limitesInfo, setLimitesInfo] = useState(null); // Info sobre limites importados
   const fileInputRef = React.useRef(null);
+  
+  // Cache de imagens
+  const [imagensCache, setImagensCache] = useState({});
+  const [imageCacheTimestamp, setImageCacheTimestamp] = useState(Date.now());
 
   useEffect(() => {
     loadEstoque();
