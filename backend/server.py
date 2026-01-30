@@ -7445,27 +7445,36 @@ api_router.include_router(limites_router)
 # Include the router in the main app
 app.include_router(api_router)
 
-# CORS Configuration - usando variável de ambiente
-cors_origins_env = os.environ.get('CORS_ORIGINS', '*')
-if cors_origins_env == '*':
-    # Wildcard não pode ser usado com credentials
-    app.add_middleware(
-        CORSMiddleware,
-        allow_credentials=False,
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# CORS Configuration - usando variável de ambiente ou lista padrão
+cors_origins_env = os.environ.get('CORS_ORIGINS', '')
+
+# Lista de origens permitidas (domínios customizados e padrão Emergent)
+default_origins = [
+    "https://onlicitacoes.com",
+    "https://www.onlicitacoes.com",
+    "http://onlicitacoes.com",
+    "http://www.onlicitacoes.com",
+    "https://pedidos-fiep.emergent.host",
+    "http://localhost:3000",
+    "http://localhost:8001"
+]
+
+if cors_origins_env:
+    # Se configurado via env, adicionar aos defaults
+    cors_origins_list = default_origins + [origin.strip() for origin in cors_origins_env.split(',') if origin.strip()]
 else:
-    # Lista específica de origens permite credentials
-    cors_origins_list = [origin.strip() for origin in cors_origins_env.split(',')]
-    app.add_middleware(
-        CORSMiddleware,
-        allow_credentials=True,
-        allow_origins=cors_origins_list,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    cors_origins_list = default_origins
+
+# Remover duplicatas mantendo ordem
+cors_origins_list = list(dict.fromkeys(cors_origins_list))
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=cors_origins_list,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Middleware para headers anti-cache (forçar atualização)
 from starlette.middleware.base import BaseHTTPMiddleware
