@@ -16,6 +16,7 @@ const calcularStatusEntrega = (dataEntrega, statusCount = {}) => {
     statusCount.cotado === 0 && 
     statusCount.comprado === 0 &&
     statusCount.em_separacao === 0 &&
+    statusCount.pronto_envio === 0 &&
     statusCount.em_transito === 0;
   
   try {
