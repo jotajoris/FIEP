@@ -626,15 +626,16 @@ const Estoque = () => {
         </p>
       </div>
 
-      {/* Busca */}
-      <div style={{ marginBottom: '1.5rem' }}>
+      {/* Busca e Paginação */}
+      <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
         <input
           type="text"
           placeholder="🔍 Buscar por código, descrição, marca ou fornecedor..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{
-            width: '100%',
+            flex: 1,
+            minWidth: '300px',
             maxWidth: '500px',
             padding: '0.75rem 1rem',
             border: '2px solid #e2e8f0',
@@ -643,6 +644,31 @@ const Estoque = () => {
           }}
           data-testid="search-estoque"
         />
+        
+        {/* Controle de itens por página */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>Mostrar:</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => setItemsPerPage(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
+            style={{
+              padding: '0.5rem 1rem',
+              border: '2px solid #e2e8f0',
+              borderRadius: '6px',
+              fontSize: '0.9rem',
+              cursor: 'pointer'
+            }}
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={15}>15</option>
+            <option value={20}>20</option>
+            <option value="all">Tudo</option>
+          </select>
+          <span style={{ fontSize: '0.85rem', color: '#9ca3af' }}>
+            ({filteredEstoque.length} itens)
+          </span>
+        </div>
       </div>
 
       {/* Lista de Estoque */}
