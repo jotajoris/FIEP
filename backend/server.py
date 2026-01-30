@@ -4371,6 +4371,120 @@ async def copiar_imagem_item(
     return {"success": True, "message": "Imagem copiada com sucesso"}
 
 
+# ================== ENDPOINTS SIMPLIFICADOS DE IMAGEM POR CÓDIGO ==================
+
+@api_router.post("/itens/{codigo_item}/imagem")
+async def upload_imagem_por_codigo(
+    codigo_item: str,
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Upload de imagem por código do item.
+    A imagem é salva na coleção imagens_itens e vinculada ao código.
+    """
+    # Validar arquivo
+    if not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="Apenas imagens são aceitas")
+    
+    # Ler conteúdo da imagem
+    image_data = await file.read()
+    
+    # Converter para base64
+    import base64
+    base64_data = base64.b64encode(image_data).decode('utf-8')
+    imagem_url = f"data:{file.content_type};base64,{base64_data}"
+    
+    # Salvar na coleção imagens_itens
+    await db.imagens_itens.update_one(
+        {"codigo_item": codigo_item},
+        {"$set": {
+            "codigo_item": codigo_item,
+            "imagem_url": imagem_url,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    
+    # Atualizar imagem em TODOS os itens com esse código em todas as OCs
+    await db.purchase_orders.update_many(
+        {"items.codigo_item": codigo_item},
+        {"$set": {"items.$[elem].imagem_url": imagem_url}},
+        array_filters=[{"elem.codigo_item": codigo_item}]
+    )
+    
+    # Atualizar no estoque também
+    await db.stock.update_many(
+        {"codigo_item": codigo_item},
+        {"$set": {"imagem_url": imagem_url}}
+    )
+    
+    return {"success": True, "message": f"Imagem salva para o item {codigo_item}"}
+
+
+@api_router.get("/itens/{codigo_item}/imagem")
+async def get_imagem_por_codigo(codigo_item: str):
+    """
+    Retorna a imagem de um item pelo código.
+    """
+    # Buscar na coleção imagens_itens
+    imagem_info = await db.imagens_itens.find_one({"codigo_item": codigo_item}, {"_id": 0})
+    
+    if not imagem_info or not imagem_info.get('imagem_url'):
+        raise HTTPException(status_code=404, detail="Imagem não encontrada")
+    
+    imagem_url = imagem_info['imagem_url']
+    
+    # Retornar a imagem
+    if imagem_url.startswith('data:'):
+        # É base64 - converter para resposta
+        import base64
+        try:
+            # Formato: data:image/jpeg;base64,XXXXX
+            header, data = imagem_url.split(',', 1)
+            content_type = header.split(':')[1].split(';')[0]
+            image_bytes = base64.b64decode(data)
+            
+            from fastapi.responses import Response
+            return Response(content=image_bytes, media_type=content_type)
+        except:
+            raise HTTPException(status_code=500, detail="Erro ao processar imagem")
+    else:
+        # URL externa - redirecionar
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url=imagem_url)
+
+
+@api_router.delete("/itens/{codigo_item}/imagem")
+async def delete_imagem_por_codigo(
+    codigo_item: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Remove a imagem de um item pelo código.
+    """
+    # Remover da coleção imagens_itens
+    result = await db.imagens_itens.delete_one({"codigo_item": codigo_item})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Imagem não encontrada")
+    
+    # Remover de todos os itens com esse código em todas as OCs
+    await db.purchase_orders.update_many(
+        {"items.codigo_item": codigo_item},
+        {"$unset": {"items.$[elem].imagem_url": ""}},
+        array_filters=[{"elem.codigo_item": codigo_item}]
+    )
+    
+    # Remover do estoque também
+    await db.stock.update_many(
+        {"codigo_item": codigo_item},
+        {"$unset": {"imagem_url": ""}}
+    )
+    
+    return {"success": True, "message": f"Imagem removida do item {codigo_item}"}
+
+
 @api_router.get("/itens/imagens-disponiveis")
 async def get_itens_imagens_disponiveis(current_user: dict = Depends(get_current_user)):
     """
