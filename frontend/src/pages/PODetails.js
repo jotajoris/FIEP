@@ -735,20 +735,170 @@ const PODetails = () => {
       <div className="card">
         <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1.5rem' }}>
           Itens da Ordem de Compra ({po.items.length})
-          {itensAgrupados.some(g => g.temMultiplos) && (
+          {itensAgrupadosFiltrados.some(g => g.temMultiplos) && (
             <span style={{ 
               fontSize: '0.9rem', 
               fontWeight: '500', 
               color: '#ea580c',
               marginLeft: '0.75rem'
             }}>
-              ({itensAgrupados.length} códigos únicos)
+              ({itensAgrupadosFiltrados.length} códigos únicos)
+            </span>
+          )}
+          {/* Indicador de filtro ativo */}
+          {(filtros.codigo || filtros.descricao || filtros.fornecedor || filtros.status) && (
+            <span style={{ 
+              fontSize: '0.85rem', 
+              fontWeight: '500', 
+              color: '#6366f1',
+              marginLeft: '0.75rem'
+            }}>
+              🔍 Mostrando {itensAgrupadosFiltrados.length} de {itensAgrupados.length}
             </span>
           )}
         </h2>
+
+        {/* BARRA DE FILTROS */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: '0.75rem',
+          marginBottom: '1.5rem',
+          padding: '1rem',
+          background: '#f1f5f9',
+          borderRadius: '8px',
+          border: '1px solid #e2e8f0'
+        }}>
+          {/* Filtro por Código */}
+          <div>
+            <label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#64748b', marginBottom: '0.25rem', display: 'block' }}>
+              🔢 Código
+            </label>
+            <input
+              type="text"
+              placeholder="Buscar código..."
+              value={filtros.codigo}
+              onChange={(e) => setFiltros(prev => ({ ...prev, codigo: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '0.5rem 0.75rem',
+                border: '1px solid #cbd5e1',
+                borderRadius: '6px',
+                fontSize: '0.9rem'
+              }}
+              data-testid="filtro-codigo"
+            />
+          </div>
+          
+          {/* Filtro por Descrição/Nome */}
+          <div>
+            <label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#64748b', marginBottom: '0.25rem', display: 'block' }}>
+              📝 Descrição/Nome
+            </label>
+            <input
+              type="text"
+              placeholder="Buscar descrição..."
+              value={filtros.descricao}
+              onChange={(e) => setFiltros(prev => ({ ...prev, descricao: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '0.5rem 0.75rem',
+                border: '1px solid #cbd5e1',
+                borderRadius: '6px',
+                fontSize: '0.9rem'
+              }}
+              data-testid="filtro-descricao"
+            />
+          </div>
+          
+          {/* Filtro por Fornecedor */}
+          <div>
+            <label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#64748b', marginBottom: '0.25rem', display: 'block' }}>
+              🏢 Fornecedor
+            </label>
+            <input
+              type="text"
+              placeholder="Buscar fornecedor..."
+              value={filtros.fornecedor}
+              onChange={(e) => setFiltros(prev => ({ ...prev, fornecedor: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '0.5rem 0.75rem',
+                border: '1px solid #cbd5e1',
+                borderRadius: '6px',
+                fontSize: '0.9rem'
+              }}
+              data-testid="filtro-fornecedor"
+            />
+          </div>
+          
+          {/* Filtro por Status */}
+          <div>
+            <label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#64748b', marginBottom: '0.25rem', display: 'block' }}>
+              📊 Status
+            </label>
+            <select
+              value={filtros.status}
+              onChange={(e) => setFiltros(prev => ({ ...prev, status: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '0.5rem 0.75rem',
+                border: '1px solid #cbd5e1',
+                borderRadius: '6px',
+                fontSize: '0.9rem',
+                background: 'white'
+              }}
+              data-testid="filtro-status"
+            >
+              <option value="">Todos</option>
+              <option value="pendente">⏳ Pendente</option>
+              <option value="cotado">💰 Cotado</option>
+              <option value="comprado">🛒 Comprado</option>
+              <option value="em_separacao">📦 Em Separação</option>
+              <option value="pronto_envio">🚚 Pronto p/ Envio</option>
+              <option value="em_transito">✈️ Em Trânsito</option>
+              <option value="entregue">✅ Entregue</option>
+            </select>
+          </div>
+          
+          {/* Botão Limpar Filtros */}
+          {(filtros.codigo || filtros.descricao || filtros.fornecedor || filtros.status) && (
+            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button
+                onClick={() => setFiltros({ codigo: '', descricao: '', fornecedor: '', status: '' })}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem',
+                  fontWeight: '600'
+                }}
+                data-testid="limpar-filtros"
+              >
+                ✕ Limpar
+              </button>
+            </div>
+          )}
+        </div>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {itensAgrupados.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((group, groupIndex) => {
+          {itensAgrupadosFiltrados.length === 0 ? (
+            <div style={{
+              padding: '2rem',
+              textAlign: 'center',
+              background: '#fef3c7',
+              borderRadius: '8px',
+              color: '#92400e'
+            }}>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔍</div>
+              <div style={{ fontWeight: '600' }}>Nenhum item encontrado</div>
+              <div style={{ fontSize: '0.9rem' }}>Tente ajustar os filtros de pesquisa</div>
+            </div>
+          ) : (
+            itensAgrupadosFiltrados.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((group, groupIndex) => {
             const item = group.firstItem;
             const realIndex = group.firstIndex;
             
