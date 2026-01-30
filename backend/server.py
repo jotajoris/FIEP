@@ -7359,9 +7359,4 @@ app.add_middleware(NoCacheMiddleware)
 
 # Logger já configurado no início do arquivo
 
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    global rastreio_task
-    if rastreio_task:
-        rastreio_task.cancel()
-    client.close()
+# Shutdown antigo removido - agora usando scheduler.shutdown() no shutdown_event acima
