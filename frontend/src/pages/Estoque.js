@@ -160,6 +160,13 @@ const Estoque = () => {
       const itemNoEstoque = estoque.find(e => e.codigo_item === codigoBusca);
       if (itemNoEstoque) {
         setItemExistenteEstoque(itemNoEstoque);
+        // Pegar o preço do primeiro fornecedor se existir
+        if (itemNoEstoque.preco_unitario) {
+          setAddPreco(itemNoEstoque.preco_unitario);
+        }
+        if (itemNoEstoque.fornecedor) {
+          setAddFornecedor(itemNoEstoque.fornecedor);
+        }
         setBuscando(false);
         return;
       }
@@ -171,23 +178,65 @@ const Estoque = () => {
       
       const pos = response.data.data || [];
       
-      // Buscar item com status "comprado" ou posterior
+      // Coletar TODOS os fornecedores/preços para este item
+      const fornecedoresEncontrados = [];
+      let primeiroItem = null;
+      
       for (const po of pos) {
-        for (let idx = 0; idx < po.items.length; idx++) {
+        for (let idx = 0; idx < (po.items || []).length; idx++) {
           const item = po.items[idx];
-          if (item.codigo_item === codigoBusca && 
-              ['comprado', 'em_separacao', 'pronto_envio', 'em_transito', 'entregue'].includes(item.status)) {
-            setItemEncontrado({
-              ...item,
-              po_id: po.id,
-              numero_oc: po.numero_oc,
-              item_index: idx
-            });
-            setAddDescricao(item.descricao || '');
-            setBuscando(false);
-            return;
+          if (item.codigo_item === codigoBusca) {
+            // Verificar fontes de compra
+            const fontes = item.fontes_compra || [];
+            if (fontes.length > 0) {
+              fontes.forEach(fonte => {
+                if (fonte.fornecedor && fonte.preco_unitario > 0) {
+                  fornecedoresEncontrados.push({
+                    fornecedor: fonte.fornecedor,
+                    preco: fonte.preco_unitario,
+                    oc: po.numero_oc,
+                    quantidade: fonte.quantidade
+                  });
+                }
+              });
+            } else if (item.preco > 0) {
+              // Usar preço do item se não tiver fontes
+              fornecedoresEncontrados.push({
+                fornecedor: item.fornecedor || 'NÃO INFORMADO',
+                preco: item.preco / (item.quantidade || 1),
+                oc: po.numero_oc,
+                quantidade: item.quantidade
+              });
+            }
+            
+            // Guardar primeiro item encontrado com status comprado ou posterior
+            if (!primeiroItem && ['comprado', 'em_separacao', 'pronto_envio', 'em_transito', 'entregue'].includes(item.status)) {
+              primeiroItem = {
+                ...item,
+                po_id: po.id,
+                numero_oc: po.numero_oc,
+                item_index: idx
+              };
+            }
           }
         }
+      }
+      
+      if (primeiroItem) {
+        setItemEncontrado({
+          ...primeiroItem,
+          fornecedores: fornecedoresEncontrados
+        });
+        setAddDescricao(primeiroItem.descricao || '');
+        
+        // Preencher com o primeiro fornecedor encontrado
+        if (fornecedoresEncontrados.length > 0) {
+          setAddPreco(fornecedoresEncontrados[0].preco);
+          setAddFornecedor(fornecedoresEncontrados[0].fornecedor);
+        }
+        setBuscando(false);
+        return;
+      }
       }
       
       // Item não encontrado - permitir adicionar manualmente
