@@ -19,7 +19,7 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 - [x] Atualização segura de OC via re-upload de PDF
 
 ### Gerenciamento de Itens
-- [x] Status: Pendente → Cotado → Comprado → Em Separação → Em Trânsito → Entregue
+- [x] Status: Pendente → Cotado → Comprado → Em Separação → **Pronto p/ Envio** → Em Trânsito → Entregue
 - [x] Atribuição de responsáveis
 - [x] Histórico de cotações para itens pendentes
 - [x] Campo "Observação" por item
@@ -27,7 +27,7 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 - [x] Agrupamento de itens por código (pendentes/cotados)
 - [x] Compra parcial (split de quantidades)
 - [x] Envio parcial de itens
-- [ ] Agrupar itens dentro da mesma OC (Em Separação) - **EM PROGRESSO**
+- [x] Agrupar itens dentro da mesma OC (Em Separação) ✅
 
 ### Notas Fiscais
 - [x] Upload de NF de Venda (XML/PDF)
