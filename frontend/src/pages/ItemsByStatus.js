@@ -4234,13 +4234,51 @@ DADOS BANCÁRIOS - Banco: 341 Itaú | Ag: 3978 | Cc: 98814-9 | PIX: 46.663.556/0
                                         {/* Header com checkboxes e badge */}
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
                                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                            {/* Foto do item */}
+                                            {/* Foto do item - tamanho maior com funcionalidades */}
                                             <ItemImage
-                                              item={item}
-                                              imagensItens={imagensItens}
-                                              imageCacheTimestamp={imageCacheTimestamp}
-                                              onImageClick={(url) => setImagemExpandida(url)}
-                                              size="small"
+                                              codigoItem={item.codigo_item}
+                                              imagemUrl={imagensItens[item.codigo_item] ? `${API_URL}/itens/${item.codigo_item}/imagem?t=${imageCacheTimestamp}` : null}
+                                              onUpload={async (file) => {
+                                                const formData = new FormData();
+                                                formData.append('file', file);
+                                                try {
+                                                  const response = await fetch(`${API_URL}/itens/${item.codigo_item}/imagem`, {
+                                                    method: 'POST',
+                                                    body: formData,
+                                                    headers: {
+                                                      'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                                    }
+                                                  });
+                                                  if (response.ok) {
+                                                    setImagensItens(prev => ({ ...prev, [item.codigo_item]: true }));
+                                                    setImageCacheTimestamp(Date.now());
+                                                    alert('Imagem enviada com sucesso!');
+                                                  }
+                                                } catch (err) {
+                                                  alert('Erro ao enviar imagem');
+                                                }
+                                              }}
+                                              onDelete={async () => {
+                                                if (window.confirm('Excluir imagem deste item?')) {
+                                                  try {
+                                                    const response = await fetch(`${API_URL}/itens/${item.codigo_item}/imagem`, {
+                                                      method: 'DELETE',
+                                                      headers: {
+                                                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                                      }
+                                                    });
+                                                    if (response.ok) {
+                                                      setImagensItens(prev => ({ ...prev, [item.codigo_item]: false }));
+                                                      setImageCacheTimestamp(Date.now());
+                                                      alert('Imagem removida!');
+                                                    }
+                                                  } catch (err) {
+                                                    alert('Erro ao remover imagem');
+                                                  }
+                                                }
+                                              }}
+                                              canEdit={true}
+                                              size="normal"
                                             />
                                             {/* Checkboxes com emojis */}
                                             <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
