@@ -56,6 +56,8 @@ const ItemsByStatus = () => {
   const [uploadingNF, setUploadingNF] = useState(null);
   const [editingEndereco, setEditingEndereco] = useState(null);
   const [enderecoTemp, setEnderecoTemp] = useState('');
+  const [editingEnderecoOC, setEditingEnderecoOC] = useState(null);  // OC com endereço sendo editado
+  const [enderecoOCTemp, setEnderecoOCTemp] = useState('');  // Endereço temporário da OC
   const [ncmManual, setNcmManual] = useState({});
   const fileInputRef = useRef({});
   
