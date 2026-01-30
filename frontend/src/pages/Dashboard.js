@@ -87,8 +87,9 @@ const Dashboard = () => {
       'cotado': '💰',
       'comprado': '🛒',
       'em_separacao': '📦',
+      'pronto_envio': '✅',
       'em_transito': '🚚',
-      'entregue': '✅'
+      'entregue': '📬'
     };
     return emojis[status] || '❓';
   };
