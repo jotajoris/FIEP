@@ -90,6 +90,24 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 
 ## Changelog Recente
 
+### 2025-01-30 (Sessão atual - Continuação 3)
+- ✅ **"Dados Adicionais da NF" movido para header da OC:**
+  - Agora aparece no card da OC (área amarela) em vez de dentro do item
+  - Mostra: Endereço, número OC, Dados Bancários (Banco Itaú, Ag, Cc, PIX)
+  - Botão "📋 Copiar" para copiar todos os dados
+  
+- ✅ **Botão "Edit" no endereço de entrega:**
+  - Endereço editável inline no header da OC
+  - Campos de edição aparecem ao clicar em "✏️ Edit"
+  - Botões "✓ Salvar" e "✕ Cancelar"
+
+- ✅ **Foto do item maior com funcionalidades:**
+  - Tamanho aumentado de 40px para 60px
+  - Drag-and-drop para adicionar imagem
+  - Click para selecionar arquivo
+  - Botão de excluir quando tem foto
+  - Funciona em "Em Separação" e "Pronto para Envio"
+
 ### 2025-01-30 (Sessão atual - Continuação 2)
 - ✅ **Reorganização da página "Em Separação":**
   - Movidos "📍 Endereço de Entrega" e "📝 Dados Adicionais da NF" para o card da OC
