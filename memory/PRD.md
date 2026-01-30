@@ -90,6 +90,21 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 
 ## Changelog Recente
 
+### 2025-01-30 (Sessão atual - Continuação 2)
+- ✅ **Reorganização da página "Em Separação":**
+  - Movidos "📍 Endereço de Entrega" e "📝 Dados Adicionais da NF" para o card da OC
+  - Seção de NF no item simplificada para mostrar apenas "NF de Compra"
+  - Adicionados emojis identificadores nos checkboxes: 📄 (NF), 🚚 (Frete), 🔄 (Status)
+  - Foto do item restaurada na visualização
+  - Removidos: checkbox "NF Emitida/Pronto para Despacho" e seção "Mover para Pronto p/ Envio"
+  - Removido campo "Quantidade Efetivamente Comprada" do formulário de edição
+
+- ✅ **Nova página "Pronto para Envio" reorganizada:**
+  - Agora agrupa itens por OC (similar a "Em Separação")
+  - Mostra: código, quantidade, descrição, checkboxes para frete e status
+  - Seções de NF de Venda (download), Frete/Rastreio, e Mudar Status em Massa
+  - Visualização simplificada dos itens com foto
+
 ### 2025-01-30 (Sessão atual - Continuação)
 - ✅ **BUG FIX CRÍTICO: Edição de itens em "Em Separação" restaurada**
   - **Problema:** Após adicionar agrupamento automático, os itens não podiam ser editados
