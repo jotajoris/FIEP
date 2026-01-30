@@ -23,6 +23,7 @@ const MudarStatusForm = memo(({
     { value: 'cotado', label: 'Cotado' },
     { value: 'comprado', label: 'Comprado' },
     { value: 'em_separacao', label: 'Em Separação' },
+    { value: 'pronto_envio', label: 'Pronto p/ Envio' },
     { value: 'em_transito', label: 'Em Trânsito' },
     { value: 'entregue', label: 'Entregue' }
   ].filter(opt => opt.value !== statusAtual);
