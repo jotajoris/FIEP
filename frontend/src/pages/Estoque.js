@@ -50,7 +50,13 @@ const Estoque = () => {
   useEffect(() => {
     loadEstoque();
     loadLimitesInfo();
+    loadImagensCache();
   }, []);
+  
+  // Reset para página 1 quando buscar ou mudar quantidade por página
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, itemsPerPage]);
 
   const loadEstoque = async () => {
     try {
@@ -64,6 +70,23 @@ const Estoque = () => {
       console.error('Erro ao carregar estoque:', error);
     } finally {
       setLoading(false);
+    }
+  };
+  
+  // Carregar cache de imagens
+  const loadImagensCache = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/api/itens/imagens-disponiveis`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const cache = {};
+      (response.data.codigos || []).forEach(codigo => {
+        cache[codigo] = true;
+      });
+      setImagensCache(cache);
+    } catch (error) {
+      console.warn('Cache de imagens não carregado:', error);
     }
   };
   
