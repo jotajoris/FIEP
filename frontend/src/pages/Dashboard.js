@@ -565,10 +565,33 @@ const Dashboard = () => {
                 </span>
               </h2>
               <div className="owner-grid">
-                {Object.entries(stats.items_por_responsavel).map(([owner, breakdown]) => (
-                  <Link key={owner} to={`/owner/${owner}`} className="owner-card" data-testid={`owner-card-${owner.toLowerCase()}`} style={{ padding: '1rem', minHeight: '140px' }}>
-                    <div className="owner-name" style={{ marginBottom: '0.5rem' }}>{owner}</div>
-                    <div className="owner-count" style={{ marginBottom: '0.75rem' }}>{breakdown.total || breakdown}</div>
+                {Object.entries(stats.items_por_responsavel).map(([owner, breakdown], index) => {
+                  // Cores diferentes para cada responsável
+                  const ownerColors = {
+                    'Maria': { bg: '#fef3c7', border: '#f59e0b', text: '#92400e' },
+                    'Mateus': { bg: '#dbeafe', border: '#3b82f6', text: '#1e40af' },
+                    'João': { bg: '#dcfce7', border: '#22c55e', text: '#166534' },
+                    'Mylena': { bg: '#fce7f3', border: '#ec4899', text: '#9d174d' },
+                    'Fabio': { bg: '#e0e7ff', border: '#6366f1', text: '#4338ca' }
+                  };
+                  const colors = ownerColors[owner] || { bg: '#f3f4f6', border: '#9ca3af', text: '#374151' };
+                  
+                  return (
+                  <Link 
+                    key={owner} 
+                    to={`/owner/${owner}`} 
+                    className="owner-card" 
+                    data-testid={`owner-card-${owner.toLowerCase()}`} 
+                    style={{ 
+                      padding: '1rem', 
+                      minHeight: '140px',
+                      background: colors.bg,
+                      borderColor: colors.border,
+                      borderWidth: '2px'
+                    }}
+                  >
+                    <div className="owner-name" style={{ marginBottom: '0.5rem', color: colors.text }}>{owner}</div>
+                    <div className="owner-count" style={{ marginBottom: '0.75rem', color: colors.text }}>{breakdown.total || breakdown}</div>
                     {breakdown.total !== undefined && (
                       <div style={{ fontSize: '0.7rem', color: '#6b7280', lineHeight: '1.4' }}>
                         {breakdown.pendente > 0 && <div style={{ color: '#f59e0b' }}>⏳ Pendente: {breakdown.pendente}</div>}
@@ -581,7 +604,8 @@ const Dashboard = () => {
                       </div>
                     )}
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
