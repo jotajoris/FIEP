@@ -2072,15 +2072,52 @@ const ItemsByStatus = () => {
     }
   };
 
-  // Toggle "Pronto para Despacho" da OC inteira
+  // Toggle "Pronto para Despacho" da OC inteira - TAMBÉM muda status dos itens para pronto_envio
   const toggleProntoDespachoOC = async (poId) => {
     const currentValue = ocProntoDespacho[poId] || false;
+    const newValue = !currentValue;
+    
     try {
+      // Atualizar o flag pronto_despacho da OC
       await apiPatch(`${API}/purchase-orders/${poId}/pronto-despacho`, {
-        pronto_despacho: !currentValue
+        pronto_despacho: newValue
       });
+      
+      // Se está marcando como pronto, também muda o status dos itens em_separacao para pronto_envio
+      if (newValue) {
+        // Buscar a OC atual para pegar os índices dos itens em separação
+        const ocAtual = itemsGroupedByOC.find(oc => oc.po_id === poId);
+        if (ocAtual) {
+          // Mudar status de todos os itens em_separacao para pronto_envio
+          for (const item of ocAtual.items) {
+            if (item.status === 'em_separacao') {
+              await apiPatch(`${API}/purchase-orders/${poId}/items/${item._itemIndexInPO}`, {
+                status: 'pronto_envio'
+              });
+            }
+          }
+        }
+        alert('✅ OC marcada como pronta para envio! Os itens foram movidos para "Pronto p/ Envio".');
+        // Recarregar para atualizar a visualização
+        fetchItems();
+      } else {
+        // Se está desmarcando, volta os itens para em_separacao
+        const ocAtual = itemsGroupedByOC.find(oc => oc.po_id === poId);
+        if (ocAtual) {
+          for (const item of ocAtual.items) {
+            if (item.status === 'pronto_envio') {
+              await apiPatch(`${API}/purchase-orders/${poId}/items/${item._itemIndexInPO}`, {
+                status: 'em_separacao'
+              });
+            }
+          }
+        }
+        alert('⏳ OC desmarcada. Os itens voltaram para "Em Separação".');
+        fetchItems();
+      }
+      
       // Atualizar estado local imediatamente para feedback visual
-      setOcProntoDespacho(prev => ({ ...prev, [poId]: !currentValue }));
+      setOcProntoDespacho(prev => ({ ...prev, [poId]: newValue }));
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
       alert('Erro ao atualizar status.');
