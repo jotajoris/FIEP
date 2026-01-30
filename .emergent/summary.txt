@@ -5,7 +5,7 @@ The user requested a web platform to manage purchase orders (OCs) for their clie
 - Create OCs manually or by uploading single/multiple PDFs.
 - Implement a drag-and-drop UI for PDF uploads.
 - Automatically assign items to responsible users.
-- Track item status (, , , , ****, , ).
+- Track item status (, , , , , , ).
 - Two user roles:  and .
 - Forgot Password and user profile editing functionality.
 - A page to view all items assigned to a specific person.
@@ -29,7 +29,7 @@ The user requested a web platform to manage purchase orders (OCs) for their clie
 - Allow safe OC data updates by re-uploading its PDF without losing item-specific data.
 - On the Em Separação page, allow bulk status changes and application of shipping costs to selected items.
 - Automatically record  when an item's status becomes .
-- A Quantidade Comprada field for items.
+- A Quantidade Comprada field for items (now removed).
 - A new Estoque (Stock) page for surplus items and a Planilha de Itens (Item Sheet) for a consolidated view.
 - Indicate if a new OC item is already available in stock.
 - Implement a Use from Stock feature for pending items.
@@ -75,103 +75,125 @@ The user requested a web platform to manage purchase orders (OCs) for their clie
 - **On the  page, group items with the same code automatically.**
 - **Redesign the dashboard UI with distinct colors for status and responsible user cards.**
 - **On the Em Separação page, add a feature to select multiple items and move them to Pronto para Envio status.**
+- **Major UI overhaul on Em Separação page: Move Dados Adicionais to OC header, add item photos, and add emojis to checkboxes.**
+- **Make Pronto para Envio page group by OC.**
+- **Make OC delivery address editable from the header on Em Separação page.**
+- **Add Pronto para Envio status to all status change dropdowns.**
+- **Complete overhaul of Estoque page: Manual add, image thumbnails, and pagination.**
+- **On Estoque page, when adding an item, fetch previous purchase prices for the user to select from.**
 
 **User's preferred language**:
 The user's primary language is **Portuguese (Brazil)**. The next agent MUST respond in Portuguese.
 
 **what currently exists?**
-A full-stack Purchase Order management application. The agent has implemented several significant features and fixes in this session. It first verified the existing Group by Code feature, then implemented a new user request for automatic item grouping on the Em Separação and OC Details pages. To validate this, the agent imported a user-provided database backup. It then added a new item status, Pronto para Envio, and redesigned the dashboard UI with more colors as requested. A bug was introduced that broke editing on the Em Separação page; the agent successfully reverted the faulty change and implemented an alternative UI for moving items to the new status, which is now pending user review.
+A full-stack Purchase Order management application. The agent has performed a significant number of UI/UX iterations on the Em Separação page based on detailed user feedback, including reorganizing information, adding item photos, and improving usability. It also completely overhauled the Estoque (Stock) page, adding manual item entry, image thumbnails, and pagination. However, these rapid changes introduced new bugs. The Dashboard is currently broken due to a backend error, and adding items to stock is also failing. The agent has identified the root causes and was in the process of fixing them when the session ended.
 
 **Last working item**:
-- **Last item agent was working:** Fixing a critical bug introduced in this session. The user reported that editing items on the Em Separação page () was broken. The agent identified the cause was a recent change that automatically moved all items in an OC to Pronto para Envio status when a single checkbox was toggled. To resolve this, the agent reverted the faulty logic and implemented a new UI section allowing the user to select individual items via checkboxes and then click a dedicated button to move them to the Pronto para Envio status, restoring the edit functionality.
-- **Status:** USER VERIFICATION PENDING
-- **Agent Testing Done:** Y
-- **Which testing method agent to use?** Frontend testing agent. The agent should verify that it can select one or more items on the Em Separação page, click the Mover para Pronto button, and confirm the items' status changes and that they move to the Pronto p/ Envio page. It should also verify that editing other items remains functional.
+- **Last item agent was working:** The agent was multitasking to fix several critical user-reported issues and implement an enhancement.
+    1.  **Bug (Dashboard):** Fixing a  in  that was causing the Dashboard to fail.
+    2.  **Bug (Estoque):** Fixing a Method Not Allowed error on the Estoque page when adding quantity to an item that already exists in the stock database.
+    3.  **Enhancement (Estoque):** Implementing a feature to fetch and display previous purchase prices when adding an item to stock.
+- **Status:** IN PROGRESS
+- **Agent Testing Done:** N
+- **Which testing method agent to use?** both.
+    - **Backend:** Restart the backend and use  to test the  endpoint to confirm the Dashboard  is resolved.
+    - **Frontend:** Use the screenshot tool to test the Estoque page. Verify that adding quantity to an *existing* stock item now works correctly without a Method Not Allowed error.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P0)** Editing functionality on Em Separação page.
-- **Issue 2: (P1)** Performance and maintainability issues due to  monolith.
-- **Issue 3: (P1)** Code duplication and maintainability issues due to  monolith.
-- **Issue 4: (P2)** Long-standing bug where editing a duplicate item opens all instances.
-  
+- **Issue 1: (P0)** Dashboard is broken.
+- **Issue 2: (P0)** Error when adding quantity to an existing item in Estoque.
+- **Issue 3: (P2)** Long-standing bug where editing a duplicate item opens all instances.
+
 **Issues Detail:**
-- **Issue 1: Editing functionality on Em Separação page**
-    - **Attempted fixes:** The agent introduced a bug that broke editing. It fixed it by reverting the faulty  function and creating a new, separate UI section for moving selected items to the Pronto para Envio status.
+- **Issue 1: Dashboard is broken**
+    - **Attempted fixes:** The agent identified multiple places in  that accessed  without checking if the key exists. It applied fixes using  to prevent the .
     - **Next debug checklist:**
-        1.  Wait for user verification of the fix.
-        2.  If the user confirms the fix, this issue is resolved.
-        3.  If the user reports further problems, analyze the new UI logic in  around the  state and the  function.
-    - **Why fix this issue and what will be achieved with the fix?** Restores critical editing functionality on a key page of the application.
-    - **Status:** USER VERIFICATION PENDING
-    - **Is recurring issue?** N
-    - **Should Test frontend/backend/both after fix?** Frontend.
-    - **Blocked on other issue:** None.
+        1. Restart the backend service (backend: stopped
+backend: started).
+        2. Check backend logs for any startup errors: ==> /var/log/supervisor/backend.err.log <==
+INFO:     Stopping reloader process [42]
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [194] using WatchFiles
 
-- **Issue 2: Performance issues on Em Separação page**
-    - **Attempted fixes:** None in this session. Previous sessions created smaller components to break down .
-    - **Next debug checklist:** Continue the refactoring by replacing the inline JSX for the item edit form and the NF upload section with the  and  components.
-    - **Why fix this issue and what will be achieved with the fix?** Drastically improves frontend performance, readability, and maintainability on a critical page.
+==> /var/log/supervisor/backend.out.log <==.
+        3. Use  to hit the  endpoint, which feeds the dashboard, and verify it returns a  response instead of an error.
+    - **Why fix this issue and what will be achieved with the fix?** Restores a critical, top-level page of the application.
     - **Status:** IN PROGRESS
-    - **Is recurring issue?** N
-    - **Should Test frontend/backend/both after fix?** Frontend.
-    - **Blocked on other issue:** None.
-
-- **Issue 3: Code duplication and maintainability issues due to  monolith**
-    - **Attempted fixes:** None in this session. The old endpoint functions have still not been removed from .
-    - **Next debug checklist:** Carefully delete the now-duplicated functions from .
-    - **Why fix this issue and what will be achieved with the fix?** Resolves major technical debt, making the backend more scalable and easier to debug.
-    - **Status:** IN PROGRESS
-    - **Is recurring issue?** N
+    - **Is recurring issue?** Y (The  appeared in multiple places).
     - **Should Test frontend/backend/both after fix?** Backend.
     - **Blocked on other issue:** None.
 
-- **Issue 4: Editing duplicate items opens all instances**
-    - **Attempted fixes:** None. This is a long-standing issue.
-    - **Next debug checklist:** Re-create the scenario by having two identical items in an OC. Open one for editing and verify if the modal/form incorrectly affects both. The fix will likely involve ensuring unique keys/IDs are used for modals and state management.
-    - **Why fix this issue and what will be achieved with the fix?** Fixes a confusing and error-prone UI behavior.
+- **Issue 2: Error when adding quantity to an existing item in Estoque**
+    - **Attempted fixes:** The agent identified that the frontend function  was not calling the correct backend endpoint. It modified  to use  instead of the previous incorrect logic.
+    - **Next debug checklist:**
+        1. After verifying the backend is running (from Issue 1), navigate to the Estoque page.
+        2. Open the Adicionar ao Estoque modal.
+        3. Search for an item code that is already in the stock list (e.g., ).
+        4. Enter a quantity and click the Adicionar button.
+        5. Verify that the request succeeds (no console error) and the quantity in the table updates correctly.
+    - **Why fix this issue and what will be achieved with the fix?** Fixes a core functionality of the newly revamped Estoque page.
+    - **Status:** IN PROGRESS
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** Frontend.
+    - **Blocked on other issue:** Issue 1 (Dashboard is broken) as it indicates a general backend instability.
+
+- **Issue 3: Editing duplicate items opens all instances**
+    - **Attempted fixes:** None in this session.
+    - **Next debug checklist:** Re-create the scenario by having two identical items in an OC. Open one for editing and verify if the modal/form incorrectly affects both. The fix will likely involve ensuring unique keys/IDs (e.g., ) are used for modals and state management.
+    - **Why fix this issue and what will be achieved with the fix?** Fixes a confusing and error-prone UI behavior that has been reported multiple times.
     - **Status:** NOT STARTED
     - **Is recurring issue?** Y
     - **Should Test frontend/backend/both after fix?** Frontend.
     - **Blocked on other issue:** None.
 
 **In progress Task List**:
-- **Task 1: (P1)** Complete Frontend Refactoring of .
-    - **Where to resume:** Integrate the remaining pre-built components (, ) into .
-    - **What will be achieved with this?** A significantly smaller, faster, and more maintainable page component.
+- **Task 1: (P1)** Complete Estoque enhancement to show price history.
+    - **Where to resume:** In , the agent has already modified the  function to gather previous purchase data (). The next step is to render this data in the Adicionar ao Estoque modal, allowing the user to select a previous purchase to pre-fill the price and supplier fields.
+    - **What will be achieved with this?** Improves user workflow by reducing the need to manually look up past prices.
     - **Status:** IN PROGRESS
+    - **Should Test frontend/backend/both after fix?** Frontend.
+    - **Blocked on something:** Blocked by Issue 2: Error when adding quantity to an existing item in Estoque.
+
+- **Task 2: (P2)** Complete Frontend Refactoring of .
+    - **Where to resume:** Integrate the remaining pre-built components (, ) into . The file is still a massive monolith despite many UI changes.
+    - **What will be achieved with this?** A significantly smaller, faster, and more maintainable page component.
+    - **Status:** NOT STARTED
     - **Should Test frontend/backend/both after fix?** Frontend.
     - **Blocked on something:** None.
 
-- **Task 2: (P1)** Complete Backend Refactoring of .
+- **Task 3: (P2)** Complete Backend Refactoring of .
     - **Where to resume:** In , carefully delete the endpoint functions that have already been moved to the new route modules in .
-    - **What will be achieved with this?** A clean, modular backend architecture, eliminating duplicated code.
-    - **Status:** IN PROGRESS
+    - **What will be achieved with this?** A clean, modular backend architecture, eliminating duplicated code and potential routing conflicts.
+    - **Status:** NOT STARTED
     - **Should Test frontend/backend/both after fix?** Backend.
     - **Blocked on something:** None.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-  - (P3) Add a Create OC button directly on the Planilha de Contrato page.
+    - (P3) Implement Correios API for shipping price calculation (Preços e Prazos).
+    - (P3) Add functionality to download an Excel report from the Estoque page.
 - **Future Tasks:**
-  - (P3) Extend the Grouped View functionality to the Em Separação page.
+    - (P3) Add a Create OC button directly on the Planilha de Contrato page.
 
 **Completed work in this session**
-- **Feature: Automatic Item Grouping:**
-  - Implemented automatic grouping for items with the same code *within the same OC* on the Em Separação page ().
-  - Implemented the same automatic grouping logic on the OC Details page ().
-- **Feature: New Status Pronto para Envio:**
-  - Added a new  status to the entire application (backend schema, API endpoints, and all relevant frontend components).
-  - Implemented a UI on the Em Separação page to select items and move them to this new status.
-- **Feature: Dashboard Redesign:**
-  - Removed the Total Itens card.
-  - Added the total item count to the Itens por Responsável title.
-  - Added a new card for the Pronto para Envio status.
-  - Implemented distinct color-coding for both status cards and Itens por Responsável cards based on user feedback.
-- **Bug Fix: Em Separação Editing:**
-  - Diagnosed and fixed a bug introduced during the session that prevented users from editing items on the  page. Reverted the faulty logic and implemented a safer alternative.
-- **Data: Database Restore:**
-  - Successfully imported a user-provided JSON backup into the local MongoDB instance to enable testing with real production data.
+- **Bug Fix:** Restored item editing functionality on the Em Separação page by fixing the component rendering logic.
+- **Feature:** Major UI overhaul of the Em Separação page based on iterative user feedback:
+    - Moved Dados Adicionais da NF to the main OC header.
+    - Made the OC delivery address editable from the header.
+    - Added larger, functional item photos to the item list.
+    - Added emojis (📄, 🚚, 🔄) to selection checkboxes for clarity.
+- **Feature:** Added the Pronto para Envio status to all bulk status-change dropdowns across the application.
+- **Feature:** Implemented grouping by OC on the Pronto para Envio status page.
+- **Feature:** Complete overhaul of the Estoque page:
+    - Implemented a new modal for adding items manually.
+    - Logic now detects if an item code exists in stock, in other OCs, or is completely new.
+    - Added backend endpoints (, ) to support this.
+    - Replaced image links with interactive thumbnails in the stock list.
+    - Added pagination controls (5, 10, 15, 20, All).
+- **Bug Fix:** Patched several  crashes in .
+- **Bug Fix:** Created a missing  endpoint that was causing a 404 error.
 
 **Earlier issues found/mentioned but not fixed**
 - **Issue 1:** (P2) Editing duplicate items opens all instances. This long-standing recurring issue remains unresolved.
@@ -185,56 +207,57 @@ A full-stack Purchase Order management application. The agent has implemented se
 
 
 **Key Technical Concepts**
-- **React State & Hooks:** Extensive use of , , and  for complex UI logic, data fetching, and state synchronization.
-- **Conditional Rendering:** Implemented complex conditional rendering for grouped vs. individual item views and dynamic UI elements based on item status.
-- **Bug Diagnosis and Reversal:** Identified a bug's root cause (a side effect in a state-changing function), reverted the logic, and implemented a safer alternative.
-- **Database Management:** Used  to restore a user-provided database backup, enabling accurate testing with production data.
-- **UI/UX Iteration:** Rapidly iterated on the UI based on specific user feedback, particularly regarding color schemes and layout on the Dashboard.
+- **Iterative UI Development:** The agent performed multiple, rapid cycles of implementing UI changes based on user screenshots and detailed feedback, demonstrating adaptability.
+- **Backend-Frontend Synchronization:** Created new backend endpoints and immediately integrated them into the corresponding frontend components ().
+- **Root Cause Analysis:** Successfully debugged multiple issues, from frontend logic errors (Method Not Allowed) to backend data integrity crashes (), by analyzing console logs, server logs, and application code.
+- **State Management (React):** Handled complex state for modals, editing states, and pagination within large React components.
+- **API Design:** Added new RESTful endpoints to the FastAPI backend (, ) to support new user requirements.
 
 **key DB schema**
-- **:** The  Enum was updated to include a new member: . The  and  Pydantic models were also updated to include fields for the new status count.
+No direct schema changes were made, but the new Estoque endpoints interact with the  collection and the logic for  in the  collection was made more robust.
 
 **All files of reference**
-- : **CRITICAL.** Heavily modified to add automatic grouping, the new Pronto para Envio status flow, and the subsequent bug fix.
-- : **CRITICAL.** Completely redesigned with new cards, removed cards, and new color schemes.
-- : Modified to implement automatic item grouping, matching the user's request.
-- : Modified the  endpoint to calculate and return counts for the new  status.
-- : Modified to define the new  status and update related data models.
-- : Updated to provide colors and labels for the new status.
+- : **CRITICAL.** Subject of extensive UI/UX changes. Logic for OC headers, item display, and status dropdowns was heavily modified.
+- : **CRITICAL.** Completely rewritten to implement manual entry, pagination, image thumbnails, and price history lookup.
+- : **CRITICAL.** Multiple patches applied to fix  crashes. New endpoints were also added. Needs refactoring.
+- : **MODIFIED.** New endpoints  and  were added.
+- : Modified to include the 'Pronto p/ Envio' status.
+- : Modified to include the 'Pronto p/ Envio' status.
+- : Modified to include the 'Pronto p/ Envio' status.
 
 **Areas that need refactoring**:
-- : **CRITICAL.** Still contains duplicated endpoint code that must be removed.
-- : **CRITICAL.** Remains a massive monolith. Although new features were added, the underlying refactoring task has not progressed.
+- : **CRITICAL.** Still contains thousands of lines of duplicated code and conflicting routes with files in . This is a source of bugs.
+- : **CRITICAL.** Remains a massive monolith (over 4,500 lines) despite many feature changes, making it hard to maintain and debug.
 
 **key api endpoints**
-- : Modified to return .
-- : The correct endpoint for updating a single item's status, which was used in the final bug fix.
-- : The new endpoint used to move multiple selected items to the Pronto para Envio status.
+- : The endpoint for the Dashboard, which was failing due to a .
+- : Newly created endpoint to add a new item to the stock collection.
+- : Newly created endpoint to increment the quantity of an existing item in the stock collection.
+- : Newly created endpoint to prevent a 404 error on the Estoque page.
 
 **Critical Info for New Agent**
-- **Verify the bug fix immediately.** The highest priority is to confirm with the user that the editing functionality on the Em Separação page is restored and that the new Mover para Pronto p/ Envio feature works as they expect.
-- The preview environment has been **populated with the user's real data**. The database was restored from . This data should be used for all testing.
-- A new status,  (Pronto para Envio), is now a core part of the application flow. It sits between Em Separação and Em Trânsito.
-- The major refactoring tasks for  and  are still outstanding and represent significant technical debt.
+- **PRIORITIZE BUG FIXES:** The user has reported that the Dashboard and Estoque pages are broken. You must fix **Issue 1 (Dashboard)** and **Issue 2 (Estoque)** before continuing with any new features.
+- **Estoque Enhancement is In-Progress:** The agent has already done the backend work (fetching previous purchase data) for the price history enhancement on the Estoque page. You need to complete the frontend part by rendering this data in the modal.
+- **Verify Backend Fixes:** The  was found in multiple places. After restarting the backend, be sure to test not just the Dashboard but also other pages that list OCs to ensure the fix is comprehensive.
+- **Refactoring Debt is High:** Both  and  are major sources of technical debt and bugs. After the current P0 issues are resolved, strongly consider proposing to the user that you tackle these refactoring tasks to improve application stability.
 
 **documents and test reports created in this job**
-- The user-provided database backup was downloaded to  and has been imported.
+- None.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Fix this, each responsible persons card should have a different color." (COMPLETED)
-2.  **User:** "And this too, I want each status card to have a different color." (COMPLETED)
-3.  **User:** "The green colors are too similar. Revert to the clean style with just a colored border, but use 8 distinct colors." (COMPLETED)
-4.  **User:** "On the Em Separação page, when I click the Pronto para Despacho checkbox, I want to select items to be moved to Pronto para Envio." (COMPLETED, after a bug fix)
-5.  **User:** "You broke the entire Em Separação page, I cant edit any items. Revert this change. (BUG REPORTED)
-6.  **User:** I want to be able to go into the Em Separação page and choose items to set as Pronto para Envio when they are ready. (NEW REQUIREMENT AFTER BUG)
-7.  **Agent:** Reverted the change and implemented a new UI to select items individually for status change. (FIX IMPLEMENTED)
-8.  **Agent:** Shared a screenshot of the new UI and confirmed the fix. (PENDING USER VERIFICATION)
+1. **User:** The Pronto para Envio status is missing from the bulk status change dropdown. (COMPLETED)
+2. **User:** Requested a major overhaul of the Estoque page: manual add, image thumbnails, pagination. (COMPLETED)
+3. **User:** Error (Method Not Allowed) when trying to add an item on the new Estoque page. (IN PROGRESS)
+4. **User:** Dashboard is broken. (IN PROGRESS)
+5. **User:** When adding to stock, I want it to pull the previous prices paid for that item so I can choose one. (IN PROGRESS)
 
 **Project Health Check:**
-- **Broken:** No known broken functionality, but the latest fix for the editing bug on the Em Separação page is awaiting user verification.
+- **Broken:**
+    - The Dashboard page is not loading due to a backend error ().
+    - Adding quantity to an existing item on the Estoque page fails with a Method Not Allowed error.
 - **Technical Debt:**
-    - **CRITICAL:**  contains thousands of lines of duplicated code.
-    - **CRITICAL:**  is a massive 6,500+ line monolith.
+    - **CRITICAL:**  is a monolith with duplicated routes, causing conflicts and bugs.
+    - **CRITICAL:**  is an extremely large component, making it difficult to maintain.
 
 **3rd Party Integrations**
 - **Resend:** For emails.
@@ -242,14 +265,14 @@ A full-stack Purchase Order management application. The agent has implemented se
 - **APScheduler:** For background jobs.
 - **openpyxl:** For parsing  files.
 - **pytesseract & Tesseract OCR:** For OCR on scanned PDFs.
-- **Correios Rastro API:** For automatic package tracking.
+- **Correios Rastro API:** For automatic package tracking (user contract details are in ).
 - **ViaCEP:** For CEP lookup by address.
 
 **Testing status**
 - **Testing agent used after significant changes:** NO
 - **Troubleshoot agent used after agent stuck in loop:** NO
 - **Test files created:** None.
-- **Known regressions:** A regression was introduced (broken editing) and subsequently fixed within the session.
+- **Known regressions:** The Dashboard and Estoque functionalities broke as a side effect of recent feature implementations.
 
 **Credentials to test flow:**
 - **Admin Login (João):**
@@ -257,4 +280,4 @@ A full-stack Purchase Order management application. The agent has implemented se
     - **Password:** 
 
 **What agent forgot to execute**
-- The agent did not forget any tasks but instead reacted to a continuous flow of user requests and a critical bug report. The original plan to tackle refactoring was correctly deprioritized to handle the user's immediate needs.</analysis>
+- The agent did not forget to execute anything. It was actively debugging user-reported issues and implementing an enhancement when the session ended. The primary next steps are to complete and verify the in-progress fixes.</analysis>
