@@ -163,9 +163,13 @@ const RastreioLoteForm = memo(({
               }}
             >
               <option value="">-- Manter atual --</option>
+              <option value="pendente">⏳ Pendente</option>
+              <option value="cotado">💰 Cotado</option>
+              <option value="comprado">🛒 Comprado</option>
+              <option value="em_separacao">📦 Em Separação</option>
+              <option value="pronto_envio">📤 Pronto p/ Envio</option>
+              <option value="em_transito">🚚 Em Trânsito</option>
               <option value="entregue">✅ Entregue</option>
-              <option value="em_separacao">📦 Voltar p/ Em Separação</option>
-              <option value="comprado">🛒 Voltar p/ Comprado</option>
             </select>
             {novoStatus === 'entregue' && (
               <span style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: '500' }}>
