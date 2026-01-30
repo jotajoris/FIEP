@@ -18,6 +18,7 @@ class ItemStatus(str, Enum):
     COTADO = "cotado"
     COMPRADO = "comprado"
     EM_SEPARACAO = "em_separacao"
+    PRONTO_ENVIO = "pronto_envio"
     EM_TRANSITO = "em_transito"
     ENTREGUE = "entregue"
 
