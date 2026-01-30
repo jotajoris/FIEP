@@ -98,6 +98,14 @@ const PODetails = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
+  // Filtros de pesquisa
+  const [filtros, setFiltros] = useState({
+    codigo: '',
+    descricao: '',
+    fornecedor: '',
+    status: ''
+  });
+
   // Agrupamento automático de itens com mesmo código (para Em Separação)
   const itensAgrupados = useMemo(() => {
     if (!po?.items) return [];
