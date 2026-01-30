@@ -1330,7 +1330,8 @@ const PODetails = () => {
               })}
             </div>
           );
-          })}
+          })
+          )}
           
           {/* Modal de imagem expandida */}
           {imagemExpandida && (
@@ -1381,9 +1382,9 @@ const PODetails = () => {
           )}
           
           {/* Paginação */}
-          {itensAgrupados.length > 5 && (
+          {itensAgrupadosFiltrados.length > 5 && (
             <Pagination
-              totalItems={itensAgrupados.length}
+              totalItems={itensAgrupadosFiltrados.length}
               currentPage={currentPage}
               itemsPerPage={itemsPerPage}
               onPageChange={setCurrentPage}
