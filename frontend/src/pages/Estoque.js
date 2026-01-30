@@ -151,9 +151,20 @@ const Estoque = () => {
     
     setBuscando(true);
     setItemEncontrado(null);
+    setItemExistenteEstoque(null);
     
     try {
       const token = localStorage.getItem('token');
+      
+      // Primeiro, verificar se já existe no estoque
+      const itemNoEstoque = estoque.find(e => e.codigo_item === codigoBusca);
+      if (itemNoEstoque) {
+        setItemExistenteEstoque(itemNoEstoque);
+        setBuscando(false);
+        return;
+      }
+      
+      // Se não existe no estoque, buscar nas OCs
       const response = await axios.get(`${API}/api/purchase-orders?limit=0`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -172,13 +183,22 @@ const Estoque = () => {
               numero_oc: po.numero_oc,
               item_index: idx
             });
+            setAddDescricao(item.descricao || '');
             setBuscando(false);
             return;
           }
         }
       }
       
-      alert('Item não encontrado ou não está em status "Comprado" ou superior.');
+      // Item não encontrado - permitir adicionar manualmente
+      setItemEncontrado({
+        codigo_item: codigoBusca,
+        descricao: '',
+        status: 'novo',
+        isNew: true
+      });
+      setAddDescricao('');
+      
     } catch (error) {
       console.error('Erro ao buscar item:', error);
       alert('Erro ao buscar item.');
