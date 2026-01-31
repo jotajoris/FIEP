@@ -5118,6 +5118,27 @@ async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
     nf_por_filename = {}  # filename -> lista de itens que usam essa NF
     
     for po in pos:
+        # ========= NFs DE VENDA NO NÍVEL DA OC =========
+        # Essas são as NFs que são anexadas à OC inteira (não a itens específicos)
+        nfs_venda_oc = po.get('notas_fiscais_venda', [])
+        for nf in nfs_venda_oc:
+            nfs_venda.append({
+                'id': nf.get('id'),
+                'filename': nf.get('filename'),
+                'content_type': nf.get('content_type'),
+                'ncm': nf.get('ncm'),
+                'numero_nf': nf.get('numero_nf'),
+                'uploaded_at': nf.get('uploaded_at'),
+                'numero_oc': po.get('numero_oc'),
+                'codigo_item': 'OC COMPLETA',  # Indicar que é da OC, não de item
+                'descricao': f"NF de Venda - {po.get('numero_oc')}",
+                'po_id': po.get('id'),
+                'item_index': -1,  # -1 indica que é no nível da OC
+                'baixado_por': nf.get('baixado_por'),
+                'baixado_em': nf.get('baixado_em'),
+                'tipo_nf': 'nf_venda_oc'
+            })
+        
         for idx, item in enumerate(po.get('items', [])):
             # NFs de compra (fornecedor)
             for nf in item.get('notas_fiscais_fornecedor', []):
@@ -5144,10 +5165,11 @@ async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
                     'po_id': po.get('id'),
                     'item_index': idx,
                     'baixado_por': nf.get('baixado_por'),
-                    'baixado_em': nf.get('baixado_em')
+                    'baixado_em': nf.get('baixado_em'),
+                    'tipo_nf': 'nf_fornecedor'
                 })
             
-            # NF de venda (revenda)
+            # NF de venda (revenda) - no nível do item
             nf_revenda = item.get('nota_fiscal_revenda')
             if nf_revenda:
                 nfs_venda.append({
@@ -5163,7 +5185,8 @@ async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
                     'po_id': po.get('id'),
                     'item_index': idx,
                     'baixado_por': nf_revenda.get('baixado_por'),
-                    'baixado_em': nf_revenda.get('baixado_em')
+                    'baixado_em': nf_revenda.get('baixado_em'),
+                    'tipo_nf': 'nf_revenda_item'
                 })
     
     # Marcar NFs que são usadas em múltiplos itens
