@@ -219,32 +219,9 @@ const ItemsByStatus = () => {
         const response = await apiGet(`${API}/items/by-status/${status}`);
         purchaseOrders = response.data?.data || [];
         
-        // Para "em_separacao" e "pronto_envio", precisamos dos itens pendentes por OC
-        // Fazer busca separada só das OCs que temos
-        if (status === 'em_separacao' || status === 'pronto_envio') {
-          const statusAvancados = ['em_separacao', 'pronto_envio', 'em_transito', 'entregue'];
-          const itensPendentesMap = {};
-          
-          // Buscar dados completos das OCs que têm itens neste status
-          const ocIds = purchaseOrders.map(po => po.id);
-          for (const ocId of ocIds.slice(0, 50)) { // Limitar a 50 OCs para não sobrecarregar
-            try {
-              const poResponse = await apiGet(`${API}/purchase-orders/${ocId}`);
-              const po = poResponse.data;
-              if (po && po.items) {
-                const itensPendentes = po.items
-                  .filter(item => !statusAvancados.includes(item.status))
-                  .map(item => item.codigo_item);
-                if (itensPendentes.length > 0) {
-                  itensPendentesMap[po.id] = [...new Set(itensPendentes)];
-                }
-              }
-            } catch (err) {
-              console.warn(`Erro ao buscar OC ${ocId}:`, err);
-            }
-          }
-          setItensProximaRemessaPorOC(itensPendentesMap);
-        }
+        // Nota: itens pendentes por OC não são carregados no endpoint otimizado
+        // A funcionalidade "Próxima Remessa" não estará disponível para status otimizados
+        // mas o carregamento será muito mais rápido
       } else {
         // Para pendentes e cotados, manter lógica antiga (precisa de todos os itens para agrupamento)
         const response = await apiGet(`${API}/purchase-orders?limit=0`);
