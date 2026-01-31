@@ -2150,6 +2150,19 @@ const ItemsByStatus = () => {
     }
   };
 
+  // Dados bancários padrão
+  const dadosBancariosDefault = {
+    banco: '341 - Itaú Unibanco',
+    conta: '98814-9',
+    agencia: '3978',
+    pix: '46.663.556/0001-69'
+  };
+  
+  // Função para obter dados bancários (customizados ou padrão)
+  const getDadosBancarios = (poId) => {
+    return dadosBancariosPorOC[poId] || dadosBancariosDefault;
+  };
+
   // Função para gerar texto dos Dados Adicionais da NF
   const gerarDadosAdicionaisNF = (item) => {
     // Extrair apenas o número da OC (ex: "OC-2.118938" -> "2.118938")
@@ -2160,6 +2173,9 @@ const ItemsByStatus = () => {
     // Buscar itens que irão na próxima remessa para esta OC
     const itensPendentes = itensProximaRemessaPorOC[item.po_id] || [];
     
+    // Obter dados bancários (customizados ou padrão)
+    const dados = getDadosBancarios(item.po_id);
+    
     let texto = `Endereço da entrega: ${endereco}
 NF referente à OC - ${numeroOC}`;
     
@@ -2169,10 +2185,10 @@ NF referente à OC - ${numeroOC}`;
     }
     
     texto += `\nDADOS BANCÁRIOS
-Banco: 341 - Itaú Unibanco
-Conta: 98814-9
-Agência: 3978
-Chave PIX: 46.663.556/0001-69`;
+Banco: ${dados.banco}
+Conta: ${dados.conta}
+Agência: ${dados.agencia}
+Chave PIX: ${dados.pix}`;
     
     return texto;
   };
