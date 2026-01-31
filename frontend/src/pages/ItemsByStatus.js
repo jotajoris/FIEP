@@ -70,6 +70,16 @@ const ItemsByStatus = () => {
   const [itensParaNFVenda, setItensParaNFVenda] = useState({});  // {po_id: Set(uniqueId)} - Itens selecionados para NF de Venda
   const [agruparPorCodigoOC, setAgruparPorCodigoOC] = useState({});  // {po_id: boolean} - Agrupar itens por código dentro da OC
   
+  // Estados para edição dos Dados Bancários da NF
+  const [editingDadosNF, setEditingDadosNF] = useState(null);  // po_id da OC sendo editada
+  const [dadosNFTemp, setDadosNFTemp] = useState({
+    banco: '341 - Itaú Unibanco',
+    conta: '98814-9',
+    agencia: '3978',
+    pix: '46.663.556/0001-69'
+  });
+  const [dadosBancariosPorOC, setDadosBancariosPorOC] = useState({});  // {po_id: {banco, conta, agencia, pix}}
+  
   // Paginação para Em Separação
   const [emSeparacaoPage, setEmSeparacaoPage] = useState(1);
   const ITEMS_PER_PAGE_EM_SEPARACAO = 5;
