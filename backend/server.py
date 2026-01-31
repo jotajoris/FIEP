@@ -4497,13 +4497,17 @@ async def upload_imagem_por_codigo(
     # Gerar URL para servir a imagem
     imagem_url = f"/api/item-images-db/{codigo_item}"
     
-    # Salvar na coleção imagens_itens
+    # Salvar na coleção imagens_itens (formato padronizado)
     await db.imagens_itens.update_one(
         {"codigo_item": codigo_item},
         {"$set": {
             "codigo_item": codigo_item,
             "imagem_url": imagem_url,
-            "updated_at": datetime.now(timezone.utc).isoformat()
+            "imagem_base64": imagem_base64,  # SALVAR BASE64 NO BANCO
+            "content_type": content_type,
+            "tamanho_bytes": len(contents),
+            "data_upload": datetime.now(timezone.utc).isoformat(),
+            "uploaded_by": current_user.get('email')
         }},
         upsert=True
     )
@@ -4521,7 +4525,9 @@ async def upload_imagem_por_codigo(
         {"$set": {"imagem_url": imagem_url}}
     )
     
-    return {"success": True, "message": f"Imagem salva para o item {codigo_item}"}
+    logger.info(f"Imagem salva no MongoDB para código {codigo_item}: {len(contents)} bytes")
+    
+    return {"success": True, "message": f"Imagem salva para o item {codigo_item}", "imagem_url": imagem_url}
 
 
 @api_router.get("/itens/{codigo_item}/imagem")
