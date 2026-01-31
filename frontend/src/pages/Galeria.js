@@ -409,34 +409,60 @@ const Galeria = () => {
                   <span style={{ fontSize: '0.85rem' }}>Sem foto</span>
                 </div>
                 
-                {/* Botão de Upload sobre a imagem */}
-                <label
-                  style={{
-                    position: 'absolute',
-                    bottom: '8px',
-                    right: '8px',
-                    background: isUploading ? '#9ca3af' : '#3b82f6',
-                    color: 'white',
-                    padding: '0.4rem 0.75rem',
-                    borderRadius: '6px',
-                    fontSize: '0.75rem',
-                    fontWeight: '600',
-                    cursor: isUploading ? 'wait' : 'pointer',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.25rem'
-                  }}
-                >
-                  {isUploading ? '⏳ Enviando...' : '📤 Upload'}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload(item.codigo_item, e)}
-                    disabled={isUploading}
-                    style={{ display: 'none' }}
-                  />
-                </label>
+                {/* Botões de Upload e Delete sobre a imagem */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '8px',
+                  right: '8px',
+                  display: 'flex',
+                  gap: '4px'
+                }}>
+                  {imageUrl && (
+                    <button
+                      onClick={() => handleDeleteImage(item.codigo_item)}
+                      style={{
+                        background: '#ef4444',
+                        color: 'white',
+                        padding: '0.4rem 0.6rem',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                        border: 'none',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                      title="Remover foto"
+                    >
+                      🗑️
+                    </button>
+                  )}
+                  <label
+                    style={{
+                      background: isUploading ? '#9ca3af' : '#3b82f6',
+                      color: 'white',
+                      padding: '0.4rem 0.75rem',
+                      borderRadius: '6px',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      cursor: isUploading ? 'wait' : 'pointer',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem'
+                    }}
+                  >
+                    {isUploading ? '⏳' : '📤'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload(item.codigo_item, e)}
+                      disabled={isUploading}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                </div>
               </div>
 
               {/* Código */}
