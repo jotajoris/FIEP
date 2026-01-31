@@ -209,12 +209,53 @@ const PODetails = () => {
     try {
       const response = await apiGet(`${API}/purchase-orders/${id}`);
       setPo(response.data);
+      
+      // Verificar se tem PDF disponível para download
+      try {
+        const pdfCheck = await apiGet(`${API}/purchase-orders/${id}/has-pdf`);
+        setHasPdf(pdfCheck.data?.has_pdf || false);
+      } catch (e) {
+        setHasPdf(false);
+      }
     } catch (error) {
       console.error('Erro ao carregar OC:', error);
       alert('Ordem de Compra não encontrada');
       navigate('/');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Função para download do PDF da OC
+  const handleDownloadPDF = async () => {
+    setDownloadingPdf(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/purchase-orders/${id}/download-pdf`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Erro ao baixar PDF');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${po?.numero_oc || 'OC'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (error) {
+      console.error('Erro ao baixar PDF:', error);
+      alert(error.message || 'Erro ao baixar o PDF da OC');
+    } finally {
+      setDownloadingPdf(false);
     }
   };
 
