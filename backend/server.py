@@ -3316,27 +3316,50 @@ async def verificar_rastreios_agendado():
                             now = datetime.now(timezone.utc)
                             
                             # ===== LÓGICA PARA ITENS "PRONTO_ENVIO" =====
-                            # Se está "pronto_envio" e tem eventos de movimentação → mudar para "em_transito"
+                            # Se está "pronto_envio" e tem eventos de movimentação REAL → mudar para "em_transito"
+                            # IMPORTANTE: "etiqueta emitida" ou "objeto criado eletronicamente" NÃO são postagens reais
                             if status_atual == 'pronto_envio' and len(eventos) > 0:
-                                # Verificar se tem evento de postagem/movimentação
+                                # Verificar se tem evento de postagem/movimentação REAL
                                 evento_recente = eventos[0] if eventos else {}
                                 descricao = evento_recente.get('descricao', '').lower()
+                                status_evento = evento_recente.get('status', '').lower()
                                 
-                                # Palavras que indicam que o objeto foi postado/está em movimento
-                                indicadores_postagem = [
+                                # Palavras que indicam que o objeto foi REALMENTE postado/está em movimento
+                                indicadores_postagem_real = [
                                     'objeto postado',
-                                    'postado',
-                                    'objeto recebido',
+                                    'postado após o horário limite',
+                                    'objeto recebido na unidade',
+                                    'objeto recebido pelos correios',
                                     'em trânsito',
                                     'encaminhado',
                                     'saiu para',
-                                    'em transferência'
+                                    'em transferência',
+                                    'objeto coletado',
                                 ]
                                 
-                                foi_postado = any(ind in descricao for ind in indicadores_postagem)
+                                # Palavras que indicam que a etiqueta foi apenas EMITIDA (não postado de verdade)
+                                indicadores_apenas_etiqueta = [
+                                    'objeto criado eletronicamente',
+                                    'etiqueta',
+                                    'pré-postagem',
+                                    'aguardando postagem',
+                                    'pendente',
+                                    'coleta agendada',
+                                    'informações prestadas',
+                                    'ar digital',
+                                ]
                                 
-                                if foi_postado or len(eventos) >= 1:
-                                    # Tem pelo menos um evento = foi postado
+                                # Verificar se é postagem real (e não apenas etiqueta emitida)
+                                texto_analise = descricao + ' ' + status_evento
+                                
+                                # Se contém indicador de "apenas etiqueta", NÃO é postagem real
+                                apenas_etiqueta = any(ind in texto_analise for ind in indicadores_apenas_etiqueta)
+                                
+                                # Verificar se é postagem real
+                                foi_postado_real = any(ind in texto_analise for ind in indicadores_postagem_real)
+                                
+                                # Só marcar como postado se for postagem REAL e NÃO for apenas etiqueta
+                                if foi_postado_real and not apenas_etiqueta:
                                     item['status'] = 'em_transito'
                                     item['data_postagem'] = now.isoformat()
                                     stats["postados"] += 1
@@ -3349,6 +3372,9 @@ async def verificar_rastreios_agendado():
                                     )
                                     
                                     logger.info(f"Item {item['codigo_item']} postado - {codigo}")
+                                elif apenas_etiqueta:
+                                    # Apenas atualizar eventos sem mudar status
+                                    logger.debug(f"Item {item['codigo_item']} - apenas etiqueta emitida, aguardando postagem real")
                             
                             # ===== LÓGICA PARA ITENS "EM_TRANSITO" =====
                             elif status_atual == 'em_transito':
@@ -7462,17 +7488,18 @@ async def startup_event():
     except Exception as e:
         logging.getLogger(__name__).warning(f"Erro ao criar índices: {e}")
     
-    # Agendar verificação de rastreios para 15h horário de Brasília (18h UTC)
+    # Agendar verificação de rastreios a cada hora (horário de Brasília)
+    # Executa no minuto 0 de cada hora: 00:00, 01:00, 02:00, ..., 23:00
     brasilia_tz = pytz.timezone('America/Sao_Paulo')
     scheduler.add_job(
         verificar_rastreios_agendado,
-        CronTrigger(hour=15, minute=0, timezone=brasilia_tz),
-        id='verificar_rastreios_diario',
-        name='Verificação diária de rastreios às 15h Brasília',
+        CronTrigger(minute=0, timezone=brasilia_tz),  # A cada hora cheia
+        id='verificar_rastreios_horario',
+        name='Verificação de rastreios a cada hora',
         replace_existing=True
     )
     scheduler.start()
-    logging.getLogger(__name__).info("Scheduler iniciado - Verificação de rastreios agendada para 15:00 (Brasília)")
+    logging.getLogger(__name__).info("Scheduler iniciado - Verificação de rastreios agendada para cada hora cheia (Brasília)")
 
 
 @app.on_event("shutdown")
