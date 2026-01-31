@@ -209,8 +209,47 @@ const ItemsByStatus = () => {
     setLoading(true);
     setError(null);
     try {
-      // Carregar itens
-      const response = await apiGet(`${API}/purchase-orders?limit=0`);
+      // Para status específicos (em_separacao, pronto_envio, em_transito, entregue), 
+      // usar endpoint otimizado que filtra no banco de dados
+      const statusOtimizados = ['em_separacao', 'pronto_envio', 'em_transito', 'entregue'];
+      let purchaseOrders = [];
+      
+      if (statusOtimizados.includes(status)) {
+        // ENDPOINT OTIMIZADO - busca apenas itens do status específico
+        const response = await apiGet(`${API}/items/by-status/${status}`);
+        purchaseOrders = response.data?.data || [];
+        
+        // Para "em_separacao" e "pronto_envio", precisamos dos itens pendentes por OC
+        // Fazer busca separada só das OCs que temos
+        if (status === 'em_separacao' || status === 'pronto_envio') {
+          const statusAvancados = ['em_separacao', 'pronto_envio', 'em_transito', 'entregue'];
+          const itensPendentesMap = {};
+          
+          // Buscar dados completos das OCs que têm itens neste status
+          const ocIds = purchaseOrders.map(po => po.id);
+          for (const ocId of ocIds.slice(0, 50)) { // Limitar a 50 OCs para não sobrecarregar
+            try {
+              const poResponse = await apiGet(`${API}/purchase-orders/${ocId}`);
+              const po = poResponse.data;
+              if (po && po.items) {
+                const itensPendentes = po.items
+                  .filter(item => !statusAvancados.includes(item.status))
+                  .map(item => item.codigo_item);
+                if (itensPendentes.length > 0) {
+                  itensPendentesMap[po.id] = [...new Set(itensPendentes)];
+                }
+              }
+            } catch (err) {
+              console.warn(`Erro ao buscar OC ${ocId}:`, err);
+            }
+          }
+          setItensProximaRemessaPorOC(itensPendentesMap);
+        }
+      } else {
+        // Para pendentes e cotados, manter lógica antiga (precisa de todos os itens para agrupamento)
+        const response = await apiGet(`${API}/purchase-orders?limit=0`);
+        purchaseOrders = response.data.data || response.data || [];
+      }
       
       // Para itens pendentes ou cotados, carregar também o mapa de estoque disponível
       if (status === 'pendente' || status === 'cotado') {
@@ -247,9 +286,6 @@ const ItemsByStatus = () => {
           setLimitesContrato({});
         }
       }
-      
-      // O endpoint retorna {data: [...], total: ..., page: ...}
-      const purchaseOrders = response.data.data || response.data || [];
       
       const allItems = [];
       const nfVendaByOC = {}; // Armazenar NF de Venda por OC (última)
