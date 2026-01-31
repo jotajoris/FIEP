@@ -187,10 +187,39 @@ const ItemsByStatus = () => {
     'entregue': 'Entregues'
   };
 
+  // Carregar dados bancários personalizados de todas as OCs
+  const loadDadosBancarios = async () => {
+    try {
+      const response = await apiGet(`${API}/dados-bancarios/todas-ocs`);
+      if (response.data) {
+        setDadosBancariosPorOC(response.data);
+      }
+    } catch (err) {
+      console.warn('Erro ao carregar dados bancários:', err);
+    }
+  };
+
+  // Salvar dados bancários no backend
+  const salvarDadosBancarios = async (po_id, dados) => {
+    try {
+      const response = await apiPatch(`${API}/purchase-orders/${po_id}/dados-bancarios`, dados);
+      if (response.data?.success) {
+        setDadosBancariosPorOC(prev => ({ ...prev, [po_id]: dados }));
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Erro ao salvar dados bancários:', err);
+      alert('Erro ao salvar dados bancários: ' + (err.response?.data?.detail || err.message));
+      return false;
+    }
+  };
+
   useEffect(() => {
     loadItems();
     loadFornecedoresSistema();
     loadImagensItens();
+    loadDadosBancarios();  // Carregar dados bancários personalizados
     setSelectedItems(new Set());  // Limpar seleção ao trocar de status
     setCurrentPage(1);  // Reset página ao trocar de status
   }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
