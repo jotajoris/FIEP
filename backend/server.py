@@ -1524,6 +1524,15 @@ async def upload_pdf_purchase_order(file: UploadFile = File(...), current_user: 
     if oc_data.get("cnpj_requisitante"):
         doc['cnpj_requisitante'] = oc_data["cnpj_requisitante"]
     
+    # SALVAR PDF ORIGINAL para download posterior
+    import base64
+    doc['pdf_original'] = {
+        'filename': file.filename,
+        'content_type': 'application/pdf',
+        'data': base64.b64encode(pdf_content).decode('utf-8'),
+        'uploaded_at': datetime.now(timezone.utc).isoformat()
+    }
+    
     await db.purchase_orders.insert_one(doc)
     
     warning = ""
