@@ -233,7 +233,7 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 - [x] ~~Implementar "Agrupar por Código" na página Em Separação (dentro da mesma OC)~~ ✅ IMPLEMENTADO
 
 ### P1 (Alta Prioridade)
-- [ ] Completar "Dados Adicionais da NF" editável (modal + backend endpoint)
+- [x] ~~Completar "Dados Adicionais da NF" editável (modal + backend endpoint)~~ ✅
 - [ ] Remover código duplicado do `server.py` (refatoração backend)
 - [ ] Integrar componentes restantes em `ItemsByStatus.js` (refatoração frontend)
 
