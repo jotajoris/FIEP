@@ -5522,7 +5522,7 @@ async def aplicar_status_multiplo(
     if not item_indices:
         raise HTTPException(status_code=400, detail="Nenhum item selecionado")
     
-    status_validos = ['pendente', 'cotado', 'comprado', 'em_separacao', 'em_transito', 'entregue']
+    status_validos = ['pendente', 'cotado', 'comprado', 'em_separacao', 'pronto_envio', 'em_transito', 'entregue']
     if novo_status not in status_validos:
         raise HTTPException(status_code=400, detail=f"Status inválido. Use: {', '.join(status_validos)}")
     
