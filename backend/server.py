@@ -5237,7 +5237,7 @@ async def atualizar_status_em_massa(
     novo_status = data.get("novo_status", "").strip().lower()
     item_indices = data.get("item_indices")  # Lista de índices ou None
     
-    status_validos = ["pendente", "cotado", "comprado", "em_separacao", "em_transito", "entregue"]
+    status_validos = ["pendente", "cotado", "comprado", "em_separacao", "pronto_envio", "em_transito", "entregue"]
     
     if novo_status not in status_validos:
         raise HTTPException(status_code=400, detail=f"Status inválido. Use: {', '.join(status_validos)}")
