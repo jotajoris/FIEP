@@ -292,6 +292,10 @@ const ItemsByStatus = () => {
       const nfsVendaByOC = {}; // Armazenar todas NFs de Venda por OC
       const prontoDespachoByOC = {}; // Armazenar status "pronto para despacho" por OC
       
+      // Verificar se estamos usando endpoint otimizado (itens já vêm filtrados)
+      const statusOtimizados = ['em_separacao', 'pronto_envio', 'em_transito', 'entregue'];
+      const usandoEndpointOtimizado = statusOtimizados.includes(status);
+      
       purchaseOrders.forEach(po => {
         // Armazenar NF de Venda da OC (se existir)
         if (po.nota_fiscal_venda) {
@@ -305,9 +309,12 @@ const ItemsByStatus = () => {
         prontoDespachoByOC[po.id] = po.pronto_despacho || false;
         
         po.items.forEach((item, itemIndexInPO) => {
-          if (item.status === status) {
+          // Se usando endpoint otimizado, todos os itens já são do status certo
+          // Senão, filtrar pelo status
+          if (usandoEndpointOtimizado || item.status === status) {
             // Usar o índice original do banco se disponível, senão usar o índice do array
-            const realIndex = item._originalIndex !== undefined ? item._originalIndex : itemIndexInPO;
+            const realIndex = item._originalIndex !== undefined ? item._originalIndex : 
+                             (item._itemIndexInPO !== undefined ? item._itemIndexInPO : itemIndexInPO);
             const uniqueId = `${po.id}_${realIndex}`;
             allItems.push({
               ...item,
@@ -326,19 +333,20 @@ const ItemsByStatus = () => {
         });
       });
       
-      // Calcular itens que irão na próxima remessa por OC
-      // (itens que NÃO estão em separação, pronto_envio, em_transito ou entregue)
-      const statusAvancados = ['em_separacao', 'pronto_envio', 'em_transito', 'entregue'];
-      const itensPendentesMap = {};
-      purchaseOrders.forEach(po => {
-        const itensPendentes = po.items
-          .filter(item => !statusAvancados.includes(item.status))
-          .map(item => item.codigo_item);
-        if (itensPendentes.length > 0) {
-          itensPendentesMap[po.id] = [...new Set(itensPendentes)]; // Remove duplicatas
-        }
-      });
-      setItensProximaRemessaPorOC(itensPendentesMap);
+      // Calcular itens que irão na próxima remessa por OC (apenas para endpoints não otimizados)
+      if (!usandoEndpointOtimizado) {
+        const statusAvancados = ['em_separacao', 'pronto_envio', 'em_transito', 'entregue'];
+        const itensPendentesMap = {};
+        purchaseOrders.forEach(po => {
+          const itensPendentes = po.items
+            .filter(item => !statusAvancados.includes(item.status))
+            .map(item => item.codigo_item);
+          if (itensPendentes.length > 0) {
+            itensPendentesMap[po.id] = [...new Set(itensPendentes)]; // Remove duplicatas
+          }
+        });
+        setItensProximaRemessaPorOC(itensPendentesMap);
+      }
       
       setItems(allItems);
       setOcNFVenda(nfVendaByOC); // Atualizar estado de NF de Venda por OC
