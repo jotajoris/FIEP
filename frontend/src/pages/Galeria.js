@@ -79,7 +79,7 @@ const Galeria = () => {
 
   const loadImagensMap = async () => {
     try {
-      const response = await apiGet(`${API}/item-images-map`);
+      const response = await apiGet(`${API}/imagens-itens/mapa`);
       setImagensMap(response.data || {});
     } catch (err) {
       console.warn('Erro ao carregar mapa de imagens:', err);
