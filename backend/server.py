@@ -2110,6 +2110,61 @@ async def delete_purchase_order(po_id: str, current_user: dict = Depends(require
     
     return {"message": "Ordem de Compra deletada com sucesso"}
 
+
+@api_router.get("/purchase-orders/{po_id}/download-pdf")
+async def download_oc_pdf(po_id: str, current_user: dict = Depends(get_current_user)):
+    """Download do PDF original da OC"""
+    from fastapi.responses import Response
+    import base64
+    
+    po = await db.purchase_orders.find_one(
+        {"id": po_id},
+        {"_id": 0, "numero_oc": 1, "pdf_original": 1}
+    )
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    pdf_data = po.get('pdf_original')
+    if not pdf_data or not pdf_data.get('data'):
+        raise HTTPException(status_code=404, detail="PDF da OC não disponível. Faça upload do PDF para disponibilizá-lo.")
+    
+    # Decodificar o PDF
+    try:
+        pdf_bytes = base64.b64decode(pdf_data['data'])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Erro ao processar o PDF")
+    
+    filename = pdf_data.get('filename') or f"{po['numero_oc']}.pdf"
+    
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=\"{filename}\""
+        }
+    )
+
+
+@api_router.get("/purchase-orders/{po_id}/has-pdf")
+async def check_oc_has_pdf(po_id: str, current_user: dict = Depends(get_current_user)):
+    """Verificar se a OC tem PDF disponível para download"""
+    po = await db.purchase_orders.find_one(
+        {"id": po_id},
+        {"_id": 0, "pdf_original": 1}
+    )
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    has_pdf = bool(po.get('pdf_original') and po['pdf_original'].get('data'))
+    
+    return {
+        "has_pdf": has_pdf,
+        "filename": po.get('pdf_original', {}).get('filename') if has_pdf else None
+    }
+
+
 @api_router.put("/purchase-orders/{po_id}")
 async def update_purchase_order(po_id: str, po_update: PurchaseOrderCreate, current_user: dict = Depends(require_admin)):
     """Atualizar uma OC (ADMIN ONLY)"""
