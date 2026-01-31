@@ -140,6 +140,40 @@ const Galeria = () => {
     }
   };
 
+  // Função para deletar imagem
+  const handleDeleteImage = async (codigoItem) => {
+    if (!window.confirm(`Tem certeza que deseja remover a foto do item ${codigoItem}?`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/itens/${codigoItem}/imagem`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Erro ao deletar');
+      }
+
+      // Remover do mapa de imagens
+      setImagensMap(prev => {
+        const newMap = { ...prev };
+        delete newMap[codigoItem];
+        return newMap;
+      });
+
+      alert('Foto removida com sucesso!');
+    } catch (err) {
+      console.error('Erro ao deletar:', err);
+      alert('Erro ao deletar: ' + err.message);
+    }
+  };
+
   // Construir URL da imagem
   const getImageUrl = (codigoItem) => {
     const imagemUrl = imagensMap[codigoItem];
