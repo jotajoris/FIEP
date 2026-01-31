@@ -475,6 +475,10 @@ tr:hover td {
 }
 
 /* Mobile Menu Hamburger */
+.mobile-menu-btn {
+  display: none !important;
+}
+
 @media (max-width: 768px) {
   .mobile-menu-btn {
     display: block !important;
@@ -485,7 +489,7 @@ tr:hover td {
   }
   
   .nav-links {
-    display: none;
+    display: none !important;
     width: 100%;
     flex-direction: column;
     background: white;
