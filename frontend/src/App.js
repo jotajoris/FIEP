@@ -111,6 +111,12 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       
+      <Route path="/galeria" element={
+        <ProtectedRoute>
+          <Layout><Galeria /></Layout>
+        </ProtectedRoute>
+      } />
+      
       <Route path="/planilha-itens" element={
         <ProtectedRoute>
           <Layout><PlanilhaItens /></Layout>
