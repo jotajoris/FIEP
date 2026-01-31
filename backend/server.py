@@ -1843,6 +1843,95 @@ async def get_purchase_orders(
     }
 
 
+@api_router.get("/items/by-status/{status}")
+async def get_items_by_status_optimized(
+    status: str,
+    current_user: dict = Depends(get_current_user),
+    page: int = 1,
+    limit: int = 100
+):
+    """
+    Endpoint OTIMIZADO para buscar itens por status.
+    Usa agregação MongoDB para filtrar diretamente no banco,
+    evitando carregar todas as OCs na memória.
+    """
+    # Validar status
+    status_validos = ["pendente", "cotado", "comprado", "em_separacao", "pronto_envio", "em_transito", "entregue"]
+    if status not in status_validos:
+        raise HTTPException(status_code=400, detail=f"Status inválido. Use: {', '.join(status_validos)}")
+    
+    # Pipeline de agregação otimizado
+    pipeline = [
+        # 1. Filtrar OCs que têm pelo menos um item com o status desejado
+        {"$match": {"items.status": status}},
+        
+        # 2. Desestruturar os itens
+        {"$unwind": {"path": "$items", "includeArrayIndex": "_itemIndex"}},
+        
+        # 3. Filtrar apenas itens com o status desejado
+        {"$match": {"items.status": status}},
+        
+        # 4. Projetar campos necessários
+        {"$project": {
+            "_id": 0,
+            "po_id": "$id",
+            "numero_oc": 1,
+            "data_entrega": 1,
+            "endereco_entrega": 1,
+            "item": {
+                "$mergeObjects": [
+                    "$items",
+                    {"_itemIndexInPO": "$_itemIndex", "_originalIndex": "$_itemIndex"}
+                ]
+            }
+        }}
+    ]
+    
+    # Se não for admin, filtrar por responsável
+    if current_user['role'] != 'admin' and current_user.get('owner_name'):
+        user_name = current_user['owner_name'].strip()
+        pipeline.insert(3, {
+            "$match": {
+                "$expr": {
+                    "$eq": [
+                        {"$toUpper": {"$trim": {"input": {"$ifNull": ["$items.responsavel", ""]}}}},
+                        user_name.upper()
+                    ]
+                }
+            }
+        })
+    
+    # Executar agregação
+    cursor = db.purchase_orders.aggregate(pipeline)
+    results = await cursor.to_list(10000)
+    
+    # Agrupar por OC para manter estrutura esperada pelo frontend
+    ocs_map = {}
+    for result in results:
+        po_id = result['po_id']
+        if po_id not in ocs_map:
+            ocs_map[po_id] = {
+                "id": po_id,
+                "numero_oc": result['numero_oc'],
+                "data_entrega": result.get('data_entrega'),
+                "endereco_entrega": result.get('endereco_entrega'),
+                "items": []
+            }
+        
+        item = result['item']
+        item['po_id'] = po_id
+        ocs_map[po_id]['items'].append(item)
+    
+    # Converter para lista
+    ocs = list(ocs_map.values())
+    
+    return {
+        "data": ocs,
+        "total_items": len(results),
+        "total_ocs": len(ocs)
+    }
+
+
 @api_router.get("/purchase-orders/list/simple")
 async def get_purchase_orders_simple(
     current_user: dict = Depends(get_current_user),
