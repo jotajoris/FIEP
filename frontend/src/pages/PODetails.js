@@ -584,6 +584,24 @@ const PODetails = () => {
           </div>
           {isAdmin() && (
             <div style={{ display: 'flex', gap: '0.5rem' }}>
+              {/* Botão Download PDF */}
+              {hasPdf && (
+                <button
+                  onClick={handleDownloadPDF}
+                  className="btn"
+                  style={{ 
+                    background: '#22c55e', 
+                    color: 'white',
+                    padding: '0.75rem 1.5rem',
+                    cursor: downloadingPdf ? 'wait' : 'pointer',
+                    opacity: downloadingPdf ? 0.7 : 1
+                  }}
+                  disabled={downloadingPdf}
+                  data-testid="download-pdf-btn"
+                >
+                  {downloadingPdf ? '⏳ Baixando...' : '📥 Download PDF'}
+                </button>
+              )}
               <label 
                 className="btn"
                 style={{ 
