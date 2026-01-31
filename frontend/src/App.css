@@ -473,3 +473,49 @@ tr:hover td {
     font-size: 0.8rem;
   }
 }
+
+/* Mobile Menu Hamburger */
+@media (max-width: 768px) {
+  .mobile-menu-btn {
+    display: block !important;
+  }
+  
+  .nav-content {
+    flex-wrap: wrap;
+  }
+  
+  .nav-links {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    background: white;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+    padding: 0.5rem 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  
+  .nav-links.mobile-open {
+    display: flex !important;
+  }
+  
+  .nav-links li {
+    width: 100%;
+  }
+  
+  .nav-link {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-radius: 0;
+  }
+  
+  .nav-link:hover {
+    background: #f7fafc;
+  }
+  
+  .nav-link.active {
+    border-radius: 0;
+  }
+}
