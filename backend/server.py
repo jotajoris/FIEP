@@ -3249,18 +3249,19 @@ async def verificar_rastreios_agendado():
     Verifica todos os itens com rastreio (pronto_envio e em_transito) e atualiza status automaticamente.
     
     Para itens "pronto_envio" com código de rastreio:
-    - Se detectar postagem/movimentação → muda para "em_transito"
+    - Se detectar postagem/movimentação REAL → muda para "em_transito"
+    - IMPORTANTE: "etiqueta emitida" ou "objeto criado eletronicamente" NÃO são considerados postagens reais
     
     Para itens "em_transito":
     - Se detectar entrega → muda para "entregue"
     - Cria notificações para: saiu para entrega, tentativa de entrega, entregue
     
-    Executado 1x ao dia às 15h horário de Brasília.
+    Executado 1x por hora (a cada hora cheia no horário de Brasília).
     """
     logger = logging.getLogger(__name__)
     
     try:
-        logger.info("Iniciando verificação automática de rastreios (API Correios) - Agendamento 15h Brasília...")
+        logger.info("Iniciando verificação automática de rastreios (API Correios) - A cada hora...")
         
         # Buscar todas as OCs com itens em trânsito OU pronto para envio (com código de rastreio)
         cursor = db.purchase_orders.find(
