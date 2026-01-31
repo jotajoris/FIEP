@@ -4534,32 +4534,56 @@ async def upload_imagem_por_codigo(
 async def get_imagem_por_codigo(codigo_item: str):
     """
     Retorna a imagem de um item pelo código.
+    Suporta formato antigo (data URL) e novo (base64 separado).
     """
+    from fastapi.responses import Response, RedirectResponse
+    import base64
+    
     # Buscar na coleção imagens_itens
     imagem_info = await db.imagens_itens.find_one({"codigo_item": codigo_item}, {"_id": 0})
     
-    if not imagem_info or not imagem_info.get('imagem_url'):
+    if not imagem_info:
         raise HTTPException(status_code=404, detail="Imagem não encontrada")
     
-    imagem_url = imagem_info['imagem_url']
+    # Priorizar formato novo (imagem_base64 separado)
+    if imagem_info.get('imagem_base64'):
+        imagem_bytes = base64.b64decode(imagem_info['imagem_base64'])
+        content_type = imagem_info.get('content_type', 'image/jpeg')
+        
+        return Response(
+            content=imagem_bytes,
+            media_type=content_type,
+            headers={
+                "Cache-Control": "public, max-age=31536000",
+                "Content-Length": str(len(imagem_bytes))
+            }
+        )
     
-    # Retornar a imagem
+    imagem_url = imagem_info.get('imagem_url')
+    
+    if not imagem_url:
+        raise HTTPException(status_code=404, detail="Imagem não encontrada")
+    
+    # Formato antigo: data URL com base64 inline
     if imagem_url.startswith('data:'):
-        # É base64 - converter para resposta
-        import base64
         try:
             # Formato: data:image/jpeg;base64,XXXXX
             header, data = imagem_url.split(',', 1)
             content_type = header.split(':')[1].split(';')[0]
             image_bytes = base64.b64decode(data)
             
-            from fastapi.responses import Response
-            return Response(content=image_bytes, media_type=content_type)
+            return Response(
+                content=image_bytes,
+                media_type=content_type,
+                headers={
+                    "Cache-Control": "public, max-age=31536000",
+                    "Content-Length": str(len(image_bytes))
+                }
+            )
         except:
             raise HTTPException(status_code=500, detail="Erro ao processar imagem")
     else:
-        # URL externa - redirecionar
-        from fastapi.responses import RedirectResponse
+        # URL externa ou endpoint interno - redirecionar
         return RedirectResponse(url=imagem_url)
 
 
