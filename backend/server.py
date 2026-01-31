@@ -3400,9 +3400,9 @@ async def verificar_rastreios_agendado():
                                 # Atualizar eventos mesmo sem mudança de status
                                 po_atualizado = True
                                 
-                        except Exception as e:
-                            stats["erros"] += 1
-                            logger.warning(f"Erro ao verificar rastreio {codigo}: {str(e)}")
+                    except Exception as e:
+                        stats["erros"] += 1
+                        logger.warning(f"Erro ao verificar rastreio {codigo}: {str(e)}")
                 
                 # Atualizar OC no banco se houve alterações
                 if po_atualizado:
@@ -3414,6 +3414,7 @@ async def verificar_rastreios_agendado():
         logger.info(
             f"Verificação concluída. "
             f"Verificados: {stats['verificados']}, "
+            f"Postados: {stats['postados']}, "
             f"Entregues: {stats['entregues']}, "
             f"Saiu p/ Entrega: {stats['saiu_entrega']}, "
             f"Tentativas: {stats['tentativa']}, "
