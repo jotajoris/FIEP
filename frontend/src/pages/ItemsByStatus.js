@@ -3722,10 +3722,12 @@ Chave PIX: ${dados.pix}`;
                                 Cancelar
                               </button>
                               <button
-                                onClick={() => {
-                                  setDadosBancariosPorOC(prev => ({ ...prev, [oc.po_id]: { ...dadosNFTemp } }));
-                                  setEditingDadosNF(null);
-                                  alert('Dados bancários atualizados!');
+                                onClick={async () => {
+                                  const sucesso = await salvarDadosBancarios(oc.po_id, dadosNFTemp);
+                                  if (sucesso) {
+                                    setEditingDadosNF(null);
+                                    alert('Dados bancários salvos com sucesso!');
+                                  }
                                 }}
                                 style={{ padding: '0.5rem 1rem', background: '#16a34a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600' }}
                               >
@@ -3747,6 +3749,7 @@ Chave PIX: ${dados.pix}`;
                           >
 {(() => {
   const dados = getDadosBancarios(oc.po_id);
+  // Mostrar dados sem depender de itens pendentes
   return `Endereço: ${oc.endereco_entrega || 'NÃO INFORMADO'}
 OC: ${oc.numero_oc ? oc.numero_oc.replace(/^OC-/i, '') : ''}${(itensProximaRemessaPorOC[oc.po_id] || []).length > 0 ? `\nPróxima remessa: ${(itensProximaRemessaPorOC[oc.po_id] || []).join(', ')}` : ''}
 DADOS BANCÁRIOS - Banco: ${dados.banco} | Ag: ${dados.agencia} | Cc: ${dados.conta} | PIX: ${dados.pix}`;
