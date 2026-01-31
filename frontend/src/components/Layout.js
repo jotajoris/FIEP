@@ -143,31 +143,51 @@ const Layout = ({ children }) => {
   return (
     <div className="layout-container">
       <nav className="navbar" data-testid="main-navbar">
-        <div className="nav-content">
-          <Link to="/" className="nav-brand" data-testid="nav-brand">
-            FIEP | Gestão OC
-          </Link>
-          <ul className="nav-links">
+        <div className="nav-content" style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%', justifyContent: 'space-between' }}>
+            <Link to="/" className="nav-brand" data-testid="nav-brand">
+              FIEP | Gestão OC
+            </Link>
+            
+            {/* Botão Hamburger - Mobile Only */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="mobile-menu-btn"
+              style={{
+                display: 'none',
+                background: 'none',
+                border: 'none',
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                padding: '0.5rem'
+              }}
+              data-testid="mobile-menu-btn"
+            >
+              {mobileMenuOpen ? '✕' : '☰'}
+            </button>
+          </div>
+          
+          <ul className={`nav-links ${mobileMenuOpen ? 'mobile-open' : ''}`}>
             {/* Menu Principal - Visível para todos */}
             <li>
-              <Link to="/" className={`nav-link ${isActive('/')}`} data-testid="nav-dashboard">
+              <Link to="/" className={`nav-link ${isActive('/')}`} data-testid="nav-dashboard" onClick={() => setMobileMenuOpen(false)}>
                 📊 Dashboard
               </Link>
             </li>
             {user?.owner_name && (
               <li>
-                <Link to={`/owner/${user.owner_name}`} className={`nav-link ${isActive(`/owner/${user.owner_name}`)}`} data-testid="nav-my-items">
+                <Link to={`/owner/${user.owner_name}`} className={`nav-link ${isActive(`/owner/${user.owner_name}`)}`} data-testid="nav-my-items" onClick={() => setMobileMenuOpen(false)}>
                   📋 Meus Itens
                 </Link>
               </li>
             )}
             <li>
-              <Link to="/estoque" className={`nav-link ${isActive('/estoque')}`} data-testid="nav-estoque">
+              <Link to="/estoque" className={`nav-link ${isActive('/estoque')}`} data-testid="nav-estoque" onClick={() => setMobileMenuOpen(false)}>
                 📦 Estoque
               </Link>
             </li>
             <li>
-              <Link to="/galeria" className={`nav-link ${isActive('/galeria')}`} data-testid="nav-galeria">
+              <Link to="/galeria" className={`nav-link ${isActive('/galeria')}`} data-testid="nav-galeria" onClick={() => setMobileMenuOpen(false)}>
                 🖼️ Galeria
               </Link>
             </li>
