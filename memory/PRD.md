@@ -133,6 +133,21 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
   - PDF é salvo automaticamente ao criar OC ou atualizar com PDF
   - Botão "Download PDF" (verde) aparece na página da OC quando disponível
 
+- ✅ **Nova Página Galeria**
+  - Lista todos os 301 itens únicos do sistema em grid visual
+  - Exibe código, descrição e miniatura da foto
+  - Upload de fotos diretamente na galeria
+  - Filtros por código e descrição
+  - Paginação (10, 20, 50, 100 itens por página)
+  - Modal de visualização de imagem em tamanho completo
+  - Contador de fotos cadastradas
+
+- ✅ **Menu Reorganizado**
+  - Menu principal: Dashboard | Meus Itens | Estoque | Galeria
+  - Sininho de notificações
+  - Nome do usuário (ex: João) com ícone ☰ para menu dropdown
+  - Menu dropdown contém: Admin, Nova OC, Resumo Completo, Planilha, Meu Perfil, Sair
+
 ### 2025-01-30 (Sessão atual - Continuação 5)
 - ✅ **Bug Fix: Frontend quebrado (página em branco)**
   - Corrigido erro de sintaxe em `Estoque.js` - bloco `try` sem `catch/finally`
