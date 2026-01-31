@@ -90,6 +90,10 @@ const PODetails = () => {
   // Estado para atualização com PDF
   const [atualizandoPDF, setAtualizandoPDF] = useState(false);
   
+  // Estado para download de PDF
+  const [hasPdf, setHasPdf] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  
   // Estado para upload de imagem
   const [uploadingImage, setUploadingImage] = useState(null);
   const [imagemExpandida, setImagemExpandida] = useState(null);
