@@ -6104,6 +6104,16 @@ async def atualizar_oc_com_pdf(
         "itens_com_preco_no_pdf": sum(1 for i in pdf_data.get('items', []) if i.get('preco_pdf'))
     }
     
+    # SEMPRE salvar o PDF para download posterior
+    import base64
+    updates['pdf_original'] = {
+        'filename': file.filename,
+        'content_type': 'application/pdf',
+        'data': base64.b64encode(content).decode('utf-8'),
+        'uploaded_at': datetime.now(timezone.utc).isoformat()
+    }
+    campos_atualizados.append("pdf_original")
+    
     if not updates:
         return {
             "success": True,
