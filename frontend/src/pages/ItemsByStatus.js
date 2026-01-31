@@ -3502,7 +3502,7 @@ Chave PIX: 46.663.556/0001-69`;
                                   if (response.ok) {
                                     alert('Endereço atualizado!');
                                     setEditingEnderecoOC(null);
-                                    fetchItems();
+                                    loadItems();
                                   }
                                 } catch (err) {
                                   alert('Erro ao atualizar endereço');
