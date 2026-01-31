@@ -3553,8 +3553,13 @@ Chave PIX: 46.663.556/0001-69`;
                               e.stopPropagation();
                               const numeroOC = oc.numero_oc ? oc.numero_oc.replace(/^OC-/i, '') : '';
                               const endereco = oc.endereco_entrega || 'ENDEREÇO NÃO INFORMADO';
+                              const itensPendentes = itensProximaRemessaPorOC[oc.po_id] || [];
+                              const textoProximaRemessa = itensPendentes.length > 0 
+                                ? `Itens que irão na próxima remessa: ${itensPendentes.join(', ')}`
+                                : 'Itens que irão na próxima remessa: Nenhum (todos os itens estão nesta remessa)';
                               const texto = `Endereço da entrega: ${endereco}
 NF referente à OC - ${numeroOC}
+${textoProximaRemessa}
 DADOS BANCÁRIOS
 Banco: 341 - Itaú Unibanco
 Conta: 98814-9
@@ -3582,6 +3587,7 @@ Chave PIX: 46.663.556/0001-69`;
                         >
 {`Endereço: ${oc.endereco_entrega || 'NÃO INFORMADO'}
 OC: ${oc.numero_oc ? oc.numero_oc.replace(/^OC-/i, '') : ''}
+Próxima remessa: ${(itensProximaRemessaPorOC[oc.po_id] || []).length > 0 ? (itensProximaRemessaPorOC[oc.po_id] || []).join(', ') : 'Nenhum item pendente'}
 DADOS BANCÁRIOS - Banco: 341 Itaú | Ag: 3978 | Cc: 98814-9 | PIX: 46.663.556/0001-69`}
                         </pre>
                       </div>
