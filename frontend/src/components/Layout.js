@@ -150,24 +150,24 @@ const Layout = ({ children }) => {
             {/* Menu Principal - Visível para todos */}
             <li>
               <Link to="/" className={`nav-link ${isActive('/')}`} data-testid="nav-dashboard">
-                Dashboard
+                📊 Dashboard
               </Link>
             </li>
             {user?.owner_name && (
               <li>
                 <Link to={`/owner/${user.owner_name}`} className={`nav-link ${isActive(`/owner/${user.owner_name}`)}`} data-testid="nav-my-items">
-                  Meus Itens
+                  📋 Meus Itens
                 </Link>
               </li>
             )}
             <li>
               <Link to="/estoque" className={`nav-link ${isActive('/estoque')}`} data-testid="nav-estoque">
-                Estoque
+                📦 Estoque
               </Link>
             </li>
             <li>
               <Link to="/galeria" className={`nav-link ${isActive('/galeria')}`} data-testid="nav-galeria">
-                Galeria
+                🖼️ Galeria
               </Link>
             </li>
             
