@@ -3578,46 +3578,131 @@ Chave PIX: ${dados.pix}`;
                           <span style={{ fontSize: '0.85rem', color: '#854d0e', fontWeight: '700' }}>
                             📝 DADOS ADICIONAIS DA NF
                           </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const numeroOC = oc.numero_oc ? oc.numero_oc.replace(/^OC-/i, '') : '';
-                              const endereco = oc.endereco_entrega || 'ENDEREÇO NÃO INFORMADO';
-                              const itensPendentes = itensProximaRemessaPorOC[oc.po_id] || [];
-                              let texto = `Endereço da entrega: ${endereco}
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const dados = getDadosBancarios(oc.po_id);
+                                setDadosNFTemp(dados);
+                                setEditingDadosNF(oc.po_id);
+                              }}
+                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                              ✏️ Editar
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const numeroOC = oc.numero_oc ? oc.numero_oc.replace(/^OC-/i, '') : '';
+                                const endereco = oc.endereco_entrega || 'ENDEREÇO NÃO INFORMADO';
+                                const itensPendentes = itensProximaRemessaPorOC[oc.po_id] || [];
+                                const dados = getDadosBancarios(oc.po_id);
+                                let texto = `Endereço da entrega: ${endereco}
 NF referente à OC - ${numeroOC}`;
-                              if (itensPendentes.length > 0) {
-                                texto += `\nItens que irão na próxima remessa: ${itensPendentes.join(', ')}`;
-                              }
-                              texto += `\nDADOS BANCÁRIOS
-Banco: 341 - Itaú Unibanco
-Conta: 98814-9
-Agência: 3978
-Chave PIX: 46.663.556/0001-69`;
-                              navigator.clipboard.writeText(texto).then(() => {
-                                alert('Dados Adicionais copiados!');
-                              });
-                            }}
-                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', background: '#eab308', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                          >
-                            📋 Copiar
-                          </button>
+                                if (itensPendentes.length > 0) {
+                                  texto += `\nItens que irão na próxima remessa: ${itensPendentes.join(', ')}`;
+                                }
+                                texto += `\nDADOS BANCÁRIOS
+Banco: ${dados.banco}
+Conta: ${dados.conta}
+Agência: ${dados.agencia}
+Chave PIX: ${dados.pix}`;
+                                navigator.clipboard.writeText(texto).then(() => {
+                                  alert('Dados Adicionais copiados!');
+                                });
+                              }}
+                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', background: '#eab308', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                              📋 Copiar
+                            </button>
+                          </div>
                         </div>
-                        <pre style={{ 
-                          whiteSpace: 'pre-wrap', 
-                          fontSize: '0.75rem', 
-                          color: '#713f12',
-                          background: 'white',
-                          padding: '0.5rem',
-                          borderRadius: '4px',
-                          margin: 0
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        >
-{`Endereço: ${oc.endereco_entrega || 'NÃO INFORMADO'}
+                        
+                        {/* Modal de edição dos dados bancários */}
+                        {editingDadosNF === oc.po_id ? (
+                          <div style={{ 
+                            background: 'white', 
+                            padding: '1rem', 
+                            borderRadius: '6px',
+                            border: '1px solid #e5e7eb'
+                          }} onClick={(e) => e.stopPropagation()}>
+                            <div style={{ marginBottom: '0.75rem' }}>
+                              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem' }}>Banco</label>
+                              <input
+                                type="text"
+                                value={dadosNFTemp.banco}
+                                onChange={(e) => setDadosNFTemp(prev => ({ ...prev, banco: e.target.value }))}
+                                style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.85rem' }}
+                              />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem' }}>Conta</label>
+                                <input
+                                  type="text"
+                                  value={dadosNFTemp.conta}
+                                  onChange={(e) => setDadosNFTemp(prev => ({ ...prev, conta: e.target.value }))}
+                                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.85rem' }}
+                                />
+                              </div>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem' }}>Agência</label>
+                                <input
+                                  type="text"
+                                  value={dadosNFTemp.agencia}
+                                  onChange={(e) => setDadosNFTemp(prev => ({ ...prev, agencia: e.target.value }))}
+                                  style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.85rem' }}
+                                />
+                              </div>
+                            </div>
+                            <div style={{ marginBottom: '0.75rem' }}>
+                              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem' }}>Chave PIX</label>
+                              <input
+                                type="text"
+                                value={dadosNFTemp.pix}
+                                onChange={(e) => setDadosNFTemp(prev => ({ ...prev, pix: e.target.value }))}
+                                style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.85rem' }}
+                              />
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                              <button
+                                onClick={() => setEditingDadosNF(null)}
+                                style={{ padding: '0.5rem 1rem', background: '#6b7280', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
+                              >
+                                Cancelar
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setDadosBancariosPorOC(prev => ({ ...prev, [oc.po_id]: { ...dadosNFTemp } }));
+                                  setEditingDadosNF(null);
+                                  alert('Dados bancários atualizados!');
+                                }}
+                                style={{ padding: '0.5rem 1rem', background: '#16a34a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600' }}
+                              >
+                                ✓ Salvar
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <pre style={{ 
+                            whiteSpace: 'pre-wrap', 
+                            fontSize: '0.75rem', 
+                            color: '#713f12',
+                            background: 'white',
+                            padding: '0.5rem',
+                            borderRadius: '4px',
+                            margin: 0
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          >
+{(() => {
+  const dados = getDadosBancarios(oc.po_id);
+  return `Endereço: ${oc.endereco_entrega || 'NÃO INFORMADO'}
 OC: ${oc.numero_oc ? oc.numero_oc.replace(/^OC-/i, '') : ''}${(itensProximaRemessaPorOC[oc.po_id] || []).length > 0 ? `\nPróxima remessa: ${(itensProximaRemessaPorOC[oc.po_id] || []).join(', ')}` : ''}
-DADOS BANCÁRIOS - Banco: 341 Itaú | Ag: 3978 | Cc: 98814-9 | PIX: 46.663.556/0001-69`}
-                        </pre>
+DADOS BANCÁRIOS - Banco: ${dados.banco} | Ag: ${dados.agencia} | Cc: ${dados.conta} | PIX: ${dados.pix}`;
+})()}
+                          </pre>
+                        )}
                       </div>
                       
                       {/* Status de NFs */}
