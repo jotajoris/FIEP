@@ -110,6 +110,18 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
   - Headers de cache adicionados para melhor performance
   - Itens corrigidos: 089981, 113690, 114850, 114647
 
+- ✅ **OTIMIZAÇÃO DE PERFORMANCE - Página "Em Separação"**
+  - Novo endpoint: `/api/items/by-status/{status}` com agregação MongoDB
+  - Antes: 10MB de dados, ~0.27s de carregamento
+  - Depois: 220KB de dados, ~0.06s de carregamento
+  - Melhoria: 4x mais rápido, 46x menos dados transferidos
+
+- ✅ **Dados Bancários Editáveis (Dados Adicionais da NF)**
+  - Novo endpoint: `/api/purchase-orders/{po_id}/dados-bancarios` (GET/PATCH)
+  - Novo endpoint: `/api/dados-bancarios/todas-ocs` (GET)
+  - Dados são salvos permanentemente no banco por OC
+  - Funciona independente de haver ou não itens pendentes
+
 ### 2025-01-30 (Sessão atual - Continuação 5)
 - ✅ **Bug Fix: Frontend quebrado (página em branco)**
   - Corrigido erro de sintaxe em `Estoque.js` - bloco `try` sem `catch/finally`
