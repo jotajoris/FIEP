@@ -143,29 +143,19 @@ const Layout = ({ children }) => {
   return (
     <div className="layout-container">
       <nav className="navbar" data-testid="main-navbar">
-        <div className="nav-content" style={{ position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%', justifyContent: 'space-between' }}>
-            <Link to="/" className="nav-brand" data-testid="nav-brand">
-              FIEP | Gestão OC
-            </Link>
-            
-            {/* Botão Hamburger - Mobile Only */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="mobile-menu-btn"
-              style={{
-                display: 'none',
-                background: 'none',
-                border: 'none',
-                fontSize: '1.5rem',
-                cursor: 'pointer',
-                padding: '0.5rem'
-              }}
-              data-testid="mobile-menu-btn"
-            >
-              {mobileMenuOpen ? '✕' : '☰'}
-            </button>
-          </div>
+        <div className="nav-content">
+          <Link to="/" className="nav-brand" data-testid="nav-brand">
+            FIEP | Gestão OC
+          </Link>
+          
+          {/* Botão Hamburger - Mobile Only */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="mobile-menu-btn"
+            data-testid="mobile-menu-btn"
+          >
+            {mobileMenuOpen ? '✕' : '☰'}
+          </button>
           
           <ul className={`nav-links ${mobileMenuOpen ? 'mobile-open' : ''}`}>
             {/* Menu Principal - Visível para todos */}
