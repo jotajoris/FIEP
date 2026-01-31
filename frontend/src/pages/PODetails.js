@@ -1023,37 +1023,39 @@ const PODetails = () => {
                           ×
                         </button>
                       </div>
-                    ) : (
-                      <label style={{ 
-                        width: '70px', 
-                        height: '70px', 
-                        border: '2px dashed #cbd5e0',
-                        borderRadius: '8px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        background: '#f8fafc',
-                        transition: 'all 0.2s'
-                      }}>
+                      
+                      {/* Placeholder para upload quando não tem imagem */}
+                      <label 
+                        id={`placeholder-${groupItem.codigo_item}-${itemIdx}`}
+                        style={{ 
+                          display: 'none',
+                          width: '70px', 
+                          height: '70px', 
+                          border: '2px dashed #cbd5e0',
+                          borderRadius: '8px',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          background: '#f8fafc',
+                          transition: 'all 0.2s'
+                        }}>
                         <input
                           type="file"
                           accept="image/*"
                           style={{ display: 'none' }}
-                          onChange={(e) => handleImageUpload(item, e.target.files[0], realIndex)}
-                          disabled={uploadingImage === realIndex}
+                          onChange={(e) => handleImageUpload(groupItem, e.target.files[0], itemRealIndex)}
+                          disabled={uploadingImage === itemRealIndex}
                         />
-                        {uploadingImage === realIndex ? (
+                        {uploadingImage === itemRealIndex ? (
                           <span style={{ fontSize: '0.7rem', color: '#718096' }}>⏳</span>
                         ) : (
                           <>
                             <span style={{ fontSize: '1.2rem' }}>📷</span>
-                            <span style={{ fontSize: '0.6rem', color: '#718096', textAlign: 'center' }}>Adicionar foto</span>
+                            <span style={{ fontSize: '0.6rem', color: '#718096', textAlign: 'center' }}>Adicionar</span>
                           </>
                         )}
                       </label>
-                    )}
                   </div>
 
                   {/* Informações do item */}
