@@ -163,6 +163,9 @@ const ItemsByStatus = () => {
   
   // Timestamp de cache para forçar reload de imagens - atualizado apenas após upload/delete
   const [imageCacheTimestamp, setImageCacheTimestamp] = useState(Date.now());
+  
+  // Itens que irão na próxima remessa por OC (não estão em separação/pronto/transito/entregue)
+  const [itensProximaRemessaPorOC, setItensProximaRemessaPorOC] = useState({});
 
   const statusLabels = {
     'pendente': 'Pendentes',
