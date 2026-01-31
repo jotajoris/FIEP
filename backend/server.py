@@ -4471,13 +4471,31 @@ async def upload_imagem_por_codigo(
     if not file.content_type.startswith('image/'):
         raise HTTPException(status_code=400, detail="Apenas imagens são aceitas")
     
-    # Ler conteúdo da imagem
-    image_data = await file.read()
+    # Verificar tamanho (max 5MB)
+    contents = await file.read()
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Arquivo muito grande. Máximo: 5MB")
     
-    # Converter para base64
+    if len(contents) < 1000:
+        raise HTTPException(status_code=400, detail="Arquivo muito pequeno ou corrompido")
+    
+    # Converter imagem para base64 para salvar no MongoDB (PERSISTENTE)
     import base64
-    base64_data = base64.b64encode(image_data).decode('utf-8')
-    imagem_url = f"data:{file.content_type};base64,{base64_data}"
+    imagem_base64 = base64.b64encode(contents).decode('utf-8')
+    
+    # Determinar content type
+    ext = file.filename.split('.')[-1].lower() if '.' in file.filename else 'jpg'
+    content_types = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'webp': 'image/webp',
+        'gif': 'image/gif'
+    }
+    content_type = content_types.get(ext, file.content_type or 'image/jpeg')
+    
+    # Gerar URL para servir a imagem
+    imagem_url = f"/api/item-images-db/{codigo_item}"
     
     # Salvar na coleção imagens_itens
     await db.imagens_itens.update_one(
