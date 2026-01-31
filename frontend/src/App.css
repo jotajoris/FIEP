@@ -476,20 +476,26 @@ tr:hover td {
 
 /* Mobile Menu Hamburger */
 .mobile-menu-btn {
-  display: none !important;
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  color: #4a5568;
 }
 
 @media (max-width: 768px) {
-  .mobile-menu-btn {
-    display: block !important;
-  }
-  
   .nav-content {
     flex-wrap: wrap;
   }
   
+  .mobile-menu-btn {
+    display: block;
+  }
+  
   .nav-links {
-    display: none !important;
+    display: none;
     width: 100%;
     flex-direction: column;
     background: white;
