@@ -280,6 +280,20 @@ const ItemsByStatus = () => {
         });
       });
       
+      // Calcular itens que irão na próxima remessa por OC
+      // (itens que NÃO estão em separação, pronto_envio, em_transito ou entregue)
+      const statusAvancados = ['em_separacao', 'pronto_envio', 'em_transito', 'entregue'];
+      const itensPendentesMap = {};
+      purchaseOrders.forEach(po => {
+        const itensPendentes = po.items
+          .filter(item => !statusAvancados.includes(item.status))
+          .map(item => item.codigo_item);
+        if (itensPendentes.length > 0) {
+          itensPendentesMap[po.id] = [...new Set(itensPendentes)]; // Remove duplicatas
+        }
+      });
+      setItensProximaRemessaPorOC(itensPendentesMap);
+      
       setItems(allItems);
       setOcNFVenda(nfVendaByOC); // Atualizar estado de NF de Venda por OC
       setOcNFsVenda(nfsVendaByOC); // Atualizar estado de todas NFs de Venda por OC
