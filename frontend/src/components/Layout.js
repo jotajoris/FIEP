@@ -20,6 +20,7 @@ const Layout = ({ children }) => {
   
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const isActive = (path) => {
     return location.pathname === path ? 'active' : '';
