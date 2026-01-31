@@ -229,6 +229,8 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 - [ ] Corrigir bug: editar item duplicado abre todos os itens (recorrente)
 
 ### P3 (Backlog)
+- [ ] Implementar API Correios para cálculo de frete (Preços e Prazos)
+- [ ] Download de relatório Excel da página "Estoque"
 - [ ] Botão "Criar OC" na página Planilha de Contrato
 - [ ] Estender visualização agrupada para outras páginas
 
