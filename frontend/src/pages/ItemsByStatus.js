@@ -2149,18 +2149,22 @@ const ItemsByStatus = () => {
     
     // Buscar itens que irão na próxima remessa para esta OC
     const itensPendentes = itensProximaRemessaPorOC[item.po_id] || [];
-    const textoProximaRemessa = itensPendentes.length > 0 
-      ? `Itens que irão na próxima remessa: ${itensPendentes.join(', ')}`
-      : 'Itens que irão na próxima remessa: Nenhum (todos os itens estão nesta remessa)';
     
-    return `Endereço da entrega: ${endereco}
-NF referente à OC - ${numeroOC}
-${textoProximaRemessa}
-DADOS BANCÁRIOS
+    let texto = `Endereço da entrega: ${endereco}
+NF referente à OC - ${numeroOC}`;
+    
+    // Só mostrar linha de próxima remessa se houver itens pendentes
+    if (itensPendentes.length > 0) {
+      texto += `\nItens que irão na próxima remessa: ${itensPendentes.join(', ')}`;
+    }
+    
+    texto += `\nDADOS BANCÁRIOS
 Banco: 341 - Itaú Unibanco
 Conta: 98814-9
 Agência: 3978
 Chave PIX: 46.663.556/0001-69`;
+    
+    return texto;
   };
 
   const copiarDadosAdicionais = (item) => {
