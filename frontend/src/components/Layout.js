@@ -18,6 +18,9 @@ const Layout = ({ children }) => {
   const [searchNotificacoes, setSearchNotificacoes] = useState('');
   const [loadingTodasNotificacoes, setLoadingTodasNotificacoes] = useState(false);
   
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef(null);
+  
   const isActive = (path) => {
     return location.pathname === path ? 'active' : '';
   };
@@ -26,6 +29,17 @@ const Layout = ({ children }) => {
     logout();
     navigate('/login');
   };
+
+  // Fechar menu do usuário ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Carregar contagem de notificações
   useEffect(() => {
