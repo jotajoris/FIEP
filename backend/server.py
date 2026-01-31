@@ -3246,8 +3246,15 @@ async def _executar_verificacao_rastreios_uma_vez():
 
 async def verificar_rastreios_agendado():
     """
-    Verifica todos os itens em trânsito e atualiza status automaticamente.
-    Cria notificações para: saiu para entrega, tentativa de entrega, entregue.
+    Verifica todos os itens com rastreio (pronto_envio e em_transito) e atualiza status automaticamente.
+    
+    Para itens "pronto_envio" com código de rastreio:
+    - Se detectar postagem/movimentação → muda para "em_transito"
+    
+    Para itens "em_transito":
+    - Se detectar entrega → muda para "entregue"
+    - Cria notificações para: saiu para entrega, tentativa de entrega, entregue
+    
     Executado 1x ao dia às 15h horário de Brasília.
     """
     logger = logging.getLogger(__name__)
@@ -3255,14 +3262,18 @@ async def verificar_rastreios_agendado():
     try:
         logger.info("Iniciando verificação automática de rastreios (API Correios) - Agendamento 15h Brasília...")
         
-        # Buscar todas as OCs com itens em trânsito
+        # Buscar todas as OCs com itens em trânsito OU pronto para envio (com código de rastreio)
         cursor = db.purchase_orders.find(
-            {"items.status": "em_transito"},
+            {"$or": [
+                {"items.status": "em_transito"},
+                {"items.status": "pronto_envio"}
+            ]},
             {"_id": 0}
         )
         
         stats = {
             "verificados": 0,
+            "postados": 0,  # pronto_envio → em_transito
             "entregues": 0,
             "saiu_entrega": 0,
             "tentativa": 0,
@@ -3273,33 +3284,78 @@ async def verificar_rastreios_agendado():
                 po_atualizado = False
                 
                 for item in po['items']:
-                    if item.get('status') == 'em_transito' and item.get('codigo_rastreio'):
-                        codigo = item['codigo_rastreio']
-                        stats["verificados"] += 1
+                    codigo_rastreio = item.get('codigo_rastreio')
+                    status_atual = item.get('status')
+                    
+                    # Verificar apenas itens com código de rastreio e status relevante
+                    if not codigo_rastreio:
+                        continue
+                    if status_atual not in ['pronto_envio', 'em_transito']:
+                        continue
+                    
+                    codigo = codigo_rastreio
+                    stats["verificados"] += 1
+                    
+                    try:
+                        # Buscar rastreio na API dos Correios
+                        result = await buscar_rastreio_api(codigo)
                         
-                        try:
-                            # Buscar rastreio na API dos Correios
-                            result = await buscar_rastreio_api(codigo)
+                        if result.get('success') and result.get('eventos'):
+                            eventos = result['eventos']
                             
-                            if result.get('success') and result.get('eventos'):
-                                eventos = result['eventos']
+                            # Comparar com eventos anteriores para detectar novidades
+                            eventos_anteriores = item.get('rastreio_eventos', [])
+                            qtd_anterior = len(eventos_anteriores)
+                            
+                            # Atualizar eventos no item
+                            item['rastreio_eventos'] = eventos
+                            
+                            # Verificar se há novos eventos
+                            novos_eventos = len(eventos) > qtd_anterior
+                            
+                            now = datetime.now(timezone.utc)
+                            
+                            # ===== LÓGICA PARA ITENS "PRONTO_ENVIO" =====
+                            # Se está "pronto_envio" e tem eventos de movimentação → mudar para "em_transito"
+                            if status_atual == 'pronto_envio' and len(eventos) > 0:
+                                # Verificar se tem evento de postagem/movimentação
+                                evento_recente = eventos[0] if eventos else {}
+                                descricao = evento_recente.get('descricao', '').lower()
                                 
-                                # Comparar com eventos anteriores para detectar novidades
-                                eventos_anteriores = item.get('rastreio_eventos', [])
-                                qtd_anterior = len(eventos_anteriores)
+                                # Palavras que indicam que o objeto foi postado/está em movimento
+                                indicadores_postagem = [
+                                    'objeto postado',
+                                    'postado',
+                                    'objeto recebido',
+                                    'em trânsito',
+                                    'encaminhado',
+                                    'saiu para',
+                                    'em transferência'
+                                ]
                                 
-                                # Atualizar eventos no item
-                                item['rastreio_eventos'] = eventos
+                                foi_postado = any(ind in descricao for ind in indicadores_postagem)
                                 
-                                # Verificar se há novos eventos
-                                novos_eventos = len(eventos) > qtd_anterior
-                                
-                                now = datetime.now(timezone.utc)
-                                
+                                if foi_postado or len(eventos) >= 1:
+                                    # Tem pelo menos um evento = foi postado
+                                    item['status'] = 'em_transito'
+                                    item['data_postagem'] = now.isoformat()
+                                    stats["postados"] += 1
+                                    po_atualizado = True
+                                    
+                                    # Criar notificação de postagem
+                                    await _criar_notificacao_rastreio(
+                                        po, item, "postagem", "📦 Item Postado",
+                                        f"O item {item['codigo_item']} foi postado e está em trânsito. Código: {codigo}"
+                                    )
+                                    
+                                    logger.info(f"Item {item['codigo_item']} postado - {codigo}")
+                            
+                            # ===== LÓGICA PARA ITENS "EM_TRANSITO" =====
+                            elif status_atual == 'em_transito':
                                 # Verificar se foi entregue
                                 if result.get('entregue'):
                                     item['status'] = ItemStatus.ENTREGUE.value
-                                    item['data_entrega'] = now.isoformat()
+                                    item['data_entrega_real'] = now.isoformat()
                                     stats["entregues"] += 1
                                     po_atualizado = True
                                     
