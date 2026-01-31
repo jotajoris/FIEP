@@ -5439,6 +5439,76 @@ async def update_po_endereco_entrega(
     return {"success": True, "endereco_entrega": endereco}
 
 
+# ============== DADOS BANCÁRIOS PERSONALIZADOS POR OC ==============
+
+@api_router.get("/purchase-orders/{po_id}/dados-bancarios")
+async def get_dados_bancarios(
+    po_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter dados bancários personalizados de uma OC"""
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0, "dados_bancarios": 1})
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    # Retornar dados personalizados ou padrão
+    dados_padrao = {
+        "banco": "341 - Itaú Unibanco",
+        "conta": "98814-9",
+        "agencia": "3978",
+        "pix": "46.663.556/0001-69"
+    }
+    
+    return po.get("dados_bancarios", dados_padrao)
+
+
+@api_router.patch("/purchase-orders/{po_id}/dados-bancarios")
+async def update_dados_bancarios(
+    po_id: str,
+    data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Atualizar dados bancários de uma OC (qualquer usuário logado)"""
+    
+    # Extrair dados do request
+    dados_bancarios = {
+        "banco": data.get("banco", "").strip(),
+        "conta": data.get("conta", "").strip(),
+        "agencia": data.get("agencia", "").strip(),
+        "pix": data.get("pix", "").strip(),
+        "atualizado_por": current_user.get("email"),
+        "atualizado_em": datetime.now(timezone.utc).isoformat()
+    }
+    
+    result = await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"dados_bancarios": dados_bancarios}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    return {"success": True, "dados_bancarios": dados_bancarios}
+
+
+@api_router.get("/dados-bancarios/todas-ocs")
+async def get_todos_dados_bancarios(
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter dados bancários de todas as OCs que têm dados personalizados"""
+    cursor = db.purchase_orders.find(
+        {"dados_bancarios": {"$exists": True}},
+        {"_id": 0, "id": 1, "dados_bancarios": 1}
+    )
+    
+    result = {}
+    async for po in cursor:
+        result[po["id"]] = po.get("dados_bancarios", {})
+    
+    return result
+
+
 @api_router.post("/purchase-orders/{po_id}/status-em-massa")
 async def atualizar_status_em_massa(
     po_id: str,
