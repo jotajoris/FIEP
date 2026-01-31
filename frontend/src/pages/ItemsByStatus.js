@@ -270,7 +270,7 @@ const ItemsByStatus = () => {
       const prontoDespachoByOC = {}; // Armazenar status "pronto para despacho" por OC
       
       // Verificar se estamos usando endpoint otimizado (itens já vêm filtrados)
-      const statusOtimizados = ['em_separacao', 'pronto_envio', 'em_transito', 'entregue'];
+      // Reutilizar array já definido acima
       const usandoEndpointOtimizado = statusOtimizados.includes(status);
       
       purchaseOrders.forEach(po => {
