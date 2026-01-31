@@ -359,7 +359,7 @@ const PODetails = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `${API}/purchase-orders/${id}/items/by-index/${itemIndex}/imagem`,
+        `${API}/itens/${item.codigo_item}/imagem`,
         {
           method: 'DELETE',
           headers: {
