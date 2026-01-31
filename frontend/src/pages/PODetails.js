@@ -969,10 +969,10 @@ const PODetails = () => {
                     alignItems: 'center',
                     gap: '0.25rem'
                   }}>
-                    {groupItem.imagem_url ? (
+                    {groupItem.imagem_url || groupItem.codigo_item ? (
                       <div style={{ position: 'relative' }}>
                         <img 
-                          src={`${BACKEND_URL}${groupItem.imagem_url}?t=${Date.now()}`}
+                          src={`${API}/itens/${groupItem.codigo_item}/imagem?t=${Date.now()}`}
                           alt={`Foto do item ${groupItem.codigo_item}`}
                           style={{ 
                             width: '70px', 
@@ -982,7 +982,12 @@ const PODetails = () => {
                             border: '2px solid #e2e8f0',
                             cursor: 'pointer'
                           }}
-                          onClick={() => setImagemExpandida(`${BACKEND_URL}${groupItem.imagem_url}?t=${Date.now()}`)}
+                          onClick={() => setImagemExpandida(`${API}/itens/${groupItem.codigo_item}/imagem?t=${Date.now()}`)}
+                          onError={(e) => {
+                            // Se não tiver imagem, esconder e mostrar botão de upload
+                            e.target.style.display = 'none';
+                            e.target.parentElement.querySelector('.no-image-placeholder')?.classList.remove('hidden');
+                          }}
                         />
                         <button
                           onClick={() => handleDeleteImage(groupItem, itemRealIndex)}
