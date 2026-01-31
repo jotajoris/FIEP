@@ -969,40 +969,50 @@ const PODetails = () => {
                     alignItems: 'center',
                     gap: '0.25rem'
                   }}>
-                    {groupItem.imagem_url || groupItem.codigo_item ? (
-                      <div style={{ position: 'relative' }}>
-                        <img 
-                          src={`${API}/itens/${groupItem.codigo_item}/imagem?t=${Date.now()}`}
-                          alt={`Foto do item ${groupItem.codigo_item}`}
-                          style={{ 
-                            width: '70px', 
-                            height: '70px', 
-                            objectFit: 'cover', 
-                            borderRadius: '8px',
-                            border: '2px solid #e2e8f0',
-                            cursor: 'pointer'
-                          }}
-                          onClick={() => setImagemExpandida(`${API}/itens/${groupItem.codigo_item}/imagem?t=${Date.now()}`)}
-                          onError={(e) => {
-                            // Se não tiver imagem, esconder e mostrar botão de upload
-                            e.target.style.display = 'none';
-                            e.target.parentElement.querySelector('.no-image-placeholder')?.classList.remove('hidden');
-                          }}
-                        />
-                        <button
-                          onClick={() => handleDeleteImage(groupItem, itemRealIndex)}
-                          disabled={uploadingImage === itemRealIndex}
-                          style={{
-                            position: 'absolute',
-                            top: '-6px',
-                            right: '-6px',
-                            width: '20px',
-                            height: '20px',
-                            borderRadius: '50%',
-                            background: '#ef4444',
-                            color: 'white',
-                            border: 'none',
-                            cursor: 'pointer',
+                    {/* Área de imagem - sempre visível */}
+                    <div style={{ position: 'relative' }}>
+                      <img 
+                        id={`img-${groupItem.codigo_item}-${itemIdx}`}
+                        src={`${API}/itens/${groupItem.codigo_item}/imagem?t=${Date.now()}`}
+                        alt={`Foto do item ${groupItem.codigo_item}`}
+                        style={{ 
+                          width: '70px', 
+                          height: '70px', 
+                          objectFit: 'cover', 
+                          borderRadius: '8px',
+                          border: '2px solid #e2e8f0',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => setImagemExpandida(`${API}/itens/${groupItem.codigo_item}/imagem?t=${Date.now()}`)}
+                        onError={(e) => {
+                          // Se não tiver imagem, esconder a img e mostrar placeholder
+                          e.target.style.display = 'none';
+                          const placeholder = document.getElementById(`placeholder-${groupItem.codigo_item}-${itemIdx}`);
+                          if (placeholder) placeholder.style.display = 'flex';
+                        }}
+                        onLoad={(e) => {
+                          // Imagem carregou, garantir que está visível
+                          e.target.style.display = 'block';
+                          const placeholder = document.getElementById(`placeholder-${groupItem.codigo_item}-${itemIdx}`);
+                          if (placeholder) placeholder.style.display = 'none';
+                        }}
+                      />
+                      {/* Botão de remover (só se imagem existe) */}
+                      <button
+                        onClick={() => handleDeleteImage(groupItem, itemRealIndex)}
+                        disabled={uploadingImage === itemRealIndex}
+                        className="delete-img-btn"
+                        style={{
+                          position: 'absolute',
+                          top: '-6px',
+                          right: '-6px',
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: '50%',
+                          background: '#ef4444',
+                          color: 'white',
+                          border: 'none',
+                          cursor: 'pointer',
                             fontSize: '0.7rem',
                             display: 'flex',
                             alignItems: 'center',
