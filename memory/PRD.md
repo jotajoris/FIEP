@@ -122,6 +122,17 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
   - Dados são salvos permanentemente no banco por OC
   - Funciona independente de haver ou não itens pendentes
 
+- ✅ **Notas Fiscais no Admin - Correção**
+  - Agora mostra TODAS as NFs: 10 de Compra (Fornecedor) + 35 de Venda (ON)
+  - NFs de Venda no nível da OC agora são listadas corretamente
+  - Total: 45 NFs disponíveis para download
+
+- ✅ **Download de PDF da OC**
+  - Novo endpoint: `/api/purchase-orders/{po_id}/download-pdf`
+  - Novo endpoint: `/api/purchase-orders/{po_id}/has-pdf`
+  - PDF é salvo automaticamente ao criar OC ou atualizar com PDF
+  - Botão "Download PDF" (verde) aparece na página da OC quando disponível
+
 ### 2025-01-30 (Sessão atual - Continuação 5)
 - ✅ **Bug Fix: Frontend quebrado (página em branco)**
   - Corrigido erro de sintaxe em `Estoque.js` - bloco `try` sem `catch/finally`
