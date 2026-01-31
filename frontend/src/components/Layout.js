@@ -148,36 +148,27 @@ const Layout = ({ children }) => {
             FIEP | Gestão OC
           </Link>
           
-          {/* Botão Hamburger - Mobile Only */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="mobile-menu-btn"
-            data-testid="mobile-menu-btn"
-          >
-            {mobileMenuOpen ? '✕' : '☰'}
-          </button>
-          
-          <ul className={`nav-links ${mobileMenuOpen ? 'mobile-open' : ''}`}>
-            {/* Menu Principal - Visível para todos */}
+          {/* Desktop: Menu horizontal completo */}
+          <ul className="nav-links desktop-only">
             <li>
-              <Link to="/" className={`nav-link ${isActive('/')}`} data-testid="nav-dashboard" onClick={() => setMobileMenuOpen(false)}>
+              <Link to="/" className={`nav-link ${isActive('/')}`} data-testid="nav-dashboard">
                 📊 Dashboard
               </Link>
             </li>
             {user?.owner_name && (
               <li>
-                <Link to={`/owner/${user.owner_name}`} className={`nav-link ${isActive(`/owner/${user.owner_name}`)}`} data-testid="nav-my-items" onClick={() => setMobileMenuOpen(false)}>
+                <Link to={`/owner/${user.owner_name}`} className={`nav-link ${isActive(`/owner/${user.owner_name}`)}`} data-testid="nav-my-items">
                   📋 Meus Itens
                 </Link>
               </li>
             )}
             <li>
-              <Link to="/estoque" className={`nav-link ${isActive('/estoque')}`} data-testid="nav-estoque" onClick={() => setMobileMenuOpen(false)}>
+              <Link to="/estoque" className={`nav-link ${isActive('/estoque')}`} data-testid="nav-estoque">
                 📦 Estoque
               </Link>
             </li>
             <li>
-              <Link to="/galeria" className={`nav-link ${isActive('/galeria')}`} data-testid="nav-galeria" onClick={() => setMobileMenuOpen(false)}>
+              <Link to="/galeria" className={`nav-link ${isActive('/galeria')}`} data-testid="nav-galeria">
                 🖼️ Galeria
               </Link>
             </li>
@@ -188,6 +179,167 @@ const Layout = ({ children }) => {
                 <div ref={notificacoesRef} style={{ position: 'relative' }}>
                   <button
                     onClick={toggleNotificacoes}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '0.5rem',
+                      position: 'relative',
+                      fontSize: '1.25rem'
+                    }}
+                    data-testid="notifications-bell"
+                    title="Notificações"
+                  >
+                    🔔
+                    {notificacoesCount > 0 && (
+                      <span style={{
+                        position: 'absolute',
+                        top: '0',
+                        right: '0',
+                        background: '#ef4444',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '18px',
+                        height: '18px',
+                        fontSize: '0.7rem',
+                        fontWeight: '700',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        {notificacoesCount > 9 ? '9+' : notificacoesCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Dropdown de Notificações */}
+                  {showNotificacoes && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      right: '0',
+                      width: '360px',
+                      maxHeight: '400px',
+                      overflowY: 'auto',
+                      background: 'white',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                      zIndex: 1000,
+                      border: '1px solid #e2e8f0'
+                    }} data-testid="notifications-dropdown">
+                      <div style={{
+                        padding: '0.75rem 1rem',
+                        borderBottom: '1px solid #e2e8f0',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: '#f7fafc'
+                      }}>
+                        <span style={{ fontWeight: '600', color: '#2d3748' }}>Notificações</span>
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                          <button onClick={abrirVerTodas} style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '500' }}>Ver todas</button>
+                          {notificacoesCount > 0 && (
+                            <button onClick={marcarTodasComoLidas} style={{ background: 'none', border: 'none', color: '#667eea', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '500' }}>Marcar todas lidas</button>
+                          )}
+                        </div>
+                      </div>
+                      {notificacoes.length === 0 ? (
+                        <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#718096' }}>Nenhuma notificação</div>
+                      ) : (
+                        <div>
+                          {notificacoes.map((notif) => (
+                            <div key={notif.id} onClick={() => !notif.lida && marcarComoLida(notif.id)} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #f0f0f0', cursor: notif.lida ? 'default' : 'pointer', background: notif.lida ? 'white' : '#f0f7ff' }}>
+                              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                                <span style={{ fontSize: '1.25rem' }}>{notif.tipo === 'entrega' ? '✅' : notif.tipo === 'saiu_entrega' ? '🚚' : notif.tipo === 'tentativa' ? '⚠️' : '🔔'}</span>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ fontWeight: notif.lida ? '400' : '600', color: notif.tipo === 'entrega' ? '#16a34a' : notif.tipo === 'saiu_entrega' ? '#2563eb' : notif.tipo === 'tentativa' ? '#d97706' : '#2d3748', fontSize: '0.9rem', marginBottom: '0.25rem' }}>{notif.titulo}</div>
+                                  {notif.mensagem && <div style={{ fontSize: '0.85rem', color: '#4a5568', marginBottom: '0.25rem' }}>{notif.mensagem}</div>}
+                                  <div style={{ fontSize: '0.85rem', color: '#4a5568', marginBottom: '0.25rem' }}><strong>OC:</strong> {notif.numero_oc} | <strong>Item:</strong> {notif.codigo_item}</div>
+                                  <div style={{ fontSize: '0.75rem', color: '#a0aec0', marginTop: '0.25rem' }}>{new Date(notif.created_at).toLocaleString('pt-BR')}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Menu do Usuário Desktop */}
+                <div ref={userMenuRef} style={{ position: 'relative' }}>
+                  <button onClick={() => setShowUserMenu(!showUserMenu)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: '8px', color: '#4a5568', fontSize: '0.9rem', fontWeight: '500' }} data-testid="user-menu-button">
+                    <span style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: '700' }}>{(user?.owner_name || user?.email || '?').charAt(0).toUpperCase()}</span>
+                    {user?.owner_name || user?.email}
+                    <span style={{ fontSize: '1.2rem', marginLeft: '0.25rem' }}>☰</span>
+                  </button>
+
+                  {showUserMenu && (
+                    <div style={{ position: 'absolute', top: '100%', right: '0', width: '200px', background: 'white', borderRadius: '8px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', zIndex: 1000, border: '1px solid #e2e8f0', overflow: 'hidden' }} data-testid="user-dropdown">
+                      {isAdmin() && (
+                        <>
+                          <Link to="/admin" onClick={() => setShowUserMenu(false)} style={{ display: 'block', padding: '0.75rem 1rem', color: '#4a5568', textDecoration: 'none', fontSize: '0.9rem', borderBottom: '1px solid #f0f0f0' }}>⚙️ Admin</Link>
+                          <Link to="/create-po" onClick={() => setShowUserMenu(false)} style={{ display: 'block', padding: '0.75rem 1rem', color: '#4a5568', textDecoration: 'none', fontSize: '0.9rem', borderBottom: '1px solid #f0f0f0' }}>➕ Nova OC</Link>
+                          <Link to="/resumo-completo" onClick={() => setShowUserMenu(false)} style={{ display: 'block', padding: '0.75rem 1rem', color: '#4a5568', textDecoration: 'none', fontSize: '0.9rem', borderBottom: '1px solid #f0f0f0' }}>📊 Resumo Completo</Link>
+                        </>
+                      )}
+                      <Link to="/planilha-itens" onClick={() => setShowUserMenu(false)} style={{ display: 'block', padding: '0.75rem 1rem', color: '#4a5568', textDecoration: 'none', fontSize: '0.9rem', borderBottom: '1px solid #f0f0f0' }}>📋 Planilha</Link>
+                      <Link to="/profile" onClick={() => setShowUserMenu(false)} style={{ display: 'block', padding: '0.75rem 1rem', color: '#4a5568', textDecoration: 'none', fontSize: '0.9rem', borderBottom: '1px solid #f0f0f0' }}>👤 Meu Perfil</Link>
+                      <button onClick={() => { setShowUserMenu(false); handleLogout(); }} style={{ display: 'block', width: '100%', padding: '0.75rem 1rem', color: '#dc2626', background: 'none', border: 'none', fontSize: '0.9rem', textAlign: 'left', cursor: 'pointer' }}>🚪 Sair</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </li>
+          </ul>
+
+          {/* Mobile: Sininho + Nome + Menu Hamburger */}
+          <div className="mobile-header-right mobile-only">
+            {/* Sininho Mobile */}
+            <div ref={notificacoesRef} style={{ position: 'relative' }}>
+              <button onClick={toggleNotificacoes} className="mobile-icon-btn" data-testid="notifications-bell-mobile">
+                🔔
+                {notificacoesCount > 0 && (
+                  <span className="notification-badge">{notificacoesCount > 9 ? '9+' : notificacoesCount}</span>
+                )}
+              </button>
+            </div>
+            
+            {/* Nome do usuário (abreviado) */}
+            <span className="mobile-user-name">{user?.owner_name?.split(' ')[0] || user?.email?.split('@')[0]}</span>
+            
+            {/* Menu Hamburger */}
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="mobile-menu-btn" data-testid="mobile-menu-btn">
+              {mobileMenuOpen ? '✕' : '☰'}
+            </button>
+          </div>
+        </div>
+
+        {/* Menu Mobile Expandido */}
+        {mobileMenuOpen && (
+          <div className="mobile-menu-dropdown">
+            <Link to="/" onClick={() => setMobileMenuOpen(false)} className={`mobile-menu-item ${isActive('/') ? 'active' : ''}`}>📊 Dashboard</Link>
+            {user?.owner_name && (
+              <Link to={`/owner/${user.owner_name}`} onClick={() => setMobileMenuOpen(false)} className={`mobile-menu-item ${isActive(`/owner/${user.owner_name}`) ? 'active' : ''}`}>📋 Meus Itens</Link>
+            )}
+            <Link to="/estoque" onClick={() => setMobileMenuOpen(false)} className={`mobile-menu-item ${isActive('/estoque') ? 'active' : ''}`}>📦 Estoque</Link>
+            <Link to="/galeria" onClick={() => setMobileMenuOpen(false)} className={`mobile-menu-item ${isActive('/galeria') ? 'active' : ''}`}>🖼️ Galeria</Link>
+            
+            <div className="mobile-menu-divider"></div>
+            
+            {isAdmin() && (
+              <>
+                <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-item">⚙️ Admin</Link>
+                <Link to="/create-po" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-item">➕ Nova OC</Link>
+                <Link to="/resumo-completo" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-item">📊 Resumo Completo</Link>
+              </>
+            )}
+            <Link to="/planilha-itens" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-item">📋 Planilha</Link>
+            <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-item">👤 Meu Perfil</Link>
+            <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="mobile-menu-item logout">🚪 Sair</button>
+          </div>
+        )}
+      </nav>
                     style={{
                       background: 'none',
                       border: 'none',
