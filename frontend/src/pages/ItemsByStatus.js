@@ -2147,8 +2147,15 @@ const ItemsByStatus = () => {
     // Preferir endereço da OC (que pode ter CEP) sobre o do item
     const endereco = item.endereco_entrega_oc || item.endereco_entrega || 'ENDEREÇO NÃO INFORMADO';
     
+    // Buscar itens que irão na próxima remessa para esta OC
+    const itensPendentes = itensProximaRemessaPorOC[item.po_id] || [];
+    const textoProximaRemessa = itensPendentes.length > 0 
+      ? `Itens que irão na próxima remessa: ${itensPendentes.join(', ')}`
+      : 'Itens que irão na próxima remessa: Nenhum (todos os itens estão nesta remessa)';
+    
     return `Endereço da entrega: ${endereco}
 NF referente à OC - ${numeroOC}
+${textoProximaRemessa}
 DADOS BANCÁRIOS
 Banco: 341 - Itaú Unibanco
 Conta: 98814-9
