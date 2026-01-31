@@ -90,6 +90,26 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 
 ## Changelog Recente
 
+### 2026-01-31 (Sessão atual - Continuação 6)
+- ✅ **CORREÇÃO CRÍTICA: Detecção de postagem real nos Correios**
+  - Problema: Sistema marcava itens como "em trânsito" mesmo quando só a etiqueta foi emitida
+  - Solução: Nova lógica que diferencia "etiqueta emitida" de "objeto postado"
+  - Indicadores de postagem real: "objeto postado", "objeto recebido", "encaminhado", etc.
+  - Indicadores ignorados: "etiqueta emitida", "objeto criado eletronicamente", "pré-postagem", etc.
+  - 4 itens incorretamente marcados foram revertidos para "pronto_envio"
+  - Notificações falsas de "Item Postado" foram marcadas como lidas
+
+- ✅ **Scheduler de rastreio atualizado**
+  - Antes: 1x ao dia às 15h Brasília
+  - Agora: 1x por hora (a cada hora cheia: 00:00, 01:00, ..., 23:00)
+  - Maior frequência de atualização para detectar entregas mais rapidamente
+
+- ✅ **Correção de imagens de itens**
+  - Padronizado formato de armazenamento (base64 separado no MongoDB)
+  - Migradas imagens legadas (disco e data URL) para novo formato
+  - Headers de cache adicionados para melhor performance
+  - Itens corrigidos: 089981, 113690, 114850, 114647
+
 ### 2025-01-30 (Sessão atual - Continuação 5)
 - ✅ **Bug Fix: Frontend quebrado (página em branco)**
   - Corrigido erro de sintaxe em `Estoque.js` - bloco `try` sem `catch/finally`
