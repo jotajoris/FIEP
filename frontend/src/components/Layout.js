@@ -147,38 +147,10 @@ const Layout = ({ children }) => {
             FIEP | Gestão OC
           </Link>
           <ul className="nav-links">
+            {/* Menu Principal - Visível para todos */}
             <li>
               <Link to="/" className={`nav-link ${isActive('/')}`} data-testid="nav-dashboard">
                 Dashboard
-              </Link>
-            </li>
-            {isAdmin() && (
-              <>
-                <li>
-                  <Link to="/create-po" className={`nav-link ${isActive('/create-po')}`} data-testid="nav-create-po">
-                    Nova OC
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/resumo-completo" className={`nav-link ${isActive('/resumo-completo')}`} data-testid="nav-resumo-completo">
-                    Resumo Completo
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/admin" className={`nav-link ${isActive('/admin')}`} data-testid="nav-admin">
-                    Admin
-                  </Link>
-                </li>
-              </>
-            )}
-            <li>
-              <Link to="/estoque" className={`nav-link ${isActive('/estoque')}`} data-testid="nav-estoque">
-                📦 Estoque
-              </Link>
-            </li>
-            <li>
-              <Link to="/planilha-itens" className={`nav-link ${isActive('/planilha-itens')}`} data-testid="nav-planilha">
-                📋 Planilha
               </Link>
             </li>
             {user?.owner_name && (
@@ -188,6 +160,17 @@ const Layout = ({ children }) => {
                 </Link>
               </li>
             )}
+            <li>
+              <Link to="/estoque" className={`nav-link ${isActive('/estoque')}`} data-testid="nav-estoque">
+                Estoque
+              </Link>
+            </li>
+            <li>
+              <Link to="/galeria" className={`nav-link ${isActive('/galeria')}`} data-testid="nav-galeria">
+                Galeria
+              </Link>
+            </li>
+            
             <li>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 {/* Sininho de Notificações */}
@@ -381,47 +364,178 @@ const Layout = ({ children }) => {
                   )}
                 </div>
 
-                <Link 
-                  to="/profile" 
-                  style={{ 
-                    color: '#4a5568', 
-                    fontSize: '0.9rem', 
-                    fontWeight: '500',
-                    textDecoration: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '8px',
-                    background: location.pathname === '/profile' ? '#edf2f7' : 'transparent',
-                    transition: 'background 0.2s'
-                  }} 
-                  data-testid="user-profile-link"
-                >
-                  <span style={{ 
-                    width: '28px', 
-                    height: '28px', 
-                    borderRadius: '50%', 
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '0.75rem',
-                    fontWeight: '700'
-                  }}>
-                    {(user?.owner_name || user?.email || '?').charAt(0).toUpperCase()}
-                  </span>
-                  {user?.owner_name || user?.email}
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="btn btn-secondary"
-                  style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                  data-testid="logout-button"
-                >
-                  Sair
-                </button>
+                {/* Nome do usuário com menu suspenso */}
+                <div ref={userMenuRef} style={{ position: 'relative' }}>
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '8px',
+                      color: '#4a5568',
+                      fontSize: '0.9rem',
+                      fontWeight: '500',
+                      transition: 'background 0.2s'
+                    }}
+                    data-testid="user-menu-button"
+                  >
+                    <span style={{ 
+                      width: '28px', 
+                      height: '28px', 
+                      borderRadius: '50%', 
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.75rem',
+                      fontWeight: '700'
+                    }}>
+                      {(user?.owner_name || user?.email || '?').charAt(0).toUpperCase()}
+                    </span>
+                    {user?.owner_name || user?.email}
+                    <span style={{ fontSize: '1.2rem', marginLeft: '0.25rem' }}>☰</span>
+                  </button>
+
+                  {/* Menu Dropdown do Usuário */}
+                  {showUserMenu && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      right: '0',
+                      width: '200px',
+                      background: 'white',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                      zIndex: 1000,
+                      border: '1px solid #e2e8f0',
+                      overflow: 'hidden'
+                    }} data-testid="user-dropdown">
+                      {isAdmin() && (
+                        <>
+                          <Link
+                            to="/admin"
+                            onClick={() => setShowUserMenu(false)}
+                            style={{
+                              display: 'block',
+                              padding: '0.75rem 1rem',
+                              color: '#4a5568',
+                              textDecoration: 'none',
+                              fontSize: '0.9rem',
+                              borderBottom: '1px solid #f0f0f0',
+                              transition: 'background 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.target.style.background = '#f7fafc'}
+                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                            data-testid="menu-admin"
+                          >
+                            ⚙️ Admin
+                          </Link>
+                          <Link
+                            to="/create-po"
+                            onClick={() => setShowUserMenu(false)}
+                            style={{
+                              display: 'block',
+                              padding: '0.75rem 1rem',
+                              color: '#4a5568',
+                              textDecoration: 'none',
+                              fontSize: '0.9rem',
+                              borderBottom: '1px solid #f0f0f0',
+                              transition: 'background 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.target.style.background = '#f7fafc'}
+                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                            data-testid="menu-nova-oc"
+                          >
+                            ➕ Nova OC
+                          </Link>
+                          <Link
+                            to="/resumo-completo"
+                            onClick={() => setShowUserMenu(false)}
+                            style={{
+                              display: 'block',
+                              padding: '0.75rem 1rem',
+                              color: '#4a5568',
+                              textDecoration: 'none',
+                              fontSize: '0.9rem',
+                              borderBottom: '1px solid #f0f0f0',
+                              transition: 'background 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.target.style.background = '#f7fafc'}
+                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                            data-testid="menu-resumo"
+                          >
+                            📊 Resumo Completo
+                          </Link>
+                        </>
+                      )}
+                      <Link
+                        to="/planilha-itens"
+                        onClick={() => setShowUserMenu(false)}
+                        style={{
+                          display: 'block',
+                          padding: '0.75rem 1rem',
+                          color: '#4a5568',
+                          textDecoration: 'none',
+                          fontSize: '0.9rem',
+                          borderBottom: '1px solid #f0f0f0',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = '#f7fafc'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                        data-testid="menu-planilha"
+                      >
+                        📋 Planilha
+                      </Link>
+                      <Link
+                        to="/profile"
+                        onClick={() => setShowUserMenu(false)}
+                        style={{
+                          display: 'block',
+                          padding: '0.75rem 1rem',
+                          color: '#4a5568',
+                          textDecoration: 'none',
+                          fontSize: '0.9rem',
+                          borderBottom: '1px solid #f0f0f0',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = '#f7fafc'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                        data-testid="menu-perfil"
+                      >
+                        👤 Meu Perfil
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          handleLogout();
+                        }}
+                        style={{
+                          display: 'block',
+                          width: '100%',
+                          padding: '0.75rem 1rem',
+                          color: '#dc2626',
+                          background: 'none',
+                          border: 'none',
+                          fontSize: '0.9rem',
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = '#fef2f2'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                        data-testid="menu-logout"
+                      >
+                        🚪 Sair
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </li>
           </ul>
