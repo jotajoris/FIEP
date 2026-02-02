@@ -24,6 +24,10 @@ const Estoque = () => {
   const [novaQuantidade, setNovaQuantidade] = useState(0);
   const [salvando, setSalvando] = useState(false);
   
+  // Estado para edição inline da quantidade do estoque
+  const [editingQuantidadeItem, setEditingQuantidadeItem] = useState(null);
+  const [novaQuantidadeEstoque, setNovaQuantidadeEstoque] = useState(0);
+  
   // Estados para adicionar item manual ao estoque
   const [showAddModal, setShowAddModal] = useState(false);
   const [codigoBusca, setCodigoBusca] = useState('');
