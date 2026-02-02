@@ -1977,6 +1977,9 @@ async def get_items_by_status_optimized(
         
         item = result['item']
         item['po_id'] = po_id
+        # Adicionar email do representante
+        responsavel = item.get('responsavel', '').strip()
+        item['representante_email'] = OWNER_TO_EMAIL.get(responsavel, '')
         ocs_map[po_id]['items'].append(item)
     
     # Converter para lista
