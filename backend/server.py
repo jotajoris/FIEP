@@ -6506,11 +6506,15 @@ async def atualizar_todas_ocs_com_pdfs(
                     responsavel = ""
                     lote = ""
                     lot_number = 0
+                    descricao_ref = item.get("descricao", "")  # Fallback para descrição do PDF
                     
                     if ref_items:
                         ref_item = ref_items[0] if len(ref_items) == 1 else random.choice(ref_items)
-                        responsavel = ref_item.get("quem_cotou", "")
+                        responsavel = ref_item.get("responsavel", "")  # Campo correto
                         lote = ref_item.get("lote", "")
+                        # Usar descrição da planilha se disponível
+                        if ref_item.get("descricao"):
+                            descricao_ref = ref_item.get("descricao")
                         try:
                             lot_number = int(''.join(filter(str.isdigit, lote))) if lote else 0
                         except:
@@ -6520,15 +6524,16 @@ async def atualizar_todas_ocs_com_pdfs(
                         "codigo_item": codigo,
                         "quantidade": int(item.get("quantidade", 1)),
                         "unidade": item.get("unidade", "UN"),
-                        "descricao": item.get("descricao", ""),
+                        "descricao": descricao_ref,  # Usar descrição da planilha
                         "endereco_entrega": pdf_data.get("endereco_entrega", ""),
                         "responsavel": responsavel,
                         "lote": lote,
                         "lot_number": lot_number,
-                        "regiao": item.get("regiao", ""),
+                        "regiao": ref_item.get("regiao", "") if ref_items else item.get("regiao", ""),
                         "status": "pendente",
-                        "preco_venda": item.get("preco_venda_pdf") or item.get("preco_venda"),
-                        "ncm": item.get("ncm", "")
+                        "preco_venda": item.get("preco_venda_pdf") or item.get("preco_venda") or (ref_item.get("preco_venda_unitario") if ref_items else None),
+                        "ncm": item.get("ncm", ""),
+                        "marca_modelo": ref_item.get("marca_modelo", "") if ref_items else ""
                     })
                 
                 # Criar documento da OC
