@@ -2051,62 +2051,84 @@ async def get_purchase_orders_simple(
     search_descricao: str = None,
     search_responsavel: str = None,
     date_from: str = None,
-    date_to: str = None
+    date_to: str = None,
+    page: int = 1,
+    limit: int = 50
 ):
     """Listar Ordens de Compra de forma simplificada (para carregamento rápido)
-    Retorna apenas dados essenciais sem os itens completos
+    Retorna apenas dados essenciais com paginação
     Suporta filtros server-side para performance"""
+    
+    # Limitar para evitar sobrecarga
+    limit = min(limit, 100)
+    skip = (page - 1) * limit
+    
+    # Construir query base
     query = {}
     
-    pos = await db.purchase_orders.find(query, {
+    # Filtro por número da OC
+    if search_oc:
+        query["numero_oc"] = {"$regex": search_oc, "$options": "i"}
+    
+    # Filtro por data
+    if date_from or date_to:
+        query["created_at"] = {}
+        if date_from:
+            query["created_at"]["$gte"] = date_from
+        if date_to:
+            query["created_at"]["$lte"] = date_to
+        if not query["created_at"]:
+            del query["created_at"]
+    
+    # Filtro por responsável (no nível do item)
+    if search_responsavel:
+        if search_responsavel == 'nao_atribuido':
+            query["$or"] = [
+                {"items.responsavel": {"$exists": False}},
+                {"items.responsavel": ""},
+                {"items.responsavel": {"$regex": "NÃO ENCONTRADO|Não atribuído", "$options": "i"}}
+            ]
+        else:
+            query["items.responsavel"] = search_responsavel
+    
+    # Filtro por código do item
+    if search_codigo:
+        query["items.codigo_item"] = {"$regex": search_codigo, "$options": "i"}
+    
+    # Filtro por descrição
+    if search_descricao:
+        query["items.descricao"] = {"$regex": search_descricao, "$options": "i"}
+    
+    # Se não for admin, adicionar filtro de responsável
+    if current_user['role'] != 'admin' and current_user.get('owner_name'):
+        user_name = current_user['owner_name'].strip()
+        query["items.responsavel"] = {"$regex": f"^{user_name}$", "$options": "i"}
+    
+    # Buscar OCs com projeção otimizada (sem dados pesados)
+    projection = {
         "_id": 0,
         "id": 1,
         "numero_oc": 1,
         "created_at": 1,
-        "data_entrega": 1,  # Data de entrega
-        "endereco_entrega": 1,  # Endereço de entrega
+        "data_entrega": 1,
+        "endereco_entrega": 1,
         "cnpj_requisitante": 1,
-        "items": 1,  # Necessário para contagem e filtro
-        "pdf_original.filename": 1  # Só buscar filename para verificar se existe (não os dados)
-    }).to_list(1000)
+        "items.codigo_item": 1,
+        "items.descricao": 1,
+        "items.responsavel": 1,
+        "items.quantidade": 1,
+        "items.status": 1,
+        "items.marca_modelo": 1,
+        "items.preco_venda": 1,
+        "pdf_original.filename": 1
+    }
+    
+    # Executar query com ordenação e paginação
+    cursor = db.purchase_orders.find(query, projection).sort("created_at", -1).skip(skip).limit(limit)
+    pos = await cursor.to_list(limit)
     
     result = []
     for po in pos:
-        if 'created_at' in po and po.get('created_at'):
-            if isinstance(po['created_at'], str):
-                try:
-                    po['created_at'] = datetime.fromisoformat(po['created_at'])
-                except:
-                    po['created_at'] = datetime.now(timezone.utc)
-        else:
-            po['created_at'] = datetime.now(timezone.utc)
-        
-        # Filtro por número da OC
-        if search_oc:
-            if search_oc.lower() not in po.get('numero_oc', '').lower():
-                continue
-        
-        # Filtro por data
-        if date_from or date_to:
-            po_date = po.get('created_at')
-            if isinstance(po_date, str):
-                try:
-                    po_date = datetime.fromisoformat(po_date)
-                except:
-                    po_date = datetime.now(timezone.utc)
-            if not po_date:
-                po_date = datetime.now(timezone.utc)
-            
-            if date_from:
-                from_date = datetime.fromisoformat(date_from)
-                if po_date.date() < from_date.date():
-                    continue
-            
-            if date_to:
-                to_date = datetime.fromisoformat(date_to)
-                if po_date.date() > to_date.date():
-                    continue
-        
         items = po.get('items', [])
         
         # Se não for admin, filtrar apenas itens do responsável
@@ -2114,39 +2136,28 @@ async def get_purchase_orders_simple(
             user_name = current_user['owner_name'].strip().upper()
             items = [item for item in items if (item.get('responsavel') or '').strip().upper() == user_name]
         
-        # Filtro por código do item
+        # Aplicar filtros adicionais nos itens
         if search_codigo:
             search_codigo_upper = search_codigo.upper()
             items = [item for item in items if search_codigo_upper in (item.get('codigo_item') or '').upper()]
-            if not items:
-                continue  # Pular OC se nenhum item corresponder
         
-        # Filtro por descrição/nome do item
         if search_descricao:
             search_descricao_upper = search_descricao.upper()
             items = [item for item in items if search_descricao_upper in (item.get('descricao') or '').upper()]
-            if not items:
-                continue  # Pular OC se nenhum item corresponder
         
-        # Filtro por responsável
-        if search_responsavel:
-            if search_responsavel == 'nao_atribuido':
-                items = [item for item in items if 
-                    not item.get('responsavel') or 
-                    item.get('responsavel', '').strip() == '' or
-                    'NÃO ENCONTRADO' in item.get('responsavel', '') or
-                    'Não atribuído' in item.get('responsavel', '')
-                ]
-            else:
-                items = [item for item in items if item.get('responsavel') == search_responsavel]
-            
-            if not items:
-                continue  # Pular OC se nenhum item corresponder
+        if search_responsavel and search_responsavel != 'nao_atribuido':
+            items = [item for item in items if item.get('responsavel') == search_responsavel]
+        elif search_responsavel == 'nao_atribuido':
+            items = [item for item in items if 
+                not item.get('responsavel') or 
+                item.get('responsavel', '').strip() == '' or
+                'NÃO ENCONTRADO' in item.get('responsavel', '') or
+                'Não atribuído' in item.get('responsavel', '')
+            ]
         
-        # Calcular resumo dos itens
         total_items = len(items)
         if total_items == 0:
-            continue  # Pular OCs sem itens para o usuário
+            continue
             
         valor_total = sum(
             (item.get('preco_venda') or 0) * (item.get('quantidade') or 1) 
@@ -2156,22 +2167,20 @@ async def get_purchase_orders_simple(
         result.append({
             "id": po['id'],
             "numero_oc": po.get('numero_oc', ''),
-            "created_at": po.get('created_at', datetime.now(timezone.utc)),
-            "data_entrega": po.get('data_entrega'),  # Data de entrega extraída do PDF
-            "endereco_entrega": po.get('endereco_entrega'),  # Endereço de entrega extraído do PDF
+            "created_at": po.get('created_at'),
+            "data_entrega": po.get('data_entrega'),
+            "endereco_entrega": po.get('endereco_entrega'),
             "cnpj_requisitante": po.get('cnpj_requisitante', ''),
             "total_items": total_items,
             "valor_total": valor_total,
-            # Flag para indicar se tem PDF disponível para download
             "has_pdf": bool(po.get('pdf_original') and po['pdf_original'].get('filename')),
-            # Incluir itens simplificados para filtro local (com quantidade, status e marca_modelo para resumo)
             "items": [{"codigo_item": i.get('codigo_item'), "descricao": i.get('descricao'), "responsavel": i.get('responsavel'), "quantidade": i.get('quantidade', 1), "status": i.get('status'), "marca_modelo": i.get('marca_modelo', '')} for i in items],
-            # Resumo por status
             "status_count": {
                 "pendente": sum(1 for i in items if i.get('status') == 'pendente'),
                 "cotado": sum(1 for i in items if i.get('status') == 'cotado'),
                 "comprado": sum(1 for i in items if i.get('status') == 'comprado'),
                 "em_separacao": sum(1 for i in items if i.get('status') == 'em_separacao'),
+                "pronto_envio": sum(1 for i in items if i.get('status') == 'pronto_envio'),
                 "em_transito": sum(1 for i in items if i.get('status') == 'em_transito'),
                 "entregue": sum(1 for i in items if i.get('status') == 'entregue'),
             }
