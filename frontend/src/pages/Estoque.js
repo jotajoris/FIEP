@@ -391,7 +391,34 @@ const Estoque = () => {
     }
   };
 
-  // Ajustar quantidade de estoque
+  // Ajustar quantidade total do estoque de um item (por código)
+  const handleAjustarQuantidade = async (codigoItem, novaQtd) => {
+    if (novaQtd < 0) {
+      alert('Quantidade não pode ser negativa');
+      return;
+    }
+    
+    setSalvando(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/api/estoque/ajustar-quantidade/${codigoItem}`, {
+        nova_quantidade: novaQtd
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      alert(`Quantidade do item ${codigoItem} ajustada para ${novaQtd}!`);
+      setEditingQuantidadeItem(null);
+      loadEstoque();
+    } catch (error) {
+      console.error('Erro ao ajustar quantidade:', error);
+      alert('Erro ao ajustar quantidade: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  // Ajustar quantidade de estoque (via modal)
   const handleAjustarEstoque = async () => {
     if (!editingOC) return;
     
