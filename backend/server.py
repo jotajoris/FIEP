@@ -6795,6 +6795,115 @@ async def recalcular_lucros_todos_itens(current_user: dict = Depends(require_adm
     }
 
 
+@api_router.post("/admin/reprocessar-itens-planilha")
+async def reprocessar_itens_com_planilha(
+    numero_oc: Optional[str] = None,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Reprocessar os itens de OCs existentes com base nos dados da planilha de referência.
+    Atualiza: descrição, lote, responsável, região, marca/modelo, preço de venda.
+    Preserva: status, fornecedor, link, observação, notas fiscais.
+    
+    Se numero_oc for especificado, processa apenas essa OC.
+    Caso contrário, processa TODAS as OCs.
+    """
+    import random
+    
+    query = {}
+    if numero_oc:
+        query["numero_oc"] = numero_oc
+    
+    # Buscar OCs
+    pos = await db.purchase_orders.find(query, {"_id": 0}).to_list(5000)
+    
+    if not pos:
+        return {"success": False, "message": "Nenhuma OC encontrada"}
+    
+    # Buscar todos os itens de referência
+    all_refs = await db.reference_items.find({}, {"_id": 0}).to_list(10000)
+    
+    # Criar lookup por código
+    ref_lookup = {}
+    for ref in all_refs:
+        codigo = ref.get("codigo_item", "")
+        if codigo:
+            if codigo not in ref_lookup:
+                ref_lookup[codigo] = []
+            ref_lookup[codigo].append(ref)
+    
+    ocs_atualizadas = 0
+    itens_atualizados = 0
+    itens_nao_encontrados = []
+    
+    for po in pos:
+        items_modified = False
+        
+        for item in po.get("items", []):
+            codigo = item.get("codigo_item", "")
+            ref_items = ref_lookup.get(codigo, [])
+            
+            if ref_items:
+                # Escolher referência (se houver múltiplas, usar a primeira ou aleatória)
+                ref_item = ref_items[0] if len(ref_items) == 1 else random.choice(ref_items)
+                
+                # Atualizar campos
+                old_desc = item.get("descricao", "")
+                new_desc = ref_item.get("descricao", "")
+                
+                if new_desc and (not old_desc or old_desc.startswith("Item ") or len(new_desc) > len(old_desc)):
+                    item["descricao"] = new_desc
+                    items_modified = True
+                
+                # Sempre atualizar lote, responsável, região se estiverem vazios ou com "NÃO ENCONTRADO"
+                if not item.get("responsavel") or "NÃO ENCONTRADO" in item.get("responsavel", ""):
+                    item["responsavel"] = ref_item.get("responsavel", "")
+                    items_modified = True
+                
+                if not item.get("lote") or "NÃO ENCONTRADO" in item.get("lote", ""):
+                    item["lote"] = ref_item.get("lote", "")
+                    try:
+                        item["lot_number"] = int(''.join(filter(str.isdigit, item["lote"]))) if item["lote"] else 0
+                    except:
+                        item["lot_number"] = 0
+                    items_modified = True
+                
+                if not item.get("regiao"):
+                    item["regiao"] = ref_item.get("regiao", "")
+                    items_modified = True
+                
+                if not item.get("marca_modelo"):
+                    item["marca_modelo"] = ref_item.get("marca_modelo", "")
+                    items_modified = True
+                
+                # Atualizar preço de venda se não tiver
+                if not item.get("preco_venda") and ref_item.get("preco_venda_unitario"):
+                    item["preco_venda"] = ref_item.get("preco_venda_unitario")
+                    items_modified = True
+                
+                if items_modified:
+                    itens_atualizados += 1
+            else:
+                # Item não encontrado na planilha
+                if codigo and codigo not in itens_nao_encontrados:
+                    itens_nao_encontrados.append(codigo)
+        
+        if items_modified:
+            await db.purchase_orders.update_one(
+                {"id": po["id"]},
+                {"$set": {"items": po["items"]}}
+            )
+            ocs_atualizadas += 1
+    
+    return {
+        "success": True,
+        "ocs_processadas": len(pos),
+        "ocs_atualizadas": ocs_atualizadas,
+        "itens_atualizados": itens_atualizados,
+        "itens_nao_encontrados_na_planilha": itens_nao_encontrados[:50]  # Limitar para não sobrecarregar resposta
+    }
+
+
 @api_router.post("/admin/atualizar-ncm-em-massa")
 async def atualizar_ncm_em_massa(
     files: List[UploadFile] = File(...),
