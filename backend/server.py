@@ -5247,9 +5247,19 @@ async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
             # NF de venda (revenda) - no nível do item
             nf_revenda = item.get('nota_fiscal_revenda')
             if nf_revenda:
+                filename_revenda = nf_revenda.get('filename', '')
+                
+                # Rastrear duplicatas de NF de venda
+                if filename_revenda not in nf_venda_por_filename:
+                    nf_venda_por_filename[filename_revenda] = []
+                nf_venda_por_filename[filename_revenda].append({
+                    'numero_oc': po.get('numero_oc'),
+                    'codigo_item': item.get('codigo_item')
+                })
+                
                 nfs_venda.append({
                     'id': nf_revenda.get('id'),
-                    'filename': nf_revenda.get('filename'),
+                    'filename': filename_revenda,
                     'content_type': nf_revenda.get('content_type'),
                     'ncm': nf_revenda.get('ncm'),
                     'numero_nf': nf_revenda.get('numero_nf'),  # Número da NF
@@ -5272,9 +5282,19 @@ async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
         nf['itens_usando'] = itens_usando if len(itens_usando) > 1 else []
         nf['qtd_usos'] = len(itens_usando)
     
-    # Criar lista de NFs duplicadas (únicas por filename)
+    # Marcar NFs de VENDA duplicadas
+    for nf in nfs_venda:
+        filename = nf.get('filename', '')
+        itens_usando = nf_venda_por_filename.get(filename, [])
+        nf['duplicada'] = len(itens_usando) > 1
+        nf['itens_usando'] = itens_usando if len(itens_usando) > 1 else []
+        nf['qtd_usos'] = len(itens_usando)
+    
+    # Criar lista de NFs duplicadas (únicas por filename) - inclui compra e venda
     nfs_duplicadas = []
     filenames_vistos = set()
+    
+    # NFs de compra duplicadas
     for nf in nfs_compra:
         if nf.get('duplicada') and nf['filename'] not in filenames_vistos:
             filenames_vistos.add(nf['filename'])
@@ -5283,7 +5303,21 @@ async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
                 'numero_nf': nf.get('numero_nf'),
                 'ncm': nf.get('ncm'),
                 'qtd_usos': nf['qtd_usos'],
-                'itens': nf['itens_usando']
+                'itens': nf['itens_usando'],
+                'tipo': 'compra'
+            })
+    
+    # NFs de venda duplicadas
+    for nf in nfs_venda:
+        if nf.get('duplicada') and nf['filename'] not in filenames_vistos:
+            filenames_vistos.add(nf['filename'])
+            nfs_duplicadas.append({
+                'filename': nf['filename'],
+                'numero_nf': nf.get('numero_nf'),
+                'ncm': nf.get('ncm'),
+                'qtd_usos': nf['qtd_usos'],
+                'itens': nf['itens_usando'],
+                'tipo': 'venda'
             })
     
     # Ordenar por data de upload (mais recente primeiro)
