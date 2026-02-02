@@ -6353,10 +6353,12 @@ async def atualizar_todas_ocs_com_pdfs(
     """
     Atualizar múltiplas OCs de uma vez com seus PDFs.
     Cada PDF deve corresponder a uma OC existente (pelo número da OC no PDF).
+    Se a OC não existir, ela será CRIADA automaticamente.
     
     Atualiza: Endereço, Data de Entrega, NCM, Preços dos itens (preco_pdf e preco_venda_unitario)
     Preserva: Status, responsável, fontes de compra, notas fiscais, observações
     """
+    import base64
     
     resultados = []
     
