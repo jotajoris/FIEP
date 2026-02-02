@@ -480,12 +480,13 @@ const Galeria = () => {
                 fontSize: '0.85rem', 
                 color: '#4b5563',
                 lineHeight: '1.4',
-                minHeight: '2.8rem',
-                overflow: 'hidden',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical'
-              }} title={item.descricao}>
+                height: '60px',
+                overflowY: 'auto',
+                padding: '0.25rem',
+                background: '#f9fafb',
+                borderRadius: '4px',
+                border: '1px solid #e5e7eb'
+              }}>
                 {item.descricao || 'Sem descrição'}
               </div>
 
