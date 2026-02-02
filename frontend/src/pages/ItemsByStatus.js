@@ -4868,7 +4868,7 @@ DADOS BANCÁRIOS - Banco: ${dados.banco} | Ag: ${dados.agencia} | Cc: ${dados.co
                                   <div style={{ flex: 1 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                                       <div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                                           <span style={{ fontWeight: '700', fontSize: '1rem', color: '#1f2937' }}>
                                             {item.codigo_item}
                                           </span>
@@ -4882,6 +4882,22 @@ DADOS BANCÁRIOS - Banco: ${dados.banco} | Ag: ${dados.agencia} | Cc: ${dados.co
                                           }}>
                                             {item.quantidade || 1} {item.unidade || 'UN'}
                                           </span>
+                                          {/* Código de Rastreio ao lado do código do item */}
+                                          {item.codigo_rastreio && (
+                                            <span style={{ 
+                                              fontSize: '0.75rem', 
+                                              color: '#7c3aed', 
+                                              background: '#f3e8ff',
+                                              padding: '0.15rem 0.5rem',
+                                              borderRadius: '4px',
+                                              fontWeight: '600',
+                                              display: 'inline-flex',
+                                              alignItems: 'center',
+                                              gap: '0.2rem'
+                                            }}>
+                                              📦 {item.codigo_rastreio}
+                                            </span>
+                                          )}
                                         </div>
                                         <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', color: '#6b7280' }}>
                                           {item.descricao?.substring(0, 80)}{item.descricao?.length > 80 ? '...' : ''}
