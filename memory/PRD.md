@@ -90,7 +90,35 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 
 ## Changelog Recente
 
-### 2026-01-31 (Sessão atual - Continuação 6)
+### 2026-02-02 (Sessão atual - Continuação 7)
+- ✅ **Admin Panel - Indicador de NFs de Venda Duplicadas**
+  - NFs de Venda agora mostram badge amarelo com "Nx" quando usadas em múltiplos itens/OCs
+  - Mesma lógica visual já existente nas NFs de Compra
+  - Card fica com borda amarela quando é duplicada
+
+- ✅ **Admin Panel - Campos de Pesquisa para NFs**
+  - Adicionado campo de pesquisa na coluna NFs de Compra
+  - Adicionado campo de pesquisa na coluna NFs de Venda
+  - Filtro por: filename, número NF, número OC, código item
+  - Mostra contador "Mostrando X de Y NFs" durante filtro
+
+- ✅ **"Pronto para Envio" - Seção de NF de Compra (Fornecedor)**
+  - Nova seção "🏭 NFs de Compra (Fornecedor)" quando expande OC
+  - Lista todas as NFs de fornecedor dos itens da OC
+  - Botões de download (⬇️) e excluir (🗑️) por NF
+  - Botão "+ Adicionar NF de Compra" para upload
+  - Contador de itens com NF (ex: "3 de 5 itens com NF")
+
+- ✅ **Galeria - Descrição com Scroll**
+  - Descrição dos itens agora tem altura fixa (60px) com scroll vertical
+  - Todas as descrições ficam do mesmo tamanho
+  - Barra de rolagem aparece quando texto é longo
+
+- ✅ **Permissões de Estoque**
+  - Qualquer usuário autenticado pode gerenciar estoque (não só admin)
+  - Endpoints afetados: `/api/estoque/*` (adicionar, ajustar, limpar, resetar)
+
+### 2026-01-31 (Sessão anterior - Continuação 6)
 - ✅ **CORREÇÃO CRÍTICA: Detecção de postagem real nos Correios**
   - Problema: Sistema marcava itens como "em trânsito" mesmo quando só a etiqueta foi emitida
   - Solução: Nova lógica que diferencia "etiqueta emitida" de "objeto postado"
