@@ -205,6 +205,98 @@ async def limpar_estoque_item(
     return {"success": True, "message": "Excedente de estoque removido"}
 
 
+@router.patch("/ajustar-quantidade/{codigo_item}")
+async def ajustar_quantidade_estoque(
+    codigo_item: str,
+    data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Ajusta a quantidade total em estoque de um item pelo código.
+    Distribui a diferença proporcionalmente entre as OCs que contribuem para o estoque.
+    Disponível para qualquer usuário autenticado.
+    """
+    nova_quantidade = data.get('nova_quantidade', 0)
+    
+    if nova_quantidade < 0:
+        raise HTTPException(status_code=400, detail="Quantidade não pode ser negativa")
+    
+    # Buscar todas as OCs que têm este item em estoque
+    pipeline = [
+        {"$unwind": {"path": "$items", "includeArrayIndex": "itemIndex"}},
+        {"$match": {
+            "items.codigo_item": codigo_item,
+            "$expr": {
+                "$gt": [
+                    {"$ifNull": ["$items.quantidade_comprada", 0]},
+                    {"$ifNull": ["$items.quantidade", 0]}
+                ]
+            }
+        }},
+        {"$project": {
+            "_id": 0,
+            "po_id": "$id",
+            "numero_oc": 1,
+            "item_index": "$itemIndex",
+            "quantidade_comprada": {"$ifNull": ["$items.quantidade_comprada", 0]},
+            "quantidade_necessaria": {"$ifNull": ["$items.quantidade", 0]},
+            "excedente": {
+                "$subtract": [
+                    {"$ifNull": ["$items.quantidade_comprada", 0]},
+                    {"$ifNull": ["$items.quantidade", 0]}
+                ]
+            }
+        }}
+    ]
+    
+    cursor = db.purchase_orders.aggregate(pipeline)
+    ocs_com_estoque = await cursor.to_list(100)
+    
+    if not ocs_com_estoque:
+        raise HTTPException(status_code=404, detail=f"Item {codigo_item} não encontrado em estoque")
+    
+    # Calcular estoque atual total
+    estoque_atual = sum(oc['excedente'] for oc in ocs_com_estoque)
+    
+    if nova_quantidade == estoque_atual:
+        return {"success": True, "message": "Quantidade já está no valor desejado"}
+    
+    diferenca = nova_quantidade - estoque_atual
+    
+    if diferenca > 0:
+        # Aumentar: adicionar à primeira OC
+        primeira_oc = ocs_com_estoque[0]
+        nova_qtd_comprada = primeira_oc['quantidade_comprada'] + diferenca
+        
+        await db.purchase_orders.update_one(
+            {"id": primeira_oc['po_id']},
+            {"$set": {f"items.{primeira_oc['item_index']}.quantidade_comprada": nova_qtd_comprada}}
+        )
+    else:
+        # Diminuir: remover proporcionalmente
+        a_remover = abs(diferenca)
+        for oc in ocs_com_estoque:
+            if a_remover <= 0:
+                break
+            
+            remover_desta = min(a_remover, oc['excedente'])
+            nova_qtd_comprada = oc['quantidade_comprada'] - remover_desta
+            
+            await db.purchase_orders.update_one(
+                {"id": oc['po_id']},
+                {"$set": {f"items.{oc['item_index']}.quantidade_comprada": nova_qtd_comprada}}
+            )
+            
+            a_remover -= remover_desta
+    
+    return {
+        "success": True,
+        "message": f"Quantidade de {codigo_item} ajustada de {estoque_atual} para {nova_quantidade}",
+        "anterior": estoque_atual,
+        "novo": nova_quantidade
+    }
+
+
 @router.post("/resetar-uso/{po_id}/{item_index}")
 async def resetar_uso_estoque(
     po_id: str,
