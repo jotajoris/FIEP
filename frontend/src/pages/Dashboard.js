@@ -9,15 +9,20 @@ import SearchSummaryPopup from '../components/SearchSummaryPopup';
 const calcularStatusEntrega = (dataEntrega, statusCount = {}) => {
   if (!dataEntrega) return null;
   
+  // Calcular total de itens e entregues
+  const totalItems = (statusCount.pendente || 0) + 
+                     (statusCount.cotado || 0) + 
+                     (statusCount.comprado || 0) + 
+                     (statusCount.em_separacao || 0) + 
+                     (statusCount.pronto_envio || 0) + 
+                     (statusCount.em_transito || 0) + 
+                     (statusCount.entregue || 0);
+  
+  const itensEntregues = statusCount.entregue || 0;
+  
   // Verificar se todos os itens estão entregues
-  const todosEntregues = statusCount && 
-    statusCount.entregue > 0 && 
-    statusCount.pendente === 0 && 
-    statusCount.cotado === 0 && 
-    statusCount.comprado === 0 &&
-    statusCount.em_separacao === 0 &&
-    statusCount.pronto_envio === 0 &&
-    statusCount.em_transito === 0;
+  const todosEntregues = totalItems > 0 && 
+    itensEntregues === totalItems;
   
   try {
     const hoje = new Date();
@@ -29,21 +34,24 @@ const calcularStatusEntrega = (dataEntrega, statusCount = {}) => {
     
     const dataFormatada = entrega.toLocaleDateString('pt-BR');
     
+    // Info de contagem de itens
+    const infoItens = { itensEntregues, totalItems };
+    
     // Se todos entregues, mostrar status positivo
     if (todosEntregues) {
-      return { entregue: true, dias: 0, dataFormatada, cor: '#22c55e', bg: '#f0fdf4' };
+      return { entregue: true, dias: 0, dataFormatada, cor: '#22c55e', bg: '#f0fdf4', ...infoItens };
     }
     
     if (diffDays < 0) {
-      return { atrasado: true, dias: Math.abs(diffDays), dataFormatada, cor: '#dc2626', bg: '#fef2f2' };
+      return { atrasado: true, dias: Math.abs(diffDays), dataFormatada, cor: '#dc2626', bg: '#fef2f2', ...infoItens };
     } else if (diffDays === 0) {
-      return { atrasado: false, dias: 0, texto: 'HOJE', dataFormatada, cor: '#f59e0b', bg: '#fffbeb' };
+      return { atrasado: false, dias: 0, texto: 'HOJE', dataFormatada, cor: '#f59e0b', bg: '#fffbeb', ...infoItens };
     } else if (diffDays <= 3) {
-      return { atrasado: false, dias: diffDays, dataFormatada, cor: '#f59e0b', bg: '#fffbeb' };
+      return { atrasado: false, dias: diffDays, dataFormatada, cor: '#f59e0b', bg: '#fffbeb', ...infoItens };
     } else if (diffDays <= 7) {
-      return { atrasado: false, dias: diffDays, dataFormatada, cor: '#3b82f6', bg: '#eff6ff' };
+      return { atrasado: false, dias: diffDays, dataFormatada, cor: '#3b82f6', bg: '#eff6ff', ...infoItens };
     } else {
-      return { atrasado: false, dias: diffDays, dataFormatada, cor: '#22c55e', bg: '#f0fdf4' };
+      return { atrasado: false, dias: diffDays, dataFormatada, cor: '#22c55e', bg: '#f0fdf4', ...infoItens };
     }
   } catch (e) {
     return null;
