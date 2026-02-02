@@ -1922,6 +1922,28 @@ async def get_items_by_status_optimized(
     cursor = db.purchase_orders.aggregate(pipeline)
     results = await cursor.to_list(10000)
     
+    # Coletar IDs das OCs para buscar itens pendentes
+    po_ids = set(r['po_id'] for r in results)
+    
+    # Buscar itens pendentes de cada OC (status que não são avançados)
+    status_avancados = ['em_separacao', 'pronto_envio', 'em_transito', 'entregue']
+    itens_pendentes_map = {}
+    
+    if po_ids:
+        pipeline_pendentes = [
+            {"$match": {"id": {"$in": list(po_ids)}}},
+            {"$unwind": "$items"},
+            {"$match": {"items.status": {"$nin": status_avancados}}},
+            {"$group": {
+                "_id": "$id",
+                "itens_pendentes": {"$addToSet": "$items.codigo_item"}
+            }}
+        ]
+        cursor_pendentes = db.purchase_orders.aggregate(pipeline_pendentes)
+        pendentes_results = await cursor_pendentes.to_list(1000)
+        for p in pendentes_results:
+            itens_pendentes_map[p['_id']] = p['itens_pendentes']
+    
     # Agrupar por OC para manter estrutura esperada pelo frontend
     ocs_map = {}
     for result in results:
@@ -1934,6 +1956,7 @@ async def get_items_by_status_optimized(
                 "endereco_entrega": result.get('endereco_entrega'),
                 "notas_fiscais_venda": result.get('notas_fiscais_venda', []),  # NFs de venda
                 "dados_bancarios_custom": result.get('dados_bancarios_custom'),  # Dados bancários
+                "itens_pendentes": itens_pendentes_map.get(po_id, []),  # Itens pendentes para próxima remessa
                 "items": []
             }
         
