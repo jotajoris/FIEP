@@ -950,7 +950,50 @@ const Dashboard = () => {
                         {order.valor_total > 0 ? formatBRL(order.valor_total) : '-'}
                       </td>
                       <td>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          {/* Botão Download PDF */}
+                          {order.has_pdf && (
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const response = await fetch(`${API}/purchase-orders/${order.id}/download-pdf`, {
+                                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                                  });
+                                  if (response.ok) {
+                                    const blob = await response.blob();
+                                    const url = window.URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = `${order.numero_oc}.pdf`;
+                                    a.click();
+                                    window.URL.revokeObjectURL(url);
+                                  } else {
+                                    alert('PDF não disponível');
+                                  }
+                                } catch (err) {
+                                  console.error('Erro ao baixar PDF:', err);
+                                  alert('Erro ao baixar PDF');
+                                }
+                              }}
+                              className="btn"
+                              style={{ 
+                                padding: '0.5rem 0.75rem', 
+                                fontSize: '0.85rem',
+                                background: '#059669',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.25rem'
+                              }}
+                              title="Baixar PDF da OC"
+                              data-testid={`download-pdf-${order.numero_oc}`}
+                            >
+                              ⬇️
+                            </button>
+                          )}
                           <Link to={`/po/${order.id}`} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} data-testid={`view-po-${order.numero_oc}`}>
                             Ver Detalhes
                           </Link>
