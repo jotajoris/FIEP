@@ -2103,7 +2103,7 @@ async def get_purchase_orders_simple(
             "total_items": total_items,
             "valor_total": valor_total,
             # Flag para indicar se tem PDF disponível para download
-            "has_pdf": bool(po.get('pdf_original') and po['pdf_original'].get('data')),
+            "has_pdf": bool(po.get('pdf_original') and po['pdf_original'].get('filename')),
             # Incluir itens simplificados para filtro local (com quantidade, status e marca_modelo para resumo)
             "items": [{"codigo_item": i.get('codigo_item'), "descricao": i.get('descricao'), "responsavel": i.get('responsavel'), "quantidade": i.get('quantidade', 1), "status": i.get('status'), "marca_modelo": i.get('marca_modelo', '')} for i in items],
             # Resumo por status
