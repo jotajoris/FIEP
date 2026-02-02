@@ -1340,9 +1340,9 @@ const AdminPanel = () => {
                       );
                     })}
                     {/* Paginação NFs Venda */}
-                    {notasFiscais.notas_venda.length > 5 && (
+                    {filteredNfVenda.length > 5 && (
                       <Pagination
-                        totalItems={notasFiscais.notas_venda.length}
+                        totalItems={filteredNfVenda.length}
                         currentPage={nfVendaPage}
                         itemsPerPage={nfVendaPerPage}
                         onPageChange={setNfVendaPage}
