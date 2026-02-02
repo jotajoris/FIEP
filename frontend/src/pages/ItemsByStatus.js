@@ -339,8 +339,9 @@ const ItemsByStatus = () => {
         });
       });
       
-      // Calcular itens que irão na próxima remessa por OC (apenas para endpoints não otimizados)
+      // Calcular itens que irão na próxima remessa por OC
       if (!usandoEndpointOtimizado) {
+        // Quando não usa endpoint otimizado, calcula no frontend
         const statusAvancados = ['em_separacao', 'pronto_envio', 'em_transito', 'entregue'];
         const itensPendentesMap = {};
         purchaseOrders.forEach(po => {
@@ -349,6 +350,15 @@ const ItemsByStatus = () => {
             .map(item => item.codigo_item);
           if (itensPendentes.length > 0) {
             itensPendentesMap[po.id] = [...new Set(itensPendentes)]; // Remove duplicatas
+          }
+        });
+        setItensProximaRemessaPorOC(itensPendentesMap);
+      } else {
+        // Quando usa endpoint otimizado, os itens pendentes já vêm do backend
+        const itensPendentesMap = {};
+        purchaseOrders.forEach(po => {
+          if (po.itens_pendentes && po.itens_pendentes.length > 0) {
+            itensPendentesMap[po.id] = po.itens_pendentes;
           }
         });
         setItensProximaRemessaPorOC(itensPendentesMap);
