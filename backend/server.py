@@ -2207,6 +2207,44 @@ async def check_oc_has_pdf(po_id: str, current_user: dict = Depends(get_current_
     }
 
 
+@api_router.post("/purchase-orders/{po_id}/upload-pdf")
+async def upload_pdf_to_oc(
+    po_id: str,
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload direto de PDF para uma OC específica"""
+    import base64
+    
+    # Verificar se OC existe
+    po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0, "numero_oc": 1})
+    if not po:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    # Ler conteúdo do arquivo
+    content = await file.read()
+    
+    # Salvar PDF
+    pdf_data = {
+        'filename': file.filename,
+        'content_type': file.content_type or 'application/pdf',
+        'data': base64.b64encode(content).decode('utf-8'),
+        'uploaded_at': datetime.now(timezone.utc).isoformat(),
+        'uploaded_by': current_user.get('sub')
+    }
+    
+    result = await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {"pdf_original": pdf_data}}
+    )
+    
+    return {
+        "success": True,
+        "message": f"PDF salvo para {po.get('numero_oc')}",
+        "filename": file.filename
+    }
+
+
 @api_router.put("/purchase-orders/{po_id}")
 async def update_purchase_order(po_id: str, po_update: PurchaseOrderCreate, current_user: dict = Depends(require_admin)):
     """Atualizar uma OC (ADMIN ONLY)"""
