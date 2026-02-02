@@ -182,9 +182,9 @@ async def ajustar_estoque(
 async def limpar_estoque_item(
     po_id: str,
     item_index: int,
-    current_user: dict = Depends(require_admin)
+    current_user: dict = Depends(get_current_user)
 ):
-    """Remove o excedente de estoque de um item específico"""
+    """Remove o excedente de estoque de um item específico. Disponível para qualquer usuário."""
     po = await db.purchase_orders.find_one({"id": po_id}, {"_id": 0})
     if not po:
         raise HTTPException(status_code=404, detail="OC não encontrada")
