@@ -4160,6 +4160,155 @@ DADOS BANCÁRIOS - Banco: ${dados.banco} | Ag: ${dados.agencia} | Cc: ${dados.co
                         </div>
                       )}
 
+                      {/* ======== SEÇÃO NF DE COMPRA (FORNECEDOR) ======== */}
+                      <div style={{ 
+                        marginBottom: '1rem', 
+                        padding: '1rem', 
+                        background: '#f5f3ff', 
+                        borderRadius: '8px',
+                        border: '1px solid #c4b5fd'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                          <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700', color: '#5b21b6' }}>
+                            🏭 NFs de Compra (Fornecedor) - {oc.numero_oc}
+                          </h4>
+                          {oc.itensComNFFornecedor > 0 && (
+                            <span style={{ 
+                              background: oc.todosFornecedor ? '#22c55e' : '#f59e0b', 
+                              color: 'white', 
+                              padding: '0.25rem 0.75rem', 
+                              borderRadius: '12px',
+                              fontSize: '0.8rem',
+                              fontWeight: '600'
+                            }}>
+                              {oc.itensComNFFornecedor} de {oc.totalItens} itens com NF
+                            </span>
+                          )}
+                        </div>
+                        
+                        {/* Lista de NFs de Compra existentes */}
+                        {(() => {
+                          // Coletar todas as NFs de fornecedor de todos os itens desta OC
+                          const todasNFsFornecedor = [];
+                          oc.items.forEach(item => {
+                            (item.notas_fiscais_fornecedor || []).forEach((nf, idx) => {
+                              todasNFsFornecedor.push({
+                                ...nf,
+                                item: item,
+                                itemIdx: idx
+                              });
+                            });
+                          });
+                          
+                          if (todasNFsFornecedor.length > 0) {
+                            return (
+                              <div style={{ marginBottom: '0.75rem' }}>
+                                {todasNFsFornecedor.map((nf, idx) => (
+                                  <div 
+                                    key={nf.id || idx}
+                                    style={{ 
+                                      display: 'flex', 
+                                      alignItems: 'center', 
+                                      justifyContent: 'space-between',
+                                      padding: '0.5rem 0.75rem',
+                                      background: 'white',
+                                      borderRadius: '6px',
+                                      marginBottom: '0.25rem',
+                                      fontSize: '0.85rem'
+                                    }}
+                                  >
+                                    <div>
+                                      <span style={{ fontWeight: '600' }}>
+                                        {nf.filename.endsWith('.xml') ? '📑' : '📄'} {nf.filename}
+                                      </span>
+                                      {nf.numero_nf && (
+                                        <span style={{ marginLeft: '0.5rem', color: '#6b7280', fontSize: '0.8rem' }}>
+                                          (NF: {nf.numero_nf})
+                                        </span>
+                                      )}
+                                      <span style={{ marginLeft: '0.5rem', color: '#7c3aed', fontSize: '0.75rem' }}>
+                                        • {nf.item.codigo_item}
+                                      </span>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                      <button
+                                        onClick={() => downloadNF(nf.item, nf.id, nf.filename)}
+                                        style={{ 
+                                          padding: '0.25rem 0.5rem', 
+                                          fontSize: '0.75rem', 
+                                          background: '#7c3aed', 
+                                          color: 'white', 
+                                          border: 'none', 
+                                          borderRadius: '4px', 
+                                          cursor: 'pointer' 
+                                        }}
+                                      >
+                                        ⬇️
+                                      </button>
+                                      <button
+                                        onClick={() => deleteNF(nf.item, nf.id, 'fornecedor')}
+                                        style={{ 
+                                          padding: '0.25rem 0.5rem', 
+                                          fontSize: '0.75rem', 
+                                          background: '#ef4444', 
+                                          color: 'white', 
+                                          border: 'none', 
+                                          borderRadius: '4px', 
+                                          cursor: 'pointer' 
+                                        }}
+                                      >
+                                        🗑️
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          }
+                          return (
+                            <div style={{ color: '#9ca3af', fontSize: '0.85rem', marginBottom: '0.75rem' }}>
+                              Nenhuma NF de compra adicionada
+                            </div>
+                          );
+                        })()}
+                        
+                        {/* Botão para adicionar NF de Compra */}
+                        {oc.items && oc.items.length > 0 && (
+                          <div style={{ textAlign: 'center' }}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const input = document.createElement('input');
+                                input.type = 'file';
+                                input.accept = '.pdf,.xml';
+                                input.onchange = (ev) => {
+                                  if (ev.target.files && ev.target.files[0]) {
+                                    // Adiciona para o primeiro item da OC
+                                    const primeiroItem = oc.items[0];
+                                    handleFileUpload(primeiroItem, 'fornecedor', ev);
+                                  }
+                                };
+                                input.click();
+                              }}
+                              disabled={uploadingNF !== null}
+                              style={{ 
+                                padding: '0.5rem 1rem', 
+                                fontSize: '0.85rem', 
+                                background: uploadingNF !== null ? '#9ca3af' : '#7c3aed', 
+                                color: 'white', 
+                                border: 'none', 
+                                borderRadius: '6px',
+                                cursor: uploadingNF !== null ? 'not-allowed' : 'pointer',
+                                fontWeight: '600'
+                              }}
+                            >
+                              {uploadingNF !== null ? '⏳ Enviando...' : '+ Adicionar NF de Compra'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      {/* ======== FIM SEÇÃO NF DE COMPRA ======== */}
+
                       {/* Informações de Frete */}
                       <div style={{ 
                         marginBottom: '1rem', 
