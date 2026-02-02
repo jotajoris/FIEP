@@ -38,6 +38,10 @@ const AdminPanel = () => {
   // Paginação para itens do responsável
   const [itensPage, setItensPage] = useState(1);
   const [itensPerPage, setItensPerPage] = useState(5);
+  
+  // Campos de pesquisa para NFs
+  const [searchNFCompra, setSearchNFCompra] = useState('');
+  const [searchNFVenda, setSearchNFVenda] = useState('');
 
   useEffect(() => {
     loadData();
