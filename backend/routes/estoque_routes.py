@@ -209,9 +209,9 @@ async def limpar_estoque_item(
 async def resetar_uso_estoque(
     po_id: str,
     item_index: int,
-    current_user: dict = Depends(require_admin)
+    current_user: dict = Depends(get_current_user)
 ):
-    """Reseta os campos de uso de estoque de um item"""
+    """Reseta os campos de uso de estoque de um item. Disponível para qualquer usuário."""
     result = await db.purchase_orders.update_one(
         {"id": po_id},
         {"$set": {
