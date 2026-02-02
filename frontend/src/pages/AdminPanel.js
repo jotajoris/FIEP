@@ -1309,7 +1309,6 @@ const AdminPanel = () => {
                                 </span>
                               )}
                             </div>
-                            </div>
                             <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                               OC: {nf.numero_oc}
                             </div>
