@@ -1154,9 +1154,9 @@ const AdminPanel = () => {
                       );
                     })}
                     {/* Paginação NFs Compra */}
-                    {notasFiscais.notas_compra.length > 5 && (
+                    {filteredNfCompra.length > 5 && (
                       <Pagination
-                        totalItems={notasFiscais.notas_compra.length}
+                        totalItems={filteredNfCompra.length}
                         currentPage={nfCompraPage}
                         itemsPerPage={nfCompraPerPage}
                         onPageChange={setNfCompraPage}
