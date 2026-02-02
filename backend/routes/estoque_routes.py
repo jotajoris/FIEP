@@ -154,11 +154,11 @@ async def get_estoque_detalhes(
 @router.patch("/ajustar")
 async def ajustar_estoque(
     data: dict,
-    current_user: dict = Depends(require_admin)
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Ajusta manualmente a quantidade em estoque de um item.
-    Usado para correções administrativas.
+    Disponível para qualquer usuário autenticado.
     """
     po_id = data.get('po_id')
     item_index = data.get('item_index')
