@@ -707,6 +707,95 @@ const AdminPanel = () => {
                 </div>
               </div>
             )}
+            
+            {/* Seção de Reprocessamento com Planilha */}
+            <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '2px solid #e5e7eb' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '1rem' }}>
+                🔄 Reprocessar Itens com Planilha
+              </h3>
+              <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '1rem' }}>
+                Use esta opção para atualizar os dados dos itens (descrição, lote, responsável, região, marca/modelo) 
+                com base na planilha de referência. Útil quando uma OC foi criada antes da planilha ser carregada.
+              </p>
+              
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => handleReprocessarItensPlanilha()}
+                  disabled={reprocessandoItens}
+                  className="btn btn-primary"
+                  style={{ 
+                    padding: '0.75rem 1.5rem',
+                    background: reprocessandoItens ? '#9ca3af' : '#8b5cf6',
+                    cursor: reprocessandoItens ? 'wait' : 'pointer'
+                  }}
+                  data-testid="reprocessar-todas-ocs-btn"
+                >
+                  {reprocessandoItens ? '⏳ Processando...' : '🔄 Reprocessar TODAS as OCs'}
+                </button>
+                
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    placeholder="Ex: OC-3.100117"
+                    id="numeroOcReprocessar"
+                    style={{
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '0.9rem',
+                      width: '150px'
+                    }}
+                  />
+                  <button
+                    onClick={() => {
+                      const numeroOc = document.getElementById('numeroOcReprocessar').value.trim();
+                      if (numeroOc) {
+                        handleReprocessarItensPlanilha(numeroOc);
+                      } else {
+                        alert('Digite o número da OC');
+                      }
+                    }}
+                    disabled={reprocessandoItens}
+                    className="btn"
+                    style={{ 
+                      padding: '0.75rem 1rem',
+                      background: reprocessandoItens ? '#9ca3af' : '#3b82f6',
+                      color: 'white',
+                      cursor: reprocessandoItens ? 'wait' : 'pointer'
+                    }}
+                  >
+                    Reprocessar OC específica
+                  </button>
+                </div>
+              </div>
+              
+              {/* Resultado do reprocessamento */}
+              {resultadoReprocessamento && (
+                <div style={{ 
+                  marginTop: '1rem', 
+                  padding: '1rem', 
+                  background: resultadoReprocessamento.success ? '#f0fdf4' : '#fef2f2',
+                  borderRadius: '8px',
+                  border: `1px solid ${resultadoReprocessamento.success ? '#86efac' : '#fca5a5'}`
+                }}>
+                  <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>
+                    {resultadoReprocessamento.success ? '✅ Reprocessamento concluído' : '❌ Erro'}
+                  </div>
+                  {resultadoReprocessamento.success && (
+                    <>
+                      <div>OCs processadas: {resultadoReprocessamento.ocs_processadas}</div>
+                      <div>OCs atualizadas: {resultadoReprocessamento.ocs_atualizadas}</div>
+                      <div>Itens atualizados: {resultadoReprocessamento.itens_atualizados}</div>
+                      {resultadoReprocessamento.itens_nao_encontrados_na_planilha?.length > 0 && (
+                        <div style={{ marginTop: '0.5rem', color: '#dc2626' }}>
+                          ⚠️ Itens não encontrados na planilha: {resultadoReprocessamento.itens_nao_encontrados_na_planilha.join(', ')}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </>
         )}
 
