@@ -1040,6 +1040,29 @@ const AdminPanel = () => {
                   </div>
                 )}
                 
+                {/* Campo de Pesquisa NFs de Compra */}
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <input
+                    type="text"
+                    placeholder="🔍 Pesquisar NF, OC, código..."
+                    value={searchNFCompra}
+                    onChange={(e) => setSearchNFCompra(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 0.75rem',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      fontSize: '0.85rem'
+                    }}
+                    data-testid="search-nf-compra"
+                  />
+                  {searchNFCompra && (
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                      Mostrando {filteredNfCompra.length} de {notasFiscais.notas_compra.length} NFs
+                    </div>
+                  )}
+                </div>
+                
                 {notasFiscais.notas_compra.length === 0 ? (
                   <p style={{ textAlign: 'center', color: '#718096', padding: '2rem', background: '#f9fafb', borderRadius: '8px' }}>
                     Nenhuma NF de compra
