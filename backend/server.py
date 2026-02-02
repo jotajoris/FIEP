@@ -1661,6 +1661,15 @@ async def upload_multiple_pdfs(files: List[UploadFile] = File(...), current_user
             if oc_data.get("data_entrega"):
                 doc['data_entrega'] = oc_data["data_entrega"]
             
+            # SALVAR PDF ORIGINAL para download posterior
+            import base64
+            doc['pdf_original'] = {
+                'filename': file.filename,
+                'content_type': 'application/pdf',
+                'data': base64.b64encode(pdf_content).decode('utf-8'),
+                'uploaded_at': datetime.now(timezone.utc).isoformat()
+            }
+            
             await db.purchase_orders.insert_one(doc)
             
             results["success"].append({
