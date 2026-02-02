@@ -1268,9 +1268,9 @@ const AdminPanel = () => {
                           key={index} 
                           style={{ 
                             padding: '0.75rem',
-                            background: isSelected ? '#e0f2fe' : 'white',
+                            background: isSelected ? '#e0f2fe' : (nf.duplicada ? '#fef3c7' : 'white'),
                             borderRadius: '6px',
-                            border: isSelected ? '2px solid #0ea5e9' : '1px solid #e5e7eb',
+                            border: isSelected ? '2px solid #0ea5e9' : (nf.duplicada ? '1px solid #f59e0b' : '1px solid #e5e7eb'),
                             display: 'flex',
                             alignItems: 'flex-start',
                             gap: '0.75rem'
@@ -1288,7 +1288,7 @@ const AdminPanel = () => {
                             width: '28px', 
                             height: '28px', 
                             borderRadius: '50%', 
-                            background: '#06b6d4',
+                            background: nf.duplicada ? '#f59e0b' : '#06b6d4',
                             color: 'white',
                             display: 'flex',
                             alignItems: 'center',
@@ -1297,12 +1297,18 @@ const AdminPanel = () => {
                             fontSize: '0.8rem',
                             flexShrink: 0
                           }}>
-                            {(nfVendaPage - 1) * nfVendaPerPage + index + 1}
+                            {nf.duplicada ? '⚠️' : (nfVendaPage - 1) * nfVendaPerPage + index + 1}
                           </div>
                           
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#1f2937' }}>
+                            <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                               NF: {nf.numero_nf || '-'}
+                              {nf.duplicada && (
+                                <span style={{ fontSize: '0.7rem', background: '#f59e0b', color: 'white', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                                  {nf.qtd_usos}x
+                                </span>
+                              )}
+                            </div>
                             </div>
                             <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                               OC: {nf.numero_oc}
