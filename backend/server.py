@@ -5180,15 +5180,26 @@ async def get_todas_notas_fiscais(current_user: dict = Depends(require_admin)):
     
     # Para detectar duplicatas, usamos o filename como chave
     nf_por_filename = {}  # filename -> lista de itens que usam essa NF
+    nf_venda_por_filename = {}  # filename -> lista de OCs/itens que usam essa NF de venda
     
     for po in pos:
         # ========= NFs DE VENDA NO NÍVEL DA OC =========
         # Essas são as NFs que são anexadas à OC inteira (não a itens específicos)
         nfs_venda_oc = po.get('notas_fiscais_venda', [])
         for nf in nfs_venda_oc:
+            filename = nf.get('filename', '')
+            
+            # Rastrear duplicatas de NF de venda
+            if filename not in nf_venda_por_filename:
+                nf_venda_por_filename[filename] = []
+            nf_venda_por_filename[filename].append({
+                'numero_oc': po.get('numero_oc'),
+                'codigo_item': 'OC COMPLETA'
+            })
+            
             nfs_venda.append({
                 'id': nf.get('id'),
-                'filename': nf.get('filename'),
+                'filename': filename,
                 'content_type': nf.get('content_type'),
                 'ncm': nf.get('ncm'),
                 'numero_nf': nf.get('numero_nf'),
