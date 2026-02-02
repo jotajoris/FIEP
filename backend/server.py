@@ -683,6 +683,28 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
         seen_items = set()
         lines = full_text.split('\n')
         
+        # PRIMEIRO: Extrair "Descritivo Completo" para cada código (mais confiável)
+        descricoes_completas = {}
+        for i, line in enumerate(lines):
+            if 'Descritivo Completo:' in line or 'Descritivo Completo' in line:
+                # Próxima linha deve ter o código e descrição
+                if i+1 < len(lines):
+                    desc_line = lines[i+1].strip()
+                    # Padrão: "085674 - DIODO; LED; COR: VERDE..."
+                    desc_match = re.match(r'^([01]\d{5})\s*-\s*(.+)$', desc_line)
+                    if desc_match:
+                        codigo_desc = desc_match.group(1)
+                        descricao_texto = desc_match.group(2).strip()
+                        # Pode continuar na próxima linha
+                        if i+2 < len(lines):
+                            next_line = lines[i+2].strip()
+                            # Se não começa com número ou "Descritivo", é continuação
+                            if next_line and not re.match(r'^\d', next_line) and 'Descritivo' not in next_line and 'Linha' not in next_line:
+                                descricao_texto += ' ' + next_line
+                        descricoes_completas[codigo_desc] = descricao_texto
+        
+        logger.info(f"Descritivos completos encontrados: {list(descricoes_completas.keys())}")
+        
         # Códigos de produto FIEP começam com 0 ou 1 (ex: 089847, 114720)
         # Códigos NCM começam com 8 ou 9 (ex: 853890, 903180) - ignorar
         
@@ -714,6 +736,10 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                                     if re.match(r'^([01]\d{5})$', check_line):
                                         break
                                     
+                                    # Parar se encontrar "Descritivo Completo" (descrição já capturada)
+                                    if 'Descritivo Completo' in check_line:
+                                        break
+                                    
                                     # Capturar NCM completo (8 dígitos começando com 1-9)
                                     if re.match(r'^[1-9]\d{7}$', check_line) and ncm_item is None:
                                         ncm_item = check_line
@@ -727,9 +753,9 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                                                 ncm_item = check_line + next_line
                                                 continue
                                     
-                                    # Coletar descrição (até encontrar quantidade)
+                                    # Coletar descrição curta (até encontrar quantidade) - usado como fallback
                                     if len(check_line) > 2 and not re.match(r'^[\d.,]+$', check_line):
-                                        if check_line not in ['UN', 'UND', 'UNID', 'KG', 'PC', 'M', 'L', 'CX', 'PAR', 'KIT']:
+                                        if check_line not in ['UN', 'UND', 'UNID', 'KG', 'PC', 'M', 'L', 'CX', 'PAR', 'KIT', 'CJ']:
                                             if 'Descritivo Completo' not in check_line and 'CFOP' not in check_line:
                                                 # Não incluir NCM na descrição (6 ou 8 dígitos começando com 1-9)
                                                 if not re.match(r'^[1-9]\d{5,7}$', check_line):
@@ -743,7 +769,7 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                                         if j+1 < len(lines):
                                             unit_line = lines[j+1].strip().upper()
                                             # Lista expandida de unidades aceitas
-                                            valid_units = ['UN', 'UND', 'UNID', 'KG', 'PC', 'PÇA', 'PÇ', 'PCA', 'M', 'L', 'CX', 'PAR', 'PCT', 'KIT', 'JG', 'JOGO', 'RL', 'ROLO', 'MT', 'METRO', 'CT', 'CEN', 'CENTO', 'MILHEIRO', 'MIL']
+                                            valid_units = ['UN', 'UND', 'UNID', 'KG', 'PC', 'PÇA', 'PÇ', 'PCA', 'M', 'L', 'CX', 'PAR', 'PCT', 'KIT', 'JG', 'JOGO', 'RL', 'ROLO', 'MT', 'METRO', 'CT', 'CEN', 'CENTO', 'MILHEIRO', 'MIL', 'CJ']
                                             if unit_line in valid_units:
                                                 quantidade = qty
                                                 # Normalizar unidades
@@ -779,12 +805,16 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                                     key = f"{linha_num}-{codigo}"
                                     if key not in seen_items:
                                         seen_items.add(key)
-                                        # Pegar descrição completa (sem limite de partes)
-                                        descricao = ' '.join(descricao_parts) if descricao_parts else f"Item {codigo}"
+                                        # PRIORIZAR "Descritivo Completo" do PDF sobre descrição curta
+                                        if codigo in descricoes_completas:
+                                            descricao = descricoes_completas[codigo]
+                                        else:
+                                            descricao = ' '.join(descricao_parts) if descricao_parts else f"Item {codigo}"
+                                        
                                         item_data = {
                                             "codigo_item": codigo,
                                             "quantidade": quantidade,
-                                            "descricao": descricao,  # Descrição completa sem truncar
+                                            "descricao": descricao,  # Descrição completa do PDF
                                             "unidade": unidade,
                                             "endereco_entrega": endereco_entrega,
                                             "regiao": regiao
