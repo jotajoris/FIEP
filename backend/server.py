@@ -2007,7 +2007,7 @@ async def get_purchase_orders_simple(
         "endereco_entrega": 1,  # Endereço de entrega
         "cnpj_requisitante": 1,
         "items": 1,  # Necessário para contagem e filtro
-        "pdf_original": 1  # Para verificar se tem PDF para download
+        "pdf_original.filename": 1  # Só buscar filename para verificar se existe (não os dados)
     }).to_list(1000)
     
     result = []
