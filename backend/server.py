@@ -1880,13 +1880,15 @@ async def get_items_by_status_optimized(
         # 3. Filtrar apenas itens com o status desejado
         {"$match": {"items.status": status}},
         
-        # 4. Projetar campos necessários
+        # 4. Projetar campos necessários (incluindo NFs)
         {"$project": {
             "_id": 0,
             "po_id": "$id",
             "numero_oc": 1,
             "data_entrega": 1,
             "endereco_entrega": 1,
+            "notas_fiscais_venda": 1,  # NFs de venda no nível da OC
+            "dados_bancarios_custom": 1,  # Dados bancários customizados
             "item": {
                 "$mergeObjects": [
                     "$items",
@@ -1924,6 +1926,8 @@ async def get_items_by_status_optimized(
                 "numero_oc": result['numero_oc'],
                 "data_entrega": result.get('data_entrega'),
                 "endereco_entrega": result.get('endereco_entrega'),
+                "notas_fiscais_venda": result.get('notas_fiscais_venda', []),  # NFs de venda
+                "dados_bancarios_custom": result.get('dados_bancarios_custom'),  # Dados bancários
                 "items": []
             }
         
