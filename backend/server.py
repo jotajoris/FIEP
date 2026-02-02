@@ -6394,15 +6394,101 @@ async def atualizar_todas_ocs_com_pdfs(
         
         # Buscar OC existente
         existing_po = await db.purchase_orders.find_one({"numero_oc": numero_oc}, {"_id": 0})
-        if not existing_po:
-            resultados.append({
-                "arquivo": file.filename,
-                "numero_oc": numero_oc,
-                "success": False,
-                "erro": f"OC {numero_oc} não encontrada no sistema"
-            })
-            continue
         
+        # Se OC não existe, CRIAR uma nova
+        if not existing_po:
+            import random
+            import uuid
+            
+            try:
+                # Buscar referências para os itens
+                all_codigo_items = [item.get("codigo_item") for item in pdf_data.get("items", []) if item.get("codigo_item")]
+                all_ref_items = await db.reference_items.find(
+                    {"codigo_item": {"$in": all_codigo_items}},
+                    {"_id": 0}
+                ).to_list(5000)
+                
+                ref_lookup = {}
+                for ref in all_ref_items:
+                    codigo = ref["codigo_item"]
+                    if codigo not in ref_lookup:
+                        ref_lookup[codigo] = []
+                    ref_lookup[codigo].append(ref)
+                
+                # Processar itens
+                processed_items = []
+                for item in pdf_data.get("items", []):
+                    codigo = item.get("codigo_item", "")
+                    ref_items = ref_lookup.get(codigo, [])
+                    
+                    responsavel = ""
+                    lote = ""
+                    lot_number = 0
+                    
+                    if ref_items:
+                        ref_item = ref_items[0] if len(ref_items) == 1 else random.choice(ref_items)
+                        responsavel = ref_item.get("quem_cotou", "")
+                        lote = ref_item.get("lote", "")
+                        try:
+                            lot_number = int(''.join(filter(str.isdigit, lote))) if lote else 0
+                        except:
+                            lot_number = 0
+                    
+                    processed_items.append({
+                        "codigo_item": codigo,
+                        "quantidade": int(item.get("quantidade", 1)),
+                        "unidade": item.get("unidade", "UN"),
+                        "descricao": item.get("descricao", ""),
+                        "endereco_entrega": pdf_data.get("endereco_entrega", ""),
+                        "responsavel": responsavel,
+                        "lote": lote,
+                        "lot_number": lot_number,
+                        "regiao": item.get("regiao", ""),
+                        "status": "pendente",
+                        "preco_venda": item.get("preco_venda_pdf") or item.get("preco_venda"),
+                        "ncm": item.get("ncm", "")
+                    })
+                
+                # Criar documento da OC
+                new_po = {
+                    "id": str(uuid.uuid4()),
+                    "numero_oc": numero_oc,
+                    "cnpj_requisitante": pdf_data.get("cnpj_requisitante", ""),
+                    "items": processed_items,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "created_by": current_user.get('sub'),
+                    "data_entrega": pdf_data.get("data_entrega"),
+                    "endereco_entrega": pdf_data.get("endereco_entrega", ""),
+                    "pdf_original": {
+                        'filename': file.filename,
+                        'content_type': 'application/pdf',
+                        'data': base64.b64encode(content).decode('utf-8'),
+                        'uploaded_at': datetime.now(timezone.utc).isoformat()
+                    }
+                }
+                
+                await db.purchase_orders.insert_one(new_po)
+                
+                resultados.append({
+                    "arquivo": file.filename,
+                    "numero_oc": numero_oc,
+                    "success": True,
+                    "campos_atualizados": ["NOVA OC CRIADA", f"{len(processed_items)} itens", "pdf_original"],
+                    "itens_atualizados": len(processed_items),
+                    "nova_oc": True
+                })
+                continue
+                
+            except Exception as e:
+                resultados.append({
+                    "arquivo": file.filename,
+                    "numero_oc": numero_oc,
+                    "success": False,
+                    "erro": f"Erro ao criar nova OC: {str(e)}"
+                })
+                continue
+        
+        # Se chegou aqui, OC existe - fazer atualização normal
         # Criar lookup de itens do PDF por código
         pdf_items_map = {}
         for item in pdf_data.get('items', []):
