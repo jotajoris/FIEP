@@ -144,17 +144,48 @@ const AdminPanel = () => {
     }
   };
 
-  // Paginação de NFs de Compra
+  // Filtrar e Paginar NFs de Compra
+  const filteredNfCompra = useMemo(() => {
+    if (!searchNFCompra.trim()) return notasFiscais.notas_compra;
+    const term = searchNFCompra.toLowerCase();
+    return notasFiscais.notas_compra.filter(nf => 
+      (nf.filename || '').toLowerCase().includes(term) ||
+      (nf.numero_nf || '').toLowerCase().includes(term) ||
+      (nf.numero_oc || '').toLowerCase().includes(term) ||
+      (nf.codigo_item || '').toLowerCase().includes(term)
+    );
+  }, [notasFiscais.notas_compra, searchNFCompra]);
+
   const paginatedNfCompra = useMemo(() => {
     const start = (nfCompraPage - 1) * nfCompraPerPage;
-    return notasFiscais.notas_compra.slice(start, start + nfCompraPerPage);
-  }, [notasFiscais.notas_compra, nfCompraPage, nfCompraPerPage]);
+    return filteredNfCompra.slice(start, start + nfCompraPerPage);
+  }, [filteredNfCompra, nfCompraPage, nfCompraPerPage]);
 
-  // Paginação de NFs de Venda
+  // Filtrar e Paginar NFs de Venda
+  const filteredNfVenda = useMemo(() => {
+    if (!searchNFVenda.trim()) return notasFiscais.notas_venda;
+    const term = searchNFVenda.toLowerCase();
+    return notasFiscais.notas_venda.filter(nf => 
+      (nf.filename || '').toLowerCase().includes(term) ||
+      (nf.numero_nf || '').toLowerCase().includes(term) ||
+      (nf.numero_oc || '').toLowerCase().includes(term) ||
+      (nf.codigo_item || '').toLowerCase().includes(term)
+    );
+  }, [notasFiscais.notas_venda, searchNFVenda]);
+
   const paginatedNfVenda = useMemo(() => {
     const start = (nfVendaPage - 1) * nfVendaPerPage;
-    return notasFiscais.notas_venda.slice(start, start + nfVendaPerPage);
-  }, [notasFiscais.notas_venda, nfVendaPage, nfVendaPerPage]);
+    return filteredNfVenda.slice(start, start + nfVendaPerPage);
+  }, [filteredNfVenda, nfVendaPage, nfVendaPerPage]);
+
+  // Reset página ao filtrar
+  useEffect(() => {
+    setNfCompraPage(1);
+  }, [searchNFCompra]);
+
+  useEffect(() => {
+    setNfVendaPage(1);
+  }, [searchNFVenda]);
 
   // Paginação de itens do responsável
   const paginatedItensResponsavel = useMemo(() => {
