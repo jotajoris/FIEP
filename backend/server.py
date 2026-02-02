@@ -115,6 +115,12 @@ EMAIL_TO_OWNER = {
     'fabioonsolucoes@gmail.com': 'Fabio'
 }
 
+# Reverse mapping: owner name -> email
+OWNER_TO_EMAIL = {v: k for k, v in EMAIL_TO_OWNER.items()}
+# Add missing team members
+OWNER_TO_EMAIL['João'] = 'projetos.onsolucoes@gmail.com'
+OWNER_TO_EMAIL['Mateus'] = 'mateus.onsolucoes@gmail.com'
+
 # OCs excluídas do cálculo de comissão
 EXCLUDED_OCS_FROM_COMMISSION = ['OC-2.118938', 'OC-2.118941']
 
