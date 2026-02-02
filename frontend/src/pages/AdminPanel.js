@@ -29,6 +29,10 @@ const AdminPanel = () => {
   const [atualizandoOCs, setAtualizandoOCs] = useState(false);
   const [resultadoAtualizacao, setResultadoAtualizacao] = useState(null);
   
+  // Reprocessar itens com planilha
+  const [reprocessandoItens, setReprocessandoItens] = useState(false);
+  const [resultadoReprocessamento, setResultadoReprocessamento] = useState(null);
+  
   // Paginação para NFs
   const [nfCompraPage, setNfCompraPage] = useState(1);
   const [nfCompraPerPage, setNfCompraPerPage] = useState(5);
