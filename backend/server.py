@@ -6410,6 +6410,16 @@ async def atualizar_todas_ocs_com_pdfs(
         
         # ============ ATUALIZAR CABEÇALHO ============
         
+        # SALVAR PDF ORIGINAL para download posterior
+        import base64
+        updates['pdf_original'] = {
+            'filename': file.filename,
+            'content_type': 'application/pdf',
+            'data': base64.b64encode(content).decode('utf-8'),
+            'uploaded_at': datetime.now(timezone.utc).isoformat()
+        }
+        campos_atualizados.append("pdf_original")
+        
         # Endereço de Entrega
         novo_endereco = pdf_data.get('endereco_entrega', '').strip()
         endereco_atual = existing_po.get('endereco_entrega', '').strip()
