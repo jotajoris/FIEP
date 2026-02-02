@@ -1989,13 +1989,13 @@ async def get_items_by_status_optimized(
     results = await cursor.to_list(limit)
     
     # Coletar IDs das OCs para buscar itens pendentes
+    # SÓ busca itens pendentes para status avançados (onde faz sentido mostrar "próxima remessa")
     po_ids = set(r['po_id'] for r in results)
-    
-    # Buscar itens pendentes de cada OC (status que não são avançados)
-    status_avancados = ['em_separacao', 'pronto_envio', 'em_transito', 'entregue']
     itens_pendentes_map = {}
     
-    if po_ids:
+    # Só buscar itens pendentes para status onde faz sentido
+    if po_ids and status in ['em_separacao', 'pronto_envio']:
+        status_avancados = ['em_separacao', 'pronto_envio', 'em_transito', 'entregue']
         pipeline_pendentes = [
             {"$match": {"id": {"$in": list(po_ids)}}},
             {"$unwind": "$items"},
@@ -2006,7 +2006,7 @@ async def get_items_by_status_optimized(
             }}
         ]
         cursor_pendentes = db.purchase_orders.aggregate(pipeline_pendentes)
-        pendentes_results = await cursor_pendentes.to_list(1000)
+        pendentes_results = await cursor_pendentes.to_list(500)
         for p in pendentes_results:
             itens_pendentes_map[p['_id']] = p['itens_pendentes']
     
