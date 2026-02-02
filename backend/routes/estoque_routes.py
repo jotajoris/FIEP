@@ -230,11 +230,12 @@ async def resetar_uso_estoque(
 @router.post("/adicionar-manual")
 async def adicionar_estoque_manual(
     data: dict,
-    current_user: dict = Depends(require_admin)
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Adiciona um item novo diretamente ao estoque (sem OC vinculada).
     Cria uma OC virtual para armazenar o item.
+    Disponível para qualquer usuário autenticado.
     """
     codigo_item = data.get('codigo_item')
     descricao = data.get('descricao', '')
