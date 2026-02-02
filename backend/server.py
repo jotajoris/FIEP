@@ -1834,6 +1834,12 @@ async def get_purchase_orders(
                 except:
                     pass
         
+        # Adicionar flag has_pdf
+        po['has_pdf'] = bool(po.get('pdf_original') and po['pdf_original'].get('data'))
+        # Remover dados pesados do PDF para não sobrecarregar a resposta
+        if 'pdf_original' in po:
+            del po['pdf_original']
+        
         # Adicionar índice original a cada item ANTES de filtrar
         for idx, item in enumerate(po.get('items', [])):
             item['_originalIndex'] = idx
