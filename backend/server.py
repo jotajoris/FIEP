@@ -1918,7 +1918,7 @@ async def get_items_by_status_optimized(
     status: str,
     current_user: dict = Depends(get_current_user),
     page: int = 1,
-    limit: int = 100
+    limit: int = 50  # Reduzido de 100 para 50
 ):
     """
     Endpoint OTIMIZADO para buscar itens por status.
@@ -1930,6 +1930,10 @@ async def get_items_by_status_optimized(
     if status not in status_validos:
         raise HTTPException(status_code=400, detail=f"Status inválido. Use: {', '.join(status_validos)}")
     
+    # Limitar para evitar sobrecarga
+    limit = min(limit, 100)
+    skip = (page - 1) * limit
+    
     # Pipeline de agregação otimizado
     pipeline = [
         # 1. Filtrar OCs que têm pelo menos um item com o status desejado
@@ -1940,29 +1944,12 @@ async def get_items_by_status_optimized(
         
         # 3. Filtrar apenas itens com o status desejado
         {"$match": {"items.status": status}},
-        
-        # 4. Projetar campos necessários (incluindo NFs)
-        {"$project": {
-            "_id": 0,
-            "po_id": "$id",
-            "numero_oc": 1,
-            "data_entrega": 1,
-            "endereco_entrega": 1,
-            "notas_fiscais_venda": 1,  # NFs de venda no nível da OC
-            "dados_bancarios_custom": 1,  # Dados bancários customizados
-            "item": {
-                "$mergeObjects": [
-                    "$items",
-                    {"_itemIndexInPO": "$_itemIndex", "_originalIndex": "$_itemIndex"}
-                ]
-            }
-        }}
     ]
     
     # Se não for admin, filtrar por responsável
     if current_user['role'] != 'admin' and current_user.get('owner_name'):
         user_name = current_user['owner_name'].strip()
-        pipeline.insert(3, {
+        pipeline.append({
             "$match": {
                 "$expr": {
                     "$eq": [
@@ -1973,9 +1960,33 @@ async def get_items_by_status_optimized(
             }
         })
     
+    # 4. Projetar campos necessários (REDUZIDO para performance)
+    pipeline.append({
+        "$project": {
+            "_id": 0,
+            "po_id": "$id",
+            "numero_oc": 1,
+            "data_entrega": 1,
+            "endereco_entrega": 1,
+            "notas_fiscais_venda": 1,
+            "dados_bancarios_custom": 1,
+            "item": {
+                "$mergeObjects": [
+                    "$items",
+                    {"_itemIndexInPO": "$_itemIndex", "_originalIndex": "$_itemIndex"}
+                ]
+            }
+        }
+    })
+    
+    # 5. Ordenar e paginar
+    pipeline.append({"$sort": {"numero_oc": -1}})
+    pipeline.append({"$skip": skip})
+    pipeline.append({"$limit": limit})
+    
     # Executar agregação
     cursor = db.purchase_orders.aggregate(pipeline)
-    results = await cursor.to_list(10000)
+    results = await cursor.to_list(limit)
     
     # Coletar IDs das OCs para buscar itens pendentes
     po_ids = set(r['po_id'] for r in results)
