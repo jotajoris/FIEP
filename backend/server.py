@@ -8253,9 +8253,10 @@ cors_origins_list = list(dict.fromkeys(cors_origins_list))
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=cors_origins_list,
+    allow_origins=["*"],  # Permitir todas as origens
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Middleware para headers anti-cache (forçar atualização)
