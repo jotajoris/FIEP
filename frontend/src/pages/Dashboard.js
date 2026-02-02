@@ -992,10 +992,62 @@ const Dashboard = () => {
                               gap: '0.25rem',
                               opacity: order.has_pdf ? 1 : 0.6
                             }}
-                            title={order.has_pdf ? "Baixar PDF da OC" : "PDF não disponível"}
+                            title={order.has_pdf ? "Baixar PDF da OC" : "PDF não disponível - clique em ⬆️ para subir"}
                             data-testid={`download-pdf-${order.numero_oc}`}
                           >
                             ⬇️
+                          </button>
+                          {/* Botão Upload PDF */}
+                          <button
+                            onClick={() => {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = '.pdf';
+                              input.onchange = async (e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  const file = e.target.files[0];
+                                  const formData = new FormData();
+                                  formData.append('file', file);
+                                  
+                                  try {
+                                    const response = await fetch(`${API}/purchase-orders/${order.id}/upload-pdf`, {
+                                      method: 'POST',
+                                      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                                      body: formData
+                                    });
+                                    
+                                    if (response.ok) {
+                                      alert(`PDF "${file.name}" salvo para ${order.numero_oc}!`);
+                                      // Recarregar lista
+                                      fetchPurchaseOrders();
+                                    } else {
+                                      const err = await response.json();
+                                      alert('Erro: ' + (err.detail || 'Falha ao salvar PDF'));
+                                    }
+                                  } catch (err) {
+                                    console.error('Erro ao fazer upload:', err);
+                                    alert('Erro ao fazer upload do PDF');
+                                  }
+                                }
+                              };
+                              input.click();
+                            }}
+                            className="btn"
+                            style={{ 
+                              padding: '0.5rem 0.75rem', 
+                              fontSize: '0.85rem',
+                              background: order.has_pdf ? '#94a3b8' : '#3b82f6',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center'
+                            }}
+                            title={order.has_pdf ? "Substituir PDF" : "Subir PDF para esta OC"}
+                            data-testid={`upload-pdf-${order.numero_oc}`}
+                          >
+                            ⬆️
                           </button>
                           <Link to={`/po/${order.id}`} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} data-testid={`view-po-${order.numero_oc}`}>
                             Ver Detalhes
