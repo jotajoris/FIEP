@@ -3756,6 +3756,76 @@ async def _criar_notificacao_rastreio(po: dict, item: dict, tipo: str, titulo: s
     
     await db.notificacoes.insert_one(notificacao)
 
+
+# ============== ENDPOINTS DE NOTIFICAÇÕES ==============
+
+@api_router.get("/notificacoes")
+async def get_notificacoes(
+    limit: int = 10,
+    current_user: dict = Depends(get_current_user)
+):
+    """Buscar notificações do usuário"""
+    try:
+        # Buscar notificações ordenadas por data (mais recentes primeiro)
+        notificacoes = await db.notificacoes.find(
+            {},
+            {"_id": 0}
+        ).sort("created_at", -1).limit(limit).to_list(limit)
+        
+        # Contar não lidas
+        nao_lidas = await db.notificacoes.count_documents({"lida": False})
+        
+        return {
+            "notificacoes": notificacoes,
+            "nao_lidas": nao_lidas,
+            "total": len(notificacoes)
+        }
+    except Exception as e:
+        logger.error(f"Erro ao buscar notificações: {e}")
+        return {"notificacoes": [], "nao_lidas": 0, "total": 0}
+
+
+@api_router.patch("/notificacoes/{notificacao_id}/lida")
+async def marcar_notificacao_lida(
+    notificacao_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Marcar uma notificação como lida"""
+    try:
+        result = await db.notificacoes.update_one(
+            {"id": notificacao_id},
+            {"$set": {"lida": True}}
+        )
+        
+        if result.modified_count == 0:
+            return {"success": False, "message": "Notificação não encontrada"}
+        
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"Erro ao marcar notificação como lida: {e}")
+        return {"success": False, "message": str(e)}
+
+
+@api_router.patch("/notificacoes/marcar-todas-lidas")
+async def marcar_todas_notificacoes_lidas(
+    current_user: dict = Depends(get_current_user)
+):
+    """Marcar todas as notificações como lidas"""
+    try:
+        result = await db.notificacoes.update_many(
+            {"lida": False},
+            {"$set": {"lida": True}}
+        )
+        
+        return {
+            "success": True,
+            "notificacoes_marcadas": result.modified_count
+        }
+    except Exception as e:
+        logger.error(f"Erro ao marcar notificações como lidas: {e}")
+        return {"success": False, "message": str(e)}
+
+
 # ============== FUNÇÕES DE NOTAS FISCAIS ==============
 
 def extract_ncm_from_xml(xml_content: str) -> Optional[str]:
