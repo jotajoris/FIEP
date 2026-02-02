@@ -6957,6 +6957,17 @@ async def reprocessar_itens_com_planilha(
                 # Item não encontrado na planilha
                 if codigo and codigo not in itens_nao_encontrados:
                     itens_nao_encontrados.append(codigo)
+            
+            # Preencher data_compra para itens que já estão em status avançado
+            status_item = item.get("status", "pendente")
+            status_comprado_ou_adiante = ['comprado', 'em_separacao', 'pronto_envio', 'em_transito', 'entregue']
+            if status_item in status_comprado_ou_adiante and not item.get("data_compra"):
+                # Usar updated_at ou uma data padrão
+                item["data_compra"] = item.get("updated_at", datetime.now(timezone.utc).strftime('%Y-%m-%d'))
+                if isinstance(item["data_compra"], str) and 'T' in item["data_compra"]:
+                    item["data_compra"] = item["data_compra"].split('T')[0]
+                items_modified = True
+                itens_atualizados += 1
         
         if items_modified:
             await db.purchase_orders.update_one(
