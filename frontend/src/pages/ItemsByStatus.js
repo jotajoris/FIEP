@@ -4693,13 +4693,29 @@ DADOS BANCÁRIOS - Banco: ${dados.banco} | Ag: ${dados.agencia} | Cc: ${dados.co
 
                                         {/* Código e Descrição */}
                                         <div style={{ marginBottom: '0.75rem' }}>
-                                          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.25rem' }}>
+                                          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
                                             <span style={{ fontWeight: '700', fontSize: '1rem', color: '#1f2937' }}>
                                               Código: {item.codigo_item}
                                             </span>
                                             {item.ncm && (
                                               <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>
                                                 NCM: {item.ncm}
+                                              </span>
+                                            )}
+                                            {/* Código de Rastreio ao lado do código do item */}
+                                            {item.codigo_rastreio && (
+                                              <span style={{ 
+                                                fontSize: '0.8rem', 
+                                                color: '#7c3aed', 
+                                                background: '#f3e8ff',
+                                                padding: '0.2rem 0.6rem',
+                                                borderRadius: '4px',
+                                                fontWeight: '600',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '0.3rem'
+                                              }}>
+                                                📦 {item.codigo_rastreio}
                                               </span>
                                             )}
                                           </div>
