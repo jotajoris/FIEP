@@ -148,6 +148,59 @@ const AdminPanel = () => {
     }
   };
 
+  // Função para reprocessar itens com dados da planilha
+  const handleReprocessarItensPlanilha = async (numeroOc = null) => {
+    const confirmar = window.confirm(
+      numeroOc 
+        ? `Reprocessar os itens da OC ${numeroOc} com os dados da planilha?\n\nIsso irá atualizar: descrição, lote, responsável, região, marca/modelo.`
+        : `Reprocessar TODAS as OCs com os dados da planilha?\n\nIsso irá atualizar: descrição, lote, responsável, região, marca/modelo.\n\n⚠️ Esta operação pode demorar alguns minutos.`
+    );
+    
+    if (!confirmar) return;
+    
+    setReprocessandoItens(true);
+    setResultadoReprocessamento(null);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const url = numeroOc 
+        ? `${API}/admin/reprocessar-itens-planilha?numero_oc=${encodeURIComponent(numeroOc)}`
+        : `${API}/admin/reprocessar-itens-planilha`;
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.detail || 'Erro ao reprocessar');
+      }
+      
+      setResultadoReprocessamento(result);
+      
+      alert(
+        `✅ Reprocessamento concluído!\n\n` +
+        `📊 Resultados:\n` +
+        `• ${result.ocs_processadas} OC(s) processada(s)\n` +
+        `• ${result.ocs_atualizadas} OC(s) atualizada(s)\n` +
+        `• ${result.itens_atualizados} item(ns) atualizado(s)\n` +
+        (result.itens_nao_encontrados_na_planilha?.length > 0 
+          ? `\n⚠️ ${result.itens_nao_encontrados_na_planilha.length} item(ns) não encontrado(s) na planilha`
+          : '')
+      );
+      
+    } catch (error) {
+      console.error('Erro ao reprocessar:', error);
+      alert(`❌ Erro ao reprocessar: ${error.message}`);
+    } finally {
+      setReprocessandoItens(false);
+    }
+  };
+
   // Filtrar e Paginar NFs de Compra
   const filteredNfCompra = useMemo(() => {
     if (!searchNFCompra.trim()) return notasFiscais.notas_compra;
