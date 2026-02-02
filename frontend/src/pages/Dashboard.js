@@ -599,8 +599,8 @@ const Dashboard = () => {
                     }}
                   >
                     <div className="owner-name" style={{ marginBottom: '0.5rem', color: colors.text }}>{owner}</div>
-                    <div className="owner-count" style={{ marginBottom: '0.75rem', color: colors.text }}>{breakdown.total || breakdown}</div>
-                    {breakdown.total !== undefined && (
+                    <div className="owner-count" style={{ marginBottom: '0.75rem', color: colors.text }}>{typeof breakdown === 'object' ? breakdown.total : breakdown}</div>
+                    {typeof breakdown === 'object' && (
                       <div style={{ fontSize: '0.7rem', color: '#6b7280', lineHeight: '1.4' }}>
                         {breakdown.pendente > 0 && <div style={{ color: '#f59e0b' }}>⏳ Pendente: {breakdown.pendente}</div>}
                         {breakdown.cotado > 0 && <div style={{ color: '#3b82f6' }}>📋 Cotado: {breakdown.cotado}</div>}
