@@ -1654,32 +1654,42 @@ async def upload_multiple_pdfs(files: List[UploadFile] = File(...), current_user
                 responsavel = item.get("responsavel", "")
                 lote = item.get("lote", "")
                 lot_number = 0
+                descricao = item.get("descricao", "")
+                regiao = item.get("regiao", "")
+                marca_modelo = item.get("marca_modelo", "")
                 
                 if ref_items:
                     ref_item = ref_items[0]
                     if len(ref_items) > 1:
                         ref_item = random.choice(ref_items)
-                    responsavel = ref_item.get("quem_cotou", "")
+                    responsavel = ref_item.get("responsavel", "")  # Campo correto
                     lote = ref_item.get("lote", "")
+                    # Usar descrição da planilha
+                    if ref_item.get("descricao"):
+                        descricao = ref_item.get("descricao")
+                    regiao = ref_item.get("regiao", regiao)
+                    marca_modelo = ref_item.get("marca_modelo", marca_modelo)
                     try:
                         lot_number = int(''.join(filter(str.isdigit, lote))) if lote else 0
                     except:
                         lot_number = 0
                 
-                preco_venda = item.get("preco_venda_pdf") or item.get("preco_venda")
+                preco_venda = item.get("preco_venda_pdf") or item.get("preco_venda") or (ref_item.get("preco_venda_unitario") if ref_items else None)
                 
                 processed_items.append(POItem(
                     codigo_item=item["codigo_item"],
                     quantidade=int(item.get("quantidade", 1)),
                     unidade=item.get("unidade", "UN"),
-                    descricao=item.get("descricao", ""),
+                    descricao=descricao,  # Usar descrição da planilha
                     endereco_entrega=oc_data.get("endereco_entrega", ""),
                     responsavel=responsavel,
                     lote=lote,
                     lot_number=lot_number,
-                    regiao=item.get("regiao", ""),
+                    regiao=regiao,
                     status="pendente",
-                    preco_venda=preco_venda
+                    preco_venda=preco_venda,
+                    marca_modelo=marca_modelo,
+                    ncm=item.get("ncm", "")
                 ))
             
             # Criar OC com data de entrega
