@@ -325,10 +325,11 @@ async def adicionar_estoque_manual(
 @router.post("/adicionar-quantidade")
 async def adicionar_quantidade_estoque(
     data: dict,
-    current_user: dict = Depends(require_admin)
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Adiciona quantidade a um item já existente no estoque.
+    Disponível para qualquer usuário autenticado.
     """
     codigo_item = data.get('codigo_item')
     quantidade = data.get('quantidade', 0)
