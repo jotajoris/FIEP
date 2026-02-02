@@ -2006,7 +2006,8 @@ async def get_purchase_orders_simple(
         "data_entrega": 1,  # Data de entrega
         "endereco_entrega": 1,  # Endereço de entrega
         "cnpj_requisitante": 1,
-        "items": 1  # Necessário para contagem e filtro
+        "items": 1,  # Necessário para contagem e filtro
+        "pdf_original": 1  # Para verificar se tem PDF para download
     }).to_list(1000)
     
     result = []
