@@ -1918,7 +1918,7 @@ async def get_items_by_status_optimized(
     status: str,
     current_user: dict = Depends(get_current_user),
     page: int = 1,
-    limit: int = 50  # Reduzido de 100 para 50
+    limit: int = 500  # Aumentado para carregar todos os itens
 ):
     """
     Endpoint OTIMIZADO para buscar itens por status.
@@ -1930,8 +1930,8 @@ async def get_items_by_status_optimized(
     if status not in status_validos:
         raise HTTPException(status_code=400, detail=f"Status inválido. Use: {', '.join(status_validos)}")
     
-    # Limitar para evitar sobrecarga
-    limit = min(limit, 100)
+    # Limitar para evitar sobrecarga extrema
+    limit = min(limit, 2000)
     skip = (page - 1) * limit
     
     # Pipeline de agregação otimizado
