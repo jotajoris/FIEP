@@ -8233,8 +8233,12 @@ default_origins = [
     "http://onlicitacoes.com",
     "http://www.onlicitacoes.com",
     "https://pedidos-fiep.emergent.host",
+    "http://pedidos-fiep.emergent.host",
+    "https://ocflex.preview.emergentagent.com",
+    "http://ocflex.preview.emergentagent.com",
     "http://localhost:3000",
-    "http://localhost:8001"
+    "http://localhost:8001",
+    "*"  # Permitir todas as origens temporariamente para debug
 ]
 
 if cors_origins_env:
