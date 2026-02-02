@@ -952,48 +952,51 @@ const Dashboard = () => {
                       <td>
                         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                           {/* Botão Download PDF */}
-                          {order.has_pdf && (
-                            <button
-                              onClick={async () => {
-                                try {
-                                  const response = await fetch(`${API}/purchase-orders/${order.id}/download-pdf`, {
-                                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-                                  });
-                                  if (response.ok) {
-                                    const blob = await response.blob();
-                                    const url = window.URL.createObjectURL(blob);
-                                    const a = document.createElement('a');
-                                    a.href = url;
-                                    a.download = `${order.numero_oc}.pdf`;
-                                    a.click();
-                                    window.URL.revokeObjectURL(url);
-                                  } else {
-                                    alert('PDF não disponível');
-                                  }
-                                } catch (err) {
-                                  console.error('Erro ao baixar PDF:', err);
-                                  alert('Erro ao baixar PDF');
+                          <button
+                            onClick={async () => {
+                              if (!order.has_pdf) {
+                                alert('Esta OC não possui PDF disponível para download');
+                                return;
+                              }
+                              try {
+                                const response = await fetch(`${API}/purchase-orders/${order.id}/download-pdf`, {
+                                  headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                                });
+                                if (response.ok) {
+                                  const blob = await response.blob();
+                                  const url = window.URL.createObjectURL(blob);
+                                  const a = document.createElement('a');
+                                  a.href = url;
+                                  a.download = `${order.numero_oc}.pdf`;
+                                  a.click();
+                                  window.URL.revokeObjectURL(url);
+                                } else {
+                                  alert('PDF não disponível');
                                 }
-                              }}
-                              className="btn"
-                              style={{ 
-                                padding: '0.5rem 0.75rem', 
-                                fontSize: '0.85rem',
-                                background: '#059669',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.25rem'
-                              }}
-                              title="Baixar PDF da OC"
-                              data-testid={`download-pdf-${order.numero_oc}`}
-                            >
-                              ⬇️
-                            </button>
-                          )}
+                              } catch (err) {
+                                console.error('Erro ao baixar PDF:', err);
+                                alert('Erro ao baixar PDF');
+                              }
+                            }}
+                            className="btn"
+                            style={{ 
+                              padding: '0.5rem 0.75rem', 
+                              fontSize: '0.85rem',
+                              background: order.has_pdf ? '#059669' : '#9ca3af',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: order.has_pdf ? 'pointer' : 'not-allowed',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              opacity: order.has_pdf ? 1 : 0.6
+                            }}
+                            title={order.has_pdf ? "Baixar PDF da OC" : "PDF não disponível"}
+                            data-testid={`download-pdf-${order.numero_oc}`}
+                          >
+                            ⬇️
+                          </button>
                           <Link to={`/po/${order.id}`} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} data-testid={`view-po-${order.numero_oc}`}>
                             Ver Detalhes
                           </Link>
