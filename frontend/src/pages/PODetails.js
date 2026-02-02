@@ -9,7 +9,7 @@ import Pagination from '../components/Pagination';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 // Helper para calcular contagem regressiva e status de atraso
-const calcularStatusEntrega = (dataEntrega) => {
+const calcularStatusEntrega = (dataEntrega, items = []) => {
   if (!dataEntrega) return null;
   
   try {
@@ -22,6 +22,34 @@ const calcularStatusEntrega = (dataEntrega) => {
     
     const dataFormatada = entrega.toLocaleDateString('pt-BR');
     
+    // Calcular status de entrega dos itens
+    const totalItems = items.length;
+    const itensEntregues = items.filter(i => i.status === 'entregue').length;
+    const itensFaltantes = items.filter(i => i.status !== 'entregue').map(i => i.codigo_item);
+    const todosEntregues = totalItems > 0 && itensEntregues === totalItems;
+    
+    // Se todos os itens foram entregues
+    if (todosEntregues) {
+      return {
+        entregue: true,
+        dias: 0,
+        texto: '✅ ENTREGUE',
+        dataFormatada,
+        cor: '#22c55e',
+        bg: '#f0fdf4',
+        itensEntregues,
+        totalItems,
+        itensFaltantes: []
+      };
+    }
+    
+    // Construir info de itens faltantes
+    const infoEntrega = {
+      itensEntregues,
+      totalItems,
+      itensFaltantes
+    };
+    
     if (diffDays < 0) {
       return {
         atrasado: true,
@@ -29,7 +57,8 @@ const calcularStatusEntrega = (dataEntrega) => {
         texto: `${Math.abs(diffDays)} dia(s) em atraso`,
         dataFormatada,
         cor: '#dc2626',
-        bg: '#fef2f2'
+        bg: '#fef2f2',
+        ...infoEntrega
       };
     } else if (diffDays === 0) {
       return {
@@ -38,7 +67,8 @@ const calcularStatusEntrega = (dataEntrega) => {
         texto: 'Entrega HOJE!',
         dataFormatada,
         cor: '#f59e0b',
-        bg: '#fffbeb'
+        bg: '#fffbeb',
+        ...infoEntrega
       };
     } else if (diffDays <= 3) {
       return {
@@ -47,7 +77,8 @@ const calcularStatusEntrega = (dataEntrega) => {
         texto: `${diffDays} dia(s) restante(s)`,
         dataFormatada,
         cor: '#f59e0b',
-        bg: '#fffbeb'
+        bg: '#fffbeb',
+        ...infoEntrega
       };
     } else if (diffDays <= 7) {
       return {
@@ -56,7 +87,8 @@ const calcularStatusEntrega = (dataEntrega) => {
         texto: `${diffDays} dias restantes`,
         dataFormatada,
         cor: '#3b82f6',
-        bg: '#eff6ff'
+        bg: '#eff6ff',
+        ...infoEntrega
       };
     } else {
       return {
@@ -65,7 +97,8 @@ const calcularStatusEntrega = (dataEntrega) => {
         texto: `${diffDays} dias restantes`,
         dataFormatada,
         cor: '#22c55e',
-        bg: '#f0fdf4'
+        bg: '#f0fdf4',
+        ...infoEntrega
       };
     }
   } catch (e) {
