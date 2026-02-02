@@ -1231,6 +1231,29 @@ const AdminPanel = () => {
                   </div>
                 )}
                 
+                {/* Campo de Pesquisa NFs de Venda */}
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <input
+                    type="text"
+                    placeholder="🔍 Pesquisar NF, OC, código..."
+                    value={searchNFVenda}
+                    onChange={(e) => setSearchNFVenda(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 0.75rem',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      fontSize: '0.85rem'
+                    }}
+                    data-testid="search-nf-venda"
+                  />
+                  {searchNFVenda && (
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                      Mostrando {filteredNfVenda.length} de {notasFiscais.notas_venda.length} NFs
+                    </div>
+                  )}
+                </div>
+                
                 {notasFiscais.notas_venda.length === 0 ? (
                   <p style={{ textAlign: 'center', color: '#718096', padding: '2rem', background: '#f9fafb', borderRadius: '8px' }}>
                     Nenhuma NF de venda
