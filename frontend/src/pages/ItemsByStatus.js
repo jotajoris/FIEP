@@ -3520,6 +3520,44 @@ Chave PIX: ${dados.pix}`;
                         <h3 style={{ fontSize: '1.2rem', fontWeight: '700', margin: 0, color: '#1f2937' }}>
                           {oc.numero_oc}
                         </h3>
+                        {/* Códigos de Rastreio da OC */}
+                        {(() => {
+                          const codigosRastreioOC = [...new Set(
+                            oc.items
+                              .map(item => item.codigo_rastreio)
+                              .filter(Boolean)
+                          )];
+                          if (codigosRastreioOC.length === 0) return null;
+                          return (
+                            <div style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '0.25rem', 
+                              flexWrap: 'wrap',
+                              background: '#f3e8ff',
+                              padding: '0.25rem 0.5rem',
+                              borderRadius: '6px',
+                              border: '1px solid #c4b5fd'
+                            }}>
+                              <span style={{ fontSize: '0.75rem', color: '#7c3aed', fontWeight: '700' }}>📦</span>
+                              {codigosRastreioOC.map((codigo, idx) => (
+                                <span 
+                                  key={codigo}
+                                  style={{ 
+                                    fontSize: '0.75rem', 
+                                    color: '#7c3aed', 
+                                    fontWeight: '600',
+                                    background: 'white',
+                                    padding: '0.1rem 0.4rem',
+                                    borderRadius: '3px'
+                                  }}
+                                >
+                                  {codigo}{idx < codigosRastreioOC.length - 1 ? '' : ''}
+                                </span>
+                              ))}
+                            </div>
+                          );
+                        })()}
                         {/* Data de Entrega com contagem regressiva */}
                         {oc.data_entrega && <DataEntregaBadge dataEntrega={oc.data_entrega} compact={true} />}
                         {/* Badge de Status */}
