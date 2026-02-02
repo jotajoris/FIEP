@@ -2967,66 +2967,128 @@ async def update_item_by_index(
 
 @api_router.get("/dashboard", response_model=DashboardStats)
 async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
-    """Estatísticas do dashboard"""
-    pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(1000)
+    """Estatísticas do dashboard - OTIMIZADO com agregação MongoDB"""
     
-    all_items = []
-    ocs_with_user_items = 0
+    is_admin = current_user['role'] == 'admin'
+    user_name = current_user.get('owner_name', '').strip().upper() if not is_admin else None
     
-    for po in pos:
-        # Filtrar itens baseado no role (case-insensitive)
-        if current_user['role'] != 'admin' and current_user.get('owner_name'):
-            user_name = current_user['owner_name'].strip().upper()
-            filtered_items = [item for item in po['items'] if (item.get('responsavel') or '').strip().upper() == user_name]
-            if filtered_items:  # Só contar OCs que têm itens do usuário
-                ocs_with_user_items += 1
-            all_items.extend(filtered_items)
-        else:
-            all_items.extend(po['items'])
+    # Pipeline de agregação para contar itens por status
+    pipeline = [
+        {"$unwind": "$items"},
+    ]
     
-    # Para admins, total_ocs é o total de OCs. Para usuários, é apenas OCs com seus itens
-    total_ocs = len(pos) if current_user['role'] == 'admin' else ocs_with_user_items
-    
-    total_items = len(all_items)
-    items_pendentes = sum(1 for item in all_items if item['status'] == ItemStatus.PENDENTE)
-    items_cotados = sum(1 for item in all_items if item['status'] == ItemStatus.COTADO)
-    items_comprados = sum(1 for item in all_items if item['status'] == ItemStatus.COMPRADO)
-    items_em_separacao = sum(1 for item in all_items if item['status'] == ItemStatus.EM_SEPARACAO)
-    items_pronto_envio = sum(1 for item in all_items if item['status'] == ItemStatus.PRONTO_ENVIO)
-    items_em_transito = sum(1 for item in all_items if item['status'] == ItemStatus.EM_TRANSITO)
-    items_entregues = sum(1 for item in all_items if item['status'] == ItemStatus.ENTREGUE)
-    
-    # Para usuários não-admin, mostrar apenas seus próprios itens no breakdown por responsável
-    items_por_responsavel = {}
-    if current_user['role'] == 'admin':
-        # Admin vê todos os responsáveis com breakdown por status
-        for owner in ['Maria', 'Mateus', 'João', 'Mylena', 'Fabio']:
-            owner_items = [item for item in all_items if (item.get('responsavel') or '').strip().upper() == owner.upper()]
-            items_por_responsavel[owner] = {
-                "total": len(owner_items),
-                "pendente": sum(1 for item in owner_items if item['status'] == ItemStatus.PENDENTE),
-                "cotado": sum(1 for item in owner_items if item['status'] == ItemStatus.COTADO),
-                "comprado": sum(1 for item in owner_items if item['status'] == ItemStatus.COMPRADO),
-                "em_separacao": sum(1 for item in owner_items if item['status'] == ItemStatus.EM_SEPARACAO),
-                "pronto_envio": sum(1 for item in owner_items if item['status'] == ItemStatus.PRONTO_ENVIO),
-                "em_transito": sum(1 for item in owner_items if item['status'] == ItemStatus.EM_TRANSITO),
-                "entregue": sum(1 for item in owner_items if item['status'] == ItemStatus.ENTREGUE)
+    # Filtrar por responsável se não for admin
+    if not is_admin and user_name:
+        pipeline.append({
+            "$match": {
+                "$expr": {
+                    "$eq": [
+                        {"$toUpper": {"$trim": {"input": {"$ifNull": ["$items.responsavel", ""]}}}},
+                        user_name
+                    ]
+                }
             }
+        })
+    
+    # Agrupar para contar por status
+    pipeline.append({
+        "$group": {
+            "_id": "$items.status",
+            "count": {"$sum": 1}
+        }
+    })
+    
+    cursor = db.purchase_orders.aggregate(pipeline)
+    results = await cursor.to_list(20)
+    
+    # Mapear resultados
+    status_counts = {r['_id']: r['count'] for r in results}
+    
+    # Contar OCs
+    if is_admin:
+        total_ocs = await db.purchase_orders.count_documents({})
     else:
-        # Usuário não-admin vê apenas seus próprios itens com breakdown
+        # Contar OCs que têm itens do usuário
+        pipeline_ocs = [
+            {"$unwind": "$items"},
+            {"$match": {
+                "$expr": {
+                    "$eq": [
+                        {"$toUpper": {"$trim": {"input": {"$ifNull": ["$items.responsavel", ""]}}}},
+                        user_name
+                    ]
+                }
+            }},
+            {"$group": {"_id": "$id"}},
+            {"$count": "total"}
+        ]
+        cursor_ocs = db.purchase_orders.aggregate(pipeline_ocs)
+        ocs_result = await cursor_ocs.to_list(1)
+        total_ocs = ocs_result[0]['total'] if ocs_result else 0
+    
+    # Calcular totais
+    items_pendentes = status_counts.get('pendente', 0)
+    items_cotados = status_counts.get('cotado', 0)
+    items_comprados = status_counts.get('comprado', 0)
+    items_em_separacao = status_counts.get('em_separacao', 0)
+    items_pronto_envio = status_counts.get('pronto_envio', 0)
+    items_em_transito = status_counts.get('em_transito', 0)
+    items_entregues = status_counts.get('entregue', 0)
+    
+    total_items = sum(status_counts.values())
+    
+    # Breakdown por responsável (apenas para admins)
+    items_por_responsavel = {}
+    if is_admin:
+        pipeline_resp = [
+            {"$unwind": "$items"},
+            {"$group": {
+                "_id": {
+                    "responsavel": {"$toUpper": {"$trim": {"input": {"$ifNull": ["$items.responsavel", ""]}}}},
+                    "status": "$items.status"
+                },
+                "count": {"$sum": 1}
+            }}
+        ]
+        cursor_resp = db.purchase_orders.aggregate(pipeline_resp)
+        resp_results = await cursor_resp.to_list(500)
+        
+        # Organizar por responsável
+        resp_data = {}
+        for r in resp_results:
+            responsavel = r['_id'].get('responsavel', '').strip()
+            if not responsavel:
+                continue
+            status = r['_id'].get('status', 'pendente')
+            count = r['count']
+            
+            if responsavel not in resp_data:
+                resp_data[responsavel] = {"total": 0, "pendente": 0, "cotado": 0, "comprado": 0, 
+                                          "em_separacao": 0, "pronto_envio": 0, "em_transito": 0, "entregue": 0}
+            resp_data[responsavel][status] = count
+            resp_data[responsavel]["total"] += count
+        
+        # Filtrar apenas os responsáveis conhecidos
+        for owner in ['Maria', 'Mateus', 'João', 'Mylena', 'Fabio']:
+            owner_upper = owner.upper()
+            if owner_upper in resp_data:
+                items_por_responsavel[owner] = resp_data[owner_upper]
+            else:
+                items_por_responsavel[owner] = {"total": 0, "pendente": 0, "cotado": 0, "comprado": 0,
+                                                "em_separacao": 0, "pronto_envio": 0, "em_transito": 0, "entregue": 0}
+    else:
+        # Usuário não-admin vê apenas seus próprios itens
         owner_name = current_user.get('owner_name')
         if owner_name:
-            user_name = owner_name.strip().upper()
-            owner_items = [item for item in all_items if (item.get('responsavel') or '').strip().upper() == user_name]
             items_por_responsavel[owner_name] = {
-                "total": len(owner_items),
-                "pendente": sum(1 for item in owner_items if item['status'] == ItemStatus.PENDENTE),
-                "cotado": sum(1 for item in owner_items if item['status'] == ItemStatus.COTADO),
-                "comprado": sum(1 for item in owner_items if item['status'] == ItemStatus.COMPRADO),
-                "em_separacao": sum(1 for item in owner_items if item['status'] == ItemStatus.EM_SEPARACAO),
-                "pronto_envio": sum(1 for item in owner_items if item['status'] == ItemStatus.PRONTO_ENVIO),
-                "em_transito": sum(1 for item in owner_items if item['status'] == ItemStatus.EM_TRANSITO),
-                "entregue": sum(1 for item in owner_items if item['status'] == ItemStatus.ENTREGUE)
+                "total": total_items,
+                "pendente": items_pendentes,
+                "cotado": items_cotados,
+                "comprado": items_comprados,
+                "em_separacao": items_em_separacao,
+                "pronto_envio": items_pronto_envio,
+                "em_transito": items_em_transito,
+                "entregue": items_entregues
             }
     
     return DashboardStats(
