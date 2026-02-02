@@ -2236,8 +2236,20 @@ const ItemsByStatus = () => {
     // Obter dados bancários (customizados ou padrão)
     const dados = getDadosBancarios(item.po_id);
     
+    // Obter dados do representante
+    const representante = item.responsavel || '';
+    const representanteEmail = item.representante_email || '';
+    
     let texto = `Endereço da entrega: ${endereco}
 NF referente à OC - ${numeroOC}`;
+    
+    // Adicionar representante se disponível
+    if (representante && !representante.includes('NÃO ENCONTRADO')) {
+      texto += `\nRepresentante: ${representante}`;
+      if (representanteEmail) {
+        texto += `\nE-mail: ${representanteEmail}`;
+      }
+    }
     
     // Só mostrar linha de próxima remessa se houver itens pendentes
     if (itensPendentes.length > 0) {
