@@ -906,25 +906,41 @@ const Dashboard = () => {
                           const status = calcularStatusEntrega(order.data_entrega, order.status_count);
                           if (!status) return '-';
                           return (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <span style={{ fontWeight: '600' }}>{status.dataFormatada}</span>
-                              <span style={{
-                                padding: '0.15rem 0.4rem',
-                                borderRadius: '4px',
-                                fontSize: '0.7rem',
-                                fontWeight: '700',
-                                background: status.cor,
-                                color: 'white'
-                              }}>
-                                {status.entregue 
-                                  ? '✅' 
-                                  : status.atrasado 
-                                    ? `⚠️ -${status.dias}d` 
-                                    : status.dias === 0 
-                                      ? 'HOJE!' 
-                                      : `${status.dias}d`
-                                }
-                              </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ fontWeight: '600' }}>{status.entregue ? '✅' : status.dataFormatada}</span>
+                                <span style={{
+                                  padding: '0.15rem 0.4rem',
+                                  borderRadius: '4px',
+                                  fontSize: '0.7rem',
+                                  fontWeight: '700',
+                                  background: status.cor,
+                                  color: 'white'
+                                }}>
+                                  {status.entregue 
+                                    ? 'ENTREGUE' 
+                                    : status.atrasado 
+                                      ? `⚠️ -${status.dias}d` 
+                                      : status.dias === 0 
+                                        ? 'HOJE!' 
+                                        : `${status.dias}d`
+                                  }
+                                </span>
+                              </div>
+                              {/* Mostrar progresso de entrega X/Y */}
+                              {status.totalItems > 0 && !status.entregue && status.itensEntregues > 0 && (
+                                <span style={{
+                                  fontSize: '0.7rem',
+                                  fontWeight: '600',
+                                  color: '#059669',
+                                  background: '#f0fdf4',
+                                  padding: '0.1rem 0.35rem',
+                                  borderRadius: '4px',
+                                  width: 'fit-content'
+                                }}>
+                                  📦 {status.itensEntregues}/{status.totalItems}
+                                </span>
+                              )}
                             </div>
                           );
                         })() : <span style={{ color: '#9ca3af' }}>-</span>}
