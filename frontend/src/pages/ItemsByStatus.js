@@ -5709,6 +5709,22 @@ DADOS BANCÁRIOS - Banco: ${dados.banco} | Ag: ${dados.agencia} | Cc: ${dados.co
                       >
                         OC: {item.numero_oc}
                       </Link>
+                      {/* Código de Rastreio ao lado do código do item */}
+                      {item.codigo_rastreio && (
+                        <span style={{ 
+                          fontSize: '0.8rem', 
+                          color: '#7c3aed', 
+                          background: '#f3e8ff',
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: '4px',
+                          fontWeight: '600',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.3rem'
+                        }}>
+                          📦 {item.codigo_rastreio}
+                        </span>
+                      )}
                       {/* Data de Entrega com contagem regressiva */}
                       {item.data_entrega && <DataEntregaBadge dataEntrega={item.data_entrega} compact={true} todosEntregues={status === 'entregue'} />}
                       
