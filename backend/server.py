@@ -3044,7 +3044,7 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
             {"$unwind": "$items"},
             {"$group": {
                 "_id": {
-                    "responsavel": {"$toUpper": {"$trim": {"input": {"$ifNull": ["$items.responsavel", ""]}}}},
+                    "responsavel": {"$trim": {"input": {"$ifNull": ["$items.responsavel", ""]}}},
                     "status": "$items.status"
                 },
                 "count": {"$sum": 1}
@@ -3053,28 +3053,40 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         cursor_resp = db.purchase_orders.aggregate(pipeline_resp)
         resp_results = await cursor_resp.to_list(500)
         
-        # Organizar por responsável
+        # Organizar por responsável - case-insensitive e sem acentos
         resp_data = {}
         for r in resp_results:
-            responsavel = r['_id'].get('responsavel', '').strip()
-            if not responsavel:
+            responsavel_original = r['_id'].get('responsavel', '').strip()
+            if not responsavel_original:
                 continue
             status = r['_id'].get('status', 'pendente')
             count = r['count']
             
-            if responsavel not in resp_data:
-                resp_data[responsavel] = {"total": 0, "pendente": 0, "cotado": 0, "comprado": 0, 
+            # Normalizar nome para comparação (sem acentos, maiúsculo)
+            import unicodedata
+            responsavel_normalizado = unicodedata.normalize('NFD', responsavel_original.upper())
+            responsavel_normalizado = ''.join(c for c in responsavel_normalizado if unicodedata.category(c) != 'Mn')
+            
+            if responsavel_normalizado not in resp_data:
+                resp_data[responsavel_normalizado] = {"total": 0, "pendente": 0, "cotado": 0, "comprado": 0, 
                                           "em_separacao": 0, "pronto_envio": 0, "em_transito": 0, "entregue": 0}
-            resp_data[responsavel][status] = count
-            resp_data[responsavel]["total"] += count
+            resp_data[responsavel_normalizado][status] = resp_data[responsavel_normalizado].get(status, 0) + count
+            resp_data[responsavel_normalizado]["total"] += count
         
-        # Filtrar apenas os responsáveis conhecidos
-        for owner in ['Maria', 'Mateus', 'João', 'Mylena', 'Fabio']:
-            owner_upper = owner.upper()
+        # Mapear para os nomes conhecidos
+        owner_mapping = {
+            'MARIA': 'Maria',
+            'MATEUS': 'Mateus', 
+            'JOAO': 'João',
+            'MYLENA': 'Mylena',
+            'FABIO': 'Fabio'
+        }
+        
+        for owner_upper, owner_display in owner_mapping.items():
             if owner_upper in resp_data:
-                items_por_responsavel[owner] = resp_data[owner_upper]
+                items_por_responsavel[owner_display] = resp_data[owner_upper]
             else:
-                items_por_responsavel[owner] = {"total": 0, "pendente": 0, "cotado": 0, "comprado": 0,
+                items_por_responsavel[owner_display] = {"total": 0, "pendente": 0, "cotado": 0, "comprado": 0,
                                                 "em_separacao": 0, "pronto_envio": 0, "em_transito": 0, "entregue": 0}
     else:
         # Usuário não-admin vê apenas seus próprios itens
