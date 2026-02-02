@@ -794,34 +794,64 @@ const PODetails = () => {
           gap: '1rem'
         }}>
           {po.data_entrega && (() => {
-            const statusEntrega = calcularStatusEntrega(po.data_entrega);
+            const statusEntrega = calcularStatusEntrega(po.data_entrega, po.items || []);
             if (!statusEntrega) return null;
             return (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                <span style={{ fontWeight: '600', color: '#4a5568' }}>📅 Data de Entrega:</span>
-                <div style={{ 
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.4rem 0.75rem',
-                  borderRadius: '8px',
-                  background: statusEntrega.bg,
-                  border: `2px solid ${statusEntrega.cor}`
-                }}>
-                  <span style={{ fontWeight: '600', color: statusEntrega.cor }}>
-                    {statusEntrega.dataFormatada}
-                  </span>
-                  <span style={{
-                    padding: '0.15rem 0.5rem',
-                    borderRadius: '12px',
-                    fontSize: '0.8rem',
-                    fontWeight: '700',
-                    background: statusEntrega.cor,
-                    color: 'white'
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                  <span style={{ fontWeight: '600', color: '#4a5568' }}>📅 Data de Entrega:</span>
+                  <div style={{ 
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.4rem 0.75rem',
+                    borderRadius: '8px',
+                    background: statusEntrega.bg,
+                    border: `2px solid ${statusEntrega.cor}`
                   }}>
-                    {statusEntrega.atrasado ? `⚠️ ${statusEntrega.texto}` : statusEntrega.texto}
-                  </span>
+                    <span style={{ fontWeight: '600', color: statusEntrega.cor }}>
+                      {statusEntrega.entregue ? '✅ ENTREGUE' : statusEntrega.dataFormatada}
+                    </span>
+                    {!statusEntrega.entregue && (
+                      <span style={{
+                        padding: '0.15rem 0.5rem',
+                        borderRadius: '12px',
+                        fontSize: '0.8rem',
+                        fontWeight: '700',
+                        background: statusEntrega.cor,
+                        color: 'white'
+                      }}>
+                        {statusEntrega.atrasado ? `⚠️ ${statusEntrega.texto}` : statusEntrega.texto}
+                      </span>
+                    )}
+                  </div>
+                  {/* Mostrar progresso de entrega */}
+                  {statusEntrega.totalItems > 0 && (
+                    <span style={{ 
+                      fontSize: '0.85rem', 
+                      fontWeight: '600',
+                      color: statusEntrega.entregue ? '#22c55e' : '#6b7280',
+                      background: statusEntrega.entregue ? '#f0fdf4' : '#f3f4f6',
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '12px'
+                    }}>
+                      📦 {statusEntrega.itensEntregues}/{statusEntrega.totalItems} itens entregues
+                    </span>
+                  )}
                 </div>
+                {/* Mostrar itens faltantes se houver */}
+                {statusEntrega.itensFaltantes && statusEntrega.itensFaltantes.length > 0 && statusEntrega.itensFaltantes.length <= 10 && (
+                  <div style={{ 
+                    fontSize: '0.8rem', 
+                    color: '#dc2626',
+                    background: '#fef2f2',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '6px',
+                    marginTop: '0.25rem'
+                  }}>
+                    ⚠️ Faltam entregar: {statusEntrega.itensFaltantes.join(', ')}
+                  </div>
+                )}
               </div>
             );
           })()}
