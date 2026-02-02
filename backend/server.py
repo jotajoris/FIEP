@@ -2053,14 +2053,14 @@ async def get_purchase_orders_simple(
     date_from: str = None,
     date_to: str = None,
     page: int = 1,
-    limit: int = 50
+    limit: int = 500  # Aumentado para carregar todas as OCs por padrão
 ):
     """Listar Ordens de Compra de forma simplificada (para carregamento rápido)
     Retorna apenas dados essenciais com paginação
     Suporta filtros server-side para performance"""
     
-    # Limitar para evitar sobrecarga
-    limit = min(limit, 100)
+    # Limitar para evitar sobrecarga extrema
+    limit = min(limit, 1000)
     skip = (page - 1) * limit
     
     # Construir query base
