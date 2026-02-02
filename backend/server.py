@@ -1494,17 +1494,17 @@ async def upload_pdf_purchase_order(file: UploadFile = File(...), current_user: 
         if ref_items:
             # Se existem múltiplas ocorrências (item em vários lotes)
             if len(ref_items) > 1:
-                # Pegar apenas responsáveis não-admin
+                # Pegar apenas responsáveis não-admin (Maria, Mylena, Fabio) para distribuição
                 non_admin_items = [ri for ri in ref_items if ri['responsavel'] in ['Maria', 'Mylena', 'Fabio']]
                 
                 if non_admin_items:
                     # Escolher aleatoriamente entre os não-admins
                     selected_ref = random.choice(non_admin_items)
                 else:
-                    # Se não houver não-admins, usar o primeiro disponível
+                    # Se não houver não-admins, usar o primeiro disponível (pode ser João ou Mateus)
                     selected_ref = ref_items[0]
             else:
-                # Se existe apenas uma ocorrência, usar ela
+                # Se existe apenas uma ocorrência, usar ela (independente de quem seja)
                 selected_ref = ref_items[0]
             
             # Preencher dados
