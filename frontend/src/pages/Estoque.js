@@ -781,16 +781,89 @@ const Estoque = () => {
                     )}
                   </td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>
-                    <span style={{
-                      background: '#22c55e',
-                      color: 'white',
-                      padding: '0.35rem 0.75rem',
-                      borderRadius: '20px',
-                      fontWeight: '700',
-                      fontSize: '1rem'
-                    }}>
-                      {item.quantidade_estoque} {item.unidade}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                      {editingQuantidadeItem === item.codigo_item ? (
+                        <>
+                          <input
+                            type="number"
+                            value={novaQuantidadeEstoque}
+                            onChange={(e) => setNovaQuantidadeEstoque(parseInt(e.target.value) || 0)}
+                            min="0"
+                            style={{
+                              width: '70px',
+                              padding: '0.35rem',
+                              fontSize: '1rem',
+                              fontWeight: '700',
+                              textAlign: 'center',
+                              border: '2px solid #22c55e',
+                              borderRadius: '8px'
+                            }}
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => handleAjustarQuantidade(item.codigo_item, novaQuantidadeEstoque)}
+                            style={{
+                              background: '#22c55e',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              padding: '0.35rem 0.5rem',
+                              cursor: 'pointer',
+                              fontSize: '0.85rem'
+                            }}
+                            title="Salvar"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={() => setEditingQuantidadeItem(null)}
+                            style={{
+                              background: '#ef4444',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              padding: '0.35rem 0.5rem',
+                              cursor: 'pointer',
+                              fontSize: '0.85rem'
+                            }}
+                            title="Cancelar"
+                          >
+                            ✕
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <span style={{
+                            background: '#22c55e',
+                            color: 'white',
+                            padding: '0.35rem 0.75rem',
+                            borderRadius: '20px',
+                            fontWeight: '700',
+                            fontSize: '1rem'
+                          }}>
+                            {item.quantidade_estoque} {item.unidade}
+                          </span>
+                          <button
+                            onClick={() => {
+                              setEditingQuantidadeItem(item.codigo_item);
+                              setNovaQuantidadeEstoque(item.quantidade_estoque);
+                            }}
+                            style={{
+                              background: '#f59e0b',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              padding: '0.25rem 0.4rem',
+                              cursor: 'pointer',
+                              fontSize: '0.75rem'
+                            }}
+                            title="Editar quantidade"
+                          >
+                            ✏️
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                   <td style={{ padding: '1rem', color: '#6b7280' }}>
                     {item.fornecedor || '-'}
