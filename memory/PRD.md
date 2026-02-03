@@ -308,14 +308,16 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 - [x] ~~Finalizar "Agrupar por Código" para Pendentes/Cotados~~ ✅ COMPLETO
 - [x] ~~Bug: Edição de itens quebrada em "Em Separação"~~ ✅ CORRIGIDO
 - [x] ~~Implementar "Agrupar por Código" na página Em Separação (dentro da mesma OC)~~ ✅ IMPLEMENTADO
+- [x] ~~Paridade entre Upload e Atualização de OC~~ ✅ CORRIGIDO (2026-02-03)
 
 ### P1 (Alta Prioridade)
 - [x] ~~Completar "Dados Adicionais da NF" editável (modal + backend endpoint)~~ ✅
-- [ ] Remover código duplicado do `server.py` (refatoração backend)
+- [ ] Remover código duplicado do `server.py` (refatoração backend - monolito crítico)
 - [ ] Integrar componentes restantes em `ItemsByStatus.js` (refatoração frontend)
+- [ ] **Deploy em Produção** - Todas as correções estão no preview, precisam ir para produção
 
 ### P2 (Média Prioridade)
-- [ ] Corrigir bug: editar item duplicado abre todos os itens (recorrente)
+- [ ] Corrigir bug: editar item duplicado abre todos os itens (recorrente há 10+ sessões)
 
 ### P3 (Backlog)
 - [ ] Implementar API Correios para cálculo de frete (Preços e Prazos)
