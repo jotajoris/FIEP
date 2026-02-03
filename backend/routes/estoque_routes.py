@@ -100,7 +100,10 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
                     })
     
     result = sorted(estoque_map.values(), key=lambda x: x['codigo_item'])
-    return result
+    return {
+        "total_itens_diferentes": len(result),
+        "estoque": result
+    }
 
 
 @router.get("/mapa")
