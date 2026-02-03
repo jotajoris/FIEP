@@ -2089,6 +2089,8 @@ async def get_items_by_status_optimized(
             "numero_oc": 1,
             "data_entrega": 1,
             "endereco_entrega": 1,
+            "requisitante_nome": 1,
+            "requisitante_email": 1,
             "notas_fiscais_venda": 1,
             "dados_bancarios_custom": 1,
             "item": {
