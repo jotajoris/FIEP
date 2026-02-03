@@ -8537,7 +8537,7 @@ default_origins = [
     "http://www.onlicitacoes.com",
     "https://pedidos-fiep.emergent.host",
     "http://pedidos-fiep.emergent.host",
-    "https://ocflex.preview.emergentagent.com",
+    "https://purchase-order-sys-2.preview.emergentagent.com",
     "http://ocflex.preview.emergentagent.com",
     "http://localhost:3000",
     "http://localhost:8001",
