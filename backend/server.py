@@ -6578,7 +6578,7 @@ async def atualizar_ceps_todos_enderecos(
             continue
         
         # Buscar CEP
-        cep = buscar_cep_por_endereco(endereco)
+        cep = await buscar_cep_por_endereco(endereco)
         if cep:
             novo_endereco = f"{endereco}, CEP: {cep}"
             await db.purchase_orders.update_one(
