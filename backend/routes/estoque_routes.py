@@ -418,10 +418,16 @@ async def adicionar_estoque_manual(
             "observacao": f"Entrada manual - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}"
         }
         
-        await db.purchase_orders.update_one(
+        result = await db.purchase_orders.update_one(
             {"id": oc_estoque['id']},
             {"$push": {"items": novo_item}}
         )
+        logger.info(f"Item {codigo_item} adicionado: matched={result.matched_count}, modified={result.modified_count}")
+    
+    # Verificar se o item foi realmente adicionado
+    oc_verificar = await db.purchase_orders.find_one({"numero_oc": "ESTOQUE-MANUAL"}, {"_id": 0})
+    itens_verificar = [i.get('codigo_item') for i in oc_verificar.get('items', [])]
+    logger.info(f"Verificação final - Itens na OC ESTOQUE-MANUAL: {itens_verificar}")
     
     return {"success": True, "message": f"Adicionado {quantidade} UN de {codigo_item} ao estoque"}
 
