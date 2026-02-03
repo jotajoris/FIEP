@@ -1050,6 +1050,14 @@ async def get_version():
     }
 
 
+# Endpoint para listar todos os usuários (apenas admins)
+@api_router.get("/users")
+async def list_users(current_user: dict = Depends(require_admin)):
+    """Listar todos os usuários do sistema"""
+    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(100)
+    return {"users": users, "total": len(users)}
+
+
 # Endpoint para promover usuário a admin
 @api_router.patch("/users/{email}/promote-admin")
 async def promote_user_to_admin(
