@@ -8431,66 +8431,38 @@ else:
 # Remover duplicatas mantendo ordem
 cors_origins_list = list(dict.fromkeys(cors_origins_list))
 
-# Middleware para FORÇAR headers CORS em TODAS as respostas
-# Este middleware é mais agressivo e garante que os headers CORS estejam presentes
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
+# =============================================================================
+# CORS CONFIGURATION - CRÍTICO PARA PRODUÇÃO
+# =============================================================================
+# Ordem dos middlewares: O ÚLTIMO adicionado é executado PRIMEIRO
+# Por isso, adicionamos CORSMiddleware por ÚLTIMO para garantir que seja o PRIMEIRO a processar
 
-class CORSAndCacheMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        # Se for OPTIONS (preflight), retornar imediatamente
-        if request.method == "OPTIONS":
-            response = Response(
-                status_code=200,
-                headers={
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD",
-                    "Access-Control-Allow-Headers": "*",
-                    "Access-Control-Allow-Credentials": "true",
-                    "Access-Control-Max-Age": "86400",
-                }
-            )
-            return response
-        
-        # Para outras requisições, processar e adicionar headers
-        try:
-            response = await call_next(request)
-        except Exception as e:
-            # Em caso de erro, ainda retornar com headers CORS
-            response = Response(
-                content=str(e),
-                status_code=500,
-                headers={
-                    "Access-Control-Allow-Origin": "*",
-                }
-            )
-        
-        # Adicionar headers CORS
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD"
-        response.headers["Access-Control-Allow-Headers"] = "*"
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        
-        # Adicionar headers anti-cache
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-        response.headers["Pragma"] = "no-cache"
-        response.headers["Expires"] = "0"
-        
-        return response
-
-# Adicionar nosso middleware customizado
-app.add_middleware(CORSAndCacheMiddleware)
-
-# Também adicionar o CORSMiddleware padrão como fallback
+# IMPORTANTE: Usar apenas CORSMiddleware padrão do Starlette com wildcard
+# O middleware customizado foi removido pois pode causar conflitos
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=["*"],  # Permitir TODAS as origens
     allow_credentials=True,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Permitir TODOS os métodos
+    allow_headers=["*"],  # Permitir TODOS os headers
     expose_headers=["*"],
-    max_age=86400,
+    max_age=86400,  # Cache preflight por 24 horas
 )
+
+# Handler global para OPTIONS (preflight) - FALLBACK
+@app.options("/{rest_of_path:path}")
+async def preflight_handler(rest_of_path: str):
+    """Handle CORS preflight requests explicitly"""
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Max-Age": "86400",
+        }
+    )
 
 # Logger já configurado no início do arquivo
 
