@@ -6466,6 +6466,20 @@ async def atualizar_oc_com_pdf(
         updates['cnpj_requisitante'] = novo_cnpj
         campos_atualizados.append(f"cnpj_requisitante: {novo_cnpj}")
     
+    # Requisitante Nome
+    novo_requisitante_nome = pdf_data.get('requisitante_nome', '')
+    requisitante_nome_atual = existing_po.get('requisitante_nome', '')
+    if novo_requisitante_nome and novo_requisitante_nome != requisitante_nome_atual:
+        updates['requisitante_nome'] = novo_requisitante_nome
+        campos_atualizados.append(f"requisitante_nome: {novo_requisitante_nome}")
+    
+    # Requisitante Email
+    novo_requisitante_email = pdf_data.get('requisitante_email', '')
+    requisitante_email_atual = existing_po.get('requisitante_email', '')
+    if novo_requisitante_email and novo_requisitante_email != requisitante_email_atual:
+        updates['requisitante_email'] = novo_requisitante_email
+        campos_atualizados.append(f"requisitante_email: {novo_requisitante_email}")
+    
     # ============ ATUALIZAR ITENS ============
     
     # Mapear itens existentes para atualização
