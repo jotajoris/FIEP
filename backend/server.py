@@ -1661,6 +1661,16 @@ async def upload_pdf_purchase_order(file: UploadFile = File(...), current_user: 
     if oc_data.get("cnpj_requisitante"):
         doc['cnpj_requisitante'] = oc_data["cnpj_requisitante"]
     
+    # Adicionar requisitante (nome e email)
+    if oc_data.get("requisitante_nome"):
+        doc['requisitante_nome'] = oc_data["requisitante_nome"]
+    if oc_data.get("requisitante_email"):
+        doc['requisitante_email'] = oc_data["requisitante_email"]
+    
+    # Adicionar endereço de entrega
+    if oc_data.get("endereco_entrega"):
+        doc['endereco_entrega'] = oc_data["endereco_entrega"]
+    
     # SALVAR PDF ORIGINAL para download posterior
     import base64
     doc['pdf_original'] = {
