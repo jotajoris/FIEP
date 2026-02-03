@@ -218,6 +218,37 @@ const ItemsByStatus = () => {
     }
   };
 
+  // Função para salvar requisitante
+  const salvarRequisitante = async () => {
+    if (!editingRequisitante) return;
+    
+    try {
+      const response = await apiPatch(`${API}/purchase-orders/${editingRequisitante.po_id}/requisitante`, {
+        requisitante_nome: editingRequisitante.requisitante_nome,
+        requisitante_email: editingRequisitante.requisitante_email
+      });
+      
+      if (response.data?.success) {
+        // Atualizar items localmente
+        setItems(prevItems => prevItems.map(item => {
+          if (item.po_id === editingRequisitante.po_id) {
+            return {
+              ...item,
+              requisitante_nome: editingRequisitante.requisitante_nome,
+              requisitante_email: editingRequisitante.requisitante_email
+            };
+          }
+          return item;
+        }));
+        alert('Requisitante atualizado com sucesso!');
+        setEditingRequisitante(null);
+      }
+    } catch (err) {
+      console.error('Erro ao salvar requisitante:', err);
+      alert('Erro ao salvar requisitante: ' + (err.response?.data?.detail || err.message));
+    }
+  };
+
   useEffect(() => {
     loadItems();
     loadFornecedoresSistema();
