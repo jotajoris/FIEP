@@ -6787,7 +6787,7 @@ async def atualizar_todas_ocs_com_pdfs(
         endereco_atual = existing_po.get('endereco_entrega', '').strip()
         if novo_endereco:
             if not re.search(r'CEP[:\s]*\d{5}-?\d{3}', novo_endereco, re.IGNORECASE):
-                cep = buscar_cep_por_endereco(novo_endereco)
+                cep = await buscar_cep_por_endereco(novo_endereco)
                 if cep:
                     novo_endereco = f"{novo_endereco}, CEP: {cep}"
             
