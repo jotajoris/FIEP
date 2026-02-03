@@ -1639,6 +1639,82 @@ const ItemsByStatus = () => {
     }
   };
 
+  // Função para upload múltiplo de NFs de Venda (PDFs e/ou XMLs)
+  const uploadMultiplosNFVendaOC = async (poId, files, ocItems) => {
+    if (!files || files.length === 0) return;
+    
+    // Obter os índices dos itens selecionados
+    const selectedSet = itensParaNFVenda[poId] || new Set();
+    const itensIndices = [];
+    
+    if (selectedSet.size > 0 && ocItems) {
+      ocItems.forEach(item => {
+        if (selectedSet.has(item._uniqueId)) {
+          itensIndices.push(item._itemIndexInPO);
+        }
+      });
+    }
+    
+    if (itensIndices.length === 0 && ocItems) {
+      ocItems.forEach(item => {
+        itensIndices.push(item._itemIndexInPO);
+      });
+    }
+    
+    setUploadingNFVendaOC(poId);
+    let successCount = 0;
+    let errorCount = 0;
+    
+    try {
+      // Processar cada arquivo sequencialmente
+      for (const file of Array.from(files)) {
+        try {
+          await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = async () => {
+              try {
+                const base64 = reader.result.split(',')[1];
+                const payload = {
+                  filename: file.name.toUpperCase(),
+                  content_type: file.type || (file.name.endsWith('.xml') ? 'application/xml' : 'application/pdf'),
+                  file_data: base64,
+                  itens_indices: itensIndices
+                };
+                
+                await apiPost(`${API}/purchase-orders/${poId}/nf-venda`, payload);
+                successCount++;
+                resolve();
+              } catch (err) {
+                errorCount++;
+                resolve(); // Continuar mesmo com erro
+              }
+            };
+            reader.onerror = () => {
+              errorCount++;
+              resolve();
+            };
+            reader.readAsDataURL(file);
+          });
+        } catch (err) {
+          errorCount++;
+        }
+      }
+      
+      if (successCount > 0) {
+        alert(`✅ ${successCount} arquivo(s) enviado(s) com sucesso!${errorCount > 0 ? `\n⚠️ ${errorCount} arquivo(s) com erro.` : ''}`);
+        setItensParaNFVenda(prev => ({ ...prev, [poId]: new Set() }));
+        loadItems();
+      } else {
+        alert('❌ Erro ao enviar arquivos.');
+      }
+    } catch (error) {
+      console.error('Erro ao enviar NFs de Venda:', error);
+      alert('Erro ao enviar NFs de Venda.');
+    } finally {
+      setUploadingNFVendaOC(null);
+    }
+  };
+
   const downloadNFVendaOC = async (poId, filename) => {
     try {
       const response = await apiGet(`${API}/purchase-orders/${poId}/nf-venda/download`);
