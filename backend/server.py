@@ -561,10 +561,20 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
         lines = full_text.split('\n')
         for i, line in enumerate(lines):
             if 'requisitante:' in line.lower() and i + 1 < len(lines):
-                # Extrair nome do requisitante
-                nome_match = re.search(r'requisitante[:\s]*([A-ZÁÉÍÓÚÂÊÔÃÕÇ\s]+)\s*-?', line, re.IGNORECASE)
+                # Extrair nome do requisitante (formato: "Requisitante: NOME -" ou "Requisitante: NOME")
+                # O nome pode conter letras acentuadas e espaços
+                nome_match = re.search(r'requisitante[:\s]*([A-Za-záéíóúâêôãõçÁÉÍÓÚÂÊÔÃÕÇ\s]+?)[\s]*[-]?\s*$', line, re.IGNORECASE)
                 if nome_match:
                     requisitante_nome = nome_match.group(1).strip()
+                else:
+                    # Tentar outro padrão: tudo depois de "Requisitante:" até o fim ou até um hífen
+                    nome_match2 = re.search(r'requisitante[:\s]+(.+?)(?:\s*-\s*)?$', line, re.IGNORECASE)
+                    if nome_match2:
+                        nome = nome_match2.group(1).strip().rstrip('-').strip()
+                        # Remover email se estiver no nome
+                        nome = re.sub(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', '', nome).strip()
+                        if nome:
+                            requisitante_nome = nome
                 
                 # Email geralmente está na próxima linha
                 next_line = lines[i + 1].strip()
