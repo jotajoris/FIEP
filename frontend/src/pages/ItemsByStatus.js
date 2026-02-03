@@ -2236,18 +2236,18 @@ const ItemsByStatus = () => {
     // Obter dados bancários (customizados ou padrão)
     const dados = getDadosBancarios(item.po_id);
     
-    // Obter dados do representante
-    const representante = item.responsavel || '';
-    const representanteEmail = item.representante_email || '';
+    // Obter dados do requisitante (extraído do PDF da OC)
+    const requisitanteNome = item.requisitante_nome || '';
+    const requisitanteEmail = item.requisitante_email || '';
     
     let texto = `Endereço da entrega: ${endereco}
 NF referente à OC - ${numeroOC}`;
     
-    // Adicionar representante se disponível
-    if (representante && !representante.includes('NÃO ENCONTRADO')) {
-      texto += `\nRepresentante: ${representante}`;
-      if (representanteEmail) {
-        texto += `\nE-mail: ${representanteEmail}`;
+    // Adicionar requisitante se disponível
+    if (requisitanteNome) {
+      texto += `\nRequisitante: ${requisitanteNome}`;
+      if (requisitanteEmail) {
+        texto += ` - ${requisitanteEmail}`;
       }
     }
     
