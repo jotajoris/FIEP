@@ -206,6 +206,77 @@ const AdminPanel = () => {
     }
   };
 
+  // Carregar lista de usuários
+  const loadUsuarios = async () => {
+    setLoadingUsuarios(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/users`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setUsuarios(data.users || []);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar usuários:', error);
+    } finally {
+      setLoadingUsuarios(false);
+    }
+  };
+
+  // Promover usuário a admin
+  const handlePromoverAdmin = async (email) => {
+    if (!window.confirm(`Promover ${email} a administrador?`)) return;
+    
+    setPromovendo(email);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/users/${encodeURIComponent(email)}/promote-admin`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert(`✅ ${data.message}`);
+        loadUsuarios();
+      } else {
+        alert(`❌ Erro: ${data.detail || 'Erro desconhecido'}`);
+      }
+    } catch (error) {
+      alert(`❌ Erro: ${error.message}`);
+    } finally {
+      setPromovendo(null);
+    }
+  };
+
+  // Rebaixar admin para usuário
+  const handleRebaixarAdmin = async (email) => {
+    if (!window.confirm(`Rebaixar ${email} para usuário comum?`)) return;
+    
+    setPromovendo(email);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/users/${encodeURIComponent(email)}/demote-admin`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert(`✅ ${data.message}`);
+        loadUsuarios();
+      } else {
+        alert(`❌ Erro: ${data.detail || 'Erro desconhecido'}`);
+      }
+    } catch (error) {
+      alert(`❌ Erro: ${error.message}`);
+    } finally {
+      setPromovendo(null);
+    }
+  };
+
   // Filtrar e Paginar NFs de Compra
   const filteredNfCompra = useMemo(() => {
     if (!searchNFCompra.trim()) return notasFiscais.notas_compra;
