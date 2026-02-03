@@ -341,6 +341,8 @@ async def adicionar_estoque_manual(
     if not codigo_item or quantidade <= 0:
         raise HTTPException(status_code=400, detail="codigo_item e quantidade são obrigatórios")
     
+    logger.info(f"Adicionando ao estoque: {codigo_item}, qtd={quantidade}, preco={preco_unitario}, fornecedor={fornecedor}")
+    
     # Criar ou atualizar OC de estoque manual
     oc_estoque = await db.purchase_orders.find_one({"numero_oc": "ESTOQUE-MANUAL"}, {"_id": 0})
     
@@ -351,13 +353,20 @@ async def adicionar_estoque_manual(
         oc_estoque = {
             "id": new_id,
             "numero_oc": "ESTOQUE-MANUAL",
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "data_criacao": datetime.now(timezone.utc).isoformat(),
             "items": [],
             "status": "ativo",
             "observacao": "OC virtual para itens adicionados manualmente ao estoque"
         }
-        await db.purchase_orders.insert_one(oc_estoque)
+        result = await db.purchase_orders.insert_one(oc_estoque)
+        logger.info(f"OC ESTOQUE-MANUAL criada com id: {new_id}, inserted_id: {result.inserted_id}")
         oc_estoque = await db.purchase_orders.find_one({"id": new_id}, {"_id": 0})
+        if not oc_estoque:
+            logger.error(f"Erro: OC ESTOQUE-MANUAL não encontrada após criação!")
+            raise HTTPException(status_code=500, detail="Erro ao criar OC de estoque")
+    
+    logger.info(f"OC ESTOQUE-MANUAL encontrada: id={oc_estoque.get('id')}, items={len(oc_estoque.get('items', []))}")
     
     # Verificar se item já existe nesta OC
     items = oc_estoque.get('items', [])
