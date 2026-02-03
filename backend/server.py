@@ -8494,65 +8494,66 @@ else:
 # Remover duplicatas mantendo ordem
 cors_origins_list = list(dict.fromkeys(cors_origins_list))
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=["*"],  # Permitir todas as origens
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=86400,  # Cache do preflight por 24 horas
-)
-
-# Middleware adicional para FORÇAR headers CORS em todas as respostas
-from starlette.middleware.base import BaseHTTPMiddleware
-
-class ForceCORSMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request, call_next):
-        # Se for OPTIONS, retornar imediatamente com headers CORS
-        if request.method == "OPTIONS":
-            response = Response(status_code=200)
-            response.headers["Access-Control-Allow-Origin"] = "*"
-            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD"
-            response.headers["Access-Control-Allow-Headers"] = "*"
-            response.headers["Access-Control-Max-Age"] = "86400"
-            return response
-        
-        # Para outras requisições, processar normalmente e adicionar headers
-        response = await call_next(request)
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD"
-        response.headers["Access-Control-Allow-Headers"] = "*"
-        return response
-
-app.add_middleware(ForceCORSMiddleware)
-
-# Handler explícito para OPTIONS (preflight requests)
-@app.options("/{full_path:path}")
-async def options_handler(full_path: str):
-    return Response(
-        status_code=200,
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD",
-            "Access-Control-Allow-Headers": "*",
-            "Access-Control-Max-Age": "86400",
-        }
-    )
-
-# Middleware para headers anti-cache (forçar atualização)
+# Middleware para FORÇAR headers CORS em TODAS as respostas
+# Este middleware é mais agressivo e garante que os headers CORS estejam presentes
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
-class NoCacheMiddleware(BaseHTTPMiddleware):
+class CORSAndCacheMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        response = await call_next(request)
+        # Se for OPTIONS (preflight), retornar imediatamente
+        if request.method == "OPTIONS":
+            response = Response(
+                status_code=200,
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD",
+                    "Access-Control-Allow-Headers": "*",
+                    "Access-Control-Allow-Credentials": "true",
+                    "Access-Control-Max-Age": "86400",
+                }
+            )
+            return response
+        
+        # Para outras requisições, processar e adicionar headers
+        try:
+            response = await call_next(request)
+        except Exception as e:
+            # Em caso de erro, ainda retornar com headers CORS
+            response = Response(
+                content=str(e),
+                status_code=500,
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                }
+            )
+        
+        # Adicionar headers CORS
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        
+        # Adicionar headers anti-cache
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
+        
         return response
 
-app.add_middleware(NoCacheMiddleware)
+# Adicionar nosso middleware customizado
+app.add_middleware(CORSAndCacheMiddleware)
+
+# Também adicionar o CORSMiddleware padrão como fallback
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=86400,
+)
 
 # Logger já configurado no início do arquivo
 
