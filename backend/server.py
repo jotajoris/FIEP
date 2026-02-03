@@ -6395,7 +6395,7 @@ async def atualizar_oc_com_pdf(
     if novo_endereco:
         # Adicionar CEP ao endereço se não tiver
         if not re.search(r'CEP[:\s]*\d{5}-?\d{3}', novo_endereco, re.IGNORECASE):
-            cep = buscar_cep_por_endereco(novo_endereco)
+            cep = await buscar_cep_por_endereco(novo_endereco)
             if cep:
                 novo_endereco = f"{novo_endereco}, CEP: {cep}"
         
