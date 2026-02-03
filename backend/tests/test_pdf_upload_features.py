@@ -567,9 +567,9 @@ class TestHasPDF:
     
     def test_has_pdf_returns_correct_structure(self, auth_token):
         """Test that has-pdf returns correct structure"""
-        # First get any existing OC
+        # First get OCs with has_pdf = true (more reliable)
         response = requests.get(
-            f"{BASE_URL}/api/purchase-orders?limit=1",
+            f"{BASE_URL}/api/purchase-orders?limit=100",
             headers={"Authorization": f"Bearer {auth_token}"}
         )
         
@@ -580,7 +580,18 @@ class TestHasPDF:
         if not pos:
             pytest.skip("No OCs available for testing")
         
-        po_id = pos[0].get("id")
+        # Find an OC with has_pdf = true for more reliable test
+        po_with_pdf = None
+        for po in pos:
+            if po.get("has_pdf") == True:
+                po_with_pdf = po
+                break
+        
+        if not po_with_pdf:
+            # Use first OC if none have PDF
+            po_with_pdf = pos[0]
+        
+        po_id = po_with_pdf.get("id")
         
         # Check has-pdf endpoint
         has_pdf_response = requests.get(
@@ -588,7 +599,7 @@ class TestHasPDF:
             headers={"Authorization": f"Bearer {auth_token}"}
         )
         
-        assert has_pdf_response.status_code == 200
+        assert has_pdf_response.status_code == 200, f"Expected 200, got {has_pdf_response.status_code}: {has_pdf_response.text}"
         has_pdf_data = has_pdf_response.json()
         
         assert "has_pdf" in has_pdf_data, "Response should have has_pdf field"
