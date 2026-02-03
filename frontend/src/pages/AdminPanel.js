@@ -217,9 +217,16 @@ const AdminPanel = () => {
       const data = await response.json();
       if (response.ok) {
         setUsuarios(data.users || []);
+        if (!data.users || data.users.length === 0) {
+          alert('Nenhum usuário encontrado no sistema.');
+        }
+      } else {
+        console.error('Erro na resposta:', data);
+        alert(`Erro ao carregar usuários: ${data.detail || 'Erro desconhecido'}`);
       }
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
+      alert(`Erro ao carregar usuários: ${error.message}`);
     } finally {
       setLoadingUsuarios(false);
     }
