@@ -2601,6 +2601,53 @@ Chave PIX: ${dados.pix}`;
                   </div>
                 )}
 
+                {/* Requisitante (Nome e Email) */}
+                <div style={{ 
+                  padding: '0.75rem', 
+                  background: '#ecfdf5', 
+                  borderRadius: '8px',
+                  border: '1px solid #6ee7b7'
+                }}>
+                  <div style={{ fontSize: '0.75rem', color: '#065f46', fontWeight: '600', marginBottom: '0.25rem' }}>
+                    👤 REQUISITANTE
+                  </div>
+                  {item.requisitante_nome || item.requisitante_email ? (
+                    <div style={{ fontSize: '0.85rem', color: '#047857' }}>
+                      {item.requisitante_nome && <div style={{ fontWeight: '600' }}>{item.requisitante_nome}</div>}
+                      {item.requisitante_email && <div>{item.requisitante_email}</div>}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '0.85rem', color: '#6b7280', fontStyle: 'italic' }}>
+                      Não informado
+                    </div>
+                  )}
+                  {isAdmin && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingRequisitante({
+                          po_id: item.po_id,
+                          numero_oc: item.numero_oc,
+                          requisitante_nome: item.requisitante_nome || '',
+                          requisitante_email: item.requisitante_email || ''
+                        });
+                      }}
+                      style={{ 
+                        marginTop: '0.5rem',
+                        padding: '0.25rem 0.5rem', 
+                        fontSize: '0.75rem', 
+                        background: '#10b981', 
+                        color: 'white', 
+                        border: 'none', 
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ✏️ Editar
+                    </button>
+                  )}
+                </div>
+
             {/* NFs de Compra (Fornecedor) */}
             <div style={{ 
               padding: '0.75rem', 
