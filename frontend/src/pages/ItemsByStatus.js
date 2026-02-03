@@ -7199,6 +7199,117 @@ DADOS BANCÁRIOS - Banco: ${dados.banco} | Ag: ${dados.agencia} | Cc: ${dados.co
         />
       )}
       
+      {/* Modal de Edição do Requisitante */}
+      {editingRequisitante && (
+        <div 
+          onClick={() => setEditingRequisitante(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9998,
+            padding: '2rem'
+          }}
+          data-testid="editar-requisitante-modal"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '1.5rem',
+              maxWidth: '450px',
+              width: '100%',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+            }}
+          >
+            <h3 style={{ marginBottom: '1rem', color: '#1e293b' }}>
+              👤 Editar Requisitante - {editingRequisitante.numero_oc}
+            </h3>
+            
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '600', color: '#374151' }}>
+                Nome do Requisitante
+              </label>
+              <input
+                type="text"
+                value={editingRequisitante.requisitante_nome}
+                onChange={(e) => setEditingRequisitante(prev => ({
+                  ...prev,
+                  requisitante_nome: e.target.value
+                }))}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  fontSize: '0.9rem'
+                }}
+                placeholder="Ex: JOÃO SILVA"
+              />
+            </div>
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '600', color: '#374151' }}>
+                Email do Requisitante
+              </label>
+              <input
+                type="email"
+                value={editingRequisitante.requisitante_email}
+                onChange={(e) => setEditingRequisitante(prev => ({
+                  ...prev,
+                  requisitante_email: e.target.value
+                }))}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  fontSize: '0.9rem'
+                }}
+                placeholder="Ex: joao.silva@email.com"
+              />
+            </div>
+            
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setEditingRequisitante(null)}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#f3f4f6',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={salvarRequisitante}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                ✓ Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Modal de Imagem Expandida */}
       {/* Modal de Envio Parcial */}
       {showEnvioParcialModal && (
