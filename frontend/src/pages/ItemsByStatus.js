@@ -61,6 +61,9 @@ const ItemsByStatus = () => {
   const [ncmManual, setNcmManual] = useState({});
   const fileInputRef = useRef({});
   
+  // Estados para edição do Requisitante
+  const [editingRequisitante, setEditingRequisitante] = useState(null);  // {po_id, numero_oc, requisitante_nome, requisitante_email}
+  
   // Estados para visualização por OC (em_separacao)
   const [expandedOC, setExpandedOC] = useState(null);  // OC expandida para ver itens
   const [uploadingNFVendaOC, setUploadingNFVendaOC] = useState(null);  // Upload de NF de Venda da OC
