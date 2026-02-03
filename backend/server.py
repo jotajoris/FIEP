@@ -1667,9 +1667,15 @@ async def upload_pdf_purchase_order(file: UploadFile = File(...), current_user: 
     if oc_data.get("requisitante_email"):
         doc['requisitante_email'] = oc_data["requisitante_email"]
     
-    # Adicionar endereço de entrega
+    # Adicionar endereço de entrega COM BUSCA AUTOMÁTICA DE CEP
     if oc_data.get("endereco_entrega"):
-        doc['endereco_entrega'] = oc_data["endereco_entrega"]
+        endereco = oc_data["endereco_entrega"]
+        # Buscar CEP automaticamente se não tiver
+        if not re.search(r'CEP[:\s]*\d{5}-?\d{3}', endereco, re.IGNORECASE):
+            cep = await buscar_cep_por_endereco(endereco)
+            if cep:
+                endereco = f"{endereco}, CEP: {cep}"
+        doc['endereco_entrega'] = endereco
     
     # SALVAR PDF ORIGINAL para download posterior
     import base64
