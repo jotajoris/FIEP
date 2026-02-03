@@ -5975,6 +5975,43 @@ async def update_dados_bancarios(
     return {"success": True, "dados_bancarios": dados_bancarios}
 
 
+@api_router.patch("/purchase-orders/{po_id}/requisitante")
+async def update_requisitante(
+    po_id: str,
+    data: dict,
+    current_user: dict = Depends(require_admin)
+):
+    """Atualizar requisitante de uma OC (nome e email)"""
+    updates = {}
+    campos_atualizados = []
+    
+    if "requisitante_nome" in data:
+        updates["requisitante_nome"] = data["requisitante_nome"]
+        campos_atualizados.append("requisitante_nome")
+    
+    if "requisitante_email" in data:
+        updates["requisitante_email"] = data["requisitante_email"]
+        campos_atualizados.append("requisitante_email")
+    
+    if not updates:
+        raise HTTPException(status_code=400, detail="Nenhum campo para atualizar")
+    
+    result = await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": updates}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    return {
+        "success": True,
+        "campos_atualizados": campos_atualizados,
+        "requisitante_nome": updates.get("requisitante_nome"),
+        "requisitante_email": updates.get("requisitante_email")
+    }
+
+
 @api_router.get("/dados-bancarios/todas-ocs")
 async def get_todos_dados_bancarios(
     current_user: dict = Depends(get_current_user)
