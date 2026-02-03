@@ -2143,6 +2143,8 @@ async def get_items_by_status_optimized(
                 "numero_oc": result['numero_oc'],
                 "data_entrega": result.get('data_entrega'),
                 "endereco_entrega": result.get('endereco_entrega'),
+                "requisitante_nome": result.get('requisitante_nome'),
+                "requisitante_email": result.get('requisitante_email'),
                 "notas_fiscais_venda": result.get('notas_fiscais_venda', []),  # NFs de venda
                 "dados_bancarios_custom": result.get('dados_bancarios_custom'),  # Dados bancários
                 "itens_pendentes": itens_pendentes_map.get(po_id, []),  # Itens pendentes para próxima remessa
@@ -2151,9 +2153,12 @@ async def get_items_by_status_optimized(
         
         item = result['item']
         item['po_id'] = po_id
-        # Adicionar email do representante
+        # Adicionar email do representante (quem vai cotar)
         responsavel = item.get('responsavel', '').strip()
         item['representante_email'] = OWNER_TO_EMAIL.get(responsavel, '')
+        # Adicionar dados do requisitante (extraído do PDF da OC)
+        item['requisitante_nome'] = result.get('requisitante_nome', '')
+        item['requisitante_email'] = result.get('requisitante_email', '')
         ocs_map[po_id]['items'].append(item)
     
     # Converter para lista
