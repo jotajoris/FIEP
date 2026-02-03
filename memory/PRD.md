@@ -90,6 +90,29 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 
 ## Changelog Recente
 
+### 2026-02-03 (Sessão Atual - Continuação 8)
+- ✅ **CORREÇÃO CRÍTICA: Paridade entre Upload e Atualização de OC**
+  - **Problema:** Ao subir nova OC via PDF, os dados não eram preenchidos automaticamente (responsável, lote, preço, etc.)
+  - **Solução:** Endpoint `/api/purchase-orders/upload-pdf` agora preenche todos os campos automaticamente:
+    - `requisitante_nome` e `requisitante_email` - extraídos do PDF
+    - `cnpj_requisitante` e `data_entrega` - extraídos do PDF
+    - `endereco_entrega` - com busca automática de CEP
+    - `responsavel`, `lote`, `lot_number`, `preco_venda`, `descricao` - da planilha de referência
+  - PDF original é salvo em base64 para download posterior
+  - Eliminado retrabalho de ter que ir no Admin → Atualizar OC após subir nova OC
+
+- ✅ **CORREÇÃO: Bug da função `buscar_cep_por_endereco`**
+  - **Problema:** Existiam duas versões da função (async e sync), a sync sobrescrevia a async
+  - **Erro:** "object NoneType can't be used in 'await' expression"
+  - **Solução:** Removida função duplicada sync, mantida apenas versão async
+  - Corrigidas todas as chamadas para usar `await`
+
+- ✅ **Testes realizados:**
+  - 18/18 testes backend passaram (100%)
+  - Endpoints testados: upload-pdf, preview-pdf, download-pdf, has-pdf
+  - Verificado criação de OC com todos os campos preenchidos
+  - Verificado download do PDF salvo
+
 ### 2026-02-02 (Sessão atual - Continuação 7)
 - ✅ **Admin Panel - Indicador de NFs de Venda Duplicadas**
   - NFs de Venda agora mostram badge amarelo com "Nx" quando usadas em múltiplos itens/OCs
