@@ -1049,6 +1049,35 @@ async def get_version():
         "status": "OK"
     }
 
+
+# Endpoint para promover usuário a admin
+@api_router.patch("/users/{email}/promote-admin")
+async def promote_user_to_admin(
+    email: str,
+    current_user: dict = Depends(require_admin)
+):
+    """Promover um usuário a admin (apenas admins podem usar)"""
+    # Verificar se usuário existe
+    user = await db.users.find_one({"email": email}, {"_id": 0})
+    
+    if not user:
+        raise HTTPException(status_code=404, detail=f"Usuário {email} não encontrado")
+    
+    if user.get('role') == 'admin':
+        return {"success": True, "message": f"Usuário {email} já é admin"}
+    
+    # Promover a admin
+    result = await db.users.update_one(
+        {"email": email},
+        {"$set": {"role": "admin"}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=500, detail="Erro ao atualizar usuário")
+    
+    return {"success": True, "message": f"Usuário {email} promovido a admin com sucesso"}
+
+
 # ENDPOINT DE DEBUG DO UPDATE - MOSTRA EXATAMENTE O QUE ACONTECE
 @api_router.patch("/debug-update/{po_id}/{item_index}")
 async def debug_update(
