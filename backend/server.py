@@ -1086,6 +1086,38 @@ async def promote_user_to_admin(
     return {"success": True, "message": f"Usuário {email} promovido a admin com sucesso"}
 
 
+# Endpoint para rebaixar usuário de admin para user
+@api_router.patch("/users/{email}/demote-admin")
+async def demote_user_from_admin(
+    email: str,
+    current_user: dict = Depends(require_admin)
+):
+    """Rebaixar um admin para usuário comum (apenas admins podem usar)"""
+    # Verificar se usuário existe
+    user = await db.users.find_one({"email": email}, {"_id": 0})
+    
+    if not user:
+        raise HTTPException(status_code=404, detail=f"Usuário {email} não encontrado")
+    
+    # Não permitir rebaixar a si mesmo
+    if email == current_user.get('sub'):
+        raise HTTPException(status_code=400, detail="Você não pode rebaixar a si mesmo")
+    
+    if user.get('role') != 'admin':
+        return {"success": True, "message": f"Usuário {email} já é usuário comum"}
+    
+    # Rebaixar para user
+    result = await db.users.update_one(
+        {"email": email},
+        {"$set": {"role": "user"}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=500, detail="Erro ao atualizar usuário")
+    
+    return {"success": True, "message": f"Usuário {email} rebaixado para usuário comum"}
+
+
 # ENDPOINT DE DEBUG DO UPDATE - MOSTRA EXATAMENTE O QUE ACONTECE
 @api_router.patch("/debug-update/{po_id}/{item_index}")
 async def debug_update(
