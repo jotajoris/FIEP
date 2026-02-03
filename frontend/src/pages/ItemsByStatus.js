@@ -4160,72 +4160,48 @@ DADOS BANCÁRIOS - Banco: ${dados.banco} | Ag: ${dados.agencia} | Cc: ${dados.co
                         </div>
                       )}
                       
-                      {/* Botão para adicionar nova NF */}
+                      {/* Botão para adicionar NFs de Venda (múltiplos PDFs e XMLs) */}
                       <div style={{ textAlign: 'center' }}>
                         {oc.itensRestantes > 0 && (
                           <p style={{ color: '#f59e0b', fontSize: '0.9rem', marginBottom: '0.75rem' }}>
                             {oc.itensRestantes} item(s) ainda sem NF de Venda
                           </p>
                         )}
-                        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                          {/* Botão para PDF */}
+                        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                          {/* Botão para múltiplos PDFs e XMLs */}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               const input = document.createElement('input');
                               input.type = 'file';
-                              input.accept = '.pdf';
+                              input.accept = '.pdf,.xml';
+                              input.multiple = true;  // Permitir múltiplos arquivos
                               input.onchange = (ev) => {
-                                if (ev.target.files && ev.target.files[0]) {
-                                  uploadNFVendaOC(oc.po_id, ev.target.files[0], oc.items);
+                                if (ev.target.files && ev.target.files.length > 0) {
+                                  uploadMultiplosNFVendaOC(oc.po_id, ev.target.files, oc.items);
                                 }
                               };
                               input.click();
                             }}
                             disabled={uploadingNFVendaOC === oc.po_id}
                             style={{ 
-                              padding: '0.6rem 1.2rem', 
-                              fontSize: '0.9rem', 
-                              background: uploadingNFVendaOC === oc.po_id ? '#9ca3af' : '#22c55e', 
+                              padding: '0.8rem 1.5rem', 
+                              fontSize: '1rem', 
+                              background: uploadingNFVendaOC === oc.po_id ? '#9ca3af' : 'linear-gradient(135deg, #22c55e 0%, #3b82f6 100%)', 
                               color: 'white', 
                               border: 'none', 
                               borderRadius: '8px',
                               cursor: uploadingNFVendaOC === oc.po_id ? 'not-allowed' : 'pointer',
-                              fontWeight: '600'
+                              fontWeight: '600',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
                             }}
                           >
-                            {uploadingNFVendaOC === oc.po_id ? '⏳ Enviando...' : '📄 Subir PDF'}
-                          </button>
-                          
-                          {/* Botão para XML */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const input = document.createElement('input');
-                              input.type = 'file';
-                              input.accept = '.xml';
-                              input.onchange = (ev) => {
-                                if (ev.target.files && ev.target.files[0]) {
-                                  uploadNFVendaOC(oc.po_id, ev.target.files[0], oc.items);
-                                }
-                              };
-                              input.click();
-                            }}
-                            disabled={uploadingNFVendaOC === oc.po_id}
-                            style={{ 
-                              padding: '0.6rem 1.2rem', 
-                              fontSize: '0.9rem', 
-                              background: uploadingNFVendaOC === oc.po_id ? '#9ca3af' : '#3b82f6', 
-                              color: 'white', 
-                              border: 'none', 
-                              borderRadius: '8px',
-                              cursor: uploadingNFVendaOC === oc.po_id ? 'not-allowed' : 'pointer',
-                              fontWeight: '600'
-                            }}
-                          >
-                            📋 Subir XML
+                            {uploadingNFVendaOC === oc.po_id ? '⏳ Enviando...' : '📄 Subir PDFs e XMLs (múltiplos)'}
                           </button>
                         </div>
+                        <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0.5rem 0 0 0' }}>
+                          💡 Selecione vários arquivos de uma vez (PDFs e/ou XMLs)
+                        </p>
                         {getItensSelecionados(oc.po_id).size > 0 && (
                           <p style={{ fontSize: '0.8rem', color: '#16a34a', margin: '0.5rem 0 0 0' }}>
                             📌 {getItensSelecionados(oc.po_id).size} item(s) selecionado(s)
