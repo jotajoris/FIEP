@@ -8429,10 +8429,24 @@ app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
     allow_origins=["*"],  # Permitir todas as origens
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
     allow_headers=["*"],
     expose_headers=["*"],
+    max_age=86400,  # Cache do preflight por 24 horas
 )
+
+# Handler explícito para OPTIONS (preflight requests)
+@app.options("/{full_path:path}")
+async def options_handler(full_path: str):
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Max-Age": "86400",
+        }
+    )
 
 # Middleware para headers anti-cache (forçar atualização)
 from starlette.middleware.base import BaseHTTPMiddleware
