@@ -685,7 +685,115 @@ const AdminPanel = () => {
           >
             🔄 Atualizar OCs
           </button>
+          <button
+            onClick={() => { setView('usuarios'); loadUsuarios(); }}
+            className={`btn ${view === 'usuarios' ? 'btn-primary' : 'btn-secondary'}`}
+            data-testid="view-usuarios-btn"
+          >
+            👥 Usuários
+          </button>
         </div>
+
+        {/* ============== ABA USUÁRIOS ============== */}
+        {view === 'usuarios' && (
+          <>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem' }}>Gerenciamento de Usuários</h2>
+            <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '1rem' }}>
+              Gerencie os usuários do sistema. Admins têm acesso total, usuários comuns veem apenas seus próprios itens.
+            </p>
+            
+            <button
+              onClick={loadUsuarios}
+              disabled={loadingUsuarios}
+              className="btn btn-secondary"
+              style={{ marginBottom: '1rem' }}
+            >
+              {loadingUsuarios ? '⏳ Carregando...' : '🔄 Atualizar Lista'}
+            </button>
+            
+            {loadingUsuarios ? (
+              <p>Carregando usuários...</p>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: '#f3f4f6' }}>
+                      <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Email</th>
+                      <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Nome</th>
+                      <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #e5e7eb' }}>Role</th>
+                      <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #e5e7eb' }}>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {usuarios.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>
+                          Nenhum usuário encontrado. Clique em "Atualizar Lista".
+                        </td>
+                      </tr>
+                    ) : (
+                      usuarios.map((user, idx) => (
+                        <tr key={user.email || idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                          <td style={{ padding: '0.75rem' }}>{user.email}</td>
+                          <td style={{ padding: '0.75rem' }}>{user.owner_name || user.name || '-'}</td>
+                          <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                            <span style={{
+                              padding: '0.25rem 0.75rem',
+                              borderRadius: '12px',
+                              fontSize: '0.8rem',
+                              fontWeight: '600',
+                              background: user.role === 'admin' ? '#dbeafe' : '#f3f4f6',
+                              color: user.role === 'admin' ? '#1d4ed8' : '#6b7280'
+                            }}>
+                              {user.role === 'admin' ? '👑 Admin' : '👤 Usuário'}
+                            </span>
+                          </td>
+                          <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                            {user.role === 'admin' ? (
+                              <button
+                                onClick={() => handleRebaixarAdmin(user.email)}
+                                disabled={promovendo === user.email}
+                                className="btn"
+                                style={{
+                                  padding: '0.4rem 0.75rem',
+                                  fontSize: '0.8rem',
+                                  background: '#fee2e2',
+                                  color: '#dc2626',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  cursor: promovendo === user.email ? 'wait' : 'pointer'
+                                }}
+                              >
+                                {promovendo === user.email ? '⏳' : '⬇️ Rebaixar'}
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handlePromoverAdmin(user.email)}
+                                disabled={promovendo === user.email}
+                                className="btn"
+                                style={{
+                                  padding: '0.4rem 0.75rem',
+                                  fontSize: '0.8rem',
+                                  background: '#dbeafe',
+                                  color: '#1d4ed8',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  cursor: promovendo === user.email ? 'wait' : 'pointer'
+                                }}
+                              >
+                                {promovendo === user.email ? '⏳' : '⬆️ Promover a Admin'}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
 
         {/* ============== ABA ATUALIZAR OCS ============== */}
         {view === 'atualizar-ocs' && (
