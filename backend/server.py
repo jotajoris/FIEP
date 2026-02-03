@@ -6865,6 +6865,27 @@ async def atualizar_todas_ocs_com_pdfs(
             updates['data_entrega'] = nova_data_entrega
             campos_atualizados.append("data_entrega")
         
+        # CNPJ Requisitante
+        novo_cnpj = pdf_data.get('cnpj_requisitante', '')
+        cnpj_atual = existing_po.get('cnpj_requisitante', '')
+        if novo_cnpj and novo_cnpj != cnpj_atual:
+            updates['cnpj_requisitante'] = novo_cnpj
+            campos_atualizados.append("cnpj_requisitante")
+        
+        # Requisitante Nome
+        novo_requisitante_nome = pdf_data.get('requisitante_nome', '')
+        requisitante_nome_atual = existing_po.get('requisitante_nome', '')
+        if novo_requisitante_nome and novo_requisitante_nome != requisitante_nome_atual:
+            updates['requisitante_nome'] = novo_requisitante_nome
+            campos_atualizados.append("requisitante_nome")
+        
+        # Requisitante Email
+        novo_requisitante_email = pdf_data.get('requisitante_email', '')
+        requisitante_email_atual = existing_po.get('requisitante_email', '')
+        if novo_requisitante_email and novo_requisitante_email != requisitante_email_atual:
+            updates['requisitante_email'] = novo_requisitante_email
+            campos_atualizados.append("requisitante_email")
+        
         # ============ ATUALIZAR ITENS ============
         existing_items = existing_po.get('items', [])
         updated_items = []
