@@ -33,6 +33,11 @@ const AdminPanel = () => {
   const [reprocessandoItens, setReprocessandoItens] = useState(false);
   const [resultadoReprocessamento, setResultadoReprocessamento] = useState(null);
   
+  // Gerenciamento de usuários
+  const [usuarios, setUsuarios] = useState([]);
+  const [loadingUsuarios, setLoadingUsuarios] = useState(false);
+  const [promovendo, setPromovendo] = useState(null);
+  
   // Paginação para NFs
   const [nfCompraPage, setNfCompraPage] = useState(1);
   const [nfCompraPerPage, setNfCompraPerPage] = useState(5);
