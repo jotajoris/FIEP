@@ -1,0 +1,113 @@
+{
+  "summary": "Backend testing completed for PDF upload/preview/download features. All 18 tests passed. The upload-pdf endpoint now has full parity with the update endpoint, filling all fields from the reference spreadsheet.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_pdf_upload_features.py",
+    "/app/test_reports/pytest/pytest_pdf_upload.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "All requested features are implemented and working correctly",
+    "POST /api/purchase-orders/upload-pdf fills all fields: requisitante_nome, requisitante_email, cnpj_requisitante, data_entrega, endereco_entrega",
+    "POST /api/purchase-orders/preview-pdf returns requisitante_nome and requisitante_email",
+    "GET /api/purchase-orders/{id}/download-pdf returns valid PDF content",
+    "Items created have: responsavel, lote, lot_number, preco_venda, descricao from reference spreadsheet",
+    "PDF original is saved in base64 format for later download"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_pdf_upload_features.py"
+  ],
+  "success_rate": {
+    "backend": "100% (18/18 tests passed)"
+  },
+  "test_credentials": {
+    "admin": {"email": "projetos.onsolucoes@gmail.com", "password": "on123456"}
+  },
+  "seed_data_creation": "Test OCs created during testing were cleaned up automatically",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "PDF upload features verified working. The buscar_cep_por_endereco async function bug was fixed (duplicate sync version removed). All endpoints tested: upload-pdf, preview-pdf, download-pdf, has-pdf.",
+  "features_tested": {
+    "upload_pdf_creates_oc": {
+      "status": "WORKING",
+      "endpoint": "POST /api/purchase-orders/upload-pdf",
+      "verified": "Creates OC with all fields populated from PDF and reference spreadsheet"
+    },
+    "upload_pdf_fills_requisitante": {
+      "status": "WORKING",
+      "fields": ["requisitante_nome", "requisitante_email"],
+      "verified": "Extracted from PDF and saved to OC"
+    },
+    "upload_pdf_fills_cnpj_data_entrega": {
+      "status": "WORKING",
+      "fields": ["cnpj_requisitante", "data_entrega"],
+      "verified": "CNPJ extracted, data_entrega converted from DD/MM/YYYY to ISO format"
+    },
+    "upload_pdf_fills_endereco": {
+      "status": "WORKING",
+      "fields": ["endereco_entrega"],
+      "verified": "Extracted from PDF with automatic CEP lookup"
+    },
+    "upload_pdf_items_reference_data": {
+      "status": "WORKING",
+      "fields": ["responsavel", "lote", "lot_number", "preco_venda", "descricao"],
+      "verified": "All fields populated from reference_items collection"
+    },
+    "upload_pdf_saves_pdf": {
+      "status": "WORKING",
+      "verified": "PDF saved in base64 format for later download"
+    },
+    "preview_pdf_returns_requisitante": {
+      "status": "WORKING",
+      "endpoint": "POST /api/purchase-orders/preview-pdf",
+      "verified": "Returns requisitante_nome and requisitante_email in response"
+    },
+    "download_pdf": {
+      "status": "WORKING",
+      "endpoint": "GET /api/purchase-orders/{id}/download-pdf",
+      "verified": "Returns valid PDF content with correct headers"
+    },
+    "has_pdf": {
+      "status": "WORKING",
+      "endpoint": "GET /api/purchase-orders/{id}/has-pdf",
+      "verified": "Returns has_pdf boolean and filename"
+    }
+  },
+  "test_results": {
+    "backend_tests": {
+      "total": 18,
+      "passed": 18,
+      "failed": 0,
+      "test_classes": [
+        "TestAuthentication - 1 test (admin login)",
+        "TestPreviewPDF - 4 tests (returns 200, requisitante fields, cnpj/data_entrega, reference data)",
+        "TestUploadPDF - 6 tests (creates OC, requisitante, cnpj/data_entrega, endereco, reference data, saves PDF)",
+        "TestDownloadPDF - 4 tests (returns PDF, valid content, 404 for nonexistent, requires auth)",
+        "TestHasPDF - 1 test (correct structure)",
+        "TestHealthAndVersion - 2 tests (API root, version)"
+      ]
+    }
+  },
+  "api_endpoints_verified": {
+    "POST /api/purchase-orders/upload-pdf": "200 OK - Creates OC with all fields from PDF and reference",
+    "POST /api/purchase-orders/preview-pdf": "200 OK - Returns preview with requisitante_nome, requisitante_email",
+    "GET /api/purchase-orders/{id}/download-pdf": "200 OK - Returns PDF content with application/pdf content-type",
+    "GET /api/purchase-orders/{id}/has-pdf": "200 OK - Returns has_pdf boolean and filename",
+    "POST /api/auth/login": "200 OK - Returns access_token",
+    "GET /api/": "200 OK - API root",
+    "GET /api/version": "200 OK - Version info"
+  },
+  "bug_fix_verified": {
+    "issue": "buscar_cep_por_endereco duplicate function (async vs sync)",
+    "status": "FIXED",
+    "description": "The sync version was removed, only async version remains. No 'NoneType can't be used in await expression' errors."
+  }
+}
