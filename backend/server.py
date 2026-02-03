@@ -640,6 +640,36 @@ def extract_oc_from_pdf(pdf_bytes: bytes) -> dict:
                         break
                 break
         
+        # Extrair Requisitante (nome e email)
+        requisitante_nome = ""
+        requisitante_email = ""
+        
+        # Padrão: "Requisitante: NOME -" seguido do email na próxima linha
+        lines = full_text.split('\n')
+        for i, line in enumerate(lines):
+            if 'requisitante:' in line.lower() and i + 1 < len(lines):
+                # Extrair nome do requisitante
+                nome_match = re.search(r'requisitante[:\s]*([A-ZÁÉÍÓÚÂÊÔÃÕÇ\s]+)\s*-?', line, re.IGNORECASE)
+                if nome_match:
+                    requisitante_nome = nome_match.group(1).strip()
+                
+                # Email geralmente está na próxima linha
+                next_line = lines[i + 1].strip()
+                email_match = re.search(r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', next_line)
+                if email_match:
+                    requisitante_email = email_match.group(1)
+                
+                # Se o email estiver na mesma linha
+                if not requisitante_email:
+                    email_match = re.search(r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', line)
+                    if email_match:
+                        requisitante_email = email_match.group(1)
+                
+                if requisitante_nome:
+                    break
+        
+        logger.info(f"Requisitante extraído: {requisitante_nome} - {requisitante_email}")
+        
         # Extrair Data de Entrega (formato DD/MM/YYYY)
         # A data pode estar em diferentes formatos e locais no PDF
         data_entrega = None
