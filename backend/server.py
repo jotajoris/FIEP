@@ -6135,6 +6135,214 @@ async def update_requisitante(
     }
 
 
+@api_router.post("/admin/reprocessar-requisitantes")
+async def reprocessar_requisitantes(
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Reprocessa todos os PDFs salvos para extrair o requisitante automaticamente.
+    Útil para OCs criadas antes da feature de extração de requisitante.
+    """
+    import base64
+    
+    # Buscar todas as OCs que têm PDF salvo mas não têm requisitante
+    cursor = db.purchase_orders.find(
+        {
+            "pdf_original": {"$exists": True},
+            "$or": [
+                {"requisitante_nome": {"$exists": False}},
+                {"requisitante_nome": ""},
+                {"requisitante_nome": None}
+            ]
+        },
+        {"_id": 0, "id": 1, "numero_oc": 1, "pdf_original": 1}
+    )
+    
+    ocs = await cursor.to_list(5000)
+    
+    resultados = []
+    total_atualizados = 0
+    total_sem_requisitante = 0
+    
+    for oc in ocs:
+        try:
+            pdf_data = oc.get('pdf_original', {})
+            if not pdf_data or not pdf_data.get('data'):
+                resultados.append({
+                    "numero_oc": oc.get('numero_oc'),
+                    "status": "sem_pdf",
+                    "erro": "PDF não encontrado"
+                })
+                continue
+            
+            # Decodificar PDF
+            pdf_content = base64.b64decode(pdf_data['data'])
+            
+            # Extrair texto do PDF
+            doc = fitz.open(stream=pdf_content, filetype="pdf")
+            full_text = ""
+            for page in doc:
+                full_text += page.get_text()
+            doc.close()
+            
+            # Extrair requisitante
+            requisitante_nome = ""
+            requisitante_email = ""
+            
+            lines = full_text.split('\n')
+            for i, line in enumerate(lines):
+                if 'requisitante:' in line.lower() and i + 1 < len(lines):
+                    # Extrair nome
+                    nome_match = re.search(r'requisitante[:\s]*([A-Za-záéíóúâêôãõçÁÉÍÓÚÂÊÔÃÕÇ\s]+?)[\s]*[-]?\s*$', line, re.IGNORECASE)
+                    if nome_match:
+                        requisitante_nome = nome_match.group(1).strip()
+                    else:
+                        nome_match2 = re.search(r'requisitante[:\s]+(.+?)(?:\s*-\s*)?$', line, re.IGNORECASE)
+                        if nome_match2:
+                            nome = nome_match2.group(1).strip().rstrip('-').strip()
+                            nome = re.sub(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', '', nome).strip()
+                            if nome:
+                                requisitante_nome = nome
+                    
+                    # Email na próxima linha
+                    next_line = lines[i + 1].strip()
+                    email_match = re.search(r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', next_line)
+                    if email_match:
+                        requisitante_email = email_match.group(1)
+                    
+                    # Email na mesma linha
+                    if not requisitante_email:
+                        email_match = re.search(r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', line)
+                        if email_match:
+                            requisitante_email = email_match.group(1)
+                    
+                    if requisitante_nome:
+                        break
+            
+            if requisitante_nome:
+                # Atualizar OC com requisitante
+                await db.purchase_orders.update_one(
+                    {"id": oc['id']},
+                    {"$set": {
+                        "requisitante_nome": requisitante_nome,
+                        "requisitante_email": requisitante_email
+                    }}
+                )
+                total_atualizados += 1
+                resultados.append({
+                    "numero_oc": oc.get('numero_oc'),
+                    "status": "atualizado",
+                    "requisitante_nome": requisitante_nome,
+                    "requisitante_email": requisitante_email
+                })
+            else:
+                total_sem_requisitante += 1
+                resultados.append({
+                    "numero_oc": oc.get('numero_oc'),
+                    "status": "sem_requisitante",
+                    "erro": "Requisitante não encontrado no PDF"
+                })
+                
+        except Exception as e:
+            resultados.append({
+                "numero_oc": oc.get('numero_oc'),
+                "status": "erro",
+                "erro": str(e)
+            })
+    
+    return {
+        "success": True,
+        "total_processados": len(ocs),
+        "total_atualizados": total_atualizados,
+        "total_sem_requisitante": total_sem_requisitante,
+        "resultados": resultados
+    }
+
+
+@api_router.post("/admin/reprocessar-requisitante/{po_id}")
+async def reprocessar_requisitante_oc(
+    po_id: str,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Reprocessa o PDF de uma OC específica para extrair o requisitante.
+    """
+    import base64
+    
+    # Buscar OC
+    oc = await db.purchase_orders.find_one(
+        {"id": po_id},
+        {"_id": 0, "id": 1, "numero_oc": 1, "pdf_original": 1}
+    )
+    
+    if not oc:
+        raise HTTPException(status_code=404, detail="OC não encontrada")
+    
+    pdf_data = oc.get('pdf_original', {})
+    if not pdf_data or not pdf_data.get('data'):
+        raise HTTPException(status_code=400, detail="PDF não encontrado para esta OC")
+    
+    # Decodificar PDF
+    pdf_content = base64.b64decode(pdf_data['data'])
+    
+    # Extrair texto do PDF
+    doc = fitz.open(stream=pdf_content, filetype="pdf")
+    full_text = ""
+    for page in doc:
+        full_text += page.get_text()
+    doc.close()
+    
+    # Extrair requisitante
+    requisitante_nome = ""
+    requisitante_email = ""
+    
+    lines = full_text.split('\n')
+    for i, line in enumerate(lines):
+        if 'requisitante:' in line.lower() and i + 1 < len(lines):
+            nome_match = re.search(r'requisitante[:\s]*([A-Za-záéíóúâêôãõçÁÉÍÓÚÂÊÔÃÕÇ\s]+?)[\s]*[-]?\s*$', line, re.IGNORECASE)
+            if nome_match:
+                requisitante_nome = nome_match.group(1).strip()
+            else:
+                nome_match2 = re.search(r'requisitante[:\s]+(.+?)(?:\s*-\s*)?$', line, re.IGNORECASE)
+                if nome_match2:
+                    nome = nome_match2.group(1).strip().rstrip('-').strip()
+                    nome = re.sub(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', '', nome).strip()
+                    if nome:
+                        requisitante_nome = nome
+            
+            next_line = lines[i + 1].strip()
+            email_match = re.search(r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', next_line)
+            if email_match:
+                requisitante_email = email_match.group(1)
+            
+            if not requisitante_email:
+                email_match = re.search(r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', line)
+                if email_match:
+                    requisitante_email = email_match.group(1)
+            
+            if requisitante_nome:
+                break
+    
+    if not requisitante_nome:
+        raise HTTPException(status_code=400, detail="Requisitante não encontrado no PDF")
+    
+    # Atualizar OC
+    await db.purchase_orders.update_one(
+        {"id": po_id},
+        {"$set": {
+            "requisitante_nome": requisitante_nome,
+            "requisitante_email": requisitante_email
+        }}
+    )
+    
+    return {
+        "success": True,
+        "numero_oc": oc.get('numero_oc'),
+        "requisitante_nome": requisitante_nome,
+        "requisitante_email": requisitante_email
+    }
+
+
 @api_router.get("/dados-bancarios/todas-ocs")
 async def get_todos_dados_bancarios(
     current_user: dict = Depends(get_current_user)
