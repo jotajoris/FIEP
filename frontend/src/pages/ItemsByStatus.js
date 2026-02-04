@@ -4018,7 +4018,7 @@ Chave PIX: ${dados.pix}`;
                                   const sucesso = await salvarDadosBancarios(oc.po_id, dadosNFTemp);
                                   if (sucesso) {
                                     setEditingDadosNF(null);
-                                    alert('Dados bancários salvos com sucesso!');
+                                    alert('Dados salvos com sucesso!');
                                   }
                                 }}
                                 style={{ padding: '0.5rem 1rem', background: '#16a34a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600' }}
@@ -4028,16 +4028,31 @@ Chave PIX: ${dados.pix}`;
                             </div>
                           </div>
                         ) : (
-                          <pre style={{ 
-                            whiteSpace: 'pre-wrap', 
-                            fontSize: '0.75rem', 
-                            color: '#713f12',
-                            background: 'white',
-                            padding: '0.5rem',
-                            borderRadius: '4px',
-                            margin: 0
-                          }}
-                          onClick={(e) => e.stopPropagation()}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            {/* Requisitante em destaque se existir */}
+                            {oc.requisitante_nome && (
+                              <div style={{ 
+                                background: '#ecfdf5', 
+                                padding: '0.5rem', 
+                                borderRadius: '4px',
+                                border: '1px solid #a7f3d0'
+                              }}>
+                                <span style={{ fontSize: '0.75rem', color: '#065f46', fontWeight: '600' }}>
+                                  👤 Requisitante: {oc.requisitante_nome}
+                                  {oc.requisitante_email && ` - ${oc.requisitante_email}`}
+                                </span>
+                              </div>
+                            )}
+                            <pre style={{ 
+                              whiteSpace: 'pre-wrap', 
+                              fontSize: '0.75rem', 
+                              color: '#713f12',
+                              background: 'white',
+                              padding: '0.5rem',
+                              borderRadius: '4px',
+                              margin: 0
+                            }}
+                            onClick={(e) => e.stopPropagation()}
                           >
 {(() => {
   const dados = getDadosBancarios(oc.po_id);
