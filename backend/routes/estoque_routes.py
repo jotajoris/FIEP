@@ -107,8 +107,12 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
                         'quantidade': excedente
                     })
     
+    logger.info(f"[ESTOQUE] Total itens de excedentes: {len(estoque_map)}")
+    
     # 2. Buscar itens adicionados manualmente
     itens_manuais = await db.estoque_manual.find({}, {"_id": 0}).to_list(5000)
+    
+    logger.info(f"[ESTOQUE] Encontrados {len(itens_manuais)} itens manuais na coleção")
     
     for item in itens_manuais:
         codigo_item = item.get('codigo_item', '')
@@ -116,7 +120,10 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
         quantidade_usada = item.get('quantidade_usada', 0)
         disponivel = quantidade - quantidade_usada
         
+        logger.info(f"[ESTOQUE] Item manual {codigo_item}: {quantidade} - {quantidade_usada} = {disponivel}")
+        
         if disponivel <= 0 or not codigo_item:
+            logger.info(f"[ESTOQUE] SKIP item {codigo_item}: disponivel <= 0 ou codigo vazio")
             continue
         
         if codigo_item not in estoque_map:
@@ -135,11 +142,15 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
                 'estoque_manual_id': item.get('id'),
                 'ocs_origem': []
             }
+            logger.info(f"[ESTOQUE] Adicionado item manual {codigo_item} ao estoque_map")
         else:
             estoque_map[codigo_item]['quantidade_estoque'] += disponivel
             estoque_map[codigo_item]['disponivel'] += disponivel
+            logger.info(f"[ESTOQUE] Item {codigo_item} já existe, somando quantidade")
     
     result = sorted(estoque_map.values(), key=lambda x: x['codigo_item'])
+    
+    logger.info(f"[ESTOQUE] Total final: {len(result)} itens")
     
     return {
         "total_itens_diferentes": len(result),
