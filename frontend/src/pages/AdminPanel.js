@@ -699,7 +699,20 @@ const AdminPanel = () => {
           >
             👥 Usuários
           </button>
+          <button
+            onClick={() => setView('relatorio')}
+            className={`btn ${view === 'relatorio' ? 'btn-primary' : 'btn-secondary'}`}
+            data-testid="view-relatorio-btn"
+            style={{ background: view === 'relatorio' ? '#16a34a' : '#6b7280' }}
+          >
+            📊 Relatório
+          </button>
         </div>
+
+        {/* ============== ABA RELATÓRIO ============== */}
+        {view === 'relatorio' && (
+          <RelatorioSection />
+        )}
 
         {/* ============== ABA USUÁRIOS ============== */}
         {view === 'usuarios' && (
