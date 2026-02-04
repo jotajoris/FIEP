@@ -3161,8 +3161,9 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     if is_admin:
         total_ocs = await db.purchase_orders.count_documents({"numero_oc": {"$ne": "ESTOQUE-MANUAL"}})
     else:
-        # Contar OCs que têm itens do usuário
+        # Contar OCs que têm itens do usuário (excluindo ESTOQUE-MANUAL)
         pipeline_ocs = [
+            {"$match": {"numero_oc": {"$ne": "ESTOQUE-MANUAL"}}},
             {"$unwind": "$items"},
             {"$match": {
                 "$expr": {
