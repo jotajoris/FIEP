@@ -35,7 +35,7 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
     
     # 1. Buscar excedentes das OCs (itens comprados a mais)
     pos = await db.purchase_orders.find(
-        {"numero_oc": {"$ne": "ESTOQUE-MANUAL"}},  # Ignorar OC antiga se existir
+        {},
         {"_id": 0, "id": 1, "numero_oc": 1, "items": 1}
     ).to_list(5000)
     
