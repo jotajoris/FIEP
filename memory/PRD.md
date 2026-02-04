@@ -105,6 +105,19 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
     - Estoque manual tem gestão independente com histórico de entradas/saídas
     - Código mais limpo e manutenível
 
+- ✅ **MELHORIA: Edição do Requisitante nos Dados Adicionais da NF**
+  - **Problema:** O requisitante não aparecia nos "Dados Adicionais da NF" porque não estava sendo salvo nas OCs
+  - **Solução:** Adicionado formulário de edição do requisitante integrado ao modal de "Dados Adicionais da NF"
+  - **Mudanças:**
+    - Nos status "Em Separação" e "Pronto para Envio", agora é possível editar o requisitante diretamente
+    - O requisitante aparece em destaque (fundo verde) quando preenchido
+    - O texto copiado inclui o requisitante
+  - **Como usar:** Clique em "Editar" nos "Dados Adicionais da NF", preencha o campo "Requisitante" e clique em "Salvar"
+
+- ✅ **MELHORIA: Middleware CORS Reforçado**
+  - **Problema:** Erros CORS intermitentes em produção
+  - **Solução:** Adicionado middleware customizado que garante headers CORS em TODAS as respostas, incluindo erros
+
 ### 2026-02-03 (Sessão Anterior - Continuação 8)
 - ✅ **CORREÇÃO CRÍTICA: Paridade entre Upload e Atualização de OC**
   - **Problema:** Ao subir nova OC via PDF, os dados não eram preenchidos automaticamente (responsável, lote, preço, etc.)
