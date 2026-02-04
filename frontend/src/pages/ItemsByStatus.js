@@ -3904,6 +3904,33 @@ Chave PIX: ${dados.pix}`;
                             borderRadius: '6px',
                             border: '1px solid #e5e7eb'
                           }} onClick={(e) => e.stopPropagation()}>
+                            {/* REQUISITANTE */}
+                            <div style={{ marginBottom: '0.75rem', padding: '0.75rem', background: '#ecfdf5', borderRadius: '6px', border: '1px solid #a7f3d0' }}>
+                              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.5rem', color: '#065f46' }}>👤 Requisitante</label>
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                                <div>
+                                  <label style={{ display: 'block', fontSize: '0.7rem', color: '#6b7280', marginBottom: '0.25rem' }}>Nome</label>
+                                  <input
+                                    type="text"
+                                    value={dadosNFTemp.requisitante_nome || ''}
+                                    onChange={(e) => setDadosNFTemp(prev => ({ ...prev, requisitante_nome: e.target.value }))}
+                                    placeholder="Nome do requisitante"
+                                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.85rem' }}
+                                  />
+                                </div>
+                                <div>
+                                  <label style={{ display: 'block', fontSize: '0.7rem', color: '#6b7280', marginBottom: '0.25rem' }}>Email</label>
+                                  <input
+                                    type="email"
+                                    value={dadosNFTemp.requisitante_email || ''}
+                                    onChange={(e) => setDadosNFTemp(prev => ({ ...prev, requisitante_email: e.target.value }))}
+                                    placeholder="email@exemplo.com"
+                                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.85rem' }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            {/* DADOS BANCÁRIOS */}
                             <div style={{ marginBottom: '0.75rem' }}>
                               <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem' }}>Banco</label>
                               <input
