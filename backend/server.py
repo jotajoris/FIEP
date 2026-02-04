@@ -8009,8 +8009,8 @@ async def usar_estoque(
     quantidade_necessaria = item.get('quantidade', 0)
     
     # Verificar estoque disponível e buscar detalhes
-    estoque_response = await verificar_estoque_item(codigo_item, current_user)
-    quantidade_disponivel = estoque_response.get('quantidade_disponivel', 0)
+    estoque_response = await estoque_verificar_item(codigo_item, current_user)
+    quantidade_disponivel = estoque_response.get('disponivel', 0)
     
     if quantidade_disponivel <= 0:
         raise HTTPException(status_code=400, detail="Não há estoque disponível para este item")
