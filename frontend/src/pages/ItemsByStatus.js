@@ -79,7 +79,9 @@ const ItemsByStatus = () => {
     banco: '341 - Itaú Unibanco',
     conta: '98814-9',
     agencia: '3978',
-    pix: '46.663.556/0001-69'
+    pix: '46.663.556/0001-69',
+    requisitante_nome: '',
+    requisitante_email: ''
   });
   const [dadosBancariosPorOC, setDadosBancariosPorOC] = useState({});  // {po_id: {banco, conta, agencia, pix}}
   
