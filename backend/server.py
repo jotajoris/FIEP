@@ -87,6 +87,53 @@ db = client[os.environ['DB_NAME']]
 app = FastAPI()
 
 # =============================================================================
+# MIDDLEWARE CUSTOMIZADO - Garantir CORS em TODAS as respostas
+# =============================================================================
+from starlette.middleware.base import BaseHTTPMiddleware
+
+class CORSMiddlewareCustom(BaseHTTPMiddleware):
+    """Middleware que garante headers CORS em TODAS as respostas, incluindo erros"""
+    async def dispatch(self, request, call_next):
+        # Se for preflight, retornar imediatamente com CORS
+        if request.method == "OPTIONS":
+            return Response(
+                status_code=200,
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "*",
+                    "Access-Control-Allow-Headers": "*",
+                    "Access-Control-Allow-Credentials": "true",
+                    "Access-Control-Max-Age": "86400",
+                }
+            )
+        
+        # Processar request
+        try:
+            response = await call_next(request)
+        except Exception as e:
+            logger.error(f"Erro no middleware: {e}")
+            return JSONResponse(
+                status_code=500,
+                content={"detail": "Erro interno"},
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "*",
+                    "Access-Control-Allow-Headers": "*",
+                }
+            )
+        
+        # Adicionar headers CORS à resposta
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        
+        return response
+
+# Adicionar middleware PRIMEIRO (será executado por ÚLTIMO, envolvendo tudo)
+app.add_middleware(CORSMiddlewareCustom)
+
+# =============================================================================
 # EXCEPTION HANDLERS - Garantir CORS em TODOS os erros
 # =============================================================================
 from fastapi.exceptions import RequestValidationError
