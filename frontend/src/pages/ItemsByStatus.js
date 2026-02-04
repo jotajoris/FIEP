@@ -3976,7 +3976,6 @@ Chave PIX: ${dados.pix}`;
   const dados = getDadosBancarios(oc.po_id);
   const requisitanteNome = oc.requisitante_nome || '';
   const requisitanteEmail = oc.requisitante_email || '';
-  console.log('OC Debug:', oc.numero_oc, 'req_nome:', requisitanteNome, 'req_email:', requisitanteEmail);
   let requisitanteTxt = '';
   if (requisitanteNome) {
     requisitanteTxt = `\nRequisitante: ${requisitanteNome}${requisitanteEmail ? ` - ${requisitanteEmail}` : ''}`;
