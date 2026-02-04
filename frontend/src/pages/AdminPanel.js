@@ -143,7 +143,7 @@ const RelatorioSection = () => {
         </h3>
         <p style={{ color: '#92400e', marginBottom: '1rem', fontSize: '0.9rem' }}>
           Extrai automaticamente o nome e email do requisitante de todas as OCs que têm PDF salvo.
-          Útil para preencher o campo "Requisitante" em OCs antigas.
+          Útil para preencher o campo Requisitante em OCs antigas.
         </p>
         
         <button
