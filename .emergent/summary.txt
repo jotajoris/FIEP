@@ -29,8 +29,6 @@ The user requested a web platform to manage purchase orders (OCs) for their clie
 - Allow safe OC data updates by re-uploading its PDF without losing item-specific data.
 - On the Em Separação page, allow bulk status changes and application of shipping costs to selected items.
 - Automatically record  when an item's status becomes .
-- A Quantidade Comprada field for items (now removed).
-- A new Estoque (Stock) page for surplus items and a Planilha de Itens (Item Sheet) for a consolidated view.
 - Indicate if a new OC item is already available in stock.
 - Implement a Use from Stock feature for pending items.
 - Allow uploading images for items via drag-and-drop, with a thumbnail view and a popup for the full image.
@@ -45,7 +43,7 @@ The user requested a web platform to manage purchase orders (OCs) for their clie
 - Handle scanned/image-based PDFs by implementing OCR.
 - On the Em Separação page, sort OCs marked Pronto para Despacho to the top.
 - On the Em Trânsito page, add the ability to add/edit tracking codes in bulk (per-item, per-selection, or per-OC).
-- **Integrate the Correios API to automatically update tracking status (from Pronto para Envio to Em Trânsito and Entregue) and send notifications to admins. The job is scheduled to run once a day at 15:00 Brasília time.**
+- Integrate the Correios API to automatically update tracking status (from Pronto para Envio to Em Trânsito and Entregue) and send notifications to admins. The job is scheduled to run once per hour.
 - Simplify the UI on the Em Trânsito page to hide financial data and show a clean, expandable view of tracking events.
 - Allow manual status changes for items on the Em Trânsito page, both individually and in bulk.
 - On the Em Separação page, add the ability to change the status of items when applying freight and tracking in bulk.
@@ -54,66 +52,100 @@ The user requested a web platform to manage purchase orders (OCs) for their clie
 - Remove the static text EMPRESA OPTANTE PELO SIMPLES NACIONAL from the additional invoice data section.
 - Implement automatic CEP lookup that appends the CEP to the address string.
 - Display Valor de Venda Unitário and Valor de Venda Total inline with other item details.
-- **Add a feature to bulk-update existing OCs by re-uploading their PDFs, which now also updates item prices.**
+- Add a feature to bulk-update existing OCs by re-uploading their PDFs, which now also updates item prices.
 - Add a Ver Todas modal to the notifications dropdown, showing a full, searchable history.
-- **Add image upload/view/delete functionality to the OC Details page ().**
+- Add image upload/view/delete functionality to the OC Details page ().
 - Reorganize the Dashboard to move admin-only sections to the bottom.
 - Implement a hybrid commission logic (lot number vs.  field).
 - Display NCM code next to the item code on various pages.
 - Automatically extract NCM from OC PDFs during creation and update flows.
 - On the Dashboard, create an advanced search summary popup for item code, item name, and brand/model.
-- **On the Em Separação and Pronto para Envio pages, display which items from an OC are still pending in a Próxima remessa section.**
-- **Add client-side filtering (search fields) to the OC Details page.**
-- **Fix CORS issues for the custom domain .**
-- **Make the Dados Adicionais da NF section on the Em Separação page editable.**
+- On the Em Separação and Pronto para Envio pages, display which items from an OC are still pending in a Próxima remessa section.
+- Add client-side filtering (search fields) to the OC Details page.
+- Fix CORS issues for the custom domain.
+- Make the Dados Adicionais da NF section on the Em Separação page editable.
+- Fix all PDF upload/update endpoints to correctly save the original PDF for download.
+- Correct the dashboard stats count.
+- Ensure PDF parsing extracts all required fields (description, lot, representative).
+- Add representative's name and email to the Dados Adicionais da NF section.
+- Display delivery status on Dashboard and OC Details page (e.g., delivered, pending items, X/Y items delivered).
+- Improve site-wide performance to fix slow loading times.
+- Fix bugs preventing search from finding all OCs.
+- Fix bugs preventing manually added stock items from appearing.
+- Implement a User Management UI in the Admin Panel.
+- Extract requisitante (requestor) from PDFs and display in Dados Adicionais da NF.
+- Ensure the upload new OC endpoint behaves identically to the update OC endpoint, pulling all data from the reference sheet and saving the PDF.
+- **On the Pronto para Envio page, remove the supplier invoice upload and allow multiple sales invoice (PDF) and XML uploads at once.**
+- **Fix the broken Save button for editing addresses.**
+- **Refactor the manual stock system to use a dedicated database collection instead of creating a virtual ESTOQUE-MANUAL purchase order.**
 
 **User's preferred language**:
 The user's primary language is **Portuguese (Brazil)**. The next agent MUST respond in Portuguese.
 
 **what currently exists?**
-A full-stack Purchase Order management application. The agent has fixed multiple critical P0 bugs, including a broken Dashboard and a non-functional Add to Stock feature. A major performance bottleneck caused by a Correios tracking job running on startup was resolved by implementing a daily scheduled task with APScheduler. Several user-requested features have been implemented, such as client-side filtering on the OC details page, improved OC updating from PDF, and displaying pending items for future shipments. The agent also fixed recurring CORS and image upload issues. The production environment is currently unstable due to a failed deployment, which the agent has diagnosed as a platform-level issue.
+A full-stack Purchase Order management application. The agent has just performed a major refactoring of the stock management system in response to a user request.
+
+Previously, adding items to stock created a virtual Purchase Order named ESTOQUE-MANUAL, which cluttered the dashboard and caused confusion. The agent completely rewrote the stock management backend () to use a dedicated  collection in MongoDB, eliminating the virtual OC.
+
+In this session, the agent also:
+- **Fixed OC Upload Parity:** Ensured new OC uploads immediately save the PDF for download and extract all data (requisitante, CEP, etc.), eliminating the need for a second update step.
+- **Fixed Data Extraction:** Improved PDF parsing to correctly extract the requisitante and fixed the CEP lookup for more cities and address formats.
+- **Fixed UI Bugs:** Repaired a broken Save button for editing addresses and added the requisitante to the Dados Adicionais da NF section on multiple pages.
+- **Improved UI:** On the Pronto para Envio page, removed the supplier invoice section and added a single button for multi-file (PDF & XML) sales invoice uploads.
+- **Addressed CORS:** Implemented more robust CORS error handling.
+
+The application is currently in a broken state because the new stock management backend has not been fully integrated into the main  file.
 
 **Last working item**:
-- **Last item agent was working:** Implementing a feature to make the Dados Adicionais da NF (banking information) on the Em Separação page editable via a modal. The agent added the necessary React states and the Edit button to the UI.
+- **Last item agent was working:** Refactoring the entire stock management system. The agent completed the rewrite of  to use a dedicated  collection, following the user's request to stop creating a virtual ESTOQUE-MANUAL purchase order.
 - **Status:** IN PROGRESS
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** Frontend testing agent. The agent needs to test the full lifecycle of the edit modal: clicking the Edit button, confirming the modal opens, modifying the banking details, saving the changes, and verifying that the updated information is displayed correctly and persists for that specific OC.
+- **Which testing method agent to use?** both
+    - **Test Plan:** The new backend logic must be integrated into  and tested. This involves removing old filters and endpoints related to ESTOQUE-MANUAL. The frontend ( and pages that show stock availability) must be tested to ensure they work with the new backend API.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P0)** Production environment is down or experiencing severe issues after last deploy.
-- **Issue 2: (P2)** Editing duplicate items opens all instances.
+- **Issue 1: (P0)** Complete the Stock Management system refactor.
+- **Issue 2: (P1)** Intermittent Production CORS errors.
+- **Issue 3: (P2)** Editing an item that exists in multiple OCs opens all instances for editing instead of just one.
 
 **Issues Detail:**
-- **Issue 1: Production environment is down or experiencing severe issues after last deploy**
-    - **Attempted fixes:** The user reported a blank screen and CORS errors on the production domain (). The agent fixed the CORS policy in the backend to explicitly allow this domain and confirmed it works in the preview environment. The user reported the issue persisted after they tried to deploy.
+- **Issue 1: Complete the Stock Management system refactor**
+    - **Attempted fixes:** The agent completely rewrote  to use a new  collection instead of a virtual OC.
     - **Next debug checklist:**
-        1.  Advise the user that all necessary code fixes (especially for CORS) are complete in the preview environment.
-        2.  Instruct the user to try **running the Deploy process again**.
-        3.  Explain that the issue is likely a **platform-level deployment failure** (e.g., timeout, caching issue on the deployment server) and not a code bug, as the preview environment is fully functional.
-        4.  If the redeploy fails again, instruct the user to contact Emergent platform support for assistance with the deployment logs, as this is beyond the agent's control.
-    - **Why fix this issue and what will be achieved with the fix?** This is a critical blocker preventing the user from accessing any of the recently implemented features and fixes in their live application.
-    - **Status:** BLOCKED (on user action/platform support)
-    - **Is recurring issue?** Y
-    - **Should Test frontend/backend/both after fix?** Both (on the production URL).
-    - **Blocked on other issue:** None.
+        1. In , remove the old filters  from the , , and  endpoints. They are now obsolete.
+        2. In , replace the old  import with the new one from  and ensure it's included correctly ().
+        3. Manually delete the ESTOQUE-MANUAL OC from the database if it exists, to clean up old data.
+        4. Test the new endpoints (, ) to confirm the new architecture works.
+        5. Review and update  to ensure it correctly interacts with the new backend endpoints.
+    - **Why fix this issue and what will be achieved with the fix?** This will fulfill the user's explicit request for a cleaner architecture, resolve bugs related to stock management, and remove the confusing ESTOQUE-MANUAL OC from the UI.
+    - **Status:** IN PROGRESS
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** Both.
+    - **Blocked on other issue:** None
 
-- **Issue 2: Editing duplicate items opens all instances**
+- **Issue 2: Intermittent Production CORS errors**
+    - **Attempted fixes:** The agent implemented robust CORS middleware, including global exception handlers to ensure CORS headers are always sent.
+    - **Next debug checklist:** This is likely a code-level fix, but it requires user deployment to confirm. The agent should guide the user to deploy the latest changes and monitor the production environment. If the issue persists, it may be related to platform timeouts rather than code.
+    - **Why fix this issue and what will be achieved with the fix?** This is a critical blocker that makes the production application unreliable.
+    - **Status:** USER VERIFICATION PENDING
+    - **Is recurring issue?** Y
+    - **Should Test frontend/backend/both after fix?** Backend (verified in preview, needs production confirmation).
+    - **Blocked on other issue:** None
+
+- **Issue 3: Editing an item that exists in multiple OCs opens all instances**
     - **Attempted fixes:** None in this session.
-    - **Next debug checklist:** Re-create the scenario by having two identical items in an OC. Open one for editing and verify if the modal/form incorrectly affects both. The fix will likely involve ensuring unique keys/IDs (e.g., using  which was previously implemented) are used for modals and state management.
-    - **Why fix this issue and what will be achieved with the fix?** Fixes a confusing and error-prone UI behavior that has been reported multiple times.
+    - **Next debug checklist:** In , the modal trigger for editing likely uses a non-unique . This needs to be changed to use the item's unique MongoDB , which must be passed from the backend.
+    - **Why fix this issue and what will be achieved with the fix?** Fixes a long-standing and confusing UI bug.
     - **Status:** NOT STARTED
     - **Is recurring issue?** Y
     - **Should Test frontend/backend/both after fix?** Frontend.
-    - **Blocked on other issue:** None.
+    - **Blocked on other issue:** None
 
 **In progress Task List**:
-- **Task 1: (P1)** Complete Dados Adicionais da NF edit functionality.
-    - **Where to resume:** The file . The agent has already added the React states (, , etc.) and the Edit button. The next steps are:
-        1.  Render the actual modal for editing the banking information.
-        2.  Implement the  function to save the custom data to the database, likely associated with the OC ID. This will require a new backend endpoint.
-        3.  Ensure the custom data is loaded and used when displaying the Dados Adicionais for each OC.
-    - **What will be achieved with this?** Allows the user to override the default banking information on a per-OC basis directly from the UI.
+- **Task 1: Complete the Stock Management Refactor**
+    - **Where to resume:** Integrating the new  into , removing obsolete code and filters, and then testing the entire stock management flow.
+    - **What will be achieved with this?** A clean, dedicated stock system that functions as the user expects, without creating confusing virtual purchase orders.
     - **Status:** IN PROGRESS
     - **Should Test frontend/backend/both after fix?** Both.
     - **Blocked on something:** None.
@@ -126,25 +158,20 @@ A full-stack Purchase Order management application. The agent has fixed multiple
     - (P3) Add a Create OC button directly on the Planilha de Contrato page.
 
 **Completed work in this session**
-- **Critical Bug Fixes (P0):**
-    - Fixed a syntax error in  that was causing the entire frontend to show a blank page.
-    - Fixed the broken Dashboard page.
-    - Fixed the Method Not Allowed error when adding quantity to an existing item in Estoque.
-- **Performance:**
-    - Fixed a major system-wide slowdown and login timeouts by disabling a Correios tracking job that ran on every startup.
-    - Re-implemented the tracking job using  to run once daily at 15:00 Brasília time.
-- **Feature Enhancements:**
-    - **OC Update:** The Update OC from PDF feature now correctly updates item prices (), even if an incorrect value was previously saved.
-    - **Image Uploads:** Fixed a critical bug preventing image uploads by creating new, correct backend endpoints () and updating the frontend to use them.
-    - **OC Details:** Added client-side filtering (by code, description, supplier, status) to the  page for instant search results.
-    - **Em Separação UI:** Added a Próxima remessa section to the OC header, which lists the codes of items from that OC that are still in  or  status. The message is hidden if there are no pending items.
+- **Core Feature Fixes:**
+  - **Stock Management Refactor (Started):** Completely rewrote backend stock logic to use a dedicated  collection, per user request.
+  - **OC Upload Parity:** Fixed the upload new OC endpoint to immediately save the PDF and populate all data from the reference sheet, eliminating a redundant step for the user.
+  - **Data Extraction:** Improved PDF parsing to correctly extract the requisitante (requestor) and fixed the automatic CEP lookup for more address formats.
+  - **CORS Hardening:** Implemented global exception handlers to ensure CORS headers are sent even on server errors, addressing intermittent production failures.
+- **UI/UX Enhancements:**
+  - **Requisitante Feature:** Added UI to display and manually edit the requisitante in the Dados Adicionais da NF section.
+  - **File Upload Improvement:** On the Pronto para Envio page, replaced separate inputs with a single button for multi-file (PDF & XML) uploads.
 - **Bug Fixes:**
-    - **CORS:** Fixed CORS errors on the custom domain () by adding it to the allowed origins list in the backend.
-    - **Status Change:** Added  to the list of valid statuses for bulk updates, fixing a user-reported bug.
-    - **Auto-Tracking:** The Correios job now also checks items with  status and automatically updates them to  when tracking indicates the item has been posted.
+  - **Save Address Button:** Fixed the broken Save button in the address editing modal.
+  - **Duplicate Function:** Removed a duplicate, synchronous  function that was causing  errors.
 
 **Earlier issues found/mentioned but not fixed**
-- **Issue 1:** (P2) Editing duplicate items opens all instances. This long-standing recurring issue remains unresolved.
+- **Issue 1:** (P2) Editing an item that exists in multiple OCs opens all instances for editing instead of just the selected one. This long-standing recurring issue remains unresolved.
 
 **Known issue recurrence from previous fork**
 - **Issue recurrence in previous fork:** Editing duplicate items opens all of them.
@@ -155,82 +182,84 @@ A full-stack Purchase Order management application. The agent has fixed multiple
 
 
 **Key Technical Concepts**
-- **Performance Debugging:** Identified and resolved a major performance bottleneck by analyzing system behavior (slowdown) and backend logs, tracing it to a blocking job on application startup.
-- **Scheduled Tasks (APScheduler):** Implemented a daily scheduled job to replace the problematic startup task, improving application stability and responsiveness.
-- **CORS Configuration:** Debugged and resolved cross-origin request errors for a custom domain by modifying the FastAPI  settings.
-- **Client-Side Filtering:** Implemented efficient, real-time filtering in React using  and  hooks to avoid unnecessary backend requests.
-- **Data Integrity and Reconciliation:** Refined the OC update logic to not just fill empty fields but also correct wrong ones (e.g., ), ensuring data consistency between the PDF and the database.
-- **API Endpoint Correction:** Diagnosed and fixed several 404 Not Found and 405 Method Not Allowed errors by creating new backend endpoints that matched the frontend's expectations, particularly for image handling.
+- **Major Refactoring:** Transitioning the stock management system from a virtual document pattern (the ESTOQUE-MANUAL OC) to a dedicated MongoDB collection ().
+- **Regex for PDF Parsing:** Fine-tuning regular expressions to extract data () from varied PDF layouts.
+- **FastAPI Middleware & Exception Handling:** Using global exception handlers to enforce behavior (like sending CORS headers) on all responses, including errors.
+- **Frontend State & API Interaction:** Debugging and fixing frontend logic related to API calls ( vs.  response handling) and component rendering.
 
 **key DB schema**
-No direct schema changes. However, there was significant work done to standardize the use of item price fields, converging on  for the frontend and ensuring the  endpoint correctly populates it from  extracted from the document.
+- ** (NEW):** A new collection to manage stock items separately. Expected fields: .
+- **:** No new fields, but logic in  that filtered out  is now obsolete and must be removed.
 
 **All files of reference**
-- : CRITICAL. Contains fixes for performance, CORS, OC updates, image endpoints, and status logic.
-- : CRITICAL. Contains the new Próxima remessa feature and the in-progress editable Dados Adicionais da NF feature.
-- : CRITICAL. Contains the new client-side filtering and corrected image handling logic.
-- : Was fixed to resolve a site-wide crash.
-- : UI text updated.
-- : UI text updated.
+- : **Completely rewritten**. It is the core of the new stock management system but is not yet integrated.
+- : Contains many recent fixes but also now holds obsolete filters and logic related to the old stock system that must be removed.
+- : Contains multiple UI fixes and feature additions from this session.
+- : The primary frontend component for stock management. It has not been updated yet and will need to be adapted to the new backend API.
 
 **Areas that need refactoring**:
-- : Remains a critical monolith. While many fixes were applied, its size and lack of modularity continue to be a source of complexity and potential bugs.
-- : This component is extremely large (over 6,500 lines) and manages a vast amount of state and logic, making it difficult to maintain. It desperately needs to be broken down into smaller, reusable components.
+- **Immediate:** The primary task is to complete the stock management refactor by removing the old ESTOQUE-MANUAL logic from  and integrating the new .
+- **Ongoing:**  and  remain large and complex files that would benefit from being broken down in the future.
 
 **key api endpoints**
-- : The new primary endpoint for uploading an image for a specific item code.
-- : The new primary endpoint for retrieving an item's image.
-- : The new primary endpoint for deleting an item's image.
-- : Heavily modified to correctly update item data, including prices, from a re-uploaded PDF.
-- : Modified to use the same robust logic as the single OC update endpoint.
-- : Bug fixed to accept  as a valid status.
+- **Stock (REFACTORED / PENDING INTEGRATION):**
+  - 
+  - 
+  - 
+- **OC Upload/Update (MODIFIED):**
+  - : Correctly saves PDF and populates all reference data on initial creation.
+- **Requisitante (NEW):**
+  - 
+- **Address (FIXED):**
+  - 
 
 **Critical Info for New Agent**
-- **PRODUCTION DEPLOYMENT IS THE MAIN BLOCKER:** The user's live site () is not working correctly. You have already fixed the underlying code issues (like CORS) in this preview environment. Your first priority is to guide the user to **run the Deploy process again**. If it fails, you must explain that it is a platform issue and they should contact Emergent support, as you cannot fix the production deployment process itself.
-- **Finish Editable Dados NF:** The next feature task is to complete the modal for editing banking information in . This will require adding the modal UI and a backend endpoint to save the custom data.
-- **Browser Cache is a Recurring Problem:** The user frequently experiences issues that are resolved by clearing their browser cache. Remind them to do a hard refresh (Ctrl+Shift+R) or clear cache whenever they encounter unexpected UI behavior, especially after a deployment.
+- **Your immediate priority is to finish the stock management refactor.** The application is currently in a broken, half-refactored state. You must integrate the new  into  and remove all obsolete code and filters related to the old ESTOQUE-MANUAL system.
+- **Explain Environment Differences:** The user frequently tests new features in the preview environment but observes data from their production environment, leading to confusion. Continue to patiently explain that code fixes are in preview and require a **user-triggered deployment** to affect production data.
+- **Stock Data:** The preview database is frequently empty. To test the new stock system, you will need to manually add stock items using the new endpoints after the refactor is complete.
 
 **documents and test reports created in this job**
-- None.
+- 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Filters are not working on the OC details page. (FIXED)
-2.  **User:** Getting lots of CORS errors in the console. (FIXED in preview, needs deploy)
-3.  **User:** Cannot upload a photo for item 114647. (FIXED)
-4.  **User:** Moving an item to Pronto para Envio is not working. Also, requested that items with tracking codes automatically update status from Pronto para Envio -> Em Trânsito -> Entregue. (FIXED)
-5.  **User:** Still seeing CORS errors. (Explained that a deploy is needed)
-6.  **User:** After deploying, the site is completely broken. (Diagnosed as a platform deploy issue)
-7.  **User:** On the Em Separação page, requested to show which items from the same OC are still pending. (IMPLEMENTED)
-8.  **User:** The pending items message should not appear if there are no pending items. Also, a specific pending item was not showing up. (FIXED)
-9.  **User:** Requested the ability to edit the Dados Adicionais da NF section. (IN PROGRESS)
-10. **User:** (pending) Clicked the Edit button for the Dados NF, modal is ready to be implemented.
+1.  **User:** Requested fix for requisitante not appearing in Dados Adicionais da NF on the Em Separação page. (COMPLETED - Agent added the field to the UI template).
+2.  **User:** Reported CEP not being fetched and Save button for address editing not working. (COMPLETED - Agent fixed the save button logic and improved the CEP lookup function).
+3.  **User:** Reported that a newly uploaded OC was not available for download and that requisitante/CEP were not being extracted. (COMPLETED - Agent fixed PDF saving on initial upload and improved CEP/requisitante extraction logic, explaining that deployment is needed).
+4.  **User:** Reported issues with adding items to stock and seeing a ESTOQUE-MANUAL OC on the dashboard. (IN PROGRESS - This triggered the stock system refactor).
+5.  **User:** Requested that adding items to stock should NOT create a ESTOQUE-MANUAL OC. (IN PROGRESS - Agent started the refactor to use a separate collection).
+6.  **User:** Confirmed they are on preview and the requisitante is still not showing up. (RESOLVED - Agent found the preview DB was empty and created test data to prove the UI now works).
+7.  **User:** Reported the requisitante for OC 3.099906 was still not appearing after an update. (RESOLVED - Agent explained fixes are in preview, not production, and require deployment).
+8.  **User:** Provided PDF for OC 3.099906 to debug requisitante extraction. (RESOLVED - Agent confirmed extraction works and updated the OC manually in preview as a demonstration).
+9.  **User:** Requested removal of supplier NF upload on the Pronto para Envio page and asked for multi-file upload for sales NFs (PDFs+XMLs). Also provided another PDF to debug requisitante extraction. (COMPLETED - Agent implemented the UI changes and fixed the extraction regex).
+10. **User:** Reported the requisitante was still not being extracted for OC 2.122037 after an admin panel update. (COMPLETED - Agent added a manual edit feature for requisitante and explained the PDF parser may not recognize the format, which was later fixed).
 
 **Project Health Check:**
 - **Broken:**
-    - The **production environment** at  is unstable/down due to a failed or incomplete deployment. This is causing CORS errors and a blank page for the user. The preview environment is healthy.
+  - The stock management system is in a half-refactored state. The new backend file exists but is not integrated, and obsolete code still exists in . The application is non-functional in this area until the refactor is completed.
 - **Technical Debt:**
-    - **CRITICAL:**  is a monolith.
-    - **CRITICAL:**  is a massive component that needs immediate refactoring.
+  - **CRITICAL:** The filters and logic for ESTOQUE-MANUAL in  are now obsolete technical debt and must be removed immediately.
+  -  and  remain very large monolithic files.
 
 **3rd Party Integrations**
 - **Resend:** For emails.
 - **PyMuPDF:** For parsing text-based PDFs.
-- **APScheduler:** Used for the daily Correios tracking job.
+- **APScheduler:** Used for the hourly Correios tracking job.
 - **openpyxl:** For parsing  files.
 - **pytesseract & Tesseract OCR:** For OCR on scanned PDFs.
-- **Correios Rastro API:** For automatic package tracking. The job is now scheduled to run daily at 15:00 Brasília time.
+- **Correios Rastro API:** For automatic package tracking.
 - **ViaCEP:** For CEP lookup by address.
 
 **Testing status**
-- **Testing agent used after significant changes:** NO
+- **Testing agent used after significant changes:** YES (For the OC upload fix, which passed).
 - **Troubleshoot agent used after agent stuck in loop:** NO
 - **Test files created:** None
-- **Known regressions:** The production environment is non-functional due to deployment issues. No known regressions in the preview environment.
+- **Known regressions:** The entire stock management feature is currently broken due to the incomplete refactor.
 
 **Credentials to test flow:**
 - **Admin Login (João):**
-    - **Email:** 
-    - **Password:** 
+  - **Email:** 
+  - **Password:** 
 
 **What agent forgot to execute**
-- The agent did not forget to execute any tasks. It was actively working on the user's latest feature request when the session ended.</analysis>
+- After rewriting  for the stock refactor, the agent failed to integrate this new file into .
+- The agent did not remove the now-obsolete filters and logic related to the old ESTOQUE-MANUAL system from , leaving the codebase in an inconsistent and broken state.</analysis>
