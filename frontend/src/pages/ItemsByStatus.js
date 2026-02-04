@@ -3855,7 +3855,11 @@ Chave PIX: ${dados.pix}`;
                               onClick={(e) => {
                                 e.stopPropagation();
                                 const dados = getDadosBancarios(oc.po_id);
-                                setDadosNFTemp(dados);
+                                setDadosNFTemp({
+                                  ...dados,
+                                  requisitante_nome: oc.requisitante_nome || '',
+                                  requisitante_email: oc.requisitante_email || ''
+                                });
                                 setEditingDadosNF(oc.po_id);
                               }}
                               style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
