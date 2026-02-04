@@ -105,14 +105,23 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
     - Estoque manual tem gestão independente com histórico de entradas/saídas
     - Código mais limpo e manutenível
 
-- ✅ **MELHORIA: Edição do Requisitante nos Dados Adicionais da NF**
-  - **Problema:** O requisitante não aparecia nos "Dados Adicionais da NF" porque não estava sendo salvo nas OCs
-  - **Solução:** Adicionado formulário de edição do requisitante integrado ao modal de "Dados Adicionais da NF"
-  - **Mudanças:**
-    - Nos status "Em Separação" e "Pronto para Envio", agora é possível editar o requisitante diretamente
-    - O requisitante aparece em destaque (fundo verde) quando preenchido
-    - O texto copiado inclui o requisitante
-  - **Como usar:** Clique em "Editar" nos "Dados Adicionais da NF", preencha o campo "Requisitante" e clique em "Salvar"
+- ✅ **MELHORIA: Requisitante Automático nos Dados Adicionais da NF**
+  - **Problema:** O requisitante não aparecia nos "Dados Adicionais da NF" e não era extraído automaticamente do PDF
+  - **Solução:** 
+    - Extração automática do requisitante do PDF durante upload/atualização de OC
+    - Campo requisitante agora aparece em destaque (fundo verde) nos "Dados Adicionais da NF"
+    - Disponível em **Em Separação**, **Pronto p/ Envio**, **Em Trânsito** e **Entregues**
+    - Possibilidade de editar manualmente o requisitante clicando em "Editar"
+  - **Novos endpoints:**
+    - `POST /api/admin/reprocessar-requisitantes` - Reprocessa TODAS as OCs com PDF salvo
+    - `POST /api/admin/reprocessar-requisitante/{po_id}` - Reprocessa uma OC específica
+  - **Testado com OC 3.100069:** VANESSA DE OLIVEIRA ANDRADE SILVA - vanessa.andrade@sistemafiep.org.br
+
+- ✅ **MELHORIA: Visualização de Arquivos Enviados**
+  - Agora mostra claramente quais arquivos já foram subidos em cada seção:
+    - **NF Fornecedor:** `X de Y (falta Z)` em vermelho quando incompleto
+    - **NF Venda (ON):** `X de Y ✓ N NF(s)` em verde quando completo
+  - Arquivos existentes podem ser baixados diretamente com botões de download
 
 - ✅ **MELHORIA: Middleware CORS Reforçado**
   - **Problema:** Erros CORS intermitentes em produção
