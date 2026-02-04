@@ -6,6 +6,181 @@ import Pagination from '../components/Pagination';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Componente de Relatório
+const RelatorioSection = () => {
+  const [downloadingRelatorio, setDownloadingRelatorio] = useState(false);
+  const [reprocessandoRequisitantes, setReprocessandoRequisitantes] = useState(false);
+  const [resultadoReprocessamento, setResultadoReprocessamento] = useState(null);
+
+  const downloadRelatorioCompleto = async () => {
+    setDownloadingRelatorio(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/relatorio-completo`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      
+      // Criar link de download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Extrair nome do arquivo do header ou usar padrão
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'relatorio_completo_ocs.xlsx';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      alert('✅ Relatório baixado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao baixar relatório:', error);
+      alert('❌ Erro ao baixar relatório: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setDownloadingRelatorio(false);
+    }
+  };
+
+  const reprocessarRequisitantes = async () => {
+    if (!window.confirm('Isso vai reprocessar TODAS as OCs para extrair o requisitante dos PDFs. Continuar?')) {
+      return;
+    }
+    
+    setReprocessandoRequisitantes(true);
+    setResultadoReprocessamento(null);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/admin/reprocessar-requisitantes`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setResultadoReprocessamento(response.data);
+      alert(`✅ Processamento concluído!\n${response.data.total_atualizados} OCs atualizadas.`);
+    } catch (error) {
+      console.error('Erro ao reprocessar requisitantes:', error);
+      alert('❌ Erro: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setReprocessandoRequisitantes(false);
+    }
+  };
+
+  return (
+    <>
+      <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem', color: '#16a34a' }}>
+        📊 Relatórios
+      </h2>
+      
+      {/* Relatório Completo de OCs */}
+      <div style={{ 
+        background: '#f0fdf4', 
+        border: '2px solid #22c55e', 
+        borderRadius: '12px', 
+        padding: '1.5rem',
+        marginBottom: '1.5rem'
+      }}>
+        <h3 style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '0.75rem', color: '#166534' }}>
+          📥 Relatório Completo de OCs
+        </h3>
+        <p style={{ color: '#166534', marginBottom: '1rem', fontSize: '0.9rem' }}>
+          Baixe um arquivo Excel com todas as OCs, status de cada item, códigos de rastreio, 
+          prazos de entrega e muito mais. Ideal para controle e evitar penalidades por atraso.
+        </p>
+        
+        <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
+          <h4 style={{ fontSize: '0.95rem', fontWeight: '600', marginBottom: '0.5rem' }}>📋 O relatório inclui:</h4>
+          <ul style={{ fontSize: '0.85rem', color: '#374151', marginLeft: '1.5rem', lineHeight: '1.8' }}>
+            <li><strong>Aba 1 - Relatório Completo:</strong> Todos os itens de todas as OCs com status, rastreio, preços, etc.</li>
+            <li><strong>Aba 2 - Resumo por OC:</strong> Visão geral de cada OC com contagem de itens por status</li>
+            <li><strong>Aba 3 - ⚠️ ATRASADOS:</strong> Lista de itens com data de entrega vencida que ainda não foram entregues</li>
+          </ul>
+        </div>
+        
+        <button
+          onClick={downloadRelatorioCompleto}
+          disabled={downloadingRelatorio}
+          style={{
+            padding: '1rem 2rem',
+            fontSize: '1.1rem',
+            fontWeight: '700',
+            background: downloadingRelatorio ? '#9ca3af' : '#16a34a',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: downloadingRelatorio ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}
+          data-testid="download-relatorio-btn"
+        >
+          {downloadingRelatorio ? (
+            <>⏳ Gerando relatório...</>
+          ) : (
+            <>📥 Baixar Relatório Excel</>
+          )}
+        </button>
+      </div>
+      
+      {/* Reprocessar Requisitantes */}
+      <div style={{ 
+        background: '#fef3c7', 
+        border: '2px solid #f59e0b', 
+        borderRadius: '12px', 
+        padding: '1.5rem' 
+      }}>
+        <h3 style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '0.75rem', color: '#92400e' }}>
+          🔄 Reprocessar Requisitantes
+        </h3>
+        <p style={{ color: '#92400e', marginBottom: '1rem', fontSize: '0.9rem' }}>
+          Extrai automaticamente o nome e email do requisitante de todas as OCs que têm PDF salvo.
+          Útil para preencher o campo "Requisitante" em OCs antigas.
+        </p>
+        
+        <button
+          onClick={reprocessarRequisitantes}
+          disabled={reprocessandoRequisitantes}
+          style={{
+            padding: '0.75rem 1.5rem',
+            fontSize: '1rem',
+            fontWeight: '600',
+            background: reprocessandoRequisitantes ? '#9ca3af' : '#f59e0b',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: reprocessandoRequisitantes ? 'not-allowed' : 'pointer'
+          }}
+          data-testid="reprocessar-requisitantes-btn"
+        >
+          {reprocessandoRequisitantes ? '⏳ Processando...' : '🔄 Reprocessar Requisitantes'}
+        </button>
+        
+        {resultadoReprocessamento && (
+          <div style={{ marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: '8px' }}>
+            <h4 style={{ fontSize: '0.95rem', fontWeight: '600', marginBottom: '0.5rem', color: '#166534' }}>
+              ✅ Resultado do Processamento
+            </h4>
+            <ul style={{ fontSize: '0.85rem', color: '#374151' }}>
+              <li><strong>Total processados:</strong> {resultadoReprocessamento.total_processados}</li>
+              <li><strong>Atualizados:</strong> {resultadoReprocessamento.total_atualizados}</li>
+              <li><strong>Sem requisitante no PDF:</strong> {resultadoReprocessamento.total_sem_requisitante}</li>
+            </ul>
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
 const AdminPanel = () => {
   const [comissoes, setComissoes] = useState([]);
   const [notasFiscais, setNotasFiscais] = useState({ notas_compra: [], notas_venda: [], notas_duplicadas: [], total_duplicadas: 0 });
