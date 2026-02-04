@@ -325,9 +325,6 @@ async def buscar_cep_por_endereco(endereco: str) -> Optional[str]:
                         if cep:
                             logger.info(f"CEP aproximado encontrado: {cep}")
                             return cep
-                    cep = data[0].get('cep', '')
-                    logger.info(f"CEP encontrado: {cep}")
-                    return cep
     except Exception as e:
         logger.error(f"Erro ao buscar CEP: {e}")
     
