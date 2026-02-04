@@ -285,6 +285,46 @@ async def buscar_cep_por_endereco(endereco: str) -> Optional[str]:
             if response.status_code == 200:
                 data = response.json()
                 if isinstance(data, list) and len(data) > 0:
+                    # Tentar encontrar um CEP no mesmo bairro se possível
+                    for item in data:
+                        cep = item.get('cep', '')
+                        if cep:
+                            logger.info(f"CEP encontrado: {cep}")
+                            return cep
+            
+            # Se não encontrou com o logradouro completo, tentar apenas com prefixo
+            # Ex: buscar apenas "Travessa" em CIANORTE para encontrar CEPs do bairro
+            prefixo_match = re.match(r'^(RUA|AVENIDA|AV\.?|ALAMEDA|AL\.?|TRAVESSA|TV\.?|PRACA|PC\.?)\s+', logradouro_completo)
+            if prefixo_match and (response.status_code != 200 or not data):
+                prefixo = prefixo_match.group(1)
+                url2 = f'https://viacep.com.br/ws/{uf}/{cidade_url}/{prefixo}/json/'
+                logger.info(f"Tentando busca por prefixo: {url2}")
+                
+                response2 = await client.get(url2)
+                if response2.status_code == 200:
+                    data2 = response2.json()
+                    # Procurar por bairro similar (ex: PARQUE INDUSTRIAL)
+                    bairro_busca = None
+                    for parte in partes[1:]:
+                        parte_limpa = parte.strip()
+                        if len(parte_limpa) > 5 and not parte_limpa.isdigit():
+                            bairro_busca = parte_limpa
+                            break
+                    
+                    if isinstance(data2, list) and len(data2) > 0:
+                        # Primeiro tentar encontrar pelo bairro
+                        if bairro_busca:
+                            for item in data2:
+                                if bairro_busca.upper() in item.get('bairro', '').upper():
+                                    cep = item.get('cep', '')
+                                    if cep:
+                                        logger.info(f"CEP encontrado por bairro: {cep}")
+                                        return cep
+                        # Se não encontrar pelo bairro, pegar o primeiro
+                        cep = data2[0].get('cep', '')
+                        if cep:
+                            logger.info(f"CEP aproximado encontrado: {cep}")
+                            return cep
                     cep = data[0].get('cep', '')
                     logger.info(f"CEP encontrado: {cep}")
                     return cep
