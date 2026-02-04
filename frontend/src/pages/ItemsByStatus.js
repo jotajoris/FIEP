@@ -4427,40 +4427,116 @@ DADOS BANCÁRIOS - Banco: ${dados.banco} | Ag: ${dados.agencia} | Cc: ${dados.co
                           <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: '700', color: '#713f12' }}>
                             📋 DADOS ADICIONAIS DA NF
                           </h4>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const numeroOC = oc.numero_oc ? oc.numero_oc.replace(/^OC-/i, '') : '';
-                              const endereco = oc.endereco_entrega || 'ENDEREÇO NÃO INFORMADO';
-                              const itensPendentes = itensProximaRemessaPorOC[oc.po_id] || [];
-                              const dados = getDadosBancarios(oc.po_id);
-                              const requisitanteNome = oc.requisitante_nome || '';
-                              const requisitanteEmail = oc.requisitante_email || '';
-                              let texto = `Endereço da entrega: ${endereco}
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const dados = getDadosBancarios(oc.po_id);
+                                setDadosNFTemp({
+                                  ...dados,
+                                  requisitante_nome: oc.requisitante_nome || '',
+                                  requisitante_email: oc.requisitante_email || ''
+                                });
+                                setEditingDadosNF(oc.po_id);
+                              }}
+                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                              ✏️ Editar
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const numeroOC = oc.numero_oc ? oc.numero_oc.replace(/^OC-/i, '') : '';
+                                const endereco = oc.endereco_entrega || 'ENDEREÇO NÃO INFORMADO';
+                                const itensPendentes = itensProximaRemessaPorOC[oc.po_id] || [];
+                                const dados = getDadosBancarios(oc.po_id);
+                                const requisitanteNome = oc.requisitante_nome || '';
+                                const requisitanteEmail = oc.requisitante_email || '';
+                                let texto = `Endereço da entrega: ${endereco}
 NF referente à OC - ${numeroOC}`;
-                              if (requisitanteNome) {
-                                texto += `\nRequisitante: ${requisitanteNome}`;
-                                if (requisitanteEmail) {
-                                  texto += ` - ${requisitanteEmail}`;
+                                if (requisitanteNome) {
+                                  texto += `\nRequisitante: ${requisitanteNome}`;
+                                  if (requisitanteEmail) {
+                                    texto += ` - ${requisitanteEmail}`;
+                                  }
                                 }
-                              }
-                              if (itensPendentes.length > 0) {
-                                texto += `\nItens que irão na próxima remessa: ${itensPendentes.join(', ')}`;
-                              }
-                              texto += `\nDADOS BANCÁRIOS
+                                if (itensPendentes.length > 0) {
+                                  texto += `\nItens que irão na próxima remessa: ${itensPendentes.join(', ')}`;
+                                }
+                                texto += `\nDADOS BANCÁRIOS
 Banco: ${dados.banco}
 Conta: ${dados.conta}
 Agência: ${dados.agencia}
 Chave PIX: ${dados.pix}`;
-                              navigator.clipboard.writeText(texto).then(() => {
-                                alert('Dados Adicionais copiados!');
-                              });
-                            }}
-                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', background: '#eab308', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                          >
-                            📋 Copiar
-                          </button>
+                                navigator.clipboard.writeText(texto).then(() => {
+                                  alert('Dados Adicionais copiados!');
+                                });
+                              }}
+                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', background: '#eab308', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                              📋 Copiar
+                            </button>
+                          </div>
                         </div>
+                        {/* Modal de edição para Pronto para Envio */}
+                        {editingDadosNF === oc.po_id ? (
+                          <div style={{ 
+                            background: 'white', 
+                            padding: '1rem', 
+                            borderRadius: '6px',
+                            border: '1px solid #e5e7eb'
+                          }} onClick={(e) => e.stopPropagation()}>
+                            {/* REQUISITANTE */}
+                            <div style={{ marginBottom: '0.75rem', padding: '0.75rem', background: '#ecfdf5', borderRadius: '6px', border: '1px solid #a7f3d0' }}>
+                              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.5rem', color: '#065f46' }}>👤 Requisitante</label>
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                                <div>
+                                  <label style={{ display: 'block', fontSize: '0.7rem', color: '#6b7280', marginBottom: '0.25rem' }}>Nome</label>
+                                  <input
+                                    type="text"
+                                    value={dadosNFTemp.requisitante_nome || ''}
+                                    onChange={(e) => setDadosNFTemp(prev => ({ ...prev, requisitante_nome: e.target.value }))}
+                                    placeholder="Nome do requisitante"
+                                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.85rem' }}
+                                  />
+                                </div>
+                                <div>
+                                  <label style={{ display: 'block', fontSize: '0.7rem', color: '#6b7280', marginBottom: '0.25rem' }}>Email</label>
+                                  <input
+                                    type="email"
+                                    value={dadosNFTemp.requisitante_email || ''}
+                                    onChange={(e) => setDadosNFTemp(prev => ({ ...prev, requisitante_email: e.target.value }))}
+                                    placeholder="email@exemplo.com"
+                                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.85rem' }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            {/* DADOS BANCÁRIOS */}
+                            <div style={{ marginBottom: '0.75rem' }}>
+                              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem' }}>Banco</label>
+                              <input type="text" value={dadosNFTemp.banco} onChange={(e) => setDadosNFTemp(prev => ({ ...prev, banco: e.target.value }))} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.85rem' }} />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem' }}>Conta</label>
+                                <input type="text" value={dadosNFTemp.conta} onChange={(e) => setDadosNFTemp(prev => ({ ...prev, conta: e.target.value }))} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.85rem' }} />
+                              </div>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem' }}>Agência</label>
+                                <input type="text" value={dadosNFTemp.agencia} onChange={(e) => setDadosNFTemp(prev => ({ ...prev, agencia: e.target.value }))} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.85rem' }} />
+                              </div>
+                            </div>
+                            <div style={{ marginBottom: '0.75rem' }}>
+                              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem' }}>Chave PIX</label>
+                              <input type="text" value={dadosNFTemp.pix} onChange={(e) => setDadosNFTemp(prev => ({ ...prev, pix: e.target.value }))} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.85rem' }} />
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                              <button onClick={() => setEditingDadosNF(null)} style={{ padding: '0.5rem 1rem', background: '#6b7280', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}>Cancelar</button>
+                              <button onClick={async () => { const sucesso = await salvarDadosBancarios(oc.po_id, dadosNFTemp); if (sucesso) { setEditingDadosNF(null); alert('Dados salvos com sucesso!'); }}} style={{ padding: '0.5rem 1rem', background: '#16a34a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600' }}>✓ Salvar</button>
+                            </div>
+                          </div>
+                        ) : (
                         <pre style={{ 
                           whiteSpace: 'pre-wrap', 
                           fontSize: '0.75rem', 
