@@ -3124,7 +3124,9 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     user_name = current_user.get('owner_name', '').strip().upper() if not is_admin else None
     
     # Pipeline de agregação para contar itens por status
+    # EXCLUIR OC de estoque manual das estatísticas
     pipeline = [
+        {"$match": {"numero_oc": {"$ne": "ESTOQUE-MANUAL"}}},
         {"$unwind": "$items"},
     ]
     
