@@ -923,7 +923,7 @@ const AdminPanel = () => {
                     {usuarios.length === 0 ? (
                       <tr>
                         <td colSpan={4} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>
-                          Nenhum usuário encontrado. Clique em "Atualizar Lista".
+                          Nenhum usuário encontrado. Clique em Atualizar Lista.
                         </td>
                       </tr>
                     ) : (
