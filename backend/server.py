@@ -251,14 +251,24 @@ async def buscar_cep_por_endereco(endereco: str) -> Optional[str]:
     logradouro_completo = partes[0].strip() if partes else ''
     
     # Remover prefixos comuns e pegar palavras significativas
-    logradouro = re.sub(
+    logradouro_sem_prefixo = re.sub(
         r'^(RUA|AVENIDA|AV\.?|ALAMEDA|AL\.?|TRAVESSA|TV\.?|PRACA|PC\.?|ESTRADA|EST\.?|RODOVIA|ROD\.?)\s+', 
         '', 
         logradouro_completo
     )
-    logradouro_busca = ' '.join(logradouro.split()[:2])  # Primeiras 2 palavras
     
-    if not logradouro_busca:
+    # Se o logradouro for muito curto (ex: "UM", "DOIS"), usar o nome completo
+    logradouro_busca = ' '.join(logradouro_sem_prefixo.split()[:3])  # Primeiras 3 palavras
+    
+    if len(logradouro_busca) < 4:
+        # Usar o nome completo do logradouro sem o prefixo
+        logradouro_busca = logradouro_sem_prefixo.strip()
+    
+    # Se ainda for curto, tentar com o prefixo (TRAVESSA, RUA, etc.)
+    if len(logradouro_busca) < 4:
+        logradouro_busca = logradouro_completo
+    
+    if not logradouro_busca or len(logradouro_busca) < 2:
         return None
     
     try:
