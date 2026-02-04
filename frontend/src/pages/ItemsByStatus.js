@@ -3793,7 +3793,7 @@ Chave PIX: ${dados.pix}`;
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 try {
-                                  const response = await apiPatch(`${API}/purchase-orders/${oc.po_id}/endereco`, {
+                                  const response = await apiPatch(`${API}/purchase-orders/${oc.po_id}/endereco-entrega`, {
                                     endereco_entrega: enderecoOCTemp
                                   });
                                   if (response.data?.success || response.status === 200) {
