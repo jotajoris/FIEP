@@ -3864,8 +3864,16 @@ Chave PIX: ${dados.pix}`;
                                 const endereco = oc.endereco_entrega || 'ENDEREÇO NÃO INFORMADO';
                                 const itensPendentes = itensProximaRemessaPorOC[oc.po_id] || [];
                                 const dados = getDadosBancarios(oc.po_id);
+                                const requisitanteNome = oc.requisitante_nome || '';
+                                const requisitanteEmail = oc.requisitante_email || '';
                                 let texto = `Endereço da entrega: ${endereco}
 NF referente à OC - ${numeroOC}`;
+                                if (requisitanteNome) {
+                                  texto += `\nRequisitante: ${requisitanteNome}`;
+                                  if (requisitanteEmail) {
+                                    texto += ` - ${requisitanteEmail}`;
+                                  }
+                                }
                                 if (itensPendentes.length > 0) {
                                   texto += `\nItens que irão na próxima remessa: ${itensPendentes.join(', ')}`;
                                 }
