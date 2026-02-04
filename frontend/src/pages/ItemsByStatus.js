@@ -4485,6 +4485,21 @@ OC: ${oc.numero_oc ? oc.numero_oc.replace(/^OC-/i, '') : ''}${requisitanteTxt}${
 DADOS BANCÁRIOS - Banco: ${dados.banco} | Ag: ${dados.agencia} | Cc: ${dados.conta} | PIX: ${dados.pix}`;
 })()}
                         </pre>
+                        {/* Requisitante em destaque se existir */}
+                        {oc.requisitante_nome && (
+                          <div style={{ 
+                            marginTop: '0.5rem',
+                            background: '#ecfdf5', 
+                            padding: '0.5rem', 
+                            borderRadius: '4px',
+                            border: '1px solid #a7f3d0'
+                          }}>
+                            <span style={{ fontSize: '0.75rem', color: '#065f46', fontWeight: '600' }}>
+                              👤 Requisitante: {oc.requisitante_nome}
+                              {oc.requisitante_email && ` - ${oc.requisitante_email}`}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       {/* NF de Venda e XML para download */}
