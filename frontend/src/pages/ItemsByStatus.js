@@ -3793,16 +3793,19 @@ Chave PIX: ${dados.pix}`;
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 try {
-                                  const response = await apiPatch(`/purchase-orders/${oc.po_id}`, {
+                                  const response = await apiPatch(`${API}/purchase-orders/${oc.po_id}/endereco`, {
                                     endereco_entrega: enderecoOCTemp
                                   });
-                                  if (response.ok) {
+                                  if (response.data?.success || response.status === 200) {
                                     alert('Endereço atualizado!');
                                     setEditingEnderecoOC(null);
                                     loadItems();
+                                  } else {
+                                    alert('Erro ao atualizar endereço');
                                   }
                                 } catch (err) {
-                                  alert('Erro ao atualizar endereço');
+                                  console.error('Erro:', err);
+                                  alert('Erro ao atualizar endereço: ' + (err.response?.data?.detail || err.message));
                                 }
                               }}
                               style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', background: '#22c55e', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap' }}
