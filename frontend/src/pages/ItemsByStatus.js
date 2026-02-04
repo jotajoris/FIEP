@@ -4067,6 +4067,7 @@ OC: ${oc.numero_oc ? oc.numero_oc.replace(/^OC-/i, '') : ''}${requisitanteTxt}${
 DADOS BANCÁRIOS - Banco: ${dados.banco} | Ag: ${dados.agencia} | Cc: ${dados.conta} | PIX: ${dados.pix}`;
 })()}
                           </pre>
+                          </div>
                         )}
                       </div>
                       
