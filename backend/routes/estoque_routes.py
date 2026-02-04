@@ -33,11 +33,15 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
     """
     estoque_map = {}
     
+    logger.info(f"[ESTOQUE] Iniciando listagem de estoque para {current_user.get('sub', 'N/A')}")
+    
     # 1. Buscar excedentes das OCs (itens comprados a mais)
     pos = await db.purchase_orders.find(
         {},
         {"_id": 0, "id": 1, "numero_oc": 1, "items": 1}
     ).to_list(5000)
+    
+    logger.info(f"[ESTOQUE] Encontradas {len(pos)} OCs")
     
     for po in pos:
         for idx, item in enumerate(po.get('items', [])):
