@@ -207,7 +207,38 @@ const ItemsByStatus = () => {
   // Salvar dados bancários no backend
   const salvarDadosBancarios = async (po_id, dados) => {
     try {
-      const response = await apiPatch(`${API}/purchase-orders/${po_id}/dados-bancarios`, dados);
+      // Salvar dados bancários
+      const response = await apiPatch(`${API}/purchase-orders/${po_id}/dados-bancarios`, {
+        banco: dados.banco,
+        conta: dados.conta,
+        agencia: dados.agencia,
+        pix: dados.pix
+      });
+      
+      // Salvar requisitante separadamente se fornecido
+      if (dados.requisitante_nome !== undefined || dados.requisitante_email !== undefined) {
+        try {
+          await apiPatch(`${API}/purchase-orders/${po_id}/requisitante`, {
+            requisitante_nome: dados.requisitante_nome || '',
+            requisitante_email: dados.requisitante_email || ''
+          });
+          
+          // Atualizar items localmente com o requisitante
+          setItems(prevItems => prevItems.map(item => {
+            if (item.po_id === po_id) {
+              return {
+                ...item,
+                requisitante_nome: dados.requisitante_nome || '',
+                requisitante_email: dados.requisitante_email || ''
+              };
+            }
+            return item;
+          }));
+        } catch (reqErr) {
+          console.error('Erro ao salvar requisitante:', reqErr);
+        }
+      }
+      
       if (response.data?.success) {
         setDadosBancariosPorOC(prev => ({ ...prev, [po_id]: dados }));
         return true;
