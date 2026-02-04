@@ -2194,8 +2194,8 @@ async def get_purchase_orders_simple(
     limit = min(limit, 1000)
     skip = (page - 1) * limit
     
-    # Construir query base
-    query = {}
+    # Construir query base - EXCLUIR OC de estoque manual da listagem
+    query = {"numero_oc": {"$ne": "ESTOQUE-MANUAL"}}
     
     # Filtro por número da OC
     if search_oc:
