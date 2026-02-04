@@ -123,6 +123,19 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
     - **NF Venda (ON):** `X de Y ✓ N NF(s)` em verde quando completo
   - Arquivos existentes podem ser baixados diretamente com botões de download
 
+- ✅ **NOVA FEATURE: Relatório Completo de OCs (Admin > Relatório)**
+  - **Problema:** Necessidade de controle para evitar penalidades por atraso
+  - **Solução:** Nova aba "📊 Relatório" no Painel Administrativo com:
+    - **Botão "Baixar Relatório Excel"** - Gera arquivo Excel com 3 abas:
+      1. **Relatório Completo:** Todos os itens de todas as OCs (status, rastreio, preços, fornecedor, etc.)
+      2. **Resumo por OC:** Visão geral de cada OC com contagem de itens por status
+      3. **⚠️ ATRASADOS:** Lista de itens com data de entrega vencida que ainda não foram entregues
+    - Cores por status (vermelho=pendente, amarelo=cotado, verde=entregue, etc.)
+    - Destaque para dias de atraso (vermelho=atrasado, laranja=próximo do prazo)
+    - **Botão "Reprocessar Requisitantes"** - Extrai requisitantes de PDFs antigos
+  - **Endpoint:** `GET /api/admin/relatorio-completo`
+  - **Testado:** Gerou Excel com 471 itens, 118 OCs, 344 itens atrasados
+
 - ✅ **MELHORIA: Middleware CORS Reforçado**
   - **Problema:** Erros CORS intermitentes em produção
   - **Solução:** Adicionado middleware customizado que garante headers CORS em TODAS as respostas, incluindo erros
