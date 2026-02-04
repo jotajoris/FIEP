@@ -4335,6 +4335,78 @@ DADOS BANCÁRIOS - Banco: ${dados.banco} | Ag: ${dados.agencia} | Cc: ${dados.co
                     {/* ======== SEÇÃO PRONTO PARA ENVIO ======== */}
                     {status === 'pronto_envio' && (
                       <>
+                      {/* DADOS ADICIONAIS DA NF - Pronto para Envio */}
+                      <div style={{ 
+                        marginBottom: '1rem', 
+                        padding: '0.75rem',
+                        background: '#fef9c3', 
+                        borderRadius: '8px',
+                        border: '1px solid #fcd34d'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                          <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: '700', color: '#713f12' }}>
+                            📋 DADOS ADICIONAIS DA NF
+                          </h4>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const numeroOC = oc.numero_oc ? oc.numero_oc.replace(/^OC-/i, '') : '';
+                              const endereco = oc.endereco_entrega || 'ENDEREÇO NÃO INFORMADO';
+                              const itensPendentes = itensProximaRemessaPorOC[oc.po_id] || [];
+                              const dados = getDadosBancarios(oc.po_id);
+                              const requisitanteNome = oc.requisitante_nome || '';
+                              const requisitanteEmail = oc.requisitante_email || '';
+                              let texto = `Endereço da entrega: ${endereco}
+NF referente à OC - ${numeroOC}`;
+                              if (requisitanteNome) {
+                                texto += `\nRequisitante: ${requisitanteNome}`;
+                                if (requisitanteEmail) {
+                                  texto += ` - ${requisitanteEmail}`;
+                                }
+                              }
+                              if (itensPendentes.length > 0) {
+                                texto += `\nItens que irão na próxima remessa: ${itensPendentes.join(', ')}`;
+                              }
+                              texto += `\nDADOS BANCÁRIOS
+Banco: ${dados.banco}
+Conta: ${dados.conta}
+Agência: ${dados.agencia}
+Chave PIX: ${dados.pix}`;
+                              navigator.clipboard.writeText(texto).then(() => {
+                                alert('Dados Adicionais copiados!');
+                              });
+                            }}
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', background: '#eab308', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                          >
+                            📋 Copiar
+                          </button>
+                        </div>
+                        <pre style={{ 
+                          whiteSpace: 'pre-wrap', 
+                          fontSize: '0.75rem', 
+                          color: '#713f12',
+                          background: 'white',
+                          padding: '0.5rem',
+                          borderRadius: '4px',
+                          margin: 0
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        >
+{(() => {
+  const dados = getDadosBancarios(oc.po_id);
+  const requisitanteNome = oc.requisitante_nome || '';
+  const requisitanteEmail = oc.requisitante_email || '';
+  let requisitanteTxt = '';
+  if (requisitanteNome) {
+    requisitanteTxt = `\nRequisitante: ${requisitanteNome}${requisitanteEmail ? ` - ${requisitanteEmail}` : ''}`;
+  }
+  return `Endereço: ${oc.endereco_entrega || 'NÃO INFORMADO'}
+OC: ${oc.numero_oc ? oc.numero_oc.replace(/^OC-/i, '') : ''}${requisitanteTxt}${(itensProximaRemessaPorOC[oc.po_id] || []).length > 0 ? `\nPróxima remessa: ${(itensProximaRemessaPorOC[oc.po_id] || []).join(', ')}` : ''}
+DADOS BANCÁRIOS - Banco: ${dados.banco} | Ag: ${dados.agencia} | Cc: ${dados.conta} | PIX: ${dados.pix}`;
+})()}
+                        </pre>
+                      </div>
+
                       {/* NF de Venda e XML para download */}
                       {oc.notas_fiscais_venda && oc.notas_fiscais_venda.length > 0 && (
                         <div style={{ 
