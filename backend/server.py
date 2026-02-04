@@ -2060,9 +2060,6 @@ async def get_items_by_status_optimized(
     
     # Pipeline de agregação otimizado
     pipeline = [
-        # 0. EXCLUIR OC de estoque manual
-        {"$match": {"numero_oc": {"$ne": "ESTOQUE-MANUAL"}}},
-        
         # 1. Filtrar OCs que têm pelo menos um item com o status desejado
         {"$match": {"items.status": status}},
         
@@ -2197,8 +2194,8 @@ async def get_purchase_orders_simple(
     limit = min(limit, 1000)
     skip = (page - 1) * limit
     
-    # Construir query base - EXCLUIR OC de estoque manual da listagem
-    query = {"numero_oc": {"$ne": "ESTOQUE-MANUAL"}}
+    # Construir query base
+    query = {}
     
     # Filtro por número da OC
     if search_oc:
@@ -3127,9 +3124,7 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     user_name = current_user.get('owner_name', '').strip().upper() if not is_admin else None
     
     # Pipeline de agregação para contar itens por status
-    # EXCLUIR OC de estoque manual das estatísticas
     pipeline = [
-        {"$match": {"numero_oc": {"$ne": "ESTOQUE-MANUAL"}}},
         {"$unwind": "$items"},
     ]
     
@@ -3160,13 +3155,12 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     # Mapear resultados
     status_counts = {r['_id']: r['count'] for r in results}
     
-    # Contar OCs (excluindo ESTOQUE-MANUAL)
+    # Contar OCs
     if is_admin:
-        total_ocs = await db.purchase_orders.count_documents({"numero_oc": {"$ne": "ESTOQUE-MANUAL"}})
+        total_ocs = await db.purchase_orders.count_documents({})
     else:
-        # Contar OCs que têm itens do usuário (excluindo ESTOQUE-MANUAL)
+        # Contar OCs que têm itens do usuário
         pipeline_ocs = [
-            {"$match": {"numero_oc": {"$ne": "ESTOQUE-MANUAL"}}},
             {"$unwind": "$items"},
             {"$match": {
                 "$expr": {
