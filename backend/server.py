@@ -196,14 +196,33 @@ async def buscar_cep_por_endereco(endereco: str) -> Optional[str]:
     
     endereco_upper = endereco.upper().strip()
     
-    # Lista de cidades conhecidas e seus estados (foco na região de Curitiba)
+    # Lista de cidades conhecidas e seus estados (foco na região de Curitiba e Paraná)
     cidades_uf = {
         'CURITIBA': 'PR', 'SAO JOSE DOS PINHAIS': 'PR', 'PINHAIS': 'PR', 
         'COLOMBO': 'PR', 'ARAUCARIA': 'PR', 'CAMPO LARGO': 'PR',
         'PIRAQUARA': 'PR', 'ALMIRANTE TAMANDARE': 'PR', 'FAZENDA RIO GRANDE': 'PR',
         'LONDRINA': 'PR', 'MARINGA': 'PR', 'FOZ DO IGUACU': 'PR', 'CASCAVEL': 'PR',
+        'PONTA GROSSA': 'PR', 'GUARAPUAVA': 'PR', 'PARANAGUA': 'PR', 'TOLEDO': 'PR',
+        'UMUARAMA': 'PR', 'CAMPO MOURAO': 'PR', 'APUCARANA': 'PR', 'ARAPONGAS': 'PR',
+        'CIANORTE': 'PR', 'PATO BRANCO': 'PR', 'FRANCISCO BELTRAO': 'PR',
+        'PARANAVAÍ': 'PR', 'PARANAVAI': 'PR', 'TELÊMACO BORBA': 'PR', 'TELEMACO BORBA': 'PR',
+        'IRATI': 'PR', 'CASTRO': 'PR', 'IBIPORA': 'PR', 'IBIPORÃ': 'PR',
+        'CAMBE': 'PR', 'CAMBÉ': 'PR', 'ROLANDIA': 'PR', 'ROLÂNDIA': 'PR',
+        'CORNELIO PROCOPIO': 'PR', 'BANDEIRANTES': 'PR', 'JACAREZINHO': 'PR',
+        'SANTO ANTONIO DA PLATINA': 'PR', 'WENCESLAU BRAZ': 'PR',
+        'UNIAO DA VITORIA': 'PR', 'IVAIPORA': 'PR', 'JANDAIA DO SUL': 'PR',
+        'MANDAGUARI': 'PR', 'SARANDI': 'PR', 'MARIALVA': 'PR', 'NOVA ESPERANCA': 'PR',
+        'LOANDA': 'PR', 'GOIOERE': 'PR', 'ASSIS CHATEAUBRIAND': 'PR',
+        'PALOTINA': 'PR', 'MEDIANEIRA': 'PR', 'SAO MIGUEL DO IGUACU': 'PR',
+        'SANTA TEREZINHA DE ITAIPU': 'PR', 'QUEDAS DO IGUACU': 'PR',
+        'DOIS VIZINHOS': 'PR', 'REALEZA': 'PR', 'CORONEL VIVIDA': 'PR',
+        'CHOPINZINHO': 'PR', 'PALMAS': 'PR', 'LARANJEIRAS DO SUL': 'PR',
+        'PITANGA': 'PR', 'PRUDENTOPOLIS': 'PR', 'IMBITUVA': 'PR',
+        'LAPA': 'PR', 'RIO NEGRO': 'PR', 'SAO MATEUS DO SUL': 'PR',
+        'MATINHOS': 'PR', 'PONTAL DO PARANA': 'PR', 'GUARATUBA': 'PR',
         'SAO PAULO': 'SP', 'RIO DE JANEIRO': 'RJ', 'BELO HORIZONTE': 'MG',
         'PORTO ALEGRE': 'RS', 'FLORIANOPOLIS': 'SC', 'BRASILIA': 'DF',
+        'JOINVILLE': 'SC', 'BLUMENAU': 'SC', 'CHAPECO': 'SC', 'CRICIUMA': 'SC',
     }
     
     # Tentar extrair UF do endereço
