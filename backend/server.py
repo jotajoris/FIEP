@@ -2060,6 +2060,9 @@ async def get_items_by_status_optimized(
     
     # Pipeline de agregação otimizado
     pipeline = [
+        # 0. EXCLUIR OC de estoque manual
+        {"$match": {"numero_oc": {"$ne": "ESTOQUE-MANUAL"}}},
+        
         # 1. Filtrar OCs que têm pelo menos um item com o status desejado
         {"$match": {"items.status": status}},
         
