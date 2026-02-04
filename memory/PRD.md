@@ -90,7 +90,22 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 
 ## Changelog Recente
 
-### 2026-02-03 (Sessão Atual - Continuação 8)
+### 2026-02-04 (Sessão Atual - Continuação 9)
+- ✅ **REFATORAÇÃO COMPLETA: Sistema de Estoque**
+  - **Problema:** Ao adicionar itens manualmente ao estoque, o sistema criava uma OC virtual "ESTOQUE-MANUAL" que aparecia no dashboard e causava confusão
+  - **Solução:** Sistema agora usa coleção MongoDB dedicada `estoque_manual` para itens manuais
+  - **Mudanças:**
+    - Novo endpoint `POST /api/estoque/adicionar-manual` cria entradas na coleção `estoque_manual`
+    - Endpoint `GET /api/estoque` combina excedentes de OCs + itens da coleção `estoque_manual`
+    - Removidos filtros obsoletos `{"numero_oc": {"$ne": "ESTOQUE-MANUAL"}}` de dashboard e listagem
+    - Migrados 18 itens da OC "ESTOQUE-MANUAL" para a nova coleção
+    - OC "ESTOQUE-MANUAL" foi excluída do banco de dados
+  - **Benefícios:**
+    - Dashboard mostra apenas OCs reais (117 ao invés de 118)
+    - Estoque manual tem gestão independente com histórico de entradas/saídas
+    - Código mais limpo e manutenível
+
+### 2026-02-03 (Sessão Anterior - Continuação 8)
 - ✅ **CORREÇÃO CRÍTICA: Paridade entre Upload e Atualização de OC**
   - **Problema:** Ao subir nova OC via PDF, os dados não eram preenchidos automaticamente (responsável, lote, preço, etc.)
   - **Solução:** Endpoint `/api/purchase-orders/upload-pdf` agora preenche todos os campos automaticamente:
