@@ -6343,6 +6343,390 @@ async def reprocessar_requisitante_oc(
     }
 
 
+@api_router.get("/admin/relatorio-completo")
+async def gerar_relatorio_completo(
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Gera um relatório completo de todas as OCs com status de cada item.
+    Retorna um arquivo Excel para download.
+    """
+    from io import BytesIO
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Fill, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    from fastapi.responses import StreamingResponse
+    
+    # Buscar todas as OCs com todos os campos necessários
+    cursor = db.purchase_orders.find(
+        {},
+        {
+            "_id": 0,
+            "id": 1,
+            "numero_oc": 1,
+            "data_entrega": 1,
+            "endereco_entrega": 1,
+            "requisitante_nome": 1,
+            "requisitante_email": 1,
+            "items": 1,
+            "created_at": 1
+        }
+    ).sort("numero_oc", 1)
+    
+    ocs = await cursor.to_list(10000)
+    
+    # Criar workbook Excel
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Relatório Completo"
+    
+    # Estilos
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    
+    # Cores por status
+    status_colors = {
+        'pendente': PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid"),  # Vermelho claro
+        'cotado': PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid"),    # Amarelo claro
+        'comprado': PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid"),  # Verde claro
+        'em_separacao': PatternFill(start_color="BDD7EE", end_color="BDD7EE", fill_type="solid"),  # Azul claro
+        'pronto_envio': PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid"),  # Azul mais claro
+        'em_transito': PatternFill(start_color="E2EFDA", end_color="E2EFDA", fill_type="solid"),  # Verde água
+        'entregue': PatternFill(start_color="00B050", end_color="00B050", fill_type="solid"),  # Verde
+    }
+    
+    status_labels = {
+        'pendente': 'PENDENTE',
+        'cotado': 'COTADO',
+        'comprado': 'COMPRADO',
+        'em_separacao': 'EM SEPARAÇÃO',
+        'pronto_envio': 'PRONTO P/ ENVIO',
+        'em_transito': 'EM TRÂNSITO',
+        'entregue': 'ENTREGUE'
+    }
+    
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    # Cabeçalhos
+    headers = [
+        "OC", "Data Entrega", "Dias p/ Entrega", "Requisitante", "Endereço",
+        "Cód. Item", "Descrição", "Qtd", "UN", "Status", 
+        "Cód. Rastreio", "Data Compra", "Data Envio", "Fornecedor",
+        "Preço Compra", "Preço Venda", "Observação"
+    ]
+    
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        cell.border = thin_border
+    
+    # Ajustar larguras de colunas
+    column_widths = [15, 12, 12, 25, 40, 12, 50, 8, 6, 15, 20, 12, 12, 25, 12, 12, 30]
+    for col, width in enumerate(column_widths, 1):
+        ws.column_dimensions[get_column_letter(col)].width = width
+    
+    # Altura do cabeçalho
+    ws.row_dimensions[1].height = 30
+    
+    # Dados
+    row = 2
+    today = datetime.now(timezone.utc).date()
+    
+    for oc in ocs:
+        numero_oc = oc.get('numero_oc', '').replace('OC-', '')
+        data_entrega = oc.get('data_entrega', '')
+        requisitante = oc.get('requisitante_nome', '')
+        if oc.get('requisitante_email'):
+            requisitante += f" ({oc.get('requisitante_email')})"
+        endereco = oc.get('endereco_entrega', '')
+        
+        # Calcular dias para entrega
+        dias_entrega = ''
+        if data_entrega:
+            try:
+                if isinstance(data_entrega, str):
+                    data_obj = datetime.strptime(data_entrega[:10], '%Y-%m-%d').date()
+                else:
+                    data_obj = data_entrega
+                dias = (data_obj - today).days
+                dias_entrega = dias
+            except:
+                dias_entrega = ''
+        
+        items = oc.get('items', [])
+        
+        for item in items:
+            codigo_item = item.get('codigo_item', '')
+            descricao = item.get('descricao', '')
+            quantidade = item.get('quantidade', 0)
+            unidade = item.get('unidade', 'UN')
+            status = item.get('status', 'pendente')
+            codigo_rastreio = item.get('codigo_rastreio', '')
+            data_compra = item.get('data_compra', '')
+            data_envio = item.get('data_envio', '')
+            observacao = item.get('observacao', '')
+            preco_compra = item.get('preco_compra', 0)
+            preco_venda = item.get('preco_venda', 0)
+            
+            # Fornecedor das fontes de compra
+            fornecedor = ''
+            fontes = item.get('fontes_compra', [])
+            if fontes:
+                fornecedor = fontes[0].get('fornecedor', '')
+            
+            # Dados da linha
+            row_data = [
+                numero_oc,
+                data_entrega if isinstance(data_entrega, str) else (data_entrega.strftime('%Y-%m-%d') if data_entrega else ''),
+                dias_entrega,
+                requisitante,
+                endereco,
+                codigo_item,
+                descricao,
+                quantidade,
+                unidade,
+                status_labels.get(status, status.upper()),
+                codigo_rastreio,
+                data_compra,
+                data_envio,
+                fornecedor,
+                preco_compra if preco_compra else '',
+                preco_venda if preco_venda else '',
+                observacao
+            ]
+            
+            for col, value in enumerate(row_data, 1):
+                cell = ws.cell(row=row, column=col, value=value)
+                cell.border = thin_border
+                cell.alignment = Alignment(vertical='center', wrap_text=True)
+                
+                # Aplicar cor baseada no status
+                if col == 10:  # Coluna de Status
+                    cell.fill = status_colors.get(status, PatternFill())
+                    cell.font = Font(bold=True)
+                
+                # Destacar dias negativos (atrasados)
+                if col == 3 and isinstance(value, int):
+                    if value < 0:
+                        cell.fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
+                        cell.font = Font(bold=True, color="FFFFFF")
+                    elif value <= 7:
+                        cell.fill = PatternFill(start_color="FFC000", end_color="FFC000", fill_type="solid")
+                        cell.font = Font(bold=True)
+            
+            row += 1
+    
+    # Criar segunda aba com resumo por OC
+    ws2 = wb.create_sheet(title="Resumo por OC")
+    
+    # Cabeçalhos do resumo
+    resumo_headers = [
+        "OC", "Data Entrega", "Dias p/ Entrega", "Requisitante",
+        "Total Itens", "Pendentes", "Cotados", "Comprados", 
+        "Em Separação", "Pronto p/ Envio", "Em Trânsito", "Entregues",
+        "% Concluído"
+    ]
+    
+    for col, header in enumerate(resumo_headers, 1):
+        cell = ws2.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        cell.border = thin_border
+    
+    # Larguras das colunas do resumo
+    resumo_widths = [15, 12, 12, 25, 10, 10, 10, 10, 12, 12, 12, 10, 12]
+    for col, width in enumerate(resumo_widths, 1):
+        ws2.column_dimensions[get_column_letter(col)].width = width
+    
+    # Dados do resumo
+    row2 = 2
+    for oc in ocs:
+        numero_oc = oc.get('numero_oc', '').replace('OC-', '')
+        data_entrega = oc.get('data_entrega', '')
+        requisitante = oc.get('requisitante_nome', '')
+        
+        # Calcular dias para entrega
+        dias_entrega = ''
+        if data_entrega:
+            try:
+                if isinstance(data_entrega, str):
+                    data_obj = datetime.strptime(data_entrega[:10], '%Y-%m-%d').date()
+                else:
+                    data_obj = data_entrega
+                dias = (data_obj - today).days
+                dias_entrega = dias
+            except:
+                dias_entrega = ''
+        
+        items = oc.get('items', [])
+        total_itens = len(items)
+        
+        # Contar por status
+        contagem = {
+            'pendente': 0, 'cotado': 0, 'comprado': 0, 
+            'em_separacao': 0, 'pronto_envio': 0, 'em_transito': 0, 'entregue': 0
+        }
+        for item in items:
+            s = item.get('status', 'pendente')
+            if s in contagem:
+                contagem[s] += 1
+        
+        # Percentual concluído (entregue)
+        perc_concluido = round((contagem['entregue'] / total_itens * 100), 1) if total_itens > 0 else 0
+        
+        row_data = [
+            numero_oc,
+            data_entrega if isinstance(data_entrega, str) else (data_entrega.strftime('%Y-%m-%d') if data_entrega else ''),
+            dias_entrega,
+            requisitante,
+            total_itens,
+            contagem['pendente'],
+            contagem['cotado'],
+            contagem['comprado'],
+            contagem['em_separacao'],
+            contagem['pronto_envio'],
+            contagem['em_transito'],
+            contagem['entregue'],
+            f"{perc_concluido}%"
+        ]
+        
+        for col, value in enumerate(row_data, 1):
+            cell = ws2.cell(row=row2, column=col, value=value)
+            cell.border = thin_border
+            cell.alignment = Alignment(vertical='center', horizontal='center')
+            
+            # Destacar dias negativos (atrasados)
+            if col == 3 and isinstance(value, int):
+                if value < 0:
+                    cell.fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
+                    cell.font = Font(bold=True, color="FFFFFF")
+                elif value <= 7:
+                    cell.fill = PatternFill(start_color="FFC000", end_color="FFC000", fill_type="solid")
+                    cell.font = Font(bold=True)
+            
+            # Colorir células de contagem
+            if col == 6 and value > 0:  # Pendentes
+                cell.fill = status_colors['pendente']
+            elif col == 7 and value > 0:  # Cotados
+                cell.fill = status_colors['cotado']
+            elif col == 8 and value > 0:  # Comprados
+                cell.fill = status_colors['comprado']
+            elif col == 9 and value > 0:  # Em Separação
+                cell.fill = status_colors['em_separacao']
+            elif col == 10 and value > 0:  # Pronto p/ Envio
+                cell.fill = status_colors['pronto_envio']
+            elif col == 11 and value > 0:  # Em Trânsito
+                cell.fill = status_colors['em_transito']
+            elif col == 12 and value > 0:  # Entregues
+                cell.fill = status_colors['entregue']
+        
+        row2 += 1
+    
+    # Criar terceira aba com itens atrasados
+    ws3 = wb.create_sheet(title="⚠️ ATENÇÃO - Atrasados")
+    
+    atrasados_headers = [
+        "OC", "Data Entrega", "Dias Atraso", "Requisitante",
+        "Cód. Item", "Descrição", "Status", "Cód. Rastreio"
+    ]
+    
+    for col, header in enumerate(atrasados_headers, 1):
+        cell = ws3.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        cell.border = thin_border
+    
+    atrasados_widths = [15, 12, 12, 25, 12, 50, 15, 20]
+    for col, width in enumerate(atrasados_widths, 1):
+        ws3.column_dimensions[get_column_letter(col)].width = width
+    
+    # Itens atrasados (data_entrega < hoje E status != entregue)
+    row3 = 2
+    for oc in ocs:
+        numero_oc = oc.get('numero_oc', '').replace('OC-', '')
+        data_entrega = oc.get('data_entrega', '')
+        requisitante = oc.get('requisitante_nome', '')
+        
+        if not data_entrega:
+            continue
+        
+        try:
+            if isinstance(data_entrega, str):
+                data_obj = datetime.strptime(data_entrega[:10], '%Y-%m-%d').date()
+            else:
+                data_obj = data_entrega
+            dias = (data_obj - today).days
+            
+            if dias >= 0:  # Não está atrasado
+                continue
+        except:
+            continue
+        
+        items = oc.get('items', [])
+        for item in items:
+            status = item.get('status', 'pendente')
+            if status == 'entregue':
+                continue  # Item já entregue, não conta como atrasado
+            
+            row_data = [
+                numero_oc,
+                data_entrega if isinstance(data_entrega, str) else data_entrega.strftime('%Y-%m-%d'),
+                abs(dias),  # Mostrar dias de atraso como positivo
+                requisitante,
+                item.get('codigo_item', ''),
+                item.get('descricao', ''),
+                status_labels.get(status, status.upper()),
+                item.get('codigo_rastreio', '')
+            ]
+            
+            for col, value in enumerate(row_data, 1):
+                cell = ws3.cell(row=row3, column=col, value=value)
+                cell.border = thin_border
+                cell.alignment = Alignment(vertical='center', wrap_text=True)
+                
+                if col == 3:  # Dias de atraso
+                    cell.fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
+                    cell.font = Font(bold=True, color="FFFFFF")
+                elif col == 7:  # Status
+                    cell.fill = status_colors.get(status, PatternFill())
+                    cell.font = Font(bold=True)
+            
+            row3 += 1
+    
+    # Se não houver atrasados, adicionar mensagem
+    if row3 == 2:
+        ws3.cell(row=2, column=1, value="✅ Nenhum item atrasado!")
+        ws3.merge_cells('A2:H2')
+        ws3['A2'].font = Font(bold=True, size=14, color="00B050")
+        ws3['A2'].alignment = Alignment(horizontal='center', vertical='center')
+    
+    # Salvar para stream
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    # Nome do arquivo com data
+    filename = f"relatorio_completo_ocs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Access-Control-Expose-Headers": "Content-Disposition"
+        }
+    )
+
+
 @api_router.get("/dados-bancarios/todas-ocs")
 async def get_todos_dados_bancarios(
     current_user: dict = Depends(get_current_user)
