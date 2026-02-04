@@ -100,9 +100,68 @@ async def listar_estoque(current_user: dict = Depends(get_current_user)):
                     })
     
     result = sorted(estoque_map.values(), key=lambda x: x['codigo_item'])
+    
+    # Adicionar itens de estoque manual (OC ESTOQUE-MANUAL)
+    oc_estoque_manual = await db.purchase_orders.find_one({"numero_oc": "ESTOQUE-MANUAL"}, {"_id": 0})
+    if oc_estoque_manual:
+        for idx, item in enumerate(oc_estoque_manual.get('items', [])):
+            codigo_item = item.get('codigo_item', '')
+            quantidade_comprada = item.get('quantidade_comprada', 0)
+            quantidade_usada = item.get('quantidade_usada_estoque', 0)
+            disponivel = quantidade_comprada - quantidade_usada
+            
+            if disponivel > 0:
+                # Verificar se já existe no estoque_map
+                found = False
+                for r in result:
+                    if r['codigo_item'] == codigo_item:
+                        r['quantidade_estoque'] += disponivel
+                        r['ocs_origem'].append({
+                            'numero_oc': 'ESTOQUE-MANUAL',
+                            'po_id': oc_estoque_manual.get('id'),
+                            'item_index': idx,
+                            'quantidade_comprada': quantidade_comprada,
+                            'quantidade_necessaria': 0,
+                            'quantidade_usada_estoque': quantidade_usada,
+                            'excedente': disponivel,
+                            'data_compra': item.get('data_compra'),
+                            'usado_em': item.get('estoque_usado_em', [])
+                        })
+                        found = True
+                        break
+                
+                if not found:
+                    fontes = item.get('fontes_compra', [])
+                    result.append({
+                        'codigo_item': codigo_item,
+                        'descricao': item.get('descricao', ''),
+                        'marca_modelo': item.get('marca_modelo', ''),
+                        'unidade': item.get('unidade', 'UN'),
+                        'quantidade_estoque': disponivel,
+                        'link_compra': fontes[0].get('link', '') if fontes else '',
+                        'fornecedor': fontes[0].get('fornecedor', 'ESTOQUE MANUAL') if fontes else 'ESTOQUE MANUAL',
+                        'preco_unitario': fontes[0].get('preco_unitario', 0) if fontes else item.get('preco_compra', 0),
+                        'imagem_url': item.get('imagem_url'),
+                        'ocs_origem': [{
+                            'numero_oc': 'ESTOQUE-MANUAL',
+                            'po_id': oc_estoque_manual.get('id'),
+                            'item_index': idx,
+                            'quantidade_comprada': quantidade_comprada,
+                            'quantidade_necessaria': 0,
+                            'quantidade_usada_estoque': quantidade_usada,
+                            'excedente': disponivel,
+                            'data_compra': item.get('data_compra'),
+                            'usado_em': item.get('estoque_usado_em', [])
+                        }]
+                    })
+        
+        # Re-ordenar após adicionar itens do estoque manual
+        result = sorted(result, key=lambda x: x['codigo_item'])
+    
     return {
         "total_itens_diferentes": len(result),
-        "estoque": result
+        "estoque": result,
+        "items": result  # Alias para compatibilidade com frontend
     }
 
 
