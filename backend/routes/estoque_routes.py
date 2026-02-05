@@ -335,42 +335,121 @@ async def ajustar_quantidade_estoque_manual(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Ajusta a quantidade de um item no estoque manual.
-    Usado para editar diretamente a quantidade disponível.
+    Ajusta a quantidade de um item no estoque.
+    Funciona tanto para itens manuais quanto para excedentes de OCs.
     """
     nova_quantidade = data.get('nova_quantidade', 0)
     
     if nova_quantidade < 0:
         raise HTTPException(status_code=400, detail="Quantidade não pode ser negativa")
     
-    # Buscar item no estoque manual
-    item = await db.estoque_manual.find_one({"codigo_item": codigo_item}, {"_id": 0})
+    # 1. Primeiro, tentar buscar no estoque manual
+    item_manual = await db.estoque_manual.find_one({"codigo_item": codigo_item}, {"_id": 0})
     
-    if not item:
-        raise HTTPException(status_code=404, detail=f"Item {codigo_item} não encontrado no estoque manual")
+    if item_manual:
+        # Item está no estoque manual - atualizar diretamente
+        quantidade_usada = item_manual.get('quantidade_usada', 0)
+        
+        # Se a nova quantidade for menor que a usada, ajustar a usada também
+        if nova_quantidade < quantidade_usada:
+            quantidade_usada = nova_quantidade
+        
+        await db.estoque_manual.update_one(
+            {"codigo_item": codigo_item},
+            {"$set": {
+                "quantidade": nova_quantidade,
+                "quantidade_usada": quantidade_usada,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        return {
+            "success": True,
+            "message": f"Quantidade do item {codigo_item} ajustada para {nova_quantidade}",
+            "codigo_item": codigo_item,
+            "nova_quantidade": nova_quantidade,
+            "disponivel": nova_quantidade - quantidade_usada,
+            "origem": "manual"
+        }
     
-    # Atualizar quantidade
-    quantidade_usada = item.get('quantidade_usada', 0)
+    # 2. Se não está no estoque manual, buscar nas OCs (excedentes)
+    # Encontrar OCs que têm esse item com excedente
+    pos = await db.purchase_orders.find(
+        {"items.codigo_item": codigo_item},
+        {"_id": 0, "id": 1, "numero_oc": 1, "items": 1}
+    ).to_list(5000)
     
-    # Se a nova quantidade for menor que a usada, ajustar a usada também
-    if nova_quantidade < quantidade_usada:
-        quantidade_usada = nova_quantidade
+    for po in pos:
+        for idx, item in enumerate(po.get('items', [])):
+            if item.get('codigo_item') != codigo_item:
+                continue
+            
+            status = item.get('status', 'pendente')
+            if status not in ['comprado', 'em_separacao', 'pronto_envio', 'em_transito', 'entregue']:
+                continue
+            
+            # Verificar se tem excedente
+            quantidade_necessaria = item.get('quantidade', 0)
+            fontes = item.get('fontes_compra', [])
+            if fontes:
+                quantidade_comprada = sum(f.get('quantidade', 0) for f in fontes)
+            else:
+                quantidade_comprada = item.get('quantidade_comprada', 0)
+            
+            quantidade_usada_estoque = item.get('quantidade_usada_estoque', 0)
+            
+            if quantidade_comprada and quantidade_comprada > quantidade_necessaria:
+                # Este item tem excedente - ajustar
+                # Nova quantidade comprada = necessária + nova_quantidade (novo excedente)
+                nova_quantidade_comprada = quantidade_necessaria + nova_quantidade + quantidade_usada_estoque
+                
+                # Atualizar o item na OC
+                items = po.get('items', [])
+                items[idx]['quantidade_comprada'] = nova_quantidade_comprada
+                
+                # Atualizar nas fontes de compra também
+                if fontes:
+                    # Ajustar a primeira fonte para refletir a nova quantidade
+                    diferenca = nova_quantidade_comprada - quantidade_comprada
+                    items[idx]['fontes_compra'][0]['quantidade'] = fontes[0].get('quantidade', 0) + diferenca
+                
+                await db.purchase_orders.update_one(
+                    {"id": po['id']},
+                    {"$set": {"items": items}}
+                )
+                
+                return {
+                    "success": True,
+                    "message": f"Quantidade do item {codigo_item} ajustada para {nova_quantidade} (excedente em OC {po.get('numero_oc')})",
+                    "codigo_item": codigo_item,
+                    "nova_quantidade": nova_quantidade,
+                    "origem": "excedente_oc",
+                    "numero_oc": po.get('numero_oc')
+                }
     
-    await db.estoque_manual.update_one(
-        {"codigo_item": codigo_item},
-        {"$set": {
-            "quantidade": nova_quantidade,
-            "quantidade_usada": quantidade_usada,
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }}
-    )
+    # 3. Se não encontrou em nenhum lugar, criar no estoque manual
+    novo_item = {
+        "id": str(uuid.uuid4()),
+        "codigo_item": codigo_item,
+        "descricao": "",
+        "quantidade": nova_quantidade,
+        "quantidade_usada": 0,
+        "unidade": "UN",
+        "preco_unitario": 0,
+        "fornecedor": "ADICIONADO MANUALMENTE",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.estoque_manual.insert_one(novo_item)
     
     return {
         "success": True,
-        "message": f"Quantidade do item {codigo_item} ajustada para {nova_quantidade}",
+        "message": f"Item {codigo_item} criado no estoque manual com {nova_quantidade} UN",
         "codigo_item": codigo_item,
         "nova_quantidade": nova_quantidade,
-        "disponivel": nova_quantidade - quantidade_usada
+        "disponivel": nova_quantidade,
+        "origem": "novo_manual"
     }
 
 
