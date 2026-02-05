@@ -328,6 +328,79 @@ async def adicionar_quantidade_estoque(
     return await adicionar_estoque_manual(data, current_user)
 
 
+@router.patch("/ajustar-quantidade/{codigo_item}")
+async def ajustar_quantidade_estoque_manual(
+    codigo_item: str,
+    data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Ajusta a quantidade de um item no estoque manual.
+    Usado para editar diretamente a quantidade disponível.
+    """
+    nova_quantidade = data.get('nova_quantidade', 0)
+    
+    if nova_quantidade < 0:
+        raise HTTPException(status_code=400, detail="Quantidade não pode ser negativa")
+    
+    # Buscar item no estoque manual
+    item = await db.estoque_manual.find_one({"codigo_item": codigo_item}, {"_id": 0})
+    
+    if not item:
+        raise HTTPException(status_code=404, detail=f"Item {codigo_item} não encontrado no estoque manual")
+    
+    # Atualizar quantidade
+    quantidade_usada = item.get('quantidade_usada', 0)
+    
+    # Se a nova quantidade for menor que a usada, ajustar a usada também
+    if nova_quantidade < quantidade_usada:
+        quantidade_usada = nova_quantidade
+    
+    await db.estoque_manual.update_one(
+        {"codigo_item": codigo_item},
+        {"$set": {
+            "quantidade": nova_quantidade,
+            "quantidade_usada": quantidade_usada,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "success": True,
+        "message": f"Quantidade do item {codigo_item} ajustada para {nova_quantidade}",
+        "codigo_item": codigo_item,
+        "nova_quantidade": nova_quantidade,
+        "disponivel": nova_quantidade - quantidade_usada
+    }
+
+
+@router.delete("/manual/{codigo_item}")
+async def deletar_item_estoque_manual(
+    codigo_item: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Remove um item do estoque manual.
+    """
+    # Verificar se o item existe
+    item = await db.estoque_manual.find_one({"codigo_item": codigo_item}, {"_id": 0})
+    
+    if not item:
+        raise HTTPException(status_code=404, detail=f"Item {codigo_item} não encontrado no estoque manual")
+    
+    # Deletar
+    result = await db.estoque_manual.delete_one({"codigo_item": codigo_item})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=500, detail="Erro ao deletar item")
+    
+    return {
+        "success": True,
+        "message": f"Item {codigo_item} removido do estoque manual",
+        "codigo_item": codigo_item
+    }
+
+
 @router.get("/manual")
 async def listar_estoque_manual(current_user: dict = Depends(get_current_user)):
     """Lista apenas os itens do estoque manual"""
