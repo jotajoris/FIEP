@@ -6744,7 +6744,10 @@ async def get_configuracoes(
             "frete_correios_mensal": 0,
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.configuracoes.insert_one(config)
+        await db.configuracoes.insert_one(config.copy())  # Usar cópia para não adicionar _id ao original
+    
+    # Remover _id se existir (segurança extra)
+    config.pop('_id', None)
     
     return config
 
