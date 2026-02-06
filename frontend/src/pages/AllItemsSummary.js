@@ -87,30 +87,6 @@ const AllItemsSummary = () => {
     }
   };
 
-  const salvarConfiguracoes = async () => {
-    setSalvandoConfig(true);
-    try {
-      const token = localStorage.getItem('token');
-      await fetch(`${API}/admin/configuracoes`, {
-        method: 'PATCH',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
-        },
-        body: JSON.stringify({
-          frete_correios_mensal: freteCorreiosMensal,
-          percentual_imposto: percentualImposto
-        })
-      });
-      setEditandoConfig(false);
-      alert('Configurações salvas com sucesso!');
-    } catch (err) {
-      alert('Erro ao salvar configurações: ' + err.message);
-    } finally {
-      setSalvandoConfig(false);
-    }
-  };
-
   const loadAllItems = async () => {
     try {
       const response = await apiGet(`${API}/purchase-orders?limit=0`);
