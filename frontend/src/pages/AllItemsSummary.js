@@ -168,15 +168,15 @@ const AllItemsSummary = () => {
   const totalFreteEnvio = filteredItems.reduce((sum, item) => sum + (item.frete_envio || 0), 0);
   const totalFretes = totalFreteCompra + totalFreteEnvio;
   
-  // Imposto previsto (11% do valor de venda de todos os itens)
+  // Imposto previsto (usa percentual configurável)
   const totalImpostoPrevisto = filteredItems.reduce((sum, item) => {
     const valorVenda = (item.preco_venda || 0) * item.quantidade;
-    return sum + (valorVenda * 0.11);
+    return sum + (valorVenda * (percentualImposto / 100));
   }, 0);
   
-  // Lucro realizado (soma do lucro dos itens em separação + pronto envio + em trânsito + entregues)
+  // Lucro realizado (soma do lucro dos itens em_transito + entregues APENAS)
   const totalLucroRealizado = filteredItems
-    .filter(item => item.status === 'em_separacao' || item.status === 'pronto_envio' || item.status === 'em_transito' || item.status === 'entregue')
+    .filter(item => item.status === 'em_transito' || item.status === 'entregue')
     .reduce((sum, item) => sum + (item.lucro_liquido || 0), 0);
 
   // Calcular total de comissões a pagar (baseado nos lotes, itens entregue/em_transito/pronto_envio)
