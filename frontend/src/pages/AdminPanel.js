@@ -1172,13 +1172,16 @@ const AdminPanel = () => {
 
       <div className="card" style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-          <button
-            onClick={() => setView('comissoes')}
-            className={`btn ${view === 'comissoes' ? 'btn-primary' : 'btn-secondary'}`}
-            data-testid="view-comissoes-btn"
-          >
-            💰 Comissões
-          </button>
+          {/* Comissões - apenas para Admin */}
+          {isAdmin() && (
+            <button
+              onClick={() => setView('comissoes')}
+              className={`btn ${view === 'comissoes' ? 'btn-primary' : 'btn-secondary'}`}
+              data-testid="view-comissoes-btn"
+            >
+              💰 Comissões
+            </button>
+          )}
           <button
             onClick={() => setView('notas')}
             className={`btn ${view === 'notas' ? 'btn-primary' : 'btn-secondary'}`}
@@ -1193,13 +1196,16 @@ const AdminPanel = () => {
           >
             🔄 Atualizar OCs
           </button>
-          <button
-            onClick={() => { setView('usuarios'); loadUsuarios(); }}
-            className={`btn ${view === 'usuarios' ? 'btn-primary' : 'btn-secondary'}`}
-            data-testid="view-usuarios-btn"
-          >
-            👥 Usuários
-          </button>
+          {/* Usuários - apenas para Admin */}
+          {isAdmin() && (
+            <button
+              onClick={() => { setView('usuarios'); loadUsuarios(); }}
+              className={`btn ${view === 'usuarios' ? 'btn-primary' : 'btn-secondary'}`}
+              data-testid="view-usuarios-btn"
+            >
+              👥 Usuários
+            </button>
+          )}
           <button
             onClick={() => setView('relatorio')}
             className={`btn ${view === 'relatorio' ? 'btn-primary' : 'btn-secondary'}`}
@@ -1208,6 +1214,17 @@ const AdminPanel = () => {
           >
             📊 Relatório
           </button>
+          {/* Lucro Total - apenas para Admin */}
+          {isAdmin() && (
+            <button
+              onClick={() => setView('lucro-total')}
+              className={`btn ${view === 'lucro-total' ? 'btn-primary' : 'btn-secondary'}`}
+              data-testid="view-lucro-total-btn"
+              style={{ background: view === 'lucro-total' ? '#059669' : '#6b7280' }}
+            >
+              💵 Lucro Total
+            </button>
+          )}
         </div>
 
         {/* ============== ABA RELATÓRIO ============== */}
