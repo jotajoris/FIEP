@@ -5537,7 +5537,7 @@ async def get_comissoes(current_user: dict = Depends(require_admin)):
     
     Sistema de Comissões:
     - Comissão fixa de 1.5% sobre o VALOR TOTAL DA VENDA
-    - Apenas para itens com status "entregue" ou "em_transito"
+    - Apenas para itens com status "entregue"
     - Lógica híbrida:
       1. Itens com lote numérico (ex: "Lote 42") → Usa mapeamento fixo de lotes por pessoa
       2. Itens sem lote numérico (ex: "CHAMAMENTO PÚBLICO...") → Usa campo responsavel do item
@@ -5603,8 +5603,8 @@ async def get_comissoes(current_user: dict = Depends(require_admin)):
             
         for item in po.get('items', []):
             item_status = item.get('status', '')
-            # Apenas itens "entregue" ou "em_transito" geram comissão
-            if item_status not in ['entregue', 'em_transito']:
+            # Apenas itens "entregue" geram comissão
+            if item_status != 'entregue':
                 continue
             
             # Calcular valor total de venda do item
