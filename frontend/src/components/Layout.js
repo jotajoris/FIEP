@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { apiGet, apiPatch, API } from '../utils/api';
 
 const Layout = ({ children }) => {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isAdminOrModerador } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [notificacoes, setNotificacoes] = useState([]);
@@ -171,9 +171,13 @@ const Layout = ({ children }) => {
 
                   {showUserMenu && (
                     <div style={{ position: 'absolute', top: '100%', right: '0', width: '200px', background: 'white', borderRadius: '8px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', zIndex: 1000, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                      {isAdmin() && (
+                      {isAdminOrModerador() && (
                         <>
                           <Link to="/admin" onClick={() => setShowUserMenu(false)} style={{ display: 'block', padding: '0.75rem 1rem', color: '#4a5568', textDecoration: 'none', fontSize: '0.9rem', borderBottom: '1px solid #f0f0f0' }}>⚙️ Admin</Link>
+                        </>
+                      )}
+                      {isAdmin() && (
+                        <>
                           <Link to="/create-po" onClick={() => setShowUserMenu(false)} style={{ display: 'block', padding: '0.75rem 1rem', color: '#4a5568', textDecoration: 'none', fontSize: '0.9rem', borderBottom: '1px solid #f0f0f0' }}>➕ Nova OC</Link>
                           <Link to="/resumo-completo" onClick={() => setShowUserMenu(false)} style={{ display: 'block', padding: '0.75rem 1rem', color: '#4a5568', textDecoration: 'none', fontSize: '0.9rem', borderBottom: '1px solid #f0f0f0' }}>📊 Resumo Completo</Link>
                         </>
@@ -211,9 +215,11 @@ const Layout = ({ children }) => {
             <Link to="/estoque" onClick={() => setMobileMenuOpen(false)} className={`mobile-menu-item ${isActive('/estoque') ? 'active' : ''}`}>📦 Estoque</Link>
             <Link to="/galeria" onClick={() => setMobileMenuOpen(false)} className={`mobile-menu-item ${isActive('/galeria') ? 'active' : ''}`}>🖼️ Galeria</Link>
             <div className="mobile-menu-divider"></div>
+            {isAdminOrModerador() && (
+              <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-item">⚙️ Admin</Link>
+            )}
             {isAdmin() && (
               <>
-                <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-item">⚙️ Admin</Link>
                 <Link to="/create-po" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-item">➕ Nova OC</Link>
                 <Link to="/resumo-completo" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-item">📊 Resumo</Link>
               </>
