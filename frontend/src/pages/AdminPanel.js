@@ -193,9 +193,13 @@ const LucroTotalSection = () => {
   const [configuracoes, setConfiguracoes] = useState({ percentual_imposto: 11, frete_correios_mensal: 0 });
   const [editandoConfig, setEditandoConfig] = useState(false);
   const [mostrarItens, setMostrarItens] = useState(false);
+  const [fechamentos, setFechamentos] = useState([]);
+  const [mostrarHistorico, setMostrarHistorico] = useState(false);
+  const [marcandoPago, setMarcandoPago] = useState(false);
 
   useEffect(() => {
     carregarResumo();
+    carregarFechamentos();
   }, []);
 
   const carregarResumo = async () => {
@@ -214,6 +218,18 @@ const LucroTotalSection = () => {
       alert('Erro ao carregar resumo de lucro');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const carregarFechamentos = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/fechamentos-lucro`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setFechamentos(response.data.fechamentos || []);
+    } catch (error) {
+      console.log('Nenhum fechamento anterior encontrado');
     }
   };
 
