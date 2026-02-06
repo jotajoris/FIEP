@@ -21,7 +21,7 @@ import Layout from './components/Layout';
 import UpdateNotification from './components/UpdateNotification';
 import './App.css';
 
-const ProtectedRoute = ({ children, adminOnly = false }) => {
+const ProtectedRoute = ({ children, adminOnly = false, adminOrModeradorOnly = false }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -32,7 +32,13 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
     return <Navigate to="/login" />;
   }
 
+  // Rota apenas para admin
   if (adminOnly && user.role !== 'admin') {
+    return <Navigate to="/" />;
+  }
+
+  // Rota para admin ou moderador
+  if (adminOrModeradorOnly && user.role !== 'admin' && user.role !== 'moderador') {
     return <Navigate to="/" />;
   }
 
@@ -82,7 +88,7 @@ function AppRoutes() {
       } />
       
       <Route path="/admin" element={
-        <ProtectedRoute adminOnly>
+        <ProtectedRoute adminOrModeradorOnly>
           <Layout><AdminPanel /></Layout>
         </ProtectedRoute>
       } />

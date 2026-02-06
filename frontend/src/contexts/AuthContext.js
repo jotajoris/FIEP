@@ -121,6 +121,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAdmin = () => user?.role === 'admin';
+  const isModerador = () => user?.role === 'moderador';
+  const isAdminOrModerador = () => user?.role === 'admin' || user?.role === 'moderador';
 
   const getAuthHeaders = () => {
     return token ? { Authorization: `Bearer ${token}` } : {};
@@ -137,6 +139,8 @@ export const AuthProvider = ({ children }) => {
     confirmResetPassword,
     refreshUser,
     isAdmin,
+    isModerador,
+    isAdminOrModerador,
     getAuthHeaders
   };
 
