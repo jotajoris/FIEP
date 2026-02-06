@@ -55,7 +55,7 @@ from models import (
 
 from auth import (
     verify_password, get_password_hash, create_access_token,
-    get_current_user, require_admin
+    get_current_user, require_admin, require_admin_or_moderator
 )
 
 import requests  # Para buscar CEP
