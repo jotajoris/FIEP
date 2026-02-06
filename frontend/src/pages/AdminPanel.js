@@ -188,7 +188,7 @@ const LucroTotalSection = () => {
   const [itensEntregues, setItensEntregues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [custosDiversos, setCustosDiversos] = useState([]);
-  const [novoCusto, setNovoCusto] = useState({ descricao: '', valor: '', categoria: 'outros' });
+  const [novoCusto, setNovoCusto] = useState({ descricao: '', valor: '', categoria: 'correios' });
   const [adicionandoCusto, setAdicionandoCusto] = useState(false);
   const [configuracoes, setConfiguracoes] = useState({ percentual_imposto: 11, frete_correios_mensal: 0 });
   const [editandoConfig, setEditandoConfig] = useState(false);
