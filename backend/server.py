@@ -1186,6 +1186,47 @@ async def demote_user_from_admin(
     return {"success": True, "message": f"Usuário {email} rebaixado para usuário comum"}
 
 
+# Endpoint genérico para alterar role (admin, moderador, user)
+@api_router.patch("/users/{email}/role")
+async def alterar_role_usuario(
+    email: str,
+    data: dict,
+    current_user: dict = Depends(require_admin)
+):
+    """Alterar role de um usuário (admin, moderador, user)"""
+    novo_role = data.get('role', '').lower()
+    
+    if novo_role not in ['admin', 'moderador', 'user']:
+        raise HTTPException(status_code=400, detail="Role inválido. Use: admin, moderador ou user")
+    
+    # Verificar se usuário existe
+    user = await db.users.find_one({"email": email}, {"_id": 0})
+    
+    if not user:
+        raise HTTPException(status_code=404, detail=f"Usuário {email} não encontrado")
+    
+    # Não permitir alterar a si mesmo para um role menor
+    if email == current_user.get('sub') and novo_role != 'admin':
+        raise HTTPException(status_code=400, detail="Você não pode rebaixar a si mesmo")
+    
+    role_atual = user.get('role', 'user')
+    if role_atual == novo_role:
+        role_names = {'admin': 'Administrador', 'moderador': 'Moderador', 'user': 'Usuário'}
+        return {"success": True, "message": f"Usuário {email} já é {role_names[novo_role]}"}
+    
+    # Atualizar role
+    result = await db.users.update_one(
+        {"email": email},
+        {"$set": {"role": novo_role}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=500, detail="Erro ao atualizar usuário")
+    
+    role_names = {'admin': 'Administrador', 'moderador': 'Moderador', 'user': 'Usuário'}
+    return {"success": True, "message": f"Usuário {email} alterado para {role_names[novo_role]}"}
+
+
 # ENDPOINT DE DEBUG DO UPDATE - MOSTRA EXATAMENTE O QUE ACONTECE
 @api_router.patch("/debug-update/{po_id}/{item_index}")
 async def debug_update(
