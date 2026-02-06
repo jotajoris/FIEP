@@ -131,24 +131,31 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
     - 📊 **Resumo de Lucro:** 
       - Itens Entregues, Total Venda, Total Compra, Frete Compra, Imposto, Frete Correios, Custos Diversos
       - **Lucro Líquido** em destaque
-      - Botão "Marcar como Pago/Não Pago"
+      - Botão "Fechar Período e Marcar como Pago"
     - 📋 **Custos Diversos:** 
+      - Dropdown com categorias: **📦 Correios**, Embalagem, Transporte, Estacionamento, Material, Outros
       - Tabela com descrição, categoria, valor, data
-      - Botão "+ Adicionar Custo"
-      - Botão "🗑️" para remover
+      - Botão "+ Adicionar Custo" e "🗑️" para remover
     - 📊 **Planilha de Itens Entregues:**
       - Colunas: Código, OC, Qtd, Compra, Venda, Frete, Imposto, Lucro
       - Linha de totais no rodapé
       - Expansível/ocultável
+    - 📜 **Histórico de Fechamentos:**
+      - Registra cada período fechado com totais
+      - Data, itens, valores, lucro de cada fechamento
+  - **Sistema de Fechamento de Período:**
+    - Ao clicar "Fechar Período", cria registro histórico na collection `fechamentos_lucro`
+    - Custos diversos são mantidos para referência
+    - Permite acompanhar lucro por período
   - **Novos Endpoints:**
     - `GET /api/admin/configuracoes` - Obtém percentual_imposto e frete_correios_mensal
     - `PATCH /api/admin/configuracoes` - Atualiza configurações
     - `GET /api/admin/resumo-lucro` - Retorna resumo completo com itens entregues
-    - `PATCH /api/admin/resumo-lucro/pagamento` - Marca lucro como pago/não pago
+    - `PATCH /api/admin/resumo-lucro/pagamento` - Fecha período e marca como pago
+    - `GET /api/admin/fechamentos-lucro` - Lista histórico de fechamentos
     - `GET /api/admin/custos-diversos` - Lista custos diversos
-    - `POST /api/admin/custos-diversos` - Adiciona novo custo
+    - `POST /api/admin/custos-diversos` - Adiciona novo custo (com categoria Correios)
     - `DELETE /api/admin/custos-diversos/{id}` - Remove custo
-  - **Testado:** 43 itens entregues, Lucro Líquido R$ 27.974,12
 
 - ✅ **CORREÇÃO: Bug ObjectId em `/admin/configuracoes`**
   - **Problema:** `TypeError: 'ObjectId' object is not iterable` ao criar configuração
