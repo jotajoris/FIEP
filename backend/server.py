@@ -6818,7 +6818,7 @@ async def adicionar_custo_diverso(
         "criado_por": current_user.get('sub', '')
     }
     
-    await db.custos_diversos.insert_one(custo)
+    await db.custos_diversos.insert_one(custo.copy())  # Usar cópia
     
     return {"success": True, "custo": custo}
 
