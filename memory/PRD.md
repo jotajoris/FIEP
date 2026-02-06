@@ -54,10 +54,20 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 - [x] Formato monetário brasileiro (R$)
 
 ### Usuários
-- [x] Dois roles: admin e user
+- [x] Três roles: `admin`, `moderador` e `user`
+  - **Admin:** Acesso total a todas as funcionalidades
+  - **Moderador:** Acesso ao Admin Panel mas sem ver Comissões, Usuários, Lucro Total e Resumo Completo
+  - **User:** Acesso básico, vê apenas seus próprios itens
 - [x] Login/Logout
 - [x] "Esqueci minha senha"
 - [x] Edição de perfil
+
+### Financeiro (Admin Only)
+- [x] Página "Lucro Total" com planilha de itens entregues
+- [x] Configuração de percentual de imposto
+- [x] Configuração de frete Correios mensal
+- [x] Gerenciamento de custos diversos
+- [x] Marcação de pagamento de lucro
 
 ## Arquitetura de Arquivos
 
