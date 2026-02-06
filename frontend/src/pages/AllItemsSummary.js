@@ -63,10 +63,57 @@ const AllItemsSummary = () => {
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  
+  // Configurações (Frete Correios, Imposto)
+  const [freteCorreiosMensal, setFreteCorreiosMensal] = useState(0);
+  const [percentualImposto, setPercentualImposto] = useState(11.0);
+  const [salvandoConfig, setSalvandoConfig] = useState(false);
+  const [editandoConfig, setEditandoConfig] = useState(false);
 
   useEffect(() => {
     loadAllItems();
+    loadConfiguracoes();
   }, []);
+
+  const loadConfiguracoes = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/admin/configuracoes`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setFreteCorreiosMensal(data.frete_correios_mensal || 0);
+        setPercentualImposto(data.percentual_imposto || 11.0);
+      }
+    } catch (err) {
+      console.log('Erro ao carregar configurações:', err);
+    }
+  };
+
+  const salvarConfiguracoes = async () => {
+    setSalvandoConfig(true);
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${API}/admin/configuracoes`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({
+          frete_correios_mensal: freteCorreiosMensal,
+          percentual_imposto: percentualImposto
+        })
+      });
+      setEditandoConfig(false);
+      alert('Configurações salvas com sucesso!');
+    } catch (err) {
+      alert('Erro ao salvar configurações: ' + err.message);
+    } finally {
+      setSalvandoConfig(false);
+    }
+  };
 
   const loadAllItems = async () => {
     try {
