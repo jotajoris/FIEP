@@ -598,6 +598,65 @@ const LucroTotalSection = () => {
           </div>
         )}
       </div>
+
+      {/* Histórico de Fechamentos */}
+      <div style={{ background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '12px', padding: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: '#374151' }}>
+            📜 Histórico de Fechamentos ({fechamentos.length})
+          </h3>
+          <button
+            onClick={() => setMostrarHistorico(!mostrarHistorico)}
+            style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#6b7280', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            {mostrarHistorico ? '▲ Ocultar' : '▼ Ver Histórico'}
+          </button>
+        </div>
+
+        {mostrarHistorico && (
+          fechamentos.length > 0 ? (
+            <div style={{ background: 'white', borderRadius: '8px', overflow: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                <thead>
+                  <tr style={{ background: '#f9fafb' }}>
+                    <th style={{ padding: '0.6rem', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Data Fechamento</th>
+                    <th style={{ padding: '0.6rem', textAlign: 'center', borderBottom: '2px solid #e5e7eb' }}>Itens</th>
+                    <th style={{ padding: '0.6rem', textAlign: 'right', borderBottom: '2px solid #e5e7eb' }}>Venda</th>
+                    <th style={{ padding: '0.6rem', textAlign: 'right', borderBottom: '2px solid #e5e7eb' }}>Compra</th>
+                    <th style={{ padding: '0.6rem', textAlign: 'right', borderBottom: '2px solid #e5e7eb' }}>Custos</th>
+                    <th style={{ padding: '0.6rem', textAlign: 'right', borderBottom: '2px solid #e5e7eb', fontWeight: '700' }}>Lucro</th>
+                    <th style={{ padding: '0.6rem', textAlign: 'center', borderBottom: '2px solid #e5e7eb' }}>Fechado Por</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {fechamentos.map((f, idx) => {
+                    const lucro = (f.resumo?.total_venda || 0) - (f.resumo?.total_compra || 0) - (f.resumo?.total_frete_compra || 0) - (f.resumo?.total_imposto || 0) - (f.resumo?.total_custos_diversos || 0);
+                    return (
+                      <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                        <td style={{ padding: '0.5rem 0.6rem' }}>
+                          {new Date(f.data_fechamento).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </td>
+                        <td style={{ padding: '0.5rem 0.6rem', textAlign: 'center' }}>{f.resumo?.total_itens_entregues || 0}</td>
+                        <td style={{ padding: '0.5rem 0.6rem', textAlign: 'right', color: '#3b82f6' }}>{formatBRL(f.resumo?.total_venda || 0)}</td>
+                        <td style={{ padding: '0.5rem 0.6rem', textAlign: 'right', color: '#f59e0b' }}>{formatBRL(f.resumo?.total_compra || 0)}</td>
+                        <td style={{ padding: '0.5rem 0.6rem', textAlign: 'right', color: '#dc2626' }}>{formatBRL(f.resumo?.total_custos_diversos || 0)}</td>
+                        <td style={{ padding: '0.5rem 0.6rem', textAlign: 'right', fontWeight: '700', color: lucro > 0 ? '#16a34a' : '#dc2626' }}>
+                          {formatBRL(lucro)}
+                        </td>
+                        <td style={{ padding: '0.5rem 0.6rem', textAlign: 'center', fontSize: '0.75rem' }}>{f.fechado_por}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', textAlign: 'center', color: '#6b7280' }}>
+              Nenhum fechamento realizado ainda.
+            </div>
+          )
+        )}
+      </div>
     </>
   );
 };
