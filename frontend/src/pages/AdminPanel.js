@@ -1442,42 +1442,122 @@ const AdminPanel = () => {
                               borderRadius: '12px',
                               fontSize: '0.8rem',
                               fontWeight: '600',
-                              background: user.role === 'admin' ? '#dbeafe' : '#f3f4f6',
-                              color: user.role === 'admin' ? '#1d4ed8' : '#6b7280'
+                              background: user.role === 'admin' ? '#dbeafe' : user.role === 'moderador' ? '#fef3c7' : '#f3f4f6',
+                              color: user.role === 'admin' ? '#1d4ed8' : user.role === 'moderador' ? '#d97706' : '#6b7280'
                             }}>
-                              {user.role === 'admin' ? '👑 Admin' : '👤 Usuário'}
+                              {user.role === 'admin' ? '👑 Admin' : user.role === 'moderador' ? '🔰 Moderador' : '👤 Usuário'}
                             </span>
                           </td>
                           <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                            {user.role === 'admin' ? (
-                              <button
-                                onClick={() => handleRebaixarAdmin(user.email)}
-                                disabled={promovendo === user.email}
-                                className="btn"
-                                style={{
-                                  padding: '0.4rem 0.75rem',
-                                  fontSize: '0.8rem',
-                                  background: '#fee2e2',
-                                  color: '#dc2626',
-                                  border: 'none',
-                                  borderRadius: '6px',
-                                  cursor: promovendo === user.email ? 'wait' : 'pointer'
-                                }}
-                              >
-                                {promovendo === user.email ? '⏳' : '⬇️ Rebaixar'}
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handlePromoverAdmin(user.email)}
-                                disabled={promovendo === user.email}
-                                className="btn"
-                                style={{
-                                  padding: '0.4rem 0.75rem',
-                                  fontSize: '0.8rem',
-                                  background: '#dbeafe',
-                                  color: '#1d4ed8',
-                                  border: 'none',
-                                  borderRadius: '6px',
+                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                              {user.role === 'admin' ? (
+                                <>
+                                  <button
+                                    onClick={() => handleAlterarRole(user.email, 'moderador')}
+                                    disabled={promovendo === user.email}
+                                    className="btn"
+                                    style={{
+                                      padding: '0.4rem 0.75rem',
+                                      fontSize: '0.75rem',
+                                      background: '#fef3c7',
+                                      color: '#d97706',
+                                      border: 'none',
+                                      borderRadius: '6px',
+                                      cursor: promovendo === user.email ? 'wait' : 'pointer'
+                                    }}
+                                  >
+                                    {promovendo === user.email ? '⏳' : '🔰 Moderador'}
+                                  </button>
+                                  <button
+                                    onClick={() => handleAlterarRole(user.email, 'user')}
+                                    disabled={promovendo === user.email}
+                                    className="btn"
+                                    style={{
+                                      padding: '0.4rem 0.75rem',
+                                      fontSize: '0.75rem',
+                                      background: '#fee2e2',
+                                      color: '#dc2626',
+                                      border: 'none',
+                                      borderRadius: '6px',
+                                      cursor: promovendo === user.email ? 'wait' : 'pointer'
+                                    }}
+                                  >
+                                    {promovendo === user.email ? '⏳' : '⬇️ Usuário'}
+                                  </button>
+                                </>
+                              ) : user.role === 'moderador' ? (
+                                <>
+                                  <button
+                                    onClick={() => handleAlterarRole(user.email, 'admin')}
+                                    disabled={promovendo === user.email}
+                                    className="btn"
+                                    style={{
+                                      padding: '0.4rem 0.75rem',
+                                      fontSize: '0.75rem',
+                                      background: '#dbeafe',
+                                      color: '#1d4ed8',
+                                      border: 'none',
+                                      borderRadius: '6px',
+                                      cursor: promovendo === user.email ? 'wait' : 'pointer'
+                                    }}
+                                  >
+                                    {promovendo === user.email ? '⏳' : '👑 Admin'}
+                                  </button>
+                                  <button
+                                    onClick={() => handleAlterarRole(user.email, 'user')}
+                                    disabled={promovendo === user.email}
+                                    className="btn"
+                                    style={{
+                                      padding: '0.4rem 0.75rem',
+                                      fontSize: '0.75rem',
+                                      background: '#fee2e2',
+                                      color: '#dc2626',
+                                      border: 'none',
+                                      borderRadius: '6px',
+                                      cursor: promovendo === user.email ? 'wait' : 'pointer'
+                                    }}
+                                  >
+                                    {promovendo === user.email ? '⏳' : '⬇️ Usuário'}
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => handleAlterarRole(user.email, 'admin')}
+                                    disabled={promovendo === user.email}
+                                    className="btn"
+                                    style={{
+                                      padding: '0.4rem 0.75rem',
+                                      fontSize: '0.75rem',
+                                      background: '#dbeafe',
+                                      color: '#1d4ed8',
+                                      border: 'none',
+                                      borderRadius: '6px',
+                                      cursor: promovendo === user.email ? 'wait' : 'pointer'
+                                    }}
+                                  >
+                                    {promovendo === user.email ? '⏳' : '👑 Admin'}
+                                  </button>
+                                  <button
+                                    onClick={() => handleAlterarRole(user.email, 'moderador')}
+                                    disabled={promovendo === user.email}
+                                    className="btn"
+                                    style={{
+                                      padding: '0.4rem 0.75rem',
+                                      fontSize: '0.75rem',
+                                      background: '#fef3c7',
+                                      color: '#d97706',
+                                      border: 'none',
+                                      borderRadius: '6px',
+                                      cursor: promovendo === user.email ? 'wait' : 'pointer'
+                                    }}
+                                  >
+                                    {promovendo === user.email ? '⏳' : '🔰 Moderador'}
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
                                   cursor: promovendo === user.email ? 'wait' : 'pointer'
                                 }}
                               >
