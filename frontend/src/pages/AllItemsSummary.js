@@ -339,8 +339,13 @@ const AllItemsSummary = () => {
             {formatBRL(totalLucroRealizado)}
           </div>
           <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-            (Em trânsito + Entregues)
+            (Em trânsito + Entregues - Frete Correios)
           </div>
+          {freteCorreiosMensal > 0 && (
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.15rem' }}>
+              Frete: -{formatBRL(freteCorreiosMensal)}
+            </div>
+          )}
         </div>
       </div>
 
