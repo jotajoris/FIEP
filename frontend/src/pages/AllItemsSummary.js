@@ -239,7 +239,7 @@ const AllItemsSummary = () => {
           </div>
         </div>
         <div className="stat-card" style={{ borderColor: '#dc2626' }}>
-          <div className="stat-label">Imposto Previsto (11%)</div>
+          <div className="stat-label">Imposto Previsto ({percentualImposto}%)</div>
           <div className="stat-value" style={{ color: '#dc2626', fontSize: '1.8rem' }}>
             {formatBRL(totalImpostoPrevisto)}
           </div>
