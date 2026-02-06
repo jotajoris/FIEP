@@ -20,6 +20,12 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
 
+  const logout = () => {
+    localStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
+  };
+
   useEffect(() => {
     if (token) {
       try {
@@ -61,12 +67,6 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       throw new Error(error.response?.data?.detail || 'Erro ao fazer login');
     }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
   };
 
   const changePassword = async (currentPassword, newPassword) => {
