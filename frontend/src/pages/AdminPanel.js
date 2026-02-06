@@ -433,11 +433,12 @@ const LucroTotalSection = () => {
                   onChange={(e) => setNovoCusto(prev => ({ ...prev, categoria: e.target.value }))}
                   style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px' }}
                 >
-                  <option value="embalagem">Embalagem</option>
-                  <option value="transporte">Transporte</option>
-                  <option value="estacionamento">Estacionamento</option>
-                  <option value="material">Material</option>
-                  <option value="outros">Outros</option>
+                  <option value="correios">📦 Correios</option>
+                  <option value="embalagem">📦 Embalagem</option>
+                  <option value="transporte">🚗 Transporte</option>
+                  <option value="estacionamento">🅿️ Estacionamento</option>
+                  <option value="material">🛠️ Material</option>
+                  <option value="outros">📋 Outros</option>
                 </select>
               </div>
               <button
