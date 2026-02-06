@@ -501,7 +501,7 @@ const LucroTotalSection = () => {
           </div>
         ) : (
           <div style={{ background: 'white', padding: '1.5rem', borderRadius: '8px', textAlign: 'center', color: '#6b7280' }}>
-            Nenhum custo diverso cadastrado. Clique em "+ Adicionar Custo" para começar.
+            Nenhum custo diverso cadastrado. Clique em &quot;+ Adicionar Custo&quot; para começar.
           </div>
         )}
       </div>
