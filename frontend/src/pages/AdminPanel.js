@@ -1526,8 +1526,8 @@ const AdminPanel = () => {
           </>
         )}
 
-        {/* ============== ABA COMISSÕES ============== */}
-        {view === 'comissoes' && (
+        {/* ============== ABA COMISSÕES (Admin Only) ============== */}
+        {view === 'comissoes' && isAdmin() && (
           <>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem' }}>Comissões por Responsável</h2>
             <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '1rem' }}>
