@@ -281,14 +281,27 @@ const LucroTotalSection = () => {
   };
 
   const marcarPagamento = async (pago) => {
+    if (pago && !window.confirm('Deseja fechar este período e marcar como PAGO?\n\nIsso irá:\n• Arquivar o resumo atual no histórico\n• Os custos diversos serão mantidos para referência\n• Você poderá continuar adicionando novos custos')) {
+      return;
+    }
+    
+    setMarcandoPago(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.patch(`${API}/admin/resumo-lucro/pagamento`, { pago }, {
+      const response = await axios.patch(`${API}/admin/resumo-lucro/pagamento`, { pago }, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      if (response.data.message) {
+        alert(response.data.message);
+      }
+      
       carregarResumo();
+      carregarFechamentos();
     } catch (error) {
       alert('Erro ao atualizar status de pagamento');
+    } finally {
+      setMarcandoPago(false);
     }
   };
 
