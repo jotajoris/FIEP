@@ -6943,21 +6943,109 @@ async def marcar_pagamento_lucro(
     data: dict,
     current_user: dict = Depends(require_admin)
 ):
-    """Marca o lucro como pago ou não pago"""
+    """Marca o lucro como pago e cria histórico de fechamento"""
     pago = data.get("pago", False)
     
-    await db.configuracoes.update_one(
-        {"tipo": "pagamento_lucro"},
-        {"$set": {
-            "pago": pago,
-            "data_pagamento": datetime.now(timezone.utc).isoformat() if pago else None,
-            "marcado_por": current_user.get('sub', ''),
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }},
-        upsert=True
-    )
-    
-    return {"success": True, "pago": pago}
+    if pago:
+        # Buscar resumo atual para arquivar
+        config = await db.configuracoes.find_one({"tipo": "geral"}, {"_id": 0}) or {
+            "percentual_imposto": 11.0,
+            "frete_correios_mensal": 0
+        }
+        
+        # Buscar custos diversos atuais
+        cursor_custos = db.custos_diversos.find({}, {"_id": 0})
+        custos_atuais = await cursor_custos.to_list(1000)
+        total_custos = sum(c.get('valor', 0) for c in custos_atuais)
+        
+        # Calcular totais de itens entregues
+        cursor = db.purchase_orders.find(
+            {"items.status": "entregue"},
+            {"_id": 0, "items": 1}
+        )
+        
+        total_venda = 0
+        total_compra = 0
+        total_frete = 0
+        total_itens = 0
+        
+        async for po in cursor:
+            for item in po.get('items', []):
+                if item.get('status') == 'entregue':
+                    qtd = item.get('quantidade', 0)
+                    total_venda += (item.get('preco_venda', 0) or 0) * qtd
+                    total_compra += (item.get('preco_compra', 0) or 0) * qtd
+                    total_frete += item.get('frete_compra', 0) or 0
+                    total_itens += 1
+        
+        # Criar registro de fechamento
+        fechamento = {
+            "id": str(uuid.uuid4()),
+            "data_fechamento": datetime.now(timezone.utc).isoformat(),
+            "fechado_por": current_user.get('sub', ''),
+            "periodo_inicio": None,  # Pode ser preenchido manualmente
+            "periodo_fim": datetime.now(timezone.utc).isoformat(),
+            "resumo": {
+                "total_itens_entregues": total_itens,
+                "total_venda": round(total_venda, 2),
+                "total_compra": round(total_compra, 2),
+                "total_frete_compra": round(total_frete, 2),
+                "percentual_imposto": config.get('percentual_imposto', 11),
+                "total_imposto": round(total_venda * (config.get('percentual_imposto', 11) / 100), 2),
+                "total_custos_diversos": round(total_custos, 2),
+            },
+            "custos_diversos": custos_atuais,
+            "status": "pago"
+        }
+        
+        await db.fechamentos_lucro.insert_one(fechamento.copy())
+        
+        # Limpar custos diversos para o próximo período (opcional - manter histórico)
+        # await db.custos_diversos.delete_many({})
+        
+        # Atualizar status de pagamento
+        await db.configuracoes.update_one(
+            {"tipo": "pagamento_lucro"},
+            {"$set": {
+                "pago": True,
+                "data_pagamento": datetime.now(timezone.utc).isoformat(),
+                "marcado_por": current_user.get('sub', ''),
+                "ultimo_fechamento_id": fechamento["id"],
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }},
+            upsert=True
+        )
+        
+        return {
+            "success": True, 
+            "pago": True,
+            "fechamento_id": fechamento["id"],
+            "message": f"Período fechado com {total_itens} itens. Custos diversos mantidos no histórico."
+        }
+    else:
+        # Desmarcar como pago
+        await db.configuracoes.update_one(
+            {"tipo": "pagamento_lucro"},
+            {"$set": {
+                "pago": False,
+                "data_pagamento": None,
+                "marcado_por": current_user.get('sub', ''),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }},
+            upsert=True
+        )
+        
+        return {"success": True, "pago": False}
+
+
+@api_router.get("/admin/fechamentos-lucro")
+async def listar_fechamentos_lucro(
+    current_user: dict = Depends(require_admin)
+):
+    """Lista histórico de fechamentos de lucro"""
+    cursor = db.fechamentos_lucro.find({}, {"_id": 0}).sort("data_fechamento", -1)
+    fechamentos = await cursor.to_list(100)
+    return {"fechamentos": fechamentos, "total": len(fechamentos)}
 
 
 @api_router.get("/dados-bancarios/todas-ocs")
