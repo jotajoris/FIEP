@@ -63,3 +63,22 @@ async def require_admin(current_user: dict = Depends(get_current_user)):
             detail="Acesso negado. Apenas administradores."
         )
     return current_user
+
+async def require_admin_or_moderator(current_user: dict = Depends(get_current_user)):
+    """Permite acesso para admin ou moderador"""
+    role = current_user.get("role")
+    if role not in ["admin", "moderador"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acesso negado. Apenas administradores ou moderadores."
+        )
+    return current_user
+
+async def require_moderator(current_user: dict = Depends(get_current_user)):
+    """Permite acesso apenas para moderador"""
+    if current_user.get("role") != "moderador":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acesso negado. Apenas moderadores."
+        )
+    return current_user
