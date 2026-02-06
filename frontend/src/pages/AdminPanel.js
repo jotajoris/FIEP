@@ -505,6 +505,69 @@ const LucroTotalSection = () => {
           </div>
         )}
       </div>
+
+      {/* Tabela de Itens Entregues (Planilha Lucro Total) */}
+      <div style={{ background: '#f0fdf4', border: '2px solid #22c55e', borderRadius: '12px', padding: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: '#166534' }}>
+            📊 Planilha de Lucro - Itens Entregues ({itensEntregues.length})
+          </h3>
+          <button
+            onClick={() => setMostrarItens(!mostrarItens)}
+            style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#22c55e', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            {mostrarItens ? '▲ Ocultar' : '▼ Expandir'}
+          </button>
+        </div>
+
+        {mostrarItens && (
+          <div style={{ background: 'white', borderRadius: '8px', overflow: 'auto', maxHeight: '500px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+              <thead style={{ position: 'sticky', top: 0, background: '#f9fafb' }}>
+                <tr>
+                  <th style={{ padding: '0.6rem', textAlign: 'left', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap' }}>Código</th>
+                  <th style={{ padding: '0.6rem', textAlign: 'left', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap' }}>OC</th>
+                  <th style={{ padding: '0.6rem', textAlign: 'center', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap' }}>Qtd</th>
+                  <th style={{ padding: '0.6rem', textAlign: 'right', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap' }}>Compra</th>
+                  <th style={{ padding: '0.6rem', textAlign: 'right', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap' }}>Venda</th>
+                  <th style={{ padding: '0.6rem', textAlign: 'right', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap' }}>Frete</th>
+                  <th style={{ padding: '0.6rem', textAlign: 'right', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap' }}>Imposto ({resumo?.percentual_imposto || 11}%)</th>
+                  <th style={{ padding: '0.6rem', textAlign: 'right', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap', fontWeight: '700', color: '#166534' }}>Lucro</th>
+                </tr>
+              </thead>
+              <tbody>
+                {itensEntregues.map((item, idx) => {
+                  const lucroItem = item.valor_venda_total - item.valor_compra_total - item.frete_compra - item.imposto;
+                  return (
+                    <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                      <td style={{ padding: '0.5rem 0.6rem', fontWeight: '600' }}>{item.codigo_item}</td>
+                      <td style={{ padding: '0.5rem 0.6rem' }}>{item.numero_oc}</td>
+                      <td style={{ padding: '0.5rem 0.6rem', textAlign: 'center' }}>{item.quantidade}</td>
+                      <td style={{ padding: '0.5rem 0.6rem', textAlign: 'right', color: '#f59e0b' }}>{formatBRL(item.valor_compra_total)}</td>
+                      <td style={{ padding: '0.5rem 0.6rem', textAlign: 'right', color: '#3b82f6' }}>{formatBRL(item.valor_venda_total)}</td>
+                      <td style={{ padding: '0.5rem 0.6rem', textAlign: 'right', color: '#6366f1' }}>{formatBRL(item.frete_compra)}</td>
+                      <td style={{ padding: '0.5rem 0.6rem', textAlign: 'right', color: '#dc2626' }}>{formatBRL(item.imposto)}</td>
+                      <td style={{ padding: '0.5rem 0.6rem', textAlign: 'right', fontWeight: '700', color: lucroItem > 0 ? '#16a34a' : '#dc2626' }}>
+                        {formatBRL(lucroItem)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr style={{ background: '#dcfce7', fontWeight: '700' }}>
+                  <td colSpan={3} style={{ padding: '0.75rem', fontSize: '0.9rem' }}>TOTAIS</td>
+                  <td style={{ padding: '0.75rem', textAlign: 'right', color: '#f59e0b' }}>{formatBRL(resumo?.total_compra || 0)}</td>
+                  <td style={{ padding: '0.75rem', textAlign: 'right', color: '#3b82f6' }}>{formatBRL(resumo?.total_venda || 0)}</td>
+                  <td style={{ padding: '0.75rem', textAlign: 'right', color: '#6366f1' }}>{formatBRL(resumo?.total_frete_compra || 0)}</td>
+                  <td style={{ padding: '0.75rem', textAlign: 'right', color: '#dc2626' }}>{formatBRL(resumo?.total_imposto || 0)}</td>
+                  <td style={{ padding: '0.75rem', textAlign: 'right', color: '#16a34a', fontSize: '1rem' }}>{formatBRL(resumo?.lucro_liquido || 0)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+      </div>
     </>
   );
 };
