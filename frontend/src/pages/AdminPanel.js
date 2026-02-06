@@ -1558,13 +1558,6 @@ const AdminPanel = () => {
                               )}
                             </div>
                           </td>
-                                  cursor: promovendo === user.email ? 'wait' : 'pointer'
-                                }}
-                              >
-                                {promovendo === user.email ? '⏳' : '⬆️ Promover a Admin'}
-                              </button>
-                            )}
-                          </td>
                         </tr>
                       ))
                     )}
