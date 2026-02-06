@@ -891,41 +891,21 @@ const AdminPanel = () => {
   };
 
   // Promover usuário a admin
-  const handlePromoverAdmin = async (email) => {
-    if (!window.confirm(`Promover ${email} a administrador?`)) return;
+  // Alterar role do usuário (admin, moderador, user)
+  const handleAlterarRole = async (email, novoRole) => {
+    const roleNames = { admin: 'Administrador', moderador: 'Moderador', user: 'Usuário' };
+    if (!window.confirm(`Alterar ${email} para ${roleNames[novoRole]}?`)) return;
     
     setPromovendo(email);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API}/users/${encodeURIComponent(email)}/promote-admin`, {
+      const response = await fetch(`${API}/users/${encodeURIComponent(email)}/role`, {
         method: 'PATCH',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      
-      if (response.ok) {
-        alert(`✅ ${data.message}`);
-        loadUsuarios();
-      } else {
-        alert(`❌ Erro: ${data.detail || 'Erro desconhecido'}`);
-      }
-    } catch (error) {
-      alert(`❌ Erro: ${error.message}`);
-    } finally {
-      setPromovendo(null);
-    }
-  };
-
-  // Rebaixar admin para usuário
-  const handleRebaixarAdmin = async (email) => {
-    if (!window.confirm(`Rebaixar ${email} para usuário comum?`)) return;
-    
-    setPromovendo(email);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API}/users/${encodeURIComponent(email)}/demote-admin`, {
-        method: 'PATCH',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ role: novoRole })
       });
       const data = await response.json();
       
