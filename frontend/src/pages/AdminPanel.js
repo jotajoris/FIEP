@@ -1232,8 +1232,13 @@ const AdminPanel = () => {
           <RelatorioSection />
         )}
 
+        {/* ============== ABA LUCRO TOTAL (Admin Only) ============== */}
+        {view === 'lucro-total' && isAdmin() && (
+          <LucroTotalSection />
+        )}
+
         {/* ============== ABA USUÁRIOS ============== */}
-        {view === 'usuarios' && (
+        {view === 'usuarios' && isAdmin() && (
           <>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem' }}>Gerenciamento de Usuários</h2>
             <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '1rem' }}>
