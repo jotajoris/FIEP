@@ -507,10 +507,11 @@ const LucroTotalSection = () => {
 };
 
 const AdminPanel = () => {
+  const { isAdmin } = useAuth();
   const [comissoes, setComissoes] = useState([]);
   const [notasFiscais, setNotasFiscais] = useState({ notas_compra: [], notas_venda: [], notas_duplicadas: [], total_duplicadas: 0 });
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState('comissoes');
+  const [view, setView] = useState(isAdmin() ? 'comissoes' : 'notas'); // Moderador começa em notas
   const [expandedResponsavel, setExpandedResponsavel] = useState(null);
   const [itensResponsavel, setItensResponsavel] = useState([]);
   const [selectedItens, setSelectedItens] = useState([]);
