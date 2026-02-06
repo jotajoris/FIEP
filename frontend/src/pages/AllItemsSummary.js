@@ -64,11 +64,8 @@ const AllItemsSummary = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   
-  // Configurações (Frete Correios, Imposto)
-  const [freteCorreiosMensal, setFreteCorreiosMensal] = useState(0);
+  // Configurações (apenas leitura - edição no Admin Panel)
   const [percentualImposto, setPercentualImposto] = useState(11.0);
-  const [salvandoConfig, setSalvandoConfig] = useState(false);
-  const [editandoConfig, setEditandoConfig] = useState(false);
 
   useEffect(() => {
     loadAllItems();
@@ -83,7 +80,6 @@ const AllItemsSummary = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        setFreteCorreiosMensal(data.frete_correios_mensal || 0);
         setPercentualImposto(data.percentual_imposto || 11.0);
       }
     } catch (err) {
