@@ -181,6 +181,330 @@ const RelatorioSection = () => {
   );
 };
 
+// Componente de Lucro Total (ADMIN ONLY)
+const LucroTotalSection = () => {
+  const [resumo, setResumo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [custosDiversos, setCustosDiversos] = useState([]);
+  const [novoCusto, setNovoCusto] = useState({ descricao: '', valor: '', categoria: 'outros' });
+  const [adicionandoCusto, setAdicionandoCusto] = useState(false);
+  const [configuracoes, setConfiguracoes] = useState({ percentual_imposto: 11, frete_correios_mensal: 0 });
+  const [editandoConfig, setEditandoConfig] = useState(false);
+
+  useEffect(() => {
+    carregarResumo();
+  }, []);
+
+  const carregarResumo = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/resumo-lucro`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setResumo(response.data.resumo);
+      setCustosDiversos(response.data.custos_diversos || []);
+      setConfiguracoes(response.data.configuracoes || { percentual_imposto: 11, frete_correios_mensal: 0 });
+    } catch (error) {
+      console.error('Erro ao carregar resumo:', error);
+      alert('Erro ao carregar resumo de lucro');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const adicionarCusto = async () => {
+    if (!novoCusto.descricao || !novoCusto.valor) {
+      alert('Preencha descrição e valor');
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/custos-diversos`, novoCusto, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNovoCusto({ descricao: '', valor: '', categoria: 'outros' });
+      setAdicionandoCusto(false);
+      carregarResumo();
+    } catch (error) {
+      alert('Erro ao adicionar custo: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const removerCusto = async (custoId) => {
+    if (!window.confirm('Remover este custo?')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/admin/custos-diversos/${custoId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      carregarResumo();
+    } catch (error) {
+      alert('Erro ao remover custo');
+    }
+  };
+
+  const salvarConfiguracoes = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/admin/configuracoes`, configuracoes, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setEditandoConfig(false);
+      carregarResumo();
+      alert('Configurações salvas!');
+    } catch (error) {
+      alert('Erro ao salvar configurações');
+    }
+  };
+
+  const marcarPagamento = async (pago) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/admin/resumo-lucro/pagamento`, { pago }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      carregarResumo();
+    } catch (error) {
+      alert('Erro ao atualizar status de pagamento');
+    }
+  };
+
+  if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Carregando...</div>;
+
+  return (
+    <>
+      <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem', color: '#059669' }}>
+        💰 Lucro Total - Visão Completa
+      </h2>
+
+      {/* Configurações */}
+      <div style={{ background: '#fef3c7', border: '2px solid #f59e0b', borderRadius: '12px', padding: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: '#92400e' }}>⚙️ Configurações</h3>
+          {!editandoConfig ? (
+            <button onClick={() => setEditandoConfig(true)} style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+              ✏️ Editar
+            </button>
+          ) : (
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button onClick={() => setEditandoConfig(false)} style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#6b7280', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={salvarConfiguracoes} style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#16a34a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>✓ Salvar</button>
+            </div>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#78350f', marginBottom: '0.25rem' }}>Imposto (%)</label>
+            {editandoConfig ? (
+              <input type="number" step="0.1" value={configuracoes.percentual_imposto} onChange={(e) => setConfiguracoes(prev => ({ ...prev, percentual_imposto: parseFloat(e.target.value) || 0 }))} style={{ padding: '0.4rem', border: '1px solid #d1d5db', borderRadius: '4px', width: '80px' }} />
+            ) : (
+              <span style={{ fontSize: '1.1rem', fontWeight: '700', color: '#dc2626' }}>{configuracoes.percentual_imposto}%</span>
+            )}
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#78350f', marginBottom: '0.25rem' }}>Frete Correios Mensal (R$)</label>
+            {editandoConfig ? (
+              <input type="number" step="0.01" value={configuracoes.frete_correios_mensal} onChange={(e) => setConfiguracoes(prev => ({ ...prev, frete_correios_mensal: parseFloat(e.target.value) || 0 }))} style={{ padding: '0.4rem', border: '1px solid #d1d5db', borderRadius: '4px', width: '120px' }} />
+            ) : (
+              <span style={{ fontSize: '1.1rem', fontWeight: '700', color: '#f59e0b' }}>{formatBRL(configuracoes.frete_correios_mensal)}</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Resumo Principal */}
+      {resumo && (
+        <div style={{ 
+          background: resumo.pago ? '#dcfce7' : '#fef2f2', 
+          border: `3px solid ${resumo.pago ? '#22c55e' : '#ef4444'}`, 
+          borderRadius: '12px', 
+          padding: '1.5rem', 
+          marginBottom: '1.5rem' 
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '700', color: resumo.pago ? '#166534' : '#dc2626' }}>
+              {resumo.pago ? '✅ LUCRO PAGO' : '⏳ LUCRO PENDENTE'}
+            </h3>
+            <button
+              onClick={() => marcarPagamento(!resumo.pago)}
+              style={{
+                padding: '0.5rem 1rem',
+                fontSize: '0.9rem',
+                fontWeight: '700',
+                background: resumo.pago ? '#dc2626' : '#16a34a',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              {resumo.pago ? '❌ Marcar como Não Pago' : '✓ Marcar como Pago'}
+            </button>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+            <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Itens Entregues</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#8b5cf6' }}>{resumo.total_itens_entregues}</div>
+            </div>
+            <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Total Venda</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: '700', color: '#3b82f6' }}>{formatBRL(resumo.total_venda)}</div>
+            </div>
+            <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Total Compra</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: '700', color: '#f59e0b' }}>{formatBRL(resumo.total_compra)}</div>
+            </div>
+            <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Frete Compra</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: '700', color: '#6366f1' }}>{formatBRL(resumo.total_frete_compra)}</div>
+            </div>
+            <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Imposto ({resumo.percentual_imposto}%)</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: '700', color: '#dc2626' }}>{formatBRL(resumo.total_imposto)}</div>
+            </div>
+            <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Frete Correios</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: '700', color: '#a855f7' }}>{formatBRL(resumo.frete_correios_mensal)}</div>
+            </div>
+            <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Custos Diversos</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: '700', color: '#ec4899' }}>{formatBRL(resumo.total_custos_diversos)}</div>
+            </div>
+            <div style={{ background: resumo.lucro_liquido > 0 ? '#dcfce7' : '#fef2f2', padding: '1rem', borderRadius: '8px', textAlign: 'center', border: '2px solid ' + (resumo.lucro_liquido > 0 ? '#22c55e' : '#ef4444') }}>
+              <div style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: '600' }}>LUCRO LÍQUIDO</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: '800', color: resumo.lucro_liquido > 0 ? '#16a34a' : '#dc2626' }}>
+                {formatBRL(resumo.lucro_liquido)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custos Diversos */}
+      <div style={{ background: '#fdf2f8', border: '2px solid #ec4899', borderRadius: '12px', padding: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: '#9d174d' }}>
+            📋 Custos Diversos ({custosDiversos.length})
+          </h3>
+          <button
+            onClick={() => setAdicionandoCusto(!adicionandoCusto)}
+            style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#ec4899', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            {adicionandoCusto ? 'Cancelar' : '+ Adicionar Custo'}
+          </button>
+        </div>
+
+        {adicionandoCusto && (
+          <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem' }}>Descrição</label>
+                <input
+                  type="text"
+                  value={novoCusto.descricao}
+                  onChange={(e) => setNovoCusto(prev => ({ ...prev, descricao: e.target.value }))}
+                  placeholder="Ex: Caixas de papelão"
+                  style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', width: '200px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem' }}>Valor (R$)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={novoCusto.valor}
+                  onChange={(e) => setNovoCusto(prev => ({ ...prev, valor: e.target.value }))}
+                  placeholder="0.00"
+                  style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', width: '100px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem' }}>Categoria</label>
+                <select
+                  value={novoCusto.categoria}
+                  onChange={(e) => setNovoCusto(prev => ({ ...prev, categoria: e.target.value }))}
+                  style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px' }}
+                >
+                  <option value="embalagem">Embalagem</option>
+                  <option value="transporte">Transporte</option>
+                  <option value="estacionamento">Estacionamento</option>
+                  <option value="material">Material</option>
+                  <option value="outros">Outros</option>
+                </select>
+              </div>
+              <button
+                onClick={adicionarCusto}
+                style={{ padding: '0.5rem 1rem', background: '#16a34a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+              >
+                ✓ Adicionar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {custosDiversos.length > 0 ? (
+          <div style={{ background: 'white', borderRadius: '8px', overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+              <thead>
+                <tr style={{ background: '#f9fafb' }}>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Descrição</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>Categoria</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Valor</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>Data</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {custosDiversos.map((custo) => (
+                  <tr key={custo.id}>
+                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>{custo.descricao}</td>
+                    <td style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>
+                      <span style={{ padding: '0.25rem 0.5rem', background: '#f3f4f6', borderRadius: '4px', fontSize: '0.75rem' }}>
+                        {custo.categoria}
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb', fontWeight: '600', color: '#dc2626' }}>
+                      {formatBRL(custo.valor)}
+                    </td>
+                    <td style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #e5e7eb', fontSize: '0.8rem', color: '#6b7280' }}>
+                      {custo.data ? new Date(custo.data).toLocaleDateString('pt-BR') : '-'}
+                    </td>
+                    <td style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>
+                      <button
+                        onClick={() => removerCusto(custo.id)}
+                        style={{ padding: '0.25rem 0.5rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
+                      >
+                        🗑️
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr style={{ background: '#fdf2f8' }}>
+                  <td colSpan={2} style={{ padding: '0.75rem', fontWeight: '700' }}>TOTAL CUSTOS DIVERSOS</td>
+                  <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: '800', color: '#ec4899', fontSize: '1.1rem' }}>
+                    {formatBRL(custosDiversos.reduce((sum, c) => sum + (c.valor || 0), 0))}
+                  </td>
+                  <td colSpan={2}></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        ) : (
+          <div style={{ background: 'white', padding: '1.5rem', borderRadius: '8px', textAlign: 'center', color: '#6b7280' }}>
+            Nenhum custo diverso cadastrado. Clique em "+ Adicionar Custo" para começar.
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
 const AdminPanel = () => {
   const [comissoes, setComissoes] = useState([]);
   const [notasFiscais, setNotasFiscais] = useState({ notas_compra: [], notas_venda: [], notas_duplicadas: [], total_duplicadas: 0 });
