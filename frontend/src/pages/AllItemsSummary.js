@@ -146,9 +146,9 @@ const AllItemsSummary = () => {
     return sum + (valorVenda * (percentualImposto / 100));
   }, 0);
   
-  // Lucro realizado (soma do lucro dos itens em_transito + entregues APENAS)
+  // Lucro realizado (soma do lucro dos itens ENTREGUES APENAS)
   const totalLucroRealizado = filteredItems
-    .filter(item => item.status === 'em_transito' || item.status === 'entregue')
+    .filter(item => item.status === 'entregue')
     .reduce((sum, item) => sum + (item.lucro_liquido || 0), 0);
 
   // Calcular total de comissões a pagar (baseado nos lotes, itens entregue/em_transito/pronto_envio)
@@ -231,7 +231,7 @@ const AllItemsSummary = () => {
             {formatBRL(totalLucroRealizado)}
           </div>
           <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-            (Em trânsito + Entregues)
+            (Apenas Entregues)
           </div>
         </div>
       </div>
