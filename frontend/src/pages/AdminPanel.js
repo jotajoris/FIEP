@@ -1752,7 +1752,7 @@ const AdminPanel = () => {
               border: '1px solid #86efac',
               marginBottom: '1.5rem'
             }}>
-              <div style={{ fontSize: '0.85rem', color: '#047857', fontWeight: '600' }}>TOTAL VALOR VENDIDO (Entregue/Em Trânsito)</div>
+              <div style={{ fontSize: '0.85rem', color: '#047857', fontWeight: '600' }}>TOTAL VALOR VENDIDO (Entregues)</div>
               <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#065f46' }}>{formatBRL(totalVendaEntregue)}</div>
               <div style={{ fontSize: '0.9rem', color: '#047857', marginTop: '0.25rem' }}>
                 Comissão Total (1,5%): <strong>{formatBRL(totalVendaEntregue * 0.015)}</strong>
@@ -1761,7 +1761,7 @@ const AdminPanel = () => {
 
             {comissoes.length === 0 ? (
               <p style={{ textAlign: 'center', color: '#718096', padding: '2rem' }}>
-                Nenhum responsável com itens entregues/em trânsito ainda.
+                Nenhum responsável com itens entregues ainda.
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
