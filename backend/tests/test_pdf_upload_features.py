@@ -14,7 +14,7 @@ import io
 import uuid
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ordertrack-30.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://fiep-purchasing.preview.emergentagent.com').rstrip('/')
 
 
 def create_test_pdf_content(numero_oc: str, items: list, requisitante_nome: str = "JOAO SILVA", 

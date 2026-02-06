@@ -6,127 +6,78 @@ The user requested a web platform to manage purchase orders (OCs) for their clie
 - Implement a drag-and-drop UI for PDF uploads.
 - Automatically assign items to responsible users.
 - Track item status (, , , , , , ).
-- Two user roles:  and .
+- User roles: , , and ** (new)**.
 - Forgot Password and user profile editing functionality.
 - A page to view all items assigned to a specific person.
 - A dashboard with search, filtering, and bulk actions.
 - An admin-only feature to edit any detail of an existing OC.
-- A system to track package deliveries.
+- A system to track package deliveries with automatic status updates via Correios API.
 - A summary page showing key financial metrics.
 - Format all monetary values in Brazilian standard (R$).
 - An Observação text field for each item.
-- Breakdown of item counts by status on the Dashboard.
-- Allow editing all fields on the OC creation preview screen.
-- An autocomplete field for suppliers (Fornecedor).
 - On the Em Separação page, manage supplier/sales invoices (Notas Fiscais).
-- Extract NCM codes and item lists from supplier invoices.
-- Detect and flag duplicate supplier invoices.
+- Extract data from supplier invoices (NCM codes, item lists) and flag duplicates.
 - Implement site-wide pagination and bulk download for invoices.
-- Display Observação field in item view, editable only in the edit form.
-- For pending items, display a history of previous quotations.
-- Extract and display the delivery date () from OC PDFs, with countdowns and admin editing.
-- Display the full, editable delivery address () at the OC level.
-- Allow safe OC data updates by re-uploading its PDF without losing item-specific data.
-- On the Em Separação page, allow bulk status changes and application of shipping costs to selected items.
-- Automatically record  when an item's status becomes .
-- Indicate if a new OC item is already available in stock.
-- Implement a Use from Stock feature for pending items.
-- Allow uploading images for items via drag-and-drop, with a thumbnail view and a popup for the full image.
-- On the Pendentes tab, group items with the same code from different OCs to allow for bulk quoting and editing.
-- On the Estoque page, allow admins to manually edit or delete stock entries.
-- A Planilha de Contrato page showing all items from an Excel file, cross-referencing their status within the app.
-- Extend the Grouped View functionality to the Cotados page to allow for bulk purchasing.
-- When using an item from stock, automatically copy all its data (price, photo, notes, supplier, etc.).
-- Link an uploaded image to the item's CODE, so it appears for all instances of that item.
-- Implement partial purchase: when buying a portion of a quoted item, the purchased quantity moves to Comprados and the remainder stays in Cotados.
-- Persist uploaded images in the database so they are not lost on deploy.
-- Handle scanned/image-based PDFs by implementing OCR.
-- On the Em Separação page, sort OCs marked Pronto para Despacho to the top.
-- On the Em Trânsito page, add the ability to add/edit tracking codes in bulk (per-item, per-selection, or per-OC).
-- Integrate the Correios API to automatically update tracking status (from Pronto para Envio to Em Trânsito and Entregue) and send notifications to admins. The job is scheduled to run once per hour.
-- Simplify the UI on the Em Trânsito page to hide financial data and show a clean, expandable view of tracking events.
-- Allow manual status changes for items on the Em Trânsito page, both individually and in bulk.
-- On the Em Separação page, add the ability to change the status of items when applying freight and tracking in bulk.
-- Implement a Partial Shipment feature to move a specific quantity of an item from Em Separação to Em Trânsito, leaving the remainder.
-- Add a separate upload button for XML files for sales invoices (NF de Venda).
-- Remove the static text EMPRESA OPTANTE PELO SIMPLES NACIONAL from the additional invoice data section.
-- Implement automatic CEP lookup that appends the CEP to the address string.
-- Display Valor de Venda Unitário and Valor de Venda Total inline with other item details.
-- Add a feature to bulk-update existing OCs by re-uploading their PDFs, which now also updates item prices.
-- Add a Ver Todas modal to the notifications dropdown, showing a full, searchable history.
-- Add image upload/view/delete functionality to the OC Details page ().
-- Reorganize the Dashboard to move admin-only sections to the bottom.
-- Implement a hybrid commission logic (lot number vs.  field).
-- Display NCM code next to the item code on various pages.
-- Automatically extract NCM from OC PDFs during creation and update flows.
-- On the Dashboard, create an advanced search summary popup for item code, item name, and brand/model.
-- On the Em Separação and Pronto para Envio pages, display which items from an OC are still pending in a Próxima remessa section.
-- Add client-side filtering (search fields) to the OC Details page.
-- Fix CORS issues for the custom domain.
-- Make the Dados Adicionais da NF section on the Em Separação page editable.
-- Fix all PDF upload/update endpoints to correctly save the original PDF for download.
-- Correct the dashboard stats count.
-- Ensure PDF parsing extracts all required fields (description, lot, representative).
-- Add representative's name and email to the Dados Adicionais da NF section.
-- Display delivery status on Dashboard and OC Details page (e.g., delivered, pending items, X/Y items delivered).
-- Improve site-wide performance to fix slow loading times.
-- Fix bugs preventing search from finding all OCs.
-- Fix bugs preventing manually added stock items from appearing.
-- Implement a User Management UI in the Admin Panel.
-- Extract requisitante (requestor) from PDFs and display in Dados Adicionais da NF.
-- Ensure the upload new OC endpoint behaves identically to the update OC endpoint, pulling all data from the reference sheet and saving the PDF.
-- **On the Pronto para Envio page, remove the supplier invoice upload and allow multiple sales invoice (PDF) and XML uploads at once.**
-- **Fix the broken Save button for editing addresses.**
-- **Refactor the manual stock system to use a dedicated database collection instead of creating a virtual ESTOQUE-MANUAL purchase order.**
+- On the Pendentes and Cotados pages, group items with the same code for bulk actions.
+- A stock management system to track available items, with manual entry and Use from Stock features.
+- Link uploaded item images to the item's code.
+- Implement partial purchase and partial shipment features.
+- On the Pronto para Envio page, allow multiple sales invoice (PDF/XML) uploads at once.
+- Extract requisitante (requestor) from OC PDFs and display it in the Dados Adicionais da NF section on all relevant status pages (, , , ).
+- **Correct the profit calculation:** Lucro Realizado should only count  and  items. All other statuses contribute to Lucro Previsto.
+- **Add a field for monthly Correios shipping costs** on the summary page to be factored into profit calculations.
+- **Implement a new moderador user role:** This role can see everything an  sees, except for the Resumo Completo page and the Comissões section in the Admin Panel.
+- **Create a new admin-only Lucro Total spreadsheet-style summary:**
+    - Columns: Código, OC, Qtd Total, Qtd Entregue, Valor Compra, Valor Venda, Imposto (%), Frete Compra, Frete Venda, Custos Diversos, Lucro.
+    - The  percentage must be editable and linked to the main summary page.
+    - Must allow adding/managing Custos Diversos (e.g., packaging, parking).
+    - A summary row at the top for delivered items.
+    - A Pago/Não Pago status toggle for admins.
 
 **User's preferred language**:
 The user's primary language is **Portuguese (Brazil)**. The next agent MUST respond in Portuguese.
 
 **what currently exists?**
-A full-stack Purchase Order management application. The agent has just performed a major refactoring of the stock management system in response to a user request.
+A full-stack Purchase Order management application. In this session, the agent successfully completed the major refactoring of the stock management system, which was left in a broken state in the previous session. The system now uses a dedicated  collection, and all obsolete code related to the old ESTOQUE-MANUAL virtual OC has been removed and tested.
 
-Previously, adding items to stock created a virtual Purchase Order named ESTOQUE-MANUAL, which cluttered the dashboard and caused confusion. The agent completely rewrote the stock management backend () to use a dedicated  collection in MongoDB, eliminating the virtual OC.
+The agent also resolved several user-reported issues, including:
+- **Requisitante Display:** Fixed bugs preventing the requisitante (requestor) from being displayed. It is now visible and editable in the Dados Adicionais da NF section on the Em Separação, Pronto para Envio, Em Trânsito, and Entregues pages. An admin endpoint was created to re-extract this data from all existing PDFs.
+- **Stock Management Bugs:** Fixed Method Not Allowed errors when adding or editing stock items. The system now correctly handles adjustments for both manually added items and surplus items from OCs.
+- **Admin Reports:** Implemented a new Relatório tab in the Admin Panel, which allows downloading a comprehensive Excel report on all OCs and their items, including a sheet for overdue items.
 
-In this session, the agent also:
-- **Fixed OC Upload Parity:** Ensured new OC uploads immediately save the PDF for download and extract all data (requisitante, CEP, etc.), eliminating the need for a second update step.
-- **Fixed Data Extraction:** Improved PDF parsing to correctly extract the requisitante and fixed the CEP lookup for more cities and address formats.
-- **Fixed UI Bugs:** Repaired a broken Save button for editing addresses and added the requisitante to the Dados Adicionais da NF section on multiple pages.
-- **Improved UI:** On the Pronto para Envio page, removed the supplier invoice section and added a single button for multi-file (PDF & XML) sales invoice uploads.
-- **Addressed CORS:** Implemented more robust CORS error handling.
-
-The application is currently in a broken state because the new stock management backend has not been fully integrated into the main  file.
+The agent has just begun scaffolding the three new major features requested by the user (profit calculation, moderator role, and total profit summary).
 
 **Last working item**:
-- **Last item agent was working:** Refactoring the entire stock management system. The agent completed the rewrite of  to use a dedicated  collection, following the user's request to stop creating a virtual ESTOQUE-MANUAL purchase order.
+- **Last item agent was working:** Scaffolding the three new major feature requests from the user.
+    1.  **Profit Calculation & Monthly Freight:** Began modifying  and creating backend endpoints in  to handle a configurable tax percentage and monthly shipping costs.
+    2.  **Moderator Role:** Created a new  dependency in  to be used for authorization.
+    3.  **Total Profit Sheet:** Started creating a new  component in  and backend endpoints (, ) to manage miscellaneous costs.
 - **Status:** IN PROGRESS
 - **Agent Testing Done:** N
 - **Which testing method agent to use?** both
-    - **Test Plan:** The new backend logic must be integrated into  and tested. This involves removing old filters and endpoints related to ESTOQUE-MANUAL. The frontend ( and pages that show stock availability) must be tested to ensure they work with the new backend API.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P0)** Complete the Stock Management system refactor.
+- **Issue 1: (P0)** Complete the three new user implementations (Profit Calculation, Moderator Role, Total Profit Sheet).
 - **Issue 2: (P1)** Intermittent Production CORS errors.
 - **Issue 3: (P2)** Editing an item that exists in multiple OCs opens all instances for editing instead of just one.
 
 **Issues Detail:**
-- **Issue 1: Complete the Stock Management system refactor**
-    - **Attempted fixes:** The agent completely rewrote  to use a new  collection instead of a virtual OC.
+- **Issue 1: Complete the three new user implementations**
+    - **Attempted fixes:** The agent has created the basic backend endpoints (, ), a new auth dependency (), and started modifying the frontend components (, ). The work is in the initial scaffolding stage.
     - **Next debug checklist:**
-        1. In , remove the old filters  from the , , and  endpoints. They are now obsolete.
-        2. In , replace the old  import with the new one from  and ensure it's included correctly ().
-        3. Manually delete the ESTOQUE-MANUAL OC from the database if it exists, to clean up old data.
-        4. Test the new endpoints (, ) to confirm the new architecture works.
-        5. Review and update  to ensure it correctly interacts with the new backend endpoints.
-    - **Why fix this issue and what will be achieved with the fix?** This will fulfill the user's explicit request for a cleaner architecture, resolve bugs related to stock management, and remove the confusing ESTOQUE-MANUAL OC from the UI.
+        1.  **Moderator Role:** Apply the  dependency to all relevant endpoints. Update the frontend (, , ) to hide sections based on the user's role.
+        2.  **Profit Calculation:** In , correct the  function to calculate Lucro Realizado using only  and  statuses. Wire the new configuration UI to the  backend endpoints to save and load monthly freight and tax percentage.
+        3.  **Total Profit Sheet:** Fully implement the  component in . Create the backend logic to fetch all necessary data, including from the new  collection, and present it in the requested spreadsheet format. Implement the add cost and mark as paid functionalities.
+    - **Why fix this issue and what will be achieved with the fix?** Fulfills the user's latest and most critical business requirements for financial oversight and user permission control.
     - **Status:** IN PROGRESS
     - **Is recurring issue?** N
     - **Should Test frontend/backend/both after fix?** Both.
     - **Blocked on other issue:** None
 
 - **Issue 2: Intermittent Production CORS errors**
-    - **Attempted fixes:** The agent implemented robust CORS middleware, including global exception handlers to ensure CORS headers are always sent.
-    - **Next debug checklist:** This is likely a code-level fix, but it requires user deployment to confirm. The agent should guide the user to deploy the latest changes and monitor the production environment. If the issue persists, it may be related to platform timeouts rather than code.
+    - **Attempted fixes:** The agent added a global middleware to  to forcibly add CORS headers to *every* response, including errors. This is a robust attempt to solve the issue.
+    - **Next debug checklist:** This fix requires user deployment to production to be verified. The agent should inform the user that a potential fix has been deployed and ask for monitoring.
     - **Why fix this issue and what will be achieved with the fix?** This is a critical blocker that makes the production application unreliable.
     - **Status:** USER VERIFICATION PENDING
     - **Is recurring issue?** Y
@@ -135,7 +86,7 @@ The application is currently in a broken state because the new stock management 
 
 - **Issue 3: Editing an item that exists in multiple OCs opens all instances**
     - **Attempted fixes:** None in this session.
-    - **Next debug checklist:** In , the modal trigger for editing likely uses a non-unique . This needs to be changed to use the item's unique MongoDB , which must be passed from the backend.
+    - **Next debug checklist:** In  (and other relevant pages), the modal trigger for editing likely uses a non-unique key like . This needs to be changed to use the item's unique MongoDB , which must be passed from the backend and used to identify the specific item instance to edit.
     - **Why fix this issue and what will be achieved with the fix?** Fixes a long-standing and confusing UI bug.
     - **Status:** NOT STARTED
     - **Is recurring issue?** Y
@@ -143,9 +94,9 @@ The application is currently in a broken state because the new stock management 
     - **Blocked on other issue:** None
 
 **In progress Task List**:
-- **Task 1: Complete the Stock Management Refactor**
-    - **Where to resume:** Integrating the new  into , removing obsolete code and filters, and then testing the entire stock management flow.
-    - **What will be achieved with this?** A clean, dedicated stock system that functions as the user expects, without creating confusing virtual purchase orders.
+- **Task 1: Complete the 3 new feature implementations**
+    - **Where to resume:** The backend endpoints and auth functions exist, and frontend components have been created or modified. Resume by implementing the core logic for each feature as outlined in Issue 1 above.
+    - **What will be achieved with this?** A new moderator role, corrected profit calculations, and a comprehensive admin-only profit/loss summary page.
     - **Status:** IN PROGRESS
     - **Should Test frontend/backend/both after fix?** Both.
     - **Blocked on something:** None.
@@ -158,17 +109,11 @@ The application is currently in a broken state because the new stock management 
     - (P3) Add a Create OC button directly on the Planilha de Contrato page.
 
 **Completed work in this session**
-- **Core Feature Fixes:**
-  - **Stock Management Refactor (Started):** Completely rewrote backend stock logic to use a dedicated  collection, per user request.
-  - **OC Upload Parity:** Fixed the upload new OC endpoint to immediately save the PDF and populate all data from the reference sheet, eliminating a redundant step for the user.
-  - **Data Extraction:** Improved PDF parsing to correctly extract the requisitante (requestor) and fixed the automatic CEP lookup for more address formats.
-  - **CORS Hardening:** Implemented global exception handlers to ensure CORS headers are sent even on server errors, addressing intermittent production failures.
-- **UI/UX Enhancements:**
-  - **Requisitante Feature:** Added UI to display and manually edit the requisitante in the Dados Adicionais da NF section.
-  - **File Upload Improvement:** On the Pronto para Envio page, replaced separate inputs with a single button for multi-file (PDF & XML) uploads.
-- **Bug Fixes:**
-  - **Save Address Button:** Fixed the broken Save button in the address editing modal.
-  - **Duplicate Function:** Removed a duplicate, synchronous  function that was causing  errors.
+- **Stock System Refactor (COMPLETED):** Finished the full refactor of the stock management system to use a dedicated  collection. Removed all obsolete code from , migrated old data, and tested the new endpoints, resolving the primary blocker from the last session.
+- **Requisitante Feature (COMPLETED):** Implemented UI to display the requisitante on all relevant status pages (, , , ). Added a manual edit feature and an admin tool to reprocess all existing PDFs to extract this data automatically.
+- **Admin Reporting (COMPLETED):** Created a new Relatório tab in the Admin Panel with a feature to download a comprehensive Excel report detailing all items, OC summaries, and overdue items.
+- **Stock Management Bug Fixes (COMPLETED):** Fixed errors preventing users from adding new items to stock or adjusting quantities of existing items. The system now correctly handles both manually added items and surplus items from OCs.
+- **CORS Hardening (COMPLETED):** Implemented a global middleware to enforce CORS headers on all responses, aiming to resolve intermittent production errors.
 
 **Earlier issues found/mentioned but not fixed**
 - **Issue 1:** (P2) Editing an item that exists in multiple OCs opens all instances for editing instead of just the selected one. This long-standing recurring issue remains unresolved.
@@ -182,78 +127,77 @@ The application is currently in a broken state because the new stock management 
 
 
 **Key Technical Concepts**
-- **Major Refactoring:** Transitioning the stock management system from a virtual document pattern (the ESTOQUE-MANUAL OC) to a dedicated MongoDB collection ().
-- **Regex for PDF Parsing:** Fine-tuning regular expressions to extract data () from varied PDF layouts.
-- **FastAPI Middleware & Exception Handling:** Using global exception handlers to enforce behavior (like sending CORS headers) on all responses, including errors.
-- **Frontend State & API Interaction:** Debugging and fixing frontend logic related to API calls ( vs.  response handling) and component rendering.
+- **Full-Stack Feature Implementation:** Scaffolding features across the stack by creating FastAPI endpoints, authentication dependencies, and corresponding React components.
+- **Database Schema Extension:** Introducing new MongoDB collections (, ) to support new features.
+- **Role-Based Access Control (RBAC):** Creating new authorization logic () to implement a  role.
+- **Dynamic Excel Generation:** Using  on the backend to create complex, multi-sheet reports from database data.
+- **Refactoring & Code Consolidation:** Successfully removing duplicated and obsolete code from  to complete the stock system refactor.
 
 **key DB schema**
-- ** (NEW):** A new collection to manage stock items separately. Expected fields: .
-- **:** No new fields, but logic in  that filtered out  is now obsolete and must be removed.
+- ** (NEW):** A new collection to store global settings. Expected document: .
+- ** (NEW):** A new collection for miscellaneous expenses. Expected fields: .
+- **:** The schema is unchanged, but application logic will now interpret a  field value of .
 
 **All files of reference**
-- : **Completely rewritten**. It is the core of the new stock management system but is not yet integrated.
-- : Contains many recent fixes but also now holds obsolete filters and logic related to the old stock system that must be removed.
-- : Contains multiple UI fixes and feature additions from this session.
-- : The primary frontend component for stock management. It has not been updated yet and will need to be adapted to the new backend API.
+- : Core backend file. Contains the new endpoints for reports, configurations, and costs, as well as the CORS middleware fix.
+- : Contains the new  function, which is critical for the new user role.
+- : Contains the completed UI for displaying the requisitante across multiple pages.
+- : The entry point for the new admin reports and the planned Lucro Total page.
+- : The page where profit calculations need to be corrected and the new config UI (freight/tax) needs to be wired up.
+- : Contains the fixed logic for stock adjustments.
 
 **Areas that need refactoring**:
-- **Immediate:** The primary task is to complete the stock management refactor by removing the old ESTOQUE-MANUAL logic from  and integrating the new .
-- **Ongoing:**  and  remain large and complex files that would benefit from being broken down in the future.
+-  and  are very large and would benefit from being broken down into smaller, more manageable modules/components.
+- The new  in  should be implemented as a self-contained component to keep  from growing too large.
 
 **key api endpoints**
-- **Stock (REFACTORED / PENDING INTEGRATION):**
-  - 
-  - 
-  - 
-- **OC Upload/Update (MODIFIED):**
-  - : Correctly saves PDF and populates all reference data on initial creation.
-- **Requisitante (NEW):**
-  - 
-- **Address (FIXED):**
-  - 
+- **NEW (Implemented):**
+  - : Re-parses all saved OC PDFs to extract requestor data.
+  - : Downloads the comprehensive Excel report.
+- **NEW (Scaffolded):**
+  - , : For managing global settings like tax and shipping.
+  - , , : For managing miscellaneous costs.
+- **FIXED / MODIFIED:**
+  - : New endpoint to correctly adjust stock quantities.
+  - : Old endpoint, now works alongside the new one.
+  - All endpoints related to viewing items by status, which now include  data.
 
 **Critical Info for New Agent**
-- **Your immediate priority is to finish the stock management refactor.** The application is currently in a broken, half-refactored state. You must integrate the new  into  and remove all obsolete code and filters related to the old ESTOQUE-MANUAL system.
-- **Explain Environment Differences:** The user frequently tests new features in the preview environment but observes data from their production environment, leading to confusion. Continue to patiently explain that code fixes are in preview and require a **user-triggered deployment** to affect production data.
-- **Stock Data:** The preview database is frequently empty. To test the new stock system, you will need to manually add stock items using the new endpoints after the refactor is complete.
+- **Your immediate priority is to complete the three new features requested by the user.** The groundwork (backend endpoints, auth functions, basic UI components) has been laid, but the core logic for each is missing. You must now build out these features.
+- **Moderator Role Implementation:** You need to apply the new  dependency to the appropriate backend endpoints and add conditional rendering logic to the frontend to hide sensitive information (like the  page and  panel) from users with the  role.
+- **Profit Calculation Logic:** The user was very specific. You must modify  to ensure Lucro Realizado is calculated *only* from items with  or  status. The rest go to Lucro Previsto.
+- **Total Profit Page:** This is a major new feature. Build the  component in  to fetch data from multiple endpoints (, , ) and display it in the requested spreadsheet-like format. Ensure admins can add new costs and change the tax percentage dynamically.
 
 **documents and test reports created in this job**
-- 
+- None in this session.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Requested fix for requisitante not appearing in Dados Adicionais da NF on the Em Separação page. (COMPLETED - Agent added the field to the UI template).
-2.  **User:** Reported CEP not being fetched and Save button for address editing not working. (COMPLETED - Agent fixed the save button logic and improved the CEP lookup function).
-3.  **User:** Reported that a newly uploaded OC was not available for download and that requisitante/CEP were not being extracted. (COMPLETED - Agent fixed PDF saving on initial upload and improved CEP/requisitante extraction logic, explaining that deployment is needed).
-4.  **User:** Reported issues with adding items to stock and seeing a ESTOQUE-MANUAL OC on the dashboard. (IN PROGRESS - This triggered the stock system refactor).
-5.  **User:** Requested that adding items to stock should NOT create a ESTOQUE-MANUAL OC. (IN PROGRESS - Agent started the refactor to use a separate collection).
-6.  **User:** Confirmed they are on preview and the requisitante is still not showing up. (RESOLVED - Agent found the preview DB was empty and created test data to prove the UI now works).
-7.  **User:** Reported the requisitante for OC 3.099906 was still not appearing after an update. (RESOLVED - Agent explained fixes are in preview, not production, and require deployment).
-8.  **User:** Provided PDF for OC 3.099906 to debug requisitante extraction. (RESOLVED - Agent confirmed extraction works and updated the OC manually in preview as a demonstration).
-9.  **User:** Requested removal of supplier NF upload on the Pronto para Envio page and asked for multi-file upload for sales NFs (PDFs+XMLs). Also provided another PDF to debug requisitante extraction. (COMPLETED - Agent implemented the UI changes and fixed the extraction regex).
-10. **User:** Reported the requisitante was still not being extracted for OC 2.122037 after an admin panel update. (COMPLETED - Agent added a manual edit feature for requisitante and explained the PDF parser may not recognize the format, which was later fixed).
+1.  **User:** Requested fix for  not showing automatically for OC 3100069 and provided the PDF. (COMPLETED - Agent fixed the frontend data flow and created an endpoint to reprocess PDFs).
+2.  **User:** Requested the  field to appear on , , and  pages, and to see which files have been uploaded. (COMPLETED - Agent added the UI to all requested pages and confirmed file lists are already shown).
+3.  **User:** Requested a new admin report to see the status of all OCs and items to avoid penalties. (COMPLETED - Agent created a new Relatório tab in the Admin Panel with a comprehensive Excel download).
+4.  **User:** Reported not being able to add or edit stock items, with a Method Not Allowed error. (COMPLETED - Agent identified a missing endpoint, created it, and fixed the logic to handle different stock item origins).
+5.  **User:** Reported that many specific items could not be added to stock, showing an Item não encontrado no estoque manual error. (COMPLETED - Agent fixed the backend logic to correctly handle items that are surpluses from OCs vs. purely manual entries).
+6.  **User:** Initiated the current set of tasks with three major implementation requests. (IN PROGRESS - This is the current ).
 
 **Project Health Check:**
-- **Broken:**
-  - The stock management system is in a half-refactored state. The new backend file exists but is not integrated, and obsolete code still exists in . The application is non-functional in this area until the refactor is completed.
+- **Stable:** The application is in a good state. The critical stock management refactor is complete and tested. The new work is being built on this stable foundation.
 - **Technical Debt:**
-  - **CRITICAL:** The filters and logic for ESTOQUE-MANUAL in  are now obsolete technical debt and must be removed immediately.
-  -  and  remain very large monolithic files.
+  -  and  remain monolithic and are candidates for future refactoring to improve maintainability.
 
 **3rd Party Integrations**
 - **Resend:** For emails.
 - **PyMuPDF:** For parsing text-based PDFs.
 - **APScheduler:** Used for the hourly Correios tracking job.
-- **openpyxl:** For parsing  files.
+- **openpyxl:** For creating and parsing  files.
 - **pytesseract & Tesseract OCR:** For OCR on scanned PDFs.
 - **Correios Rastro API:** For automatic package tracking.
 - **ViaCEP:** For CEP lookup by address.
 
 **Testing status**
-- **Testing agent used after significant changes:** YES (For the OC upload fix, which passed).
+- **Testing agent used after significant changes:** NO
 - **Troubleshoot agent used after agent stuck in loop:** NO
 - **Test files created:** None
-- **Known regressions:** The entire stock management feature is currently broken due to the incomplete refactor.
+- **Known regressions:** None from this session's work.
 
 **Credentials to test flow:**
 - **Admin Login (João):**
@@ -261,5 +205,4 @@ The application is currently in a broken state because the new stock management 
   - **Password:** 
 
 **What agent forgot to execute**
-- After rewriting  for the stock refactor, the agent failed to integrate this new file into .
-- The agent did not remove the now-obsolete filters and logic related to the old ESTOQUE-MANUAL system from , leaving the codebase in an inconsistent and broken state.</analysis>
+- The agent has correctly identified the next steps but has only just begun the implementation. Nothing has been forgotten, but the new features are far from complete.</analysis>

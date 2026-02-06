@@ -9263,7 +9263,7 @@ default_origins = [
     "http://www.onlicitacoes.com",
     "https://pedidos-fiep.emergent.host",
     "http://pedidos-fiep.emergent.host",
-    "https://ordertrack-30.preview.emergentagent.com",
+    "https://fiep-purchasing.preview.emergentagent.com",
     "http://ocflex.preview.emergentagent.com",
     "http://localhost:3000",
     "http://localhost:8001",
