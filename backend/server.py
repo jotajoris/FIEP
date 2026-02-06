@@ -6727,6 +6727,236 @@ async def gerar_relatorio_completo(
     )
 
 
+# ==================== CONFIGURAÇÕES GERAIS ====================
+
+@api_router.get("/admin/configuracoes")
+async def get_configuracoes(
+    current_user: dict = Depends(require_admin)
+):
+    """Obtém configurações gerais do sistema"""
+    config = await db.configuracoes.find_one({"tipo": "geral"}, {"_id": 0})
+    
+    if not config:
+        # Criar configuração padrão
+        config = {
+            "tipo": "geral",
+            "percentual_imposto": 11.0,
+            "frete_correios_mensal": 0,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.configuracoes.insert_one(config)
+    
+    return config
+
+
+@api_router.patch("/admin/configuracoes")
+async def atualizar_configuracoes(
+    data: dict,
+    current_user: dict = Depends(require_admin)
+):
+    """Atualiza configurações gerais do sistema"""
+    updates = {}
+    
+    if "percentual_imposto" in data:
+        updates["percentual_imposto"] = float(data["percentual_imposto"])
+    
+    if "frete_correios_mensal" in data:
+        updates["frete_correios_mensal"] = float(data["frete_correios_mensal"])
+    
+    if updates:
+        updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        await db.configuracoes.update_one(
+            {"tipo": "geral"},
+            {"$set": updates},
+            upsert=True
+        )
+    
+    return {"success": True, "updated": list(updates.keys())}
+
+
+# ==================== CUSTOS DIVERSOS ====================
+
+@api_router.get("/admin/custos-diversos")
+async def listar_custos_diversos(
+    current_user: dict = Depends(require_admin)
+):
+    """Lista todos os custos diversos cadastrados"""
+    cursor = db.custos_diversos.find({}, {"_id": 0}).sort("data", -1)
+    custos = await cursor.to_list(1000)
+    
+    total = sum(c.get('valor', 0) for c in custos)
+    
+    return {
+        "total": total,
+        "custos": custos
+    }
+
+
+@api_router.post("/admin/custos-diversos")
+async def adicionar_custo_diverso(
+    data: dict,
+    current_user: dict = Depends(require_admin)
+):
+    """Adiciona um novo custo diverso"""
+    descricao = data.get("descricao", "").strip()
+    valor = float(data.get("valor", 0))
+    categoria = data.get("categoria", "outros").strip()
+    
+    if not descricao or valor <= 0:
+        raise HTTPException(status_code=400, detail="Descrição e valor são obrigatórios")
+    
+    custo = {
+        "id": str(uuid.uuid4()),
+        "descricao": descricao,
+        "valor": valor,
+        "categoria": categoria,
+        "data": datetime.now(timezone.utc).isoformat(),
+        "criado_por": current_user.get('sub', '')
+    }
+    
+    await db.custos_diversos.insert_one(custo)
+    
+    return {"success": True, "custo": custo}
+
+
+@api_router.delete("/admin/custos-diversos/{custo_id}")
+async def remover_custo_diverso(
+    custo_id: str,
+    current_user: dict = Depends(require_admin)
+):
+    """Remove um custo diverso"""
+    result = await db.custos_diversos.delete_one({"id": custo_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Custo não encontrado")
+    
+    return {"success": True, "message": "Custo removido"}
+
+
+# ==================== RESUMO DE LUCRO TOTAL (ADMIN) ====================
+
+@api_router.get("/admin/resumo-lucro")
+async def get_resumo_lucro_admin(
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Retorna resumo completo de lucro para admins.
+    Inclui:
+    - Itens entregues com valores
+    - Custos diversos
+    - Frete dos Correios mensal
+    - Imposto configurável
+    - Status de pagamento
+    """
+    # Obter configurações
+    config = await db.configuracoes.find_one({"tipo": "geral"}, {"_id": 0}) or {
+        "percentual_imposto": 11.0,
+        "frete_correios_mensal": 0
+    }
+    
+    percentual_imposto = config.get('percentual_imposto', 11.0)
+    frete_correios_mensal = config.get('frete_correios_mensal', 0)
+    
+    # Buscar todos os itens entregues
+    cursor = db.purchase_orders.find(
+        {"items.status": "entregue"},
+        {"_id": 0, "id": 1, "numero_oc": 1, "items": 1}
+    )
+    
+    itens_entregues = []
+    total_venda = 0
+    total_compra = 0
+    total_frete_compra = 0
+    total_imposto = 0
+    
+    async for po in cursor:
+        for item in po.get('items', []):
+            if item.get('status') == 'entregue':
+                qtd = item.get('quantidade', 0)
+                preco_venda = item.get('preco_venda', 0) or 0
+                preco_compra = item.get('preco_compra', 0) or 0
+                frete_compra = item.get('frete_compra', 0) or 0
+                
+                valor_venda_total = preco_venda * qtd
+                valor_compra_total = preco_compra * qtd
+                imposto_item = valor_venda_total * (percentual_imposto / 100)
+                
+                total_venda += valor_venda_total
+                total_compra += valor_compra_total
+                total_frete_compra += frete_compra
+                total_imposto += imposto_item
+                
+                itens_entregues.append({
+                    "codigo_item": item.get('codigo_item'),
+                    "numero_oc": po.get('numero_oc', '').replace('OC-', ''),
+                    "quantidade": qtd,
+                    "preco_venda": preco_venda,
+                    "preco_compra": preco_compra,
+                    "valor_venda_total": valor_venda_total,
+                    "valor_compra_total": valor_compra_total,
+                    "frete_compra": frete_compra,
+                    "imposto": imposto_item
+                })
+    
+    # Buscar custos diversos
+    cursor_custos = db.custos_diversos.find({}, {"_id": 0})
+    custos = await cursor_custos.to_list(1000)
+    total_custos_diversos = sum(c.get('valor', 0) for c in custos)
+    
+    # Buscar status de pagamento
+    pagamento_info = await db.configuracoes.find_one({"tipo": "pagamento_lucro"}, {"_id": 0}) or {
+        "pago": False,
+        "data_pagamento": None
+    }
+    
+    # Calcular lucro líquido
+    lucro_bruto = total_venda - total_compra - total_frete_compra
+    lucro_liquido = lucro_bruto - total_imposto - frete_correios_mensal - total_custos_diversos
+    
+    return {
+        "resumo": {
+            "total_itens_entregues": len(itens_entregues),
+            "total_venda": round(total_venda, 2),
+            "total_compra": round(total_compra, 2),
+            "total_frete_compra": round(total_frete_compra, 2),
+            "percentual_imposto": percentual_imposto,
+            "total_imposto": round(total_imposto, 2),
+            "frete_correios_mensal": frete_correios_mensal,
+            "total_custos_diversos": round(total_custos_diversos, 2),
+            "lucro_bruto": round(lucro_bruto, 2),
+            "lucro_liquido": round(lucro_liquido, 2),
+            "pago": pagamento_info.get('pago', False),
+            "data_pagamento": pagamento_info.get('data_pagamento')
+        },
+        "itens": itens_entregues,
+        "custos_diversos": custos,
+        "configuracoes": config
+    }
+
+
+@api_router.patch("/admin/resumo-lucro/pagamento")
+async def marcar_pagamento_lucro(
+    data: dict,
+    current_user: dict = Depends(require_admin)
+):
+    """Marca o lucro como pago ou não pago"""
+    pago = data.get("pago", False)
+    
+    await db.configuracoes.update_one(
+        {"tipo": "pagamento_lucro"},
+        {"$set": {
+            "pago": pago,
+            "data_pagamento": datetime.now(timezone.utc).isoformat() if pago else None,
+            "marcado_por": current_user.get('sub', ''),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    
+    return {"success": True, "pago": pago}
+
+
 @api_router.get("/dados-bancarios/todas-ocs")
 async def get_todos_dados_bancarios(
     current_user: dict = Depends(get_current_user)
