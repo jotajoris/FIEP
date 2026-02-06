@@ -324,6 +324,12 @@ const AllItemsSummary = () => {
             {formatBRL(totalImpostoPrevisto)}
           </div>
         </div>
+        <div className="stat-card" style={{ borderColor: '#a855f7' }}>
+          <div className="stat-label">Frete Correios Mensal</div>
+          <div className="stat-value" style={{ color: '#a855f7', fontSize: '1.8rem' }}>
+            {formatBRL(freteCorreiosMensal)}
+          </div>
+        </div>
         <div className="stat-card" style={{ borderColor: '#7c3aed', background: '#faf5ff' }}>
           <div className="stat-label">Total Comissões a Pagar</div>
           <div className="stat-value" style={{ color: '#7c3aed', fontSize: '1.8rem', fontWeight: '800' }}>
