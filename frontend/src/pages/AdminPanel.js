@@ -371,10 +371,12 @@ const LucroTotalSection = () => {
                 color: 'white',
                 border: 'none',
                 borderRadius: '6px',
-                cursor: 'pointer'
+                cursor: marcandoPago ? 'wait' : 'pointer',
+                opacity: marcandoPago ? 0.7 : 1
               }}
+              disabled={marcandoPago}
             >
-              {resumo.pago ? '❌ Marcar como Não Pago' : '✓ Marcar como Pago'}
+              {marcandoPago ? '⏳ Processando...' : (resumo.pago ? '❌ Marcar como Não Pago' : '✓ Fechar Período e Marcar como Pago')}
             </button>
           </div>
           
