@@ -208,6 +208,83 @@ const AllItemsSummary = () => {
         <p className="page-subtitle">Visão geral de todos os itens de todas as OCs</p>
       </div>
 
+      {/* Configurações de Frete e Imposto */}
+      <div style={{ 
+        marginBottom: '1.5rem', 
+        padding: '1rem', 
+        background: '#fef3c7', 
+        borderRadius: '8px', 
+        border: '2px solid #f59e0b' 
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: '#92400e' }}>
+            ⚙️ Configurações de Custos
+          </h3>
+          {!editandoConfig ? (
+            <button
+              onClick={() => setEditandoConfig(true)}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+            >
+              ✏️ Editar
+            </button>
+          ) : (
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={() => setEditandoConfig(false)}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', background: '#6b7280', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={salvarConfiguracoes}
+                disabled={salvandoConfig}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', background: '#16a34a', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+              >
+                {salvandoConfig ? 'Salvando...' : '✓ Salvar'}
+              </button>
+            </div>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.25rem', color: '#78350f' }}>
+              📦 Frete Correios Mensal (R$)
+            </label>
+            {editandoConfig ? (
+              <input
+                type="number"
+                step="0.01"
+                value={freteCorreiosMensal}
+                onChange={(e) => setFreteCorreiosMensal(parseFloat(e.target.value) || 0)}
+                style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', width: '150px', fontSize: '1rem' }}
+              />
+            ) : (
+              <span style={{ fontSize: '1.2rem', fontWeight: '700', color: '#f59e0b' }}>
+                {formatBRL(freteCorreiosMensal)}
+              </span>
+            )}
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.25rem', color: '#78350f' }}>
+              💰 Percentual de Imposto (%)
+            </label>
+            {editandoConfig ? (
+              <input
+                type="number"
+                step="0.1"
+                value={percentualImposto}
+                onChange={(e) => setPercentualImposto(parseFloat(e.target.value) || 0)}
+                style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', width: '100px', fontSize: '1rem' }}
+              />
+            ) : (
+              <span style={{ fontSize: '1.2rem', fontWeight: '700', color: '#dc2626' }}>
+                {percentualImposto}%
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Estatísticas */}
       <div className="stats-grid" style={{ marginBottom: '2rem' }}>
         <div className="stat-card" style={{ borderColor: '#8b5cf6' }}>
