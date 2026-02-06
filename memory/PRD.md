@@ -90,7 +90,62 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 
 ## Changelog Recente
 
-### 2026-02-04 (Sessão Atual - Continuação 9)
+### 2026-02-06 (Sessão Atual - Continuação 10)
+
+- ✅ **NOVA FEATURE: Papel de Usuário "Moderador"**
+  - **Requisito:** Novo role `moderador` que pode ver quase tudo de um admin, exceto informações financeiras sensíveis
+  - **Implementação:**
+    - Nova função `require_admin_or_moderator` em `auth.py`
+    - Funções `isModerador()` e `isAdminOrModerador()` no `AuthContext.js`
+    - Rota `adminOrModeradorOnly` no `App.js` para páginas Admin
+  - **Restrições do Moderador:**
+    - ✅ Pode acessar `/admin` (Painel Administrativo)
+    - ❌ Não vê aba "💰 Comissões"
+    - ❌ Não vê aba "👥 Usuários"
+    - ❌ Não vê aba "💵 Lucro Total"
+    - ❌ Não pode acessar `/resumo-completo`
+  - **Testado:** Maria (temporariamente) como moderadora - todas as restrições funcionaram
+
+- ✅ **NOVA FEATURE: Cálculo de Lucro Corrigido**
+  - **Requisito:** "Lucro Realizado" deve contar apenas itens `entregue` + `em_transito`, descontando frete Correios mensal
+  - **Implementação em `AllItemsSummary.js`:**
+    - Lucro Realizado = soma(lucro_liquido de itens entregue/em_transito) - frete_correios_mensal
+    - Novo card "Frete Correios Mensal" na página de Resumo Completo
+    - Texto atualizado: "(Em trânsito + Entregues - Frete Correios)"
+  - **Configuração via UI:** Percentual de Imposto (%) e Frete Correios Mensal (R$)
+
+- ✅ **NOVA FEATURE: Página "Lucro Total" no Admin Panel**
+  - **Requisito:** Visão completa tipo planilha para admin ver lucro/prejuízo de itens entregues
+  - **Componente `LucroTotalSection` em `AdminPanel.js`:**
+    - ⚙️ **Configurações:** Imposto (%), Frete Correios Mensal (R$) - editável
+    - 📊 **Resumo de Lucro:** 
+      - Itens Entregues, Total Venda, Total Compra, Frete Compra, Imposto, Frete Correios, Custos Diversos
+      - **Lucro Líquido** em destaque
+      - Botão "Marcar como Pago/Não Pago"
+    - 📋 **Custos Diversos:** 
+      - Tabela com descrição, categoria, valor, data
+      - Botão "+ Adicionar Custo"
+      - Botão "🗑️" para remover
+    - 📊 **Planilha de Itens Entregues:**
+      - Colunas: Código, OC, Qtd, Compra, Venda, Frete, Imposto, Lucro
+      - Linha de totais no rodapé
+      - Expansível/ocultável
+  - **Novos Endpoints:**
+    - `GET /api/admin/configuracoes` - Obtém percentual_imposto e frete_correios_mensal
+    - `PATCH /api/admin/configuracoes` - Atualiza configurações
+    - `GET /api/admin/resumo-lucro` - Retorna resumo completo com itens entregues
+    - `PATCH /api/admin/resumo-lucro/pagamento` - Marca lucro como pago/não pago
+    - `GET /api/admin/custos-diversos` - Lista custos diversos
+    - `POST /api/admin/custos-diversos` - Adiciona novo custo
+    - `DELETE /api/admin/custos-diversos/{id}` - Remove custo
+  - **Testado:** 43 itens entregues, Lucro Líquido R$ 27.974,12
+
+- ✅ **CORREÇÃO: Bug ObjectId em `/admin/configuracoes`**
+  - **Problema:** `TypeError: 'ObjectId' object is not iterable` ao criar configuração
+  - **Causa:** `insert_one()` adiciona `_id` ao dict original
+  - **Solução:** Usar `.copy()` antes do insert e remover `_id` antes de retornar
+
+### 2026-02-04 (Sessão Anterior - Continuação 9)
 - ✅ **REFATORAÇÃO COMPLETA: Sistema de Estoque**
   - **Problema:** Ao adicionar itens manualmente ao estoque, o sistema criava uma OC virtual "ESTOQUE-MANUAL" que aparecia no dashboard e causava confusão
   - **Solução:** Sistema agora usa coleção MongoDB dedicada `estoque_manual` para itens manuais
