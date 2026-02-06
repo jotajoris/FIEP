@@ -185,12 +185,14 @@ const RelatorioSection = () => {
 // Componente de Lucro Total (ADMIN ONLY)
 const LucroTotalSection = () => {
   const [resumo, setResumo] = useState(null);
+  const [itensEntregues, setItensEntregues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [custosDiversos, setCustosDiversos] = useState([]);
   const [novoCusto, setNovoCusto] = useState({ descricao: '', valor: '', categoria: 'outros' });
   const [adicionandoCusto, setAdicionandoCusto] = useState(false);
   const [configuracoes, setConfiguracoes] = useState({ percentual_imposto: 11, frete_correios_mensal: 0 });
   const [editandoConfig, setEditandoConfig] = useState(false);
+  const [mostrarItens, setMostrarItens] = useState(false);
 
   useEffect(() => {
     carregarResumo();
@@ -204,6 +206,7 @@ const LucroTotalSection = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setResumo(response.data.resumo);
+      setItensEntregues(response.data.itens || []);
       setCustosDiversos(response.data.custos_diversos || []);
       setConfiguracoes(response.data.configuracoes || { percentual_imposto: 11, frete_correios_mensal: 0 });
     } catch (error) {
