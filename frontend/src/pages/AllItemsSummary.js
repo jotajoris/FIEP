@@ -174,13 +174,10 @@ const AllItemsSummary = () => {
     return sum + (valorVenda * (percentualImposto / 100));
   }, 0);
   
-  // Lucro realizado (soma do lucro dos itens em_transito + entregues APENAS, descontando frete Correios mensal)
-  const lucroRealizadoBruto = filteredItems
+  // Lucro realizado (soma do lucro dos itens em_transito + entregues APENAS)
+  const totalLucroRealizado = filteredItems
     .filter(item => item.status === 'em_transito' || item.status === 'entregue')
     .reduce((sum, item) => sum + (item.lucro_liquido || 0), 0);
-  
-  // Lucro realizado líquido (descontando frete dos Correios mensal)
-  const totalLucroRealizado = lucroRealizadoBruto - freteCorreiosMensal;
 
   // Calcular total de comissões a pagar (baseado nos lotes, itens entregue/em_transito/pronto_envio)
   const totalComissoes = filteredItems
