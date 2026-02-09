@@ -411,11 +411,8 @@ const LucroTotalSection = () => {
             </div>
             <div style={{ background: resumo.lucro_liquido > 0 ? '#dcfce7' : '#fef2f2', padding: '1rem', borderRadius: '8px', textAlign: 'center', border: '2px solid ' + (resumo.lucro_liquido > 0 ? '#22c55e' : '#ef4444') }}>
               <div style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: '600' }}>LUCRO LÍQUIDO</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: '800', color: resumo.lucro_liquido > 0 ? '#16a34a' : '#dc2626' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: '800', color: resumo.lucro_liquido > 0 ? '#16a34a' : '#dc2626' }}>
                 {formatBRL(resumo.lucro_liquido)}
-              </div>
-              <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                (Venda - Compra - Frete - Imposto - Custos - Comissões)
               </div>
             </div>
           </div>
