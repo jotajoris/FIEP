@@ -1983,6 +1983,36 @@ async def upload_multiple_pdfs(files: List[UploadFile] = File(...), current_user
             
             await db.purchase_orders.insert_one(doc)
             
+            # REPROCESSAR automaticamente para garantir que todos os dados estejam corretos
+            try:
+                items_updated = False
+                for item in doc.get("items", []):
+                    codigo = item.get("codigo_item", "")
+                    ref_items = ref_lookup.get(codigo, [])
+                    
+                    if ref_items:
+                        ref_item = ref_items[0] if len(ref_items) == 1 else random.choice(ref_items)
+                        
+                        if not item.get("responsavel") or "NÃO ENCONTRADO" in item.get("responsavel", ""):
+                            item["responsavel"] = ref_item.get("responsavel", "")
+                            items_updated = True
+                        
+                        if not item.get("lote") or "NÃO ENCONTRADO" in item.get("lote", ""):
+                            item["lote"] = ref_item.get("lote", "")
+                            items_updated = True
+                        
+                        if not item.get("preco_venda") and ref_item.get("preco_venda_unitario"):
+                            item["preco_venda"] = ref_item.get("preco_venda_unitario")
+                            items_updated = True
+                
+                if items_updated:
+                    await db.purchase_orders.update_one(
+                        {"id": po.id},
+                        {"$set": {"items": doc["items"]}}
+                    )
+            except Exception as e:
+                logger.warning(f"Erro ao reprocessar OC automaticamente: {e}")
+            
             results["success"].append({
                 "filename": file.filename,
                 "numero_oc": po.numero_oc,
