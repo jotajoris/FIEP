@@ -6948,15 +6948,69 @@ async def get_resumo_lucro_admin(
     custos = await cursor_custos.to_list(1000)
     total_custos_diversos = sum(c.get('valor', 0) for c in custos)
     
+    # Calcular comissões a pagar (mesma lógica do endpoint /admin/comissoes)
+    LOTES_POR_PESSOA = {
+        'MARIA': [1,2,3,4,5,6,7,8,9,10,11,12,43,44,45,46,47,48,49,50,51,52,53],
+        'MYLENA': [80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97],
+        'FABIO': [32,33,34,35,36,37,38,39,40,41,42],
+    }
+    OCS_EXCLUIDAS_COMISSAO = ['OC-2.118938', 'OC-2.118941']
+    PERCENTUAL_COMISSAO = 1.5
+    
+    def extrair_numero_lote_lucro(lote_str):
+        if not lote_str:
+            return None
+        import re
+        match = re.search(r'[Ll]ote\s*(\d+)', str(lote_str))
+        if match:
+            return int(match.group(1))
+        if len(str(lote_str).strip()) <= 5:
+            match = re.search(r'^(\d+)$', str(lote_str).strip())
+            if match:
+                return int(match.group(1))
+        return None
+    
+    # Calcular comissões dos itens entregues
+    total_comissoes = 0
+    cursor_comissoes = db.purchase_orders.find({}, {"_id": 0, "numero_oc": 1, "items": 1})
+    async for po in cursor_comissoes:
+        numero_oc = po.get('numero_oc', '')
+        if numero_oc in OCS_EXCLUIDAS_COMISSAO:
+            continue
+        for item in po.get('items', []):
+            if item.get('status') != 'entregue':
+                continue
+            preco_venda = item.get('preco_venda', 0) or 0
+            quantidade = item.get('quantidade', 1) or 1
+            valor_total_venda = preco_venda * quantidade
+            
+            lote_str = item.get('lote', '')
+            numero_lote = extrair_numero_lote_lucro(lote_str)
+            
+            pessoa_responsavel = None
+            if numero_lote is not None:
+                for pessoa, lotes in LOTES_POR_PESSOA.items():
+                    if numero_lote in lotes:
+                        pessoa_responsavel = pessoa
+                        break
+            
+            if pessoa_responsavel is None:
+                responsavel_item = (item.get('responsavel', '') or '').strip().upper()
+                if responsavel_item and responsavel_item not in ['JOÃO', 'MATEUS', 'ADMIN']:
+                    pessoa_responsavel = responsavel_item
+            
+            if pessoa_responsavel:
+                total_comissoes += valor_total_venda * (PERCENTUAL_COMISSAO / 100)
+    
     # Buscar status de pagamento
     pagamento_info = await db.configuracoes.find_one({"tipo": "pagamento_lucro"}, {"_id": 0}) or {
         "pago": False,
         "data_pagamento": None
     }
     
-    # Calcular lucro líquido
+    # Calcular lucro líquido (agora descontando comissões)
     lucro_bruto = total_venda - total_compra - total_frete_compra
-    lucro_liquido = lucro_bruto - total_imposto - frete_correios_mensal - total_custos_diversos
+    lucro_liquido = lucro_bruto - total_imposto - frete_correios_mensal - total_custos_diversos - total_comissoes
     
     return {
         "resumo": {
@@ -6968,6 +7022,7 @@ async def get_resumo_lucro_admin(
             "total_imposto": round(total_imposto, 2),
             "frete_correios_mensal": frete_correios_mensal,
             "total_custos_diversos": round(total_custos_diversos, 2),
+            "total_comissoes": round(total_comissoes, 2),
             "lucro_bruto": round(lucro_bruto, 2),
             "lucro_liquido": round(lucro_liquido, 2),
             "pago": pagamento_info.get('pago', False),
