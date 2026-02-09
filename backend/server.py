@@ -3782,6 +3782,92 @@ async def export_backup(current_user: dict = Depends(require_admin)):
         logger.error(f"Erro ao exportar backup: {e}")
         raise HTTPException(status_code=500, detail=f"Erro ao exportar backup: {str(e)}")
 
+
+@api_router.get("/backup/download")
+async def download_backup(current_user: dict = Depends(require_admin)):
+    """Download backup completo do sistema como arquivo JSON (ADMIN ONLY)"""
+    from datetime import datetime
+    from fastapi.responses import StreamingResponse
+    import json
+    import io
+    import gzip
+    
+    try:
+        # Buscar todos os dados COMPLETOS de todas as collections
+        pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(10000)
+        users = await db.users.find({}, {"_id": 0}).to_list(1000)
+        reference_items = await db.reference_items.find({}, {"_id": 0}).to_list(50000)
+        notifications = await db.notifications.find({}, {"_id": 0}).to_list(10000)
+        estoque = await db.estoque.find({}, {"_id": 0}).to_list(10000)
+        configuracoes = await db.configuracoes.find({}, {"_id": 0}).to_list(100)
+        custos_diversos = await db.custos_diversos.find({}, {"_id": 0}).to_list(1000)
+        fechamentos_lucro = await db.fechamentos_lucro.find({}, {"_id": 0}).to_list(1000)
+        
+        # Verificar se collection existe antes de buscar
+        collection_names = await db.list_collection_names()
+        fornecedores = await db.fornecedores.find({}, {"_id": 0}).to_list(1000) if "fornecedores" in collection_names else []
+        
+        # Estatísticas
+        total_items = sum(len(po.get('items', [])) for po in pos)
+        ocs_com_pdf = sum(1 for po in pos if po.get('pdf_original') or po.get('has_pdf'))
+        
+        backup = {
+            "backup_info": {
+                "data_export": datetime.now().isoformat(),
+                "versao": "3.0",
+                "sistema": "FIEP - Sistema de Gestão de OCs",
+                "estatisticas": {
+                    "total_ocs": len(pos),
+                    "total_itens": total_items,
+                    "total_usuarios": len(users),
+                    "total_itens_referencia": len(reference_items),
+                    "total_notificacoes": len(notifications),
+                    "total_estoque": len(estoque),
+                    "total_configuracoes": len(configuracoes),
+                    "total_custos_diversos": len(custos_diversos),
+                    "total_fechamentos": len(fechamentos_lucro),
+                    "total_fornecedores": len(fornecedores),
+                    "ocs_com_pdf": ocs_com_pdf
+                }
+            },
+            "purchase_orders": pos,
+            "users": users,
+            "reference_items": reference_items,
+            "notifications": notifications,
+            "estoque": estoque,
+            "configuracoes": configuracoes,
+            "custos_diversos": custos_diversos,
+            "fechamentos_lucro": fechamentos_lucro,
+            "fornecedores": fornecedores
+        }
+        
+        # Criar arquivo JSON
+        json_str = json.dumps(backup, ensure_ascii=False, default=str)
+        json_bytes = json_str.encode('utf-8')
+        
+        # Comprimir com gzip
+        buffer = io.BytesIO()
+        with gzip.GzipFile(fileobj=buffer, mode='wb') as f:
+            f.write(json_bytes)
+        buffer.seek(0)
+        
+        # Nome do arquivo
+        filename = f"backup_fiep_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json.gz"
+        
+        return StreamingResponse(
+            buffer,
+            media_type="application/gzip",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Expose-Headers": "Content-Disposition"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Erro ao gerar backup para download: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar backup: {str(e)}")
+
 @api_router.post("/backup/restore")
 async def restore_backup(current_user: dict = Depends(require_admin)):
     """Restaurar backup do sistema - CUIDADO: substitui todos os dados! (ADMIN ONLY)"""
