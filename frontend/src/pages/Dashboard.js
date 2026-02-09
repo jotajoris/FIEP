@@ -310,30 +310,39 @@ const Dashboard = () => {
 
   const exportBackup = async () => {
     try {
-      const response = await apiGet(`${API}/backup/export`);
-      const backup = response.data;
+      // Mostrar loading
+      alert('⏳ Gerando backup completo... Aguarde, isso pode demorar alguns segundos.');
       
-      // Criar arquivo JSON para download
-      const dataStr = JSON.stringify(backup, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(dataBlob);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/backup/download`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       
-      // Criar link de download
+      if (!response.ok) {
+        throw new Error('Erro ao gerar backup');
+      }
+      
+      // Baixar arquivo
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      
       const link = document.createElement('a');
       link.href = url;
       const dataAtual = new Date().toISOString().split('T')[0];
       const horaAtual = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
-      link.download = `backup_fiep_${dataAtual}_${horaAtual}.json`;
+      link.download = `backup_fiep_${dataAtual}_${horaAtual}.json.gz`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      const stats = backup.backup_info.estatisticas;
-      alert(`✅ Backup exportado com sucesso!\n\n📊 Estatísticas:\n- ${stats.total_ocs} OCs\n- ${stats.total_itens} Itens\n- ${stats.items_com_cotacao || 0} com cotação\n- ${stats.items_com_link || 0} com link\n- R$ ${(stats.valor_total_venda || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})} valor total`);
+      alert('✅ Backup exportado com sucesso!\n\nO arquivo está comprimido (.gz).\nPara restaurar, você pode usar o arquivo comprimido diretamente.');
     } catch (error) {
       console.error('Erro ao exportar backup:', error);
-      alert('❌ Erro ao exportar backup');
+      alert('❌ Erro ao exportar backup: ' + error.message);
     }
   };
 
