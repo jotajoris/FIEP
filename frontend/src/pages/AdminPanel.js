@@ -402,17 +402,20 @@ const LucroTotalSection = () => {
               <div style={{ fontSize: '1.3rem', fontWeight: '700', color: '#dc2626' }}>{formatBRL(resumo.total_imposto)}</div>
             </div>
             <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Frete Correios</div>
-              <div style={{ fontSize: '1.3rem', fontWeight: '700', color: '#a855f7' }}>{formatBRL(resumo.frete_correios_mensal)}</div>
-            </div>
-            <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
               <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Custos Diversos</div>
               <div style={{ fontSize: '1.3rem', fontWeight: '700', color: '#ec4899' }}>{formatBRL(resumo.total_custos_diversos)}</div>
+            </div>
+            <div style={{ background: '#faf5ff', padding: '1rem', borderRadius: '8px', textAlign: 'center', border: '1px solid #a855f7' }}>
+              <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Comissões (1,5%)</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: '700', color: '#7c3aed' }}>{formatBRL(resumo.total_comissoes || 0)}</div>
             </div>
             <div style={{ background: resumo.lucro_liquido > 0 ? '#dcfce7' : '#fef2f2', padding: '1rem', borderRadius: '8px', textAlign: 'center', border: '2px solid ' + (resumo.lucro_liquido > 0 ? '#22c55e' : '#ef4444') }}>
               <div style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: '600' }}>LUCRO LÍQUIDO</div>
               <div style={{ fontSize: '1.8rem', fontWeight: '800', color: resumo.lucro_liquido > 0 ? '#16a34a' : '#dc2626' }}>
                 {formatBRL(resumo.lucro_liquido)}
+              </div>
+              <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                (Venda - Compra - Frete - Imposto - Custos - Comissões)
               </div>
             </div>
           </div>
