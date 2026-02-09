@@ -1929,6 +1929,7 @@ async def upload_multiple_pdfs(files: List[UploadFile] = File(...), current_user
                 'data': base64.b64encode(pdf_content).decode('utf-8'),
                 'uploaded_at': datetime.now(timezone.utc).isoformat()
             }
+            doc['has_pdf'] = True  # Marcar que tem PDF disponível
             
             await db.purchase_orders.insert_one(doc)
             
