@@ -3906,12 +3906,38 @@ async def restore_backup_data(backup_data: dict, current_user: dict = Depends(re
             await db.notifications.delete_many({})
             await db.notifications.insert_many(backup_data["notifications"])
         
+        # Restaurar Estoque
+        if backup_data.get("estoque") and len(backup_data["estoque"]) > 0:
+            await db.estoque.delete_many({})
+            await db.estoque.insert_many(backup_data["estoque"])
+        
+        # Restaurar Configurações
+        if backup_data.get("configuracoes") and len(backup_data["configuracoes"]) > 0:
+            await db.configuracoes.delete_many({})
+            await db.configuracoes.insert_many(backup_data["configuracoes"])
+        
+        # Restaurar Custos Diversos
+        if backup_data.get("custos_diversos") and len(backup_data["custos_diversos"]) > 0:
+            await db.custos_diversos.delete_many({})
+            await db.custos_diversos.insert_many(backup_data["custos_diversos"])
+        
+        # Restaurar Fechamentos de Lucro
+        if backup_data.get("fechamentos_lucro") and len(backup_data["fechamentos_lucro"]) > 0:
+            await db.fechamentos_lucro.delete_many({})
+            await db.fechamentos_lucro.insert_many(backup_data["fechamentos_lucro"])
+        
+        # Restaurar Fornecedores
+        if backup_data.get("fornecedores") and len(backup_data["fornecedores"]) > 0:
+            await db.fornecedores.delete_many({})
+            await db.fornecedores.insert_many(backup_data["fornecedores"])
+        
         # NÃO restaurar usuários automaticamente (segurança)
         # Os usuários devem ser restaurados manualmente se necessário
         
         # Estatísticas depois
         ocs_depois = await db.purchase_orders.count_documents({})
         refs_depois = await db.reference_items.count_documents({})
+        estoque_depois = await db.estoque.count_documents({})
         
         return {
             "success": True,
@@ -3920,7 +3946,8 @@ async def restore_backup_data(backup_data: dict, current_user: dict = Depends(re
                 "data_backup": backup_data.get("backup_info", {}).get("data_export", "N/A"),
                 "ocs_antes": ocs_antes,
                 "ocs_restauradas": ocs_depois,
-                "itens_referencia": refs_depois
+                "itens_referencia": refs_depois,
+                "estoque": estoque_depois
             }
         }
     except Exception as e:
