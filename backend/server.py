@@ -9470,31 +9470,20 @@ cors_origins_list = list(dict.fromkeys(cors_origins_list))
 # =============================================================================
 # CORS CONFIGURATION - CRÍTICO PARA PRODUÇÃO
 # =============================================================================
-# Ordem dos middlewares: O ÚLTIMO adicionado é executado PRIMEIRO
-# Por isso, adicionamos CORSMiddleware por ÚLTIMO para garantir que seja o PRIMEIRO a processar
+# O middleware customizado CORSMiddlewareCustom já está configurado no início do arquivo
+# Ele garante que TODAS as respostas (incluindo erros) tenham headers CORS
 
-# IMPORTANTE: Usar apenas CORSMiddleware padrão do Starlette com wildcard
-# O middleware customizado foi removido pois pode causar conflitos
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Permitir TODAS as origens
-    allow_credentials=True,
-    allow_methods=["*"],  # Permitir TODOS os métodos
-    allow_headers=["*"],  # Permitir TODOS os headers
-    expose_headers=["*"],
-    max_age=86400,  # Cache preflight por 24 horas
-)
-
-# Handler global para OPTIONS (preflight) - FALLBACK
+# Handler global para OPTIONS (preflight) - FALLBACK REDUNDANTE
 @app.options("/{rest_of_path:path}")
 async def preflight_handler(rest_of_path: str):
-    """Handle CORS preflight requests explicitly"""
+    """Handle CORS preflight requests explicitly como fallback"""
     return Response(
         status_code=200,
+        content="",
         headers={
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD",
-            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Headers": "Accept, Accept-Language, Content-Language, Content-Type, Authorization, X-Requested-With, Origin",
             "Access-Control-Allow-Credentials": "true",
             "Access-Control-Max-Age": "86400",
         }
