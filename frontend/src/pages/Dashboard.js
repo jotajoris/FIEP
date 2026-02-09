@@ -378,7 +378,23 @@ const Dashboard = () => {
     }
     
     try {
-      const fileContent = await file.text();
+      let fileContent;
+      
+      // Verificar se é arquivo comprimido (.gz)
+      if (file.name.endsWith('.gz')) {
+        // Descomprimir usando pako
+        const arrayBuffer = await file.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        
+        // Usar DecompressionStream nativo do browser
+        const ds = new DecompressionStream('gzip');
+        const decompressedStream = new Blob([uint8Array]).stream().pipeThrough(ds);
+        const decompressedBlob = await new Response(decompressedStream).blob();
+        fileContent = await decompressedBlob.text();
+      } else {
+        fileContent = await file.text();
+      }
+      
       const backupData = JSON.parse(fileContent);
       
       // Verificar se é um backup válido
