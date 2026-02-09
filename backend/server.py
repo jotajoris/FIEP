@@ -3679,63 +3679,108 @@ async def update_all_descriptions(current_user: dict = Depends(require_admin)):
 async def export_backup(current_user: dict = Depends(require_admin)):
     """Exportar backup completo do sistema (ADMIN ONLY)"""
     from datetime import datetime
+    import base64
     
-    # Buscar todos os dados COMPLETOS
-    pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(10000)
-    users = await db.users.find({}, {"_id": 0}).to_list(1000)  # Incluir tudo para restauração
-    reference_items = await db.reference_items.find({}, {"_id": 0}).to_list(10000)
-    notifications = await db.notifications.find({}, {"_id": 0}).to_list(10000)
-    
-    # Calcular estatísticas detalhadas
-    total_items = 0
-    status_counts = {}
-    items_com_cotacao = 0
-    items_com_link = 0
-    total_valor_venda = 0
-    
-    for po in pos:
-        for item in po.get('items', []):
-            total_items += 1
-            status = item.get('status', 'pendente')
-            status_counts[status] = status_counts.get(status, 0) + 1
+    try:
+        # Buscar todos os dados COMPLETOS de todas as collections
+        pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(10000)
+        users = await db.users.find({}, {"_id": 0}).to_list(1000)
+        reference_items = await db.reference_items.find({}, {"_id": 0}).to_list(50000)
+        notifications = await db.notifications.find({}, {"_id": 0}).to_list(10000)
+        
+        # Collections adicionais
+        estoque = await db.estoque.find({}, {"_id": 0}).to_list(10000)
+        configuracoes = await db.configuracoes.find({}, {"_id": 0}).to_list(100)
+        custos_diversos = await db.custos_diversos.find({}, {"_id": 0}).to_list(1000)
+        fechamentos_lucro = await db.fechamentos_lucro.find({}, {"_id": 0}).to_list(1000)
+        fornecedores = await db.fornecedores.find({}, {"_id": 0}).to_list(1000) if "fornecedores" in await db.list_collection_names() else []
+        
+        # Calcular estatísticas detalhadas
+        total_items = 0
+        status_counts = {}
+        items_com_cotacao = 0
+        items_com_link = 0
+        items_com_foto = 0
+        items_com_pdf = 0
+        total_valor_venda = 0
+        total_valor_compra = 0
+        total_fretes = 0
+        
+        for po in pos:
+            # Contar PDFs
+            if po.get('pdf_original') or po.get('has_pdf'):
+                items_com_pdf += 1
             
-            # Contar cotações
-            fontes = item.get('fontes_compra', [])
-            if fontes and len(fontes) > 0:
-                items_com_cotacao += 1
-                for f in fontes:
-                    if f.get('link'):
-                        items_com_link += 1
-            
-            # Somar valor de venda
-            preco_venda = item.get('preco_venda', 0) or 0
-            quantidade = item.get('quantidade', 0) or 0
-            total_valor_venda += preco_venda * quantidade
-    
-    backup = {
-        "backup_info": {
-            "data_export": datetime.now().isoformat(),
-            "versao": "2.0",
-            "sistema": "FIEP - Sistema de Gestão de OCs",
-            "estatisticas": {
-                "total_ocs": len(pos),
-                "total_itens": total_items,
-                "total_usuarios": len(users),
-                "total_itens_referencia": len(reference_items),
-                "total_notificacoes": len(notifications),
-                "items_com_cotacao": items_com_cotacao,
-                "items_com_link": items_com_link,
-                "valor_total_venda": round(total_valor_venda, 2),
-                "status_itens": status_counts
-            }
-        },
-        "purchase_orders": pos,
-        "users": users,
-        "reference_items": reference_items,
-        "notifications": notifications
-    }
-    
-    return backup
+            for item in po.get('items', []):
+                total_items += 1
+                status = item.get('status', 'pendente')
+                status_counts[status] = status_counts.get(status, 0) + 1
+                
+                # Contar cotações e links
+                fontes = item.get('fontes_compra', [])
+                if fontes and len(fontes) > 0:
+                    items_com_cotacao += 1
+                    for f in fontes:
+                        if f.get('link'):
+                            items_com_link += 1
+                
+                # Contar fotos
+                if item.get('imagem_url') or item.get('imagens'):
+                    items_com_foto += 1
+                
+                # Somar valores
+                preco_venda = item.get('preco_venda', 0) or 0
+                preco_compra = item.get('preco_compra', 0) or 0
+                quantidade = item.get('quantidade', 0) or 0
+                frete_compra = item.get('frete_compra', 0) or 0
+                frete_envio = item.get('frete_envio', 0) or 0
+                
+                total_valor_venda += preco_venda * quantidade
+                total_valor_compra += preco_compra * quantidade
+                total_fretes += frete_compra + frete_envio
+        
+        backup = {
+            "backup_info": {
+                "data_export": datetime.now().isoformat(),
+                "versao": "3.0",
+                "sistema": "FIEP - Sistema de Gestão de OCs",
+                "estatisticas": {
+                    "total_ocs": len(pos),
+                    "total_itens": total_items,
+                    "total_usuarios": len(users),
+                    "total_itens_referencia": len(reference_items),
+                    "total_notificacoes": len(notifications),
+                    "total_estoque": len(estoque),
+                    "total_configuracoes": len(configuracoes),
+                    "total_custos_diversos": len(custos_diversos),
+                    "total_fechamentos": len(fechamentos_lucro),
+                    "total_fornecedores": len(fornecedores),
+                    "items_com_cotacao": items_com_cotacao,
+                    "items_com_link": items_com_link,
+                    "items_com_foto": items_com_foto,
+                    "ocs_com_pdf": items_com_pdf,
+                    "valor_total_venda": round(total_valor_venda, 2),
+                    "valor_total_compra": round(total_valor_compra, 2),
+                    "total_fretes": round(total_fretes, 2),
+                    "status_itens": status_counts
+                }
+            },
+            "purchase_orders": pos,
+            "users": users,
+            "reference_items": reference_items,
+            "notifications": notifications,
+            "estoque": estoque,
+            "configuracoes": configuracoes,
+            "custos_diversos": custos_diversos,
+            "fechamentos_lucro": fechamentos_lucro,
+            "fornecedores": fornecedores
+        }
+        
+        return backup
+        
+    except Exception as e:
+        logger.error(f"Erro ao exportar backup: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao exportar backup: {str(e)}")
 
 @api_router.post("/backup/restore")
 async def restore_backup(current_user: dict = Depends(require_admin)):
