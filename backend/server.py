@@ -93,44 +93,45 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 class CORSMiddlewareCustom(BaseHTTPMiddleware):
     """Middleware que garante headers CORS em TODAS as respostas, incluindo erros"""
+    
+    CORS_HEADERS = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD",
+        "Access-Control-Allow-Headers": "Accept, Accept-Language, Content-Language, Content-Type, Authorization, X-Requested-With, Origin",
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Max-Age": "86400",
+        "Access-Control-Expose-Headers": "Content-Disposition, Content-Length",
+    }
+    
     async def dispatch(self, request, call_next):
-        # Se for preflight, retornar imediatamente com CORS
+        # Se for preflight OPTIONS, retornar imediatamente
         if request.method == "OPTIONS":
             return Response(
                 status_code=200,
-                headers={
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "*",
-                    "Access-Control-Allow-Headers": "*",
-                    "Access-Control-Allow-Credentials": "true",
-                    "Access-Control-Max-Age": "86400",
-                }
+                content="",
+                headers=self.CORS_HEADERS
             )
         
         # Processar request
         try:
             response = await call_next(request)
+            
+            # Adicionar headers CORS a TODAS as respostas
+            for key, value in self.CORS_HEADERS.items():
+                response.headers[key] = value
+            
+            return response
+            
         except Exception as e:
-            logger.error(f"Erro no middleware: {e}")
+            logger.error(f"Erro no middleware CORS: {e}")
+            # Retornar erro com headers CORS
             return JSONResponse(
                 status_code=500,
-                content={"detail": "Erro interno"},
-                headers={
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "*",
-                    "Access-Control-Allow-Headers": "*",
-                }
+                content={"detail": "Erro interno do servidor"},
+                headers=self.CORS_HEADERS
             )
-        
-        # Adicionar headers CORS à resposta
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Methods"] = "*"
-        response.headers["Access-Control-Allow-Headers"] = "*"
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        
-        return response
 
-# Adicionar middleware PRIMEIRO (será executado por ÚLTIMO, envolvendo tudo)
+# Adicionar middleware customizado
 app.add_middleware(CORSMiddlewareCustom)
 
 # =============================================================================
