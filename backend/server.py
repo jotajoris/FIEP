@@ -1769,6 +1769,56 @@ async def upload_pdf_purchase_order(file: UploadFile = File(...), current_user: 
     
     await db.purchase_orders.insert_one(doc)
     
+    # REPROCESSAR automaticamente para garantir que todos os dados estejam corretos
+    # Isso atualiza: descrição, lote, responsável, região, marca/modelo, preço de venda
+    try:
+        all_refs = await db.reference_items.find({}, {"_id": 0}).to_list(10000)
+        ref_lookup_update = {}
+        for ref in all_refs:
+            codigo = ref.get("codigo_item", "")
+            if codigo:
+                if codigo not in ref_lookup_update:
+                    ref_lookup_update[codigo] = []
+                ref_lookup_update[codigo].append(ref)
+        
+        items_updated = False
+        for item in doc.get("items", []):
+            codigo = item.get("codigo_item", "")
+            ref_items = ref_lookup_update.get(codigo, [])
+            
+            if ref_items:
+                ref_item = ref_items[0] if len(ref_items) == 1 else random.choice(ref_items)
+                
+                # Atualizar campos se não estiverem preenchidos
+                if not item.get("responsavel") or "NÃO ENCONTRADO" in item.get("responsavel", ""):
+                    item["responsavel"] = ref_item.get("responsavel", "")
+                    items_updated = True
+                
+                if not item.get("lote") or "NÃO ENCONTRADO" in item.get("lote", ""):
+                    item["lote"] = ref_item.get("lote", "")
+                    try:
+                        item["lot_number"] = int(''.join(filter(str.isdigit, item["lote"]))) if item["lote"] else 0
+                    except:
+                        item["lot_number"] = 0
+                    items_updated = True
+                
+                if not item.get("preco_venda") and ref_item.get("preco_venda_unitario"):
+                    item["preco_venda"] = ref_item.get("preco_venda_unitario")
+                    items_updated = True
+                
+                if not item.get("marca_modelo"):
+                    item["marca_modelo"] = ref_item.get("marca_modelo", "")
+                    items_updated = True
+        
+        if items_updated:
+            await db.purchase_orders.update_one(
+                {"id": po.id},
+                {"$set": {"items": doc["items"]}}
+            )
+            logger.info(f"OC {po.numero_oc} reprocessada automaticamente após criação")
+    except Exception as e:
+        logger.warning(f"Erro ao reprocessar OC automaticamente: {e}")
+    
     warning = ""
     if items_without_ref:
         warning = f" ATENÇÃO: {len(items_without_ref)} itens não encontrados no banco de referência: {', '.join(items_without_ref[:5])}"
