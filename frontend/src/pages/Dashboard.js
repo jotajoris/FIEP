@@ -333,9 +333,13 @@ const Dashboard = () => {
       if (el) el.remove();
     };
     
-    // Usar XMLHttpRequest (mais compatível, evita problemas de postMessage)
+    // Usar URL RELATIVA para funcionar em qualquer ambiente (preview ou produção)
+    // window.location.origin pega o domínio atual automaticamente
+    const backupUrl = `${window.location.origin}/api/backup/download`;
+    
+    // Usar XMLHttpRequest (mais compatível)
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', `${API}/backup/download`, true);
+    xhr.open('GET', backupUrl, true);
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     xhr.responseType = 'arraybuffer';
     
