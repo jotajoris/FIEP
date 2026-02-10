@@ -100,7 +100,35 @@ Sistema web para gerenciamento de ordens de compra (OCs) para o cliente FIEP.
 
 ## Changelog Recente
 
-### 2026-02-06 (Sessão Atual - Continuação 10)
+### 2026-02-10 (Sessão Atual - Continuação 11)
+
+- ✅ **CORREÇÃO CRÍTICA: Sistema de Backup Completo v4.0**
+  - **Problema:** O backup anterior não incluía todas as collections do banco de dados
+  - **Solução:** Implementação dinâmica que exporta TODAS as collections automaticamente
+  - **Collections agora incluídas:**
+    - `purchase_orders` (117 OCs com PDFs em base64)
+    - `users` (6 usuários)
+    - `reference_items` (2302 itens de referência)
+    - `imagens_itens` (5 imagens com base64)
+    - `limites_contrato` (1385 limites)
+    - `estoque_manual` (26 itens)
+    - `notificacoes` (2 notificações)
+    - `configuracoes` (2 configs)
+    - `custos_diversos` (1 custo)
+    - `pagamentos`, `notifications`
+  - **Estatísticas detalhadas:**
+    - Total de itens em OCs: 470
+    - OCs com PDF original: 25
+    - Itens com código de rastreio: 42
+  - **Melhorias no Frontend:**
+    - Descrição atualizada para refletir todos os dados incluídos
+    - Aceita arquivos `.json` e `.json.gz` para restauração
+    - Mensagem de sucesso detalhada com todas as collections restauradas
+  - **Endpoints:**
+    - `GET /api/backup/download` - Backup v4.0 com todas collections
+    - `POST /api/backup/restore-data` - Restauração dinâmica de todas collections
+
+### 2026-02-06 (Sessão Anterior - Continuação 10)
 
 - ✅ **NOVA FEATURE: Papel de Usuário "Moderador"**
   - **Requisito:** Novo role `moderador` que pode ver quase tudo de um admin, exceto informações financeiras sensíveis
