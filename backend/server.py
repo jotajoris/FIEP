@@ -3785,7 +3785,7 @@ async def export_backup(current_user: dict = Depends(require_admin)):
 
 @api_router.get("/backup/download")
 async def download_backup(current_user: dict = Depends(require_admin)):
-    """Download backup completo do sistema como arquivo JSON (ADMIN ONLY)"""
+    """Download backup COMPLETO do sistema - inclui TODAS as collections, PDFs, imagens, rastreios, etc."""
     from datetime import datetime
     from fastapi.responses import StreamingResponse
     import json
@@ -3793,57 +3793,68 @@ async def download_backup(current_user: dict = Depends(require_admin)):
     import gzip
     
     try:
-        # Buscar todos os dados COMPLETOS de todas as collections
-        pos = await db.purchase_orders.find({}, {"_id": 0}).to_list(10000)
-        users = await db.users.find({}, {"_id": 0}).to_list(1000)
-        reference_items = await db.reference_items.find({}, {"_id": 0}).to_list(50000)
-        notifications = await db.notifications.find({}, {"_id": 0}).to_list(10000)
-        estoque = await db.estoque.find({}, {"_id": 0}).to_list(10000)
-        configuracoes = await db.configuracoes.find({}, {"_id": 0}).to_list(100)
-        custos_diversos = await db.custos_diversos.find({}, {"_id": 0}).to_list(1000)
-        fechamentos_lucro = await db.fechamentos_lucro.find({}, {"_id": 0}).to_list(1000)
+        logger.info("Iniciando geração de backup completo...")
         
-        # Verificar se collection existe antes de buscar
+        # Obter lista de TODAS as collections no banco
         collection_names = await db.list_collection_names()
-        fornecedores = await db.fornecedores.find({}, {"_id": 0}).to_list(1000) if "fornecedores" in collection_names else []
+        logger.info(f"Collections encontradas: {collection_names}")
         
-        # Estatísticas
+        # Dicionário para armazenar todos os dados
+        all_data = {}
+        estatisticas = {}
+        
+        # Exportar TODAS as collections dinamicamente
+        for col_name in collection_names:
+            try:
+                # Buscar todos os documentos da collection (sem limite)
+                docs = await db[col_name].find({}, {"_id": 0}).to_list(None)
+                all_data[col_name] = docs
+                estatisticas[f"total_{col_name}"] = len(docs)
+                logger.info(f"  {col_name}: {len(docs)} documentos exportados")
+            except Exception as col_error:
+                logger.warning(f"Erro ao exportar {col_name}: {col_error}")
+                all_data[col_name] = []
+                estatisticas[f"total_{col_name}"] = 0
+        
+        # Estatísticas adicionais específicas
+        pos = all_data.get('purchase_orders', [])
         total_items = sum(len(po.get('items', [])) for po in pos)
-        ocs_com_pdf = sum(1 for po in pos if po.get('pdf_original') or po.get('has_pdf'))
+        ocs_com_pdf = sum(1 for po in pos if po.get('pdf_original'))
+        ocs_com_nf = sum(1 for po in pos if po.get('nf_pdf'))
         
+        # Contar itens com código de rastreio
+        itens_com_rastreio = 0
+        for po in pos:
+            for item in po.get('items', []):
+                if item.get('codigo_rastreio'):
+                    itens_com_rastreio += 1
+        
+        # Estrutura do backup completo
         backup = {
             "backup_info": {
                 "data_export": datetime.now().isoformat(),
-                "versao": "3.0",
+                "versao": "4.0",
                 "sistema": "FIEP - Sistema de Gestão de OCs",
+                "tipo": "BACKUP_COMPLETO",
+                "collections_exportadas": collection_names,
                 "estatisticas": {
-                    "total_ocs": len(pos),
-                    "total_itens": total_items,
-                    "total_usuarios": len(users),
-                    "total_itens_referencia": len(reference_items),
-                    "total_notificacoes": len(notifications),
-                    "total_estoque": len(estoque),
-                    "total_configuracoes": len(configuracoes),
-                    "total_custos_diversos": len(custos_diversos),
-                    "total_fechamentos": len(fechamentos_lucro),
-                    "total_fornecedores": len(fornecedores),
-                    "ocs_com_pdf": ocs_com_pdf
+                    **estatisticas,
+                    "total_itens_em_ocs": total_items,
+                    "ocs_com_pdf": ocs_com_pdf,
+                    "ocs_com_nf": ocs_com_nf,
+                    "itens_com_rastreio": itens_com_rastreio
                 }
             },
-            "purchase_orders": pos,
-            "users": users,
-            "reference_items": reference_items,
-            "notifications": notifications,
-            "estoque": estoque,
-            "configuracoes": configuracoes,
-            "custos_diversos": custos_diversos,
-            "fechamentos_lucro": fechamentos_lucro,
-            "fornecedores": fornecedores
+            **all_data
         }
+        
+        logger.info(f"Backup montado. Serializando JSON...")
         
         # Criar arquivo JSON
         json_str = json.dumps(backup, ensure_ascii=False, default=str)
         json_bytes = json_str.encode('utf-8')
+        
+        logger.info(f"JSON criado: {len(json_bytes)} bytes. Comprimindo...")
         
         # Comprimir com gzip
         buffer = io.BytesIO()
@@ -3851,8 +3862,11 @@ async def download_backup(current_user: dict = Depends(require_admin)):
             f.write(json_bytes)
         buffer.seek(0)
         
+        compressed_size = buffer.getbuffer().nbytes
+        logger.info(f"Backup comprimido: {compressed_size} bytes")
+        
         # Nome do arquivo
-        filename = f"backup_fiep_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json.gz"
+        filename = f"backup_fiep_COMPLETO_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json.gz"
         
         return StreamingResponse(
             buffer,
@@ -3866,6 +3880,8 @@ async def download_backup(current_user: dict = Depends(require_admin)):
         
     except Exception as e:
         logger.error(f"Erro ao gerar backup para download: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Erro ao gerar backup: {str(e)}")
 
 @api_router.post("/backup/restore")
