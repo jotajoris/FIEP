@@ -318,10 +318,9 @@ const Dashboard = () => {
       <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999;">
         <div style="background: white; padding: 2rem; border-radius: 12px; text-align: center; max-width: 400px;">
           <div style="font-size: 3rem; margin-bottom: 1rem;">⏳</div>
-          <h3 style="margin-bottom: 0.5rem;">Gerando Backup Completo</h3>
-          <p style="color: #666;" id="backup-status">Conectando ao servidor...</p>
-          <p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">Exportando OCs, PDFs, imagens, rastreios, status, valores e configurações.</p>
-          <button id="backup-cancel" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer;">Cancelar</button>
+          <h3 style="margin-bottom: 0.5rem;">Gerando Backup</h3>
+          <p style="color: #666;" id="backup-status">Conectando...</p>
+          <p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">Exportando OCs, itens, rastreios, status, valores, endereços e configurações.</p>
         </div>
       </div>
     `;
@@ -337,76 +336,42 @@ const Dashboard = () => {
       if (loading) loading.remove();
     };
     
-    // Criar link de download direto como fallback
-    const downloadDirect = () => {
-      updateStatus('Usando download direto...');
-      const downloadUrl = `${API}/backup/download?token=${encodeURIComponent(token)}`;
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.target = '_blank';
-      const dataAtual = new Date().toISOString().split('T')[0];
-      link.download = `backup_fiep_${dataAtual}.json.gz`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      setTimeout(() => {
-        removeLoading();
-        alert('⚠️ Download iniciado em nova aba.\n\nSe o download não começar automaticamente, verifique se há bloqueador de popups.\n\n📦 O backup contém TODOS os dados do sistema.');
-      }, 2000);
-    };
-    
     try {
-      updateStatus('Preparando backup...');
+      updateStatus('Baixando dados...');
       
-      // Tentar com fetch primeiro (mais moderno)
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 minutos
-      
-      // Botão cancelar
-      const cancelBtn = document.getElementById('backup-cancel');
-      if (cancelBtn) {
-        cancelBtn.onclick = () => {
-          controller.abort();
-          removeLoading();
-          alert('Backup cancelado.');
-        };
-      }
-      
-      updateStatus('Baixando dados do servidor...');
-      
+      // Usar fetch simples com blob
       const response = await fetch(`${API}/backup/download`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        signal: controller.signal
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
       });
       
-      clearTimeout(timeoutId);
-      
       if (!response.ok) {
-        throw new Error(`Erro HTTP ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(errorText || `Erro HTTP ${response.status}`);
       }
       
-      updateStatus('Processando arquivo...');
+      updateStatus('Processando...');
       
-      const blob = await response.blob();
+      // Obter como texto primeiro (mais confiável)
+      const jsonText = await response.text();
       
-      if (blob.size < 1000) {
-        // Arquivo muito pequeno, provavelmente erro
-        const text = await blob.text();
-        throw new Error(text || 'Arquivo de backup inválido');
+      if (!jsonText || jsonText.length < 100) {
+        throw new Error('Backup vazio ou inválido');
       }
       
       updateStatus('Preparando download...');
       
+      // Criar blob e fazer download
+      const blob = new Blob([jsonText], { type: 'application/json' });
       const url = window.URL.createObjectURL(blob);
+      
       const link = document.createElement('a');
       link.href = url;
       const dataAtual = new Date().toISOString().split('T')[0];
-      const horaAtual = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
-      link.download = `backup_fiep_COMPLETO_${dataAtual}_${horaAtual}.json.gz`;
+      link.download = `backup_fiep_${dataAtual}.json`;
       
       document.body.appendChild(link);
       link.click();
@@ -416,49 +381,21 @@ const Dashboard = () => {
       
       removeLoading();
       
-      const sizeMB = (blob.size / 1024 / 1024).toFixed(2);
-      alert(`✅ Backup exportado com sucesso!\n\n📦 Tamanho: ${sizeMB} MB\n\nO arquivo contém TODOS os dados:\n• OCs e PDFs originais\n• Imagens de itens\n• Códigos de rastreio\n• Status de todos os itens\n• Valores e links\n• Limites de contrato\n• Estoque\n• Configurações`);
+      // Mostrar resumo
+      try {
+        const data = JSON.parse(jsonText);
+        const stats = data.backup_info?.estatisticas || {};
+        const sizeMB = (jsonText.length / 1024 / 1024).toFixed(2);
+        
+        alert(`✅ Backup exportado com sucesso!\n\n📦 Tamanho: ${sizeMB} MB\n\n📊 Conteúdo:\n• OCs: ${stats.total_purchase_orders || 'N/A'}\n• Itens com rastreio: ${stats.itens_com_rastreio || 'N/A'}\n• Itens de referência: ${stats.total_reference_items || 'N/A'}\n• Limites de contrato: ${stats.total_limites_contrato || 'N/A'}\n• Estoque: ${stats.total_estoque_manual || 'N/A'}\n• Configurações: ${stats.total_configuracoes || 'N/A'}\n\n✓ Todos os status, valores, endereços e rastreios incluídos!\n\nNota: PDFs não incluídos (você já tem eles).`);
+      } catch {
+        alert('✅ Backup exportado com sucesso!');
+      }
       
     } catch (error) {
-      console.error('Erro ao exportar backup:', error);
-      
-      if (error.name === 'AbortError') {
-        removeLoading();
-        alert('❌ Backup cancelado ou tempo limite excedido.');
-        return;
-      }
-      
-      // Tentar download direto como fallback
-      updateStatus('Tentando método alternativo...');
-      
-      try {
-        // Tentar endpoint JSON puro
-        const response2 = await fetch(`${API}/backup/download-json`, {
-          method: 'GET',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (response2.ok) {
-          const blob2 = await response2.blob();
-          const url2 = window.URL.createObjectURL(blob2);
-          const link2 = document.createElement('a');
-          link2.href = url2;
-          link2.download = `backup_fiep_${new Date().toISOString().split('T')[0]}.json`;
-          document.body.appendChild(link2);
-          link2.click();
-          document.body.removeChild(link2);
-          setTimeout(() => window.URL.revokeObjectURL(url2), 1000);
-          
-          removeLoading();
-          alert('✅ Backup exportado em formato JSON!\n\nO arquivo não está comprimido mas contém todos os dados.');
-          return;
-        }
-      } catch (e2) {
-        console.error('Fallback também falhou:', e2);
-      }
-      
       removeLoading();
-      alert(`❌ Erro ao exportar backup: ${error.message}\n\nTente novamente ou entre em contato com o suporte.`);
+      console.error('Erro ao exportar backup:', error);
+      alert(`❌ Erro ao exportar backup:\n${error.message}\n\nTente novamente.`);
     }
   };
 
