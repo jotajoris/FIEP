@@ -308,95 +308,32 @@ const Dashboard = () => {
     }
   };
 
-  const exportBackup = async () => {
+  const exportBackup = () => {
     const token = localStorage.getItem('token');
     
-    // Mostrar loading
-    const loadingMsg = document.createElement('div');
-    loadingMsg.id = 'backup-loading';
-    loadingMsg.innerHTML = `
-      <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999;">
-        <div style="background: white; padding: 2rem; border-radius: 12px; text-align: center; max-width: 400px;">
-          <div style="font-size: 3rem; margin-bottom: 1rem;">⏳</div>
-          <h3 style="margin-bottom: 0.5rem;">Gerando Backup</h3>
-          <p style="color: #666;" id="backup-status">Conectando...</p>
-          <p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">Exportando OCs, itens, rastreios, status, valores, endereços e configurações.</p>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(loadingMsg);
-    
-    const updateStatus = (msg) => {
-      const status = document.getElementById('backup-status');
-      if (status) status.textContent = msg;
-    };
-    
-    const removeLoading = () => {
-      const loading = document.getElementById('backup-loading');
-      if (loading) loading.remove();
-    };
-    
-    try {
-      updateStatus('Baixando dados...');
-      
-      // Usar fetch simples com blob
-      const response = await fetch(`${API}/backup/download`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || `Erro HTTP ${response.status}`);
-      }
-      
-      updateStatus('Processando...');
-      
-      // Obter como texto primeiro (mais confiável)
-      const jsonText = await response.text();
-      
-      if (!jsonText || jsonText.length < 100) {
-        throw new Error('Backup vazio ou inválido');
-      }
-      
-      updateStatus('Preparando download...');
-      
-      // Criar blob e fazer download
-      const blob = new Blob([jsonText], { type: 'application/json' });
-      const url = window.URL.createObjectURL(blob);
-      
-      const link = document.createElement('a');
-      link.href = url;
-      const dataAtual = new Date().toISOString().split('T')[0];
-      link.download = `backup_fiep_${dataAtual}.json`;
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-      
-      removeLoading();
-      
-      // Mostrar resumo
-      try {
-        const data = JSON.parse(jsonText);
-        const stats = data.backup_info?.estatisticas || {};
-        const sizeMB = (jsonText.length / 1024 / 1024).toFixed(2);
-        
-        alert(`✅ Backup exportado com sucesso!\n\n📦 Tamanho: ${sizeMB} MB\n\n📊 Conteúdo:\n• OCs: ${stats.total_purchase_orders || 'N/A'}\n• Itens com rastreio: ${stats.itens_com_rastreio || 'N/A'}\n• Itens de referência: ${stats.total_reference_items || 'N/A'}\n• Limites de contrato: ${stats.total_limites_contrato || 'N/A'}\n• Estoque: ${stats.total_estoque_manual || 'N/A'}\n• Configurações: ${stats.total_configuracoes || 'N/A'}\n\n✓ Todos os status, valores, endereços e rastreios incluídos!\n\nNota: PDFs não incluídos (você já tem eles).`);
-      } catch {
-        alert('✅ Backup exportado com sucesso!');
-      }
-      
-    } catch (error) {
-      removeLoading();
-      console.error('Erro ao exportar backup:', error);
-      alert(`❌ Erro ao exportar backup:\n${error.message}\n\nTente novamente.`);
+    if (!token) {
+      alert('❌ Você precisa estar logado para fazer backup.');
+      return;
     }
+    
+    // Criar URL de download direto
+    const downloadUrl = `${API}/backup/direct?token=${encodeURIComponent(token)}`;
+    
+    // Abrir em nova janela para iniciar download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    
+    // Tentar download direto
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Mostrar mensagem
+    setTimeout(() => {
+      alert('📥 Download iniciado!\n\nSe o download não começar automaticamente:\n1. Verifique se há bloqueador de popups\n2. Verifique a pasta de Downloads\n\n📦 O backup contém:\n• Todas as OCs e itens\n• Status e códigos de rastreio\n• Valores, endereços, fretes\n• Limites de contrato\n• Estoque\n• Configurações\n\nNota: PDFs não incluídos (você já tem).');
+    }, 1000);
   };
 
   const handleRestoreBackup = async (event) => {
