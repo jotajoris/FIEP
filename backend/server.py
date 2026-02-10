@@ -3893,80 +3893,71 @@ async def restore_backup(current_user: dict = Depends(require_admin)):
 
 @api_router.post("/backup/restore-data")
 async def restore_backup_data(backup_data: dict, current_user: dict = Depends(require_admin)):
-    """Restaurar dados do backup (ADMIN ONLY) - SUBSTITUI TODOS OS DADOS!"""
+    """Restaurar TODOS os dados do backup (ADMIN ONLY) - SUBSTITUI TODOS OS DADOS!"""
     from datetime import datetime
     
     try:
         # Verificar se é um backup válido
-        if "backup_info" not in backup_data or "purchase_orders" not in backup_data:
-            raise HTTPException(status_code=400, detail="Arquivo de backup inválido")
+        if "backup_info" not in backup_data:
+            raise HTTPException(status_code=400, detail="Arquivo de backup inválido - falta backup_info")
         
-        # Estatísticas antes
-        ocs_antes = await db.purchase_orders.count_documents({})
+        logger.info("Iniciando restauração de backup completo...")
         
-        # Restaurar Purchase Orders
-        if backup_data.get("purchase_orders"):
-            # Limpar coleção existente
-            await db.purchase_orders.delete_many({})
-            # Inserir dados do backup
-            if len(backup_data["purchase_orders"]) > 0:
-                await db.purchase_orders.insert_many(backup_data["purchase_orders"])
+        # Lista de collections que NÃO devem ser restauradas automaticamente (segurança)
+        collections_protegidas = ['users']
         
-        # Restaurar Reference Items (se existir no backup)
-        if backup_data.get("reference_items") and len(backup_data["reference_items"]) > 0:
-            await db.reference_items.delete_many({})
-            await db.reference_items.insert_many(backup_data["reference_items"])
+        # Obter versão do backup
+        versao_backup = backup_data.get("backup_info", {}).get("versao", "desconhecida")
+        logger.info(f"Versão do backup: {versao_backup}")
         
-        # Restaurar Notifications (se existir no backup)
-        if backup_data.get("notifications") and len(backup_data["notifications"]) > 0:
-            await db.notifications.delete_many({})
-            await db.notifications.insert_many(backup_data["notifications"])
+        # Estatísticas de restauração
+        estatisticas_restauracao = {}
         
-        # Restaurar Estoque
-        if backup_data.get("estoque") and len(backup_data["estoque"]) > 0:
-            await db.estoque.delete_many({})
-            await db.estoque.insert_many(backup_data["estoque"])
+        # Restaurar cada collection presente no backup
+        for key, value in backup_data.items():
+            # Pular metadados e collections protegidas
+            if key == "backup_info" or key in collections_protegidas:
+                continue
+            
+            # Verificar se é uma lista de documentos
+            if isinstance(value, list):
+                collection_name = key
+                docs = value
+                
+                if len(docs) > 0:
+                    try:
+                        # Limpar collection existente
+                        await db[collection_name].delete_many({})
+                        # Inserir documentos do backup
+                        await db[collection_name].insert_many(docs)
+                        estatisticas_restauracao[collection_name] = len(docs)
+                        logger.info(f"  {collection_name}: {len(docs)} documentos restaurados")
+                    except Exception as col_error:
+                        logger.warning(f"Erro ao restaurar {collection_name}: {col_error}")
+                        estatisticas_restauracao[collection_name] = f"ERRO: {str(col_error)}"
+                else:
+                    # Collection vazia - apenas limpar
+                    await db[collection_name].delete_many({})
+                    estatisticas_restauracao[collection_name] = 0
         
-        # Restaurar Configurações
-        if backup_data.get("configuracoes") and len(backup_data["configuracoes"]) > 0:
-            await db.configuracoes.delete_many({})
-            await db.configuracoes.insert_many(backup_data["configuracoes"])
-        
-        # Restaurar Custos Diversos
-        if backup_data.get("custos_diversos") and len(backup_data["custos_diversos"]) > 0:
-            await db.custos_diversos.delete_many({})
-            await db.custos_diversos.insert_many(backup_data["custos_diversos"])
-        
-        # Restaurar Fechamentos de Lucro
-        if backup_data.get("fechamentos_lucro") and len(backup_data["fechamentos_lucro"]) > 0:
-            await db.fechamentos_lucro.delete_many({})
-            await db.fechamentos_lucro.insert_many(backup_data["fechamentos_lucro"])
-        
-        # Restaurar Fornecedores
-        if backup_data.get("fornecedores") and len(backup_data["fornecedores"]) > 0:
-            await db.fornecedores.delete_many({})
-            await db.fornecedores.insert_many(backup_data["fornecedores"])
-        
-        # NÃO restaurar usuários automaticamente (segurança)
-        # Os usuários devem ser restaurados manualmente se necessário
-        
-        # Estatísticas depois
-        ocs_depois = await db.purchase_orders.count_documents({})
-        refs_depois = await db.reference_items.count_documents({})
-        estoque_depois = await db.estoque.count_documents({})
+        # Resumo final
+        total_restaurado = sum(v for v in estatisticas_restauracao.values() if isinstance(v, int))
         
         return {
             "success": True,
             "message": "Backup restaurado com sucesso!",
             "detalhes": {
                 "data_backup": backup_data.get("backup_info", {}).get("data_export", "N/A"),
-                "ocs_antes": ocs_antes,
-                "ocs_restauradas": ocs_depois,
-                "itens_referencia": refs_depois,
-                "estoque": estoque_depois
+                "versao_backup": versao_backup,
+                "collections_restauradas": estatisticas_restauracao,
+                "total_documentos_restaurados": total_restaurado,
+                "collections_protegidas": collections_protegidas
             }
         }
     except Exception as e:
+        logger.error(f"Erro ao restaurar backup: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Erro ao restaurar backup: {str(e)}")
 
 # ================== RASTREAMENTO CORREIOS ==================
