@@ -309,79 +309,156 @@ const Dashboard = () => {
   };
 
   const exportBackup = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      
-      // Mostrar loading
-      const loadingMsg = document.createElement('div');
-      loadingMsg.id = 'backup-loading';
-      loadingMsg.innerHTML = `
-        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999;">
-          <div style="background: white; padding: 2rem; border-radius: 12px; text-align: center; max-width: 400px;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">⏳</div>
-            <h3 style="margin-bottom: 0.5rem;">Gerando Backup Completo</h3>
-            <p style="color: #666;">Isso pode demorar alguns segundos...</p>
-            <p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">Exportando todas as OCs, PDFs, imagens, rastreios e configurações.</p>
-          </div>
+    const token = localStorage.getItem('token');
+    
+    // Mostrar loading
+    const loadingMsg = document.createElement('div');
+    loadingMsg.id = 'backup-loading';
+    loadingMsg.innerHTML = `
+      <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+        <div style="background: white; padding: 2rem; border-radius: 12px; text-align: center; max-width: 400px;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">⏳</div>
+          <h3 style="margin-bottom: 0.5rem;">Gerando Backup Completo</h3>
+          <p style="color: #666;" id="backup-status">Conectando ao servidor...</p>
+          <p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">Exportando OCs, PDFs, imagens, rastreios, status, valores e configurações.</p>
+          <button id="backup-cancel" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer;">Cancelar</button>
         </div>
-      `;
-      document.body.appendChild(loadingMsg);
-      
-      // Usar XMLHttpRequest para melhor controle do download
-      const xhr = new XMLHttpRequest();
-      xhr.open('GET', `${API}/backup/download`, true);
-      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-      xhr.responseType = 'blob';
-      
-      xhr.onload = function() {
-        // Remover loading
-        const loading = document.getElementById('backup-loading');
-        if (loading) loading.remove();
-        
-        if (xhr.status === 200) {
-          const blob = xhr.response;
-          const url = window.URL.createObjectURL(blob);
-          
-          const link = document.createElement('a');
-          link.href = url;
-          const dataAtual = new Date().toISOString().split('T')[0];
-          const horaAtual = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
-          link.download = `backup_fiep_COMPLETO_${dataAtual}_${horaAtual}.json.gz`;
-          
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          
-          setTimeout(() => {
-            window.URL.revokeObjectURL(url);
-          }, 100);
-          
-          alert('✅ Backup exportado com sucesso!\n\n📦 O arquivo contém TODOS os dados:\n• OCs e PDFs\n• Imagens de itens\n• Códigos de rastreio\n• Limites de contrato\n• Estoque\n• Configurações\n\nO arquivo está comprimido (.gz).');
-        } else {
-          alert('❌ Erro ao gerar backup: ' + xhr.statusText);
-        }
-      };
-      
-      xhr.onerror = function() {
-        const loading = document.getElementById('backup-loading');
-        if (loading) loading.remove();
-        alert('❌ Erro de conexão ao exportar backup. Tente novamente.');
-      };
-      
-      xhr.ontimeout = function() {
-        const loading = document.getElementById('backup-loading');
-        if (loading) loading.remove();
-        alert('❌ Tempo limite excedido. O backup é muito grande. Tente novamente.');
-      };
-      
-      xhr.timeout = 120000; // 2 minutos de timeout
-      xhr.send();
-      
-    } catch (error) {
+      </div>
+    `;
+    document.body.appendChild(loadingMsg);
+    
+    const updateStatus = (msg) => {
+      const status = document.getElementById('backup-status');
+      if (status) status.textContent = msg;
+    };
+    
+    const removeLoading = () => {
       const loading = document.getElementById('backup-loading');
       if (loading) loading.remove();
+    };
+    
+    // Criar link de download direto como fallback
+    const downloadDirect = () => {
+      updateStatus('Usando download direto...');
+      const downloadUrl = `${API}/backup/download?token=${encodeURIComponent(token)}`;
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.target = '_blank';
+      const dataAtual = new Date().toISOString().split('T')[0];
+      link.download = `backup_fiep_${dataAtual}.json.gz`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setTimeout(() => {
+        removeLoading();
+        alert('⚠️ Download iniciado em nova aba.\n\nSe o download não começar automaticamente, verifique se há bloqueador de popups.\n\n📦 O backup contém TODOS os dados do sistema.');
+      }, 2000);
+    };
+    
+    try {
+      updateStatus('Preparando backup...');
+      
+      // Tentar com fetch primeiro (mais moderno)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 minutos
+      
+      // Botão cancelar
+      const cancelBtn = document.getElementById('backup-cancel');
+      if (cancelBtn) {
+        cancelBtn.onclick = () => {
+          controller.abort();
+          removeLoading();
+          alert('Backup cancelado.');
+        };
+      }
+      
+      updateStatus('Baixando dados do servidor...');
+      
+      const response = await fetch(`${API}/backup/download`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`Erro HTTP ${response.status}`);
+      }
+      
+      updateStatus('Processando arquivo...');
+      
+      const blob = await response.blob();
+      
+      if (blob.size < 1000) {
+        // Arquivo muito pequeno, provavelmente erro
+        const text = await blob.text();
+        throw new Error(text || 'Arquivo de backup inválido');
+      }
+      
+      updateStatus('Preparando download...');
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const dataAtual = new Date().toISOString().split('T')[0];
+      const horaAtual = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
+      link.download = `backup_fiep_COMPLETO_${dataAtual}_${horaAtual}.json.gz`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+      
+      removeLoading();
+      
+      const sizeMB = (blob.size / 1024 / 1024).toFixed(2);
+      alert(`✅ Backup exportado com sucesso!\n\n📦 Tamanho: ${sizeMB} MB\n\nO arquivo contém TODOS os dados:\n• OCs e PDFs originais\n• Imagens de itens\n• Códigos de rastreio\n• Status de todos os itens\n• Valores e links\n• Limites de contrato\n• Estoque\n• Configurações`);
+      
+    } catch (error) {
       console.error('Erro ao exportar backup:', error);
-      alert('❌ Erro ao exportar backup: ' + error.message);
+      
+      if (error.name === 'AbortError') {
+        removeLoading();
+        alert('❌ Backup cancelado ou tempo limite excedido.');
+        return;
+      }
+      
+      // Tentar download direto como fallback
+      updateStatus('Tentando método alternativo...');
+      
+      try {
+        // Tentar endpoint JSON puro
+        const response2 = await fetch(`${API}/backup/download-json`, {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response2.ok) {
+          const blob2 = await response2.blob();
+          const url2 = window.URL.createObjectURL(blob2);
+          const link2 = document.createElement('a');
+          link2.href = url2;
+          link2.download = `backup_fiep_${new Date().toISOString().split('T')[0]}.json`;
+          document.body.appendChild(link2);
+          link2.click();
+          document.body.removeChild(link2);
+          setTimeout(() => window.URL.revokeObjectURL(url2), 1000);
+          
+          removeLoading();
+          alert('✅ Backup exportado em formato JSON!\n\nO arquivo não está comprimido mas contém todos os dados.');
+          return;
+        }
+      } catch (e2) {
+        console.error('Fallback também falhou:', e2);
+      }
+      
+      removeLoading();
+      alert(`❌ Erro ao exportar backup: ${error.message}\n\nTente novamente ou entre em contato com o suporte.`);
     }
   };
 
