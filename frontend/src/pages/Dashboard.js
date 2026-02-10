@@ -316,8 +316,63 @@ const Dashboard = () => {
       return;
     }
     
-    // Usar window.location para download direto (mais compatível)
-    window.location.href = `${API}/backup/direct?token=${encodeURIComponent(token)}`;
+    // Mostrar loading
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'backup-loading';
+    loadingDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;';
+    loadingDiv.innerHTML = '<div style="background:white;padding:2rem;border-radius:12px;text-align:center;"><div style="font-size:3rem;margin-bottom:1rem;">⏳</div><h3>Gerando Backup...</h3><p style="color:#666;">Aguarde, o download iniciará automaticamente.</p></div>';
+    document.body.appendChild(loadingDiv);
+    
+    // Criar iframe oculto para download
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.name = 'backup_frame';
+    document.body.appendChild(iframe);
+    
+    // Criar formulário para enviar request
+    const form = document.createElement('form');
+    form.method = 'GET';
+    form.action = `${API}/backup/direct`;
+    form.target = 'backup_frame';
+    
+    // Adicionar token como campo hidden
+    const tokenInput = document.createElement('input');
+    tokenInput.type = 'hidden';
+    tokenInput.name = 'token';
+    tokenInput.value = token;
+    form.appendChild(tokenInput);
+    
+    document.body.appendChild(form);
+    
+    // Detectar quando o download terminar
+    iframe.onload = () => {
+      // Remover loading após um tempo
+      setTimeout(() => {
+        const loading = document.getElementById('backup-loading');
+        if (loading) loading.remove();
+        
+        // Limpar elementos
+        document.body.removeChild(form);
+        document.body.removeChild(iframe);
+        
+        alert('✅ Backup concluído!\n\nVerifique sua pasta de Downloads.\n\n📦 O backup contém:\n• OCs e itens\n• Status e rastreios\n• Valores e endereços\n• Limites de contrato\n• Estoque e configurações');
+      }, 3000);
+    };
+    
+    // Timeout de segurança
+    setTimeout(() => {
+      const loading = document.getElementById('backup-loading');
+      if (loading) {
+        loading.remove();
+        try {
+          document.body.removeChild(form);
+          document.body.removeChild(iframe);
+        } catch(e) {}
+      }
+    }, 60000);
+    
+    // Submeter formulário
+    form.submit();
   };
 
   const handleRestoreBackup = async (event) => {
