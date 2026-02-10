@@ -3785,15 +3785,13 @@ async def export_backup(current_user: dict = Depends(require_admin)):
 
 @api_router.get("/backup/download")
 async def download_backup(current_user: dict = Depends(require_admin)):
-    """Download backup COMPLETO do sistema - inclui TODAS as collections, PDFs, imagens, rastreios, etc."""
+    """Download backup SEM PDFs - inclui todos os dados exceto arquivos PDF/imagens base64"""
     from datetime import datetime
-    from fastapi.responses import StreamingResponse
+    from fastapi.responses import Response
     import json
-    import io
-    import gzip
     
     try:
-        logger.info("Iniciando geração de backup completo...")
+        logger.info("Iniciando geração de backup (sem PDFs)...")
         
         # Obter lista de TODAS as collections no banco
         collection_names = await db.list_collection_names()
@@ -3803,11 +3801,29 @@ async def download_backup(current_user: dict = Depends(require_admin)):
         all_data = {}
         estatisticas = {}
         
+        # Campos a REMOVER do backup (PDFs e imagens grandes)
+        campos_remover = ['pdf_original', 'nf_pdf', 'imagem_base64']
+        
         # Exportar TODAS as collections dinamicamente
         for col_name in collection_names:
             try:
                 # Buscar todos os documentos da collection (sem limite)
                 docs = await db[col_name].find({}, {"_id": 0}).to_list(None)
+                
+                # Limpar campos pesados das OCs
+                if col_name == 'purchase_orders':
+                    for doc in docs:
+                        for campo in campos_remover:
+                            if campo in doc:
+                                del doc[campo]
+                
+                # Limpar imagens base64 da collection de imagens
+                if col_name == 'imagens_itens':
+                    for doc in docs:
+                        if 'imagem_base64' in doc:
+                            del doc['imagem_base64']
+                        # Manter apenas a URL
+                
                 all_data[col_name] = docs
                 estatisticas[f"total_{col_name}"] = len(docs)
                 logger.info(f"  {col_name}: {len(docs)} documentos exportados")
@@ -3819,8 +3835,6 @@ async def download_backup(current_user: dict = Depends(require_admin)):
         # Estatísticas adicionais específicas
         pos = all_data.get('purchase_orders', [])
         total_items = sum(len(po.get('items', [])) for po in pos)
-        ocs_com_pdf = sum(1 for po in pos if po.get('pdf_original'))
-        ocs_com_nf = sum(1 for po in pos if po.get('nf_pdf'))
         
         # Contar itens com código de rastreio
         itens_com_rastreio = 0
@@ -3829,19 +3843,18 @@ async def download_backup(current_user: dict = Depends(require_admin)):
                 if item.get('codigo_rastreio'):
                     itens_com_rastreio += 1
         
-        # Estrutura do backup completo
+        # Estrutura do backup
         backup = {
             "backup_info": {
                 "data_export": datetime.now().isoformat(),
-                "versao": "4.0",
+                "versao": "4.1",
                 "sistema": "FIEP - Sistema de Gestão de OCs",
-                "tipo": "BACKUP_COMPLETO",
+                "tipo": "BACKUP_DADOS",
+                "nota": "Backup sem PDFs e imagens base64 - apenas dados estruturados",
                 "collections_exportadas": collection_names,
                 "estatisticas": {
                     **estatisticas,
                     "total_itens_em_ocs": total_items,
-                    "ocs_com_pdf": ocs_com_pdf,
-                    "ocs_com_nf": ocs_com_nf,
                     "itens_com_rastreio": itens_com_rastreio
                 }
             },
@@ -3850,47 +3863,27 @@ async def download_backup(current_user: dict = Depends(require_admin)):
         
         logger.info(f"Backup montado. Serializando JSON...")
         
-        # Criar arquivo JSON
-        json_str = json.dumps(backup, ensure_ascii=False, default=str)
-        json_bytes = json_str.encode('utf-8')
+        # Criar arquivo JSON (sem compressão para evitar problemas)
+        json_str = json.dumps(backup, ensure_ascii=False, default=str, indent=2)
         
-        logger.info(f"JSON criado: {len(json_bytes)} bytes. Comprimindo...")
-        
-        # Comprimir com gzip
-        buffer = io.BytesIO()
-        with gzip.GzipFile(fileobj=buffer, mode='wb') as f:
-            f.write(json_bytes)
-        buffer.seek(0)
-        
-        compressed_size = buffer.getbuffer().nbytes
-        logger.info(f"Backup comprimido: {compressed_size} bytes")
+        logger.info(f"JSON criado: {len(json_str)} bytes")
         
         # Nome do arquivo
-        filename = f"backup_fiep_COMPLETO_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json.gz"
+        filename = f"backup_fiep_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         
-        # Função geradora para streaming em chunks
-        def iter_file():
-            chunk_size = 65536  # 64KB chunks
-            while True:
-                chunk = buffer.read(chunk_size)
-                if not chunk:
-                    break
-                yield chunk
-        
-        return StreamingResponse(
-            iter_file(),
-            media_type="application/gzip",
+        return Response(
+            content=json_str,
+            media_type="application/json",
             headers={
                 "Content-Disposition": f'attachment; filename="{filename}"',
-                "Content-Length": str(compressed_size),
+                "Content-Type": "application/json; charset=utf-8",
                 "Access-Control-Allow-Origin": "*",
-                "Access-Control-Expose-Headers": "Content-Disposition, Content-Length",
-                "Cache-Control": "no-cache"
+                "Access-Control-Expose-Headers": "Content-Disposition"
             }
         )
         
     except Exception as e:
-        logger.error(f"Erro ao gerar backup para download: {e}")
+        logger.error(f"Erro ao gerar backup: {e}")
         import traceback
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Erro ao gerar backup: {str(e)}")
