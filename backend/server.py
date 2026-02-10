@@ -3784,7 +3784,7 @@ async def export_backup(current_user: dict = Depends(require_admin)):
 
 
 @api_router.get("/backup/download")
-async def download_backup(current_user: dict = Depends(require_admin)):
+async def download_backup(token: str = None, current_user: dict = Depends(require_admin)):
     """Download backup SEM PDFs - inclui todos os dados exceto arquivos PDF/imagens base64"""
     from datetime import datetime
     from fastapi.responses import Response
