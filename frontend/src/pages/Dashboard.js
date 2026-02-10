@@ -310,37 +310,76 @@ const Dashboard = () => {
 
   const exportBackup = async () => {
     try {
-      // Mostrar loading
-      alert('⏳ Gerando backup completo... Aguarde, isso pode demorar alguns segundos.');
-      
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API}/backup/download`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
+      
+      // Mostrar loading
+      const loadingMsg = document.createElement('div');
+      loadingMsg.id = 'backup-loading';
+      loadingMsg.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+          <div style="background: white; padding: 2rem; border-radius: 12px; text-align: center; max-width: 400px;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">⏳</div>
+            <h3 style="margin-bottom: 0.5rem;">Gerando Backup Completo</h3>
+            <p style="color: #666;">Isso pode demorar alguns segundos...</p>
+            <p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">Exportando todas as OCs, PDFs, imagens, rastreios e configurações.</p>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(loadingMsg);
+      
+      // Usar XMLHttpRequest para melhor controle do download
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', `${API}/backup/download`, true);
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      xhr.responseType = 'blob';
+      
+      xhr.onload = function() {
+        // Remover loading
+        const loading = document.getElementById('backup-loading');
+        if (loading) loading.remove();
+        
+        if (xhr.status === 200) {
+          const blob = xhr.response;
+          const url = window.URL.createObjectURL(blob);
+          
+          const link = document.createElement('a');
+          link.href = url;
+          const dataAtual = new Date().toISOString().split('T')[0];
+          const horaAtual = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
+          link.download = `backup_fiep_COMPLETO_${dataAtual}_${horaAtual}.json.gz`;
+          
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          setTimeout(() => {
+            window.URL.revokeObjectURL(url);
+          }, 100);
+          
+          alert('✅ Backup exportado com sucesso!\n\n📦 O arquivo contém TODOS os dados:\n• OCs e PDFs\n• Imagens de itens\n• Códigos de rastreio\n• Limites de contrato\n• Estoque\n• Configurações\n\nO arquivo está comprimido (.gz).');
+        } else {
+          alert('❌ Erro ao gerar backup: ' + xhr.statusText);
         }
-      });
+      };
       
-      if (!response.ok) {
-        throw new Error('Erro ao gerar backup');
-      }
+      xhr.onerror = function() {
+        const loading = document.getElementById('backup-loading');
+        if (loading) loading.remove();
+        alert('❌ Erro de conexão ao exportar backup. Tente novamente.');
+      };
       
-      // Baixar arquivo
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
+      xhr.ontimeout = function() {
+        const loading = document.getElementById('backup-loading');
+        if (loading) loading.remove();
+        alert('❌ Tempo limite excedido. O backup é muito grande. Tente novamente.');
+      };
       
-      const link = document.createElement('a');
-      link.href = url;
-      const dataAtual = new Date().toISOString().split('T')[0];
-      const horaAtual = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
-      link.download = `backup_fiep_${dataAtual}_${horaAtual}.json.gz`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      xhr.timeout = 120000; // 2 minutos de timeout
+      xhr.send();
       
-      alert('✅ Backup exportado com sucesso!\n\nO arquivo está comprimido (.gz).\nPara restaurar, você pode usar o arquivo comprimido diretamente.');
     } catch (error) {
+      const loading = document.getElementById('backup-loading');
+      if (loading) loading.remove();
       console.error('Erro ao exportar backup:', error);
       alert('❌ Erro ao exportar backup: ' + error.message);
     }
