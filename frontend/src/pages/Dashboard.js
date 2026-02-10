@@ -333,11 +333,11 @@ const Dashboard = () => {
       if (el) el.remove();
     };
     
-    // Usar URL RELATIVA para funcionar em qualquer ambiente (preview ou produção)
-    // window.location.origin pega o domínio atual automaticamente
+    // Usar URL RELATIVA para funcionar em qualquer ambiente
     const backupUrl = `${window.location.origin}/api/backup/download`;
+    console.log('Backup URL:', backupUrl);
     
-    // Usar XMLHttpRequest (mais compatível)
+    // Usar XMLHttpRequest
     const xhr = new XMLHttpRequest();
     xhr.open('GET', backupUrl, true);
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
@@ -347,20 +347,19 @@ const Dashboard = () => {
       if (e.lengthComputable) {
         const pct = Math.round((e.loaded / e.total) * 100);
         updateProgress(`Baixando... ${pct}%`);
-      } else {
+      } else if (e.loaded > 0) {
         updateProgress(`Baixando... ${Math.round(e.loaded / 1024)} KB`);
       }
     };
     
     xhr.onload = function() {
-      if (xhr.status === 200) {
+      console.log('XHR onload - status:', xhr.status, 'response size:', xhr.response?.byteLength);
+      
+      if (xhr.status === 200 && xhr.response && xhr.response.byteLength > 0) {
         updateProgress('Preparando arquivo...');
         
         try {
-          // Criar blob do arraybuffer
           const blob = new Blob([xhr.response], { type: 'application/json' });
-          
-          // Criar URL e link para download
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
@@ -369,7 +368,6 @@ const Dashboard = () => {
           document.body.appendChild(a);
           a.click();
           
-          // Limpar
           setTimeout(() => {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
@@ -378,30 +376,41 @@ const Dashboard = () => {
           removeLoading();
           
           const sizeMB = (xhr.response.byteLength / 1024 / 1024).toFixed(2);
-          alert(`✅ Backup baixado com sucesso!\n\n📦 Tamanho: ${sizeMB} MB\n\nO arquivo contém:\n• OCs e itens\n• Status e rastreios\n• Valores e endereços\n• Limites de contrato\n• Estoque e configurações`);
+          alert(`✅ Backup baixado com sucesso!\n\n📦 Tamanho: ${sizeMB} MB`);
           
         } catch (err) {
           removeLoading();
-          console.error('Erro ao processar backup:', err);
+          console.error('Erro ao processar:', err);
           alert('❌ Erro ao processar backup: ' + err.message);
         }
       } else {
         removeLoading();
-        alert('❌ Erro ao baixar backup: ' + xhr.statusText);
+        // Tentar ler mensagem de erro
+        let errorMsg = `Status: ${xhr.status}`;
+        if (xhr.response) {
+          try {
+            const decoder = new TextDecoder('utf-8');
+            const text = decoder.decode(xhr.response);
+            errorMsg += ` - ${text.substring(0, 200)}`;
+          } catch(e) {}
+        }
+        console.error('Erro no backup:', errorMsg);
+        alert(`❌ Erro ao baixar backup.\n\n${errorMsg}`);
       }
     };
     
     xhr.onerror = function() {
       removeLoading();
-      alert('❌ Erro de conexão. Verifique sua internet e tente novamente.');
+      console.error('XHR onerror - readyState:', xhr.readyState, 'status:', xhr.status);
+      alert(`❌ Erro de conexão.\n\nURL: ${backupUrl}\nVerifique o console para mais detalhes.`);
     };
     
     xhr.ontimeout = function() {
       removeLoading();
-      alert('❌ Tempo limite excedido. Tente novamente.');
+      alert('❌ Tempo limite excedido (5 min). Tente novamente.');
     };
     
-    xhr.timeout = 300000; // 5 minutos
+    xhr.timeout = 300000;
     
     updateProgress('Iniciando download...');
     xhr.send();
