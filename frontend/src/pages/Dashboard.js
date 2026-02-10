@@ -1171,7 +1171,7 @@ const Dashboard = () => {
           <div style={{ marginBottom: '1rem' }}>
             <h3 style={{ marginBottom: '0.5rem', fontSize: '1.2rem' }}>🔐 Backup do Sistema</h3>
             <p style={{ fontSize: '0.9rem', opacity: 0.9 }}>
-              Exporte ou restaure todos os dados: OCs, itens, cotações, links, fornecedores, fretes, valores.
+              Exporte ou restaure TODOS os dados: OCs, PDFs, NFs, imagens, rastreios, estoque, limites de contrato, configurações e mais.
             </p>
           </div>
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
@@ -1204,7 +1204,7 @@ const Dashboard = () => {
               📤 Restaurar Backup
               <input 
                 type="file" 
-                accept=".json"
+                accept=".json,.json.gz,.gz"
                 onChange={handleRestoreBackup}
                 style={{ display: 'none' }}
               />
