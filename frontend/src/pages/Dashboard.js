@@ -316,24 +316,8 @@ const Dashboard = () => {
       return;
     }
     
-    // Criar URL de download direto
-    const downloadUrl = `${API}/backup/direct?token=${encodeURIComponent(token)}`;
-    
-    // Abrir em nova janela para iniciar download
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    
-    // Tentar download direto
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // Mostrar mensagem
-    setTimeout(() => {
-      alert('📥 Download iniciado!\n\nSe o download não começar automaticamente:\n1. Verifique se há bloqueador de popups\n2. Verifique a pasta de Downloads\n\n📦 O backup contém:\n• Todas as OCs e itens\n• Status e códigos de rastreio\n• Valores, endereços, fretes\n• Limites de contrato\n• Estoque\n• Configurações\n\nNota: PDFs não incluídos (você já tem).');
-    }, 1000);
+    // Usar window.location para download direto (mais compatível)
+    window.location.href = `${API}/backup/direct?token=${encodeURIComponent(token)}`;
   };
 
   const handleRestoreBackup = async (event) => {
