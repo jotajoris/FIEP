@@ -3894,6 +3894,7 @@ async def download_backup_direct(token: str):
     """Download backup direto via link - aceita token na URL"""
     from datetime import datetime
     from fastapi.responses import Response
+    from auth import SECRET_KEY, ALGORITHM
     import json
     
     # Validar token manualmente
