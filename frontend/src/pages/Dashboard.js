@@ -397,9 +397,9 @@ const Dashboard = () => {
       
       const backupData = JSON.parse(fileContent);
       
-      // Verificar se é um backup válido
-      if (!backupData.backup_info || !backupData.purchase_orders) {
-        alert('❌ Arquivo de backup inválido!');
+      // Verificar se é um backup válido (v3.x ou v4.x)
+      if (!backupData.backup_info) {
+        alert('❌ Arquivo de backup inválido! Falta informações do backup.');
         event.target.value = '';
         return;
       }
@@ -407,7 +407,16 @@ const Dashboard = () => {
       const response = await apiPost(`${API}/backup/restore-data`, backupData);
       
       if (response.data.success) {
-        alert(`✅ Backup restaurado com sucesso!\n\n📊 Detalhes:\n- Data do backup: ${response.data.detalhes.data_backup}\n- OCs restauradas: ${response.data.detalhes.ocs_restauradas}\n- Itens de referência: ${response.data.detalhes.itens_referencia}\n\nA página será recarregada.`);
+        const detalhes = response.data.detalhes;
+        const collectionsRestauradas = detalhes.collections_restauradas || {};
+        let resumo = `✅ Backup restaurado com sucesso!\n\n📊 Detalhes:\n- Data do backup: ${detalhes.data_backup}\n- Versão: ${detalhes.versao_backup || 'N/A'}\n- Total documentos: ${detalhes.total_documentos_restaurados || 'N/A'}\n\n📁 Collections restauradas:\n`;
+        
+        for (const [col, count] of Object.entries(collectionsRestauradas)) {
+          resumo += `  • ${col}: ${count}\n`;
+        }
+        
+        resumo += '\nA página será recarregada.';
+        alert(resumo);
         window.location.reload();
       } else {
         alert('❌ Erro ao restaurar backup');
