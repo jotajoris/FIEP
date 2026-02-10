@@ -3868,13 +3868,24 @@ async def download_backup(current_user: dict = Depends(require_admin)):
         # Nome do arquivo
         filename = f"backup_fiep_COMPLETO_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json.gz"
         
+        # Função geradora para streaming em chunks
+        def iter_file():
+            chunk_size = 65536  # 64KB chunks
+            while True:
+                chunk = buffer.read(chunk_size)
+                if not chunk:
+                    break
+                yield chunk
+        
         return StreamingResponse(
-            buffer,
+            iter_file(),
             media_type="application/gzip",
             headers={
                 "Content-Disposition": f'attachment; filename="{filename}"',
+                "Content-Length": str(compressed_size),
                 "Access-Control-Allow-Origin": "*",
-                "Access-Control-Expose-Headers": "Content-Disposition"
+                "Access-Control-Expose-Headers": "Content-Disposition, Content-Length",
+                "Cache-Control": "no-cache"
             }
         )
         
@@ -3883,6 +3894,39 @@ async def download_backup(current_user: dict = Depends(require_admin)):
         import traceback
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Erro ao gerar backup: {str(e)}")
+
+# Endpoint alternativo para backup em JSON puro (sem compressão) - para debug
+@api_router.get("/backup/download-json")
+async def download_backup_json(current_user: dict = Depends(require_admin)):
+    """Download backup em JSON puro (mais lento mas mais compatível)"""
+    from datetime import datetime
+    from fastapi.responses import Response
+    import json
+    
+    try:
+        logger.info("Gerando backup em JSON puro...")
+        
+        collection_names = await db.list_collection_names()
+        all_data = {"backup_info": {"data_export": datetime.now().isoformat(), "versao": "4.0"}}
+        
+        for col_name in collection_names:
+            docs = await db[col_name].find({}, {"_id": 0}).to_list(None)
+            all_data[col_name] = docs
+        
+        json_str = json.dumps(all_data, ensure_ascii=False, default=str)
+        filename = f"backup_fiep_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        
+        return Response(
+            content=json_str,
+            media_type="application/json",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Access-Control-Allow-Origin": "*"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Erro backup JSON: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/backup/restore")
 async def restore_backup(current_user: dict = Depends(require_admin)):
