@@ -3888,6 +3888,102 @@ async def download_backup(token: str = None, current_user: dict = Depends(requir
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Erro ao gerar backup: {str(e)}")
 
+# Endpoint de download direto via link (sem necessidade de JavaScript fetch)
+@api_router.get("/backup/direct")
+async def download_backup_direct(token: str):
+    """Download backup direto via link - aceita token na URL"""
+    from datetime import datetime
+    from fastapi.responses import Response
+    import json
+    
+    # Validar token manualmente
+    try:
+        from jose import jwt
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+        role = payload.get("role")
+        
+        if role != "admin":
+            raise HTTPException(status_code=403, detail="Apenas admin pode fazer backup")
+        
+        logger.info(f"Backup direto solicitado por {email}")
+    except Exception as e:
+        logger.error(f"Erro ao validar token: {e}")
+        raise HTTPException(status_code=401, detail="Token inválido")
+    
+    try:
+        logger.info("Gerando backup direto...")
+        
+        collection_names = await db.list_collection_names()
+        all_data = {}
+        estatisticas = {}
+        
+        campos_remover = ['pdf_original', 'nf_pdf', 'imagem_base64']
+        
+        for col_name in collection_names:
+            try:
+                docs = await db[col_name].find({}, {"_id": 0}).to_list(None)
+                
+                if col_name == 'purchase_orders':
+                    for doc in docs:
+                        for campo in campos_remover:
+                            if campo in doc:
+                                del doc[campo]
+                
+                if col_name == 'imagens_itens':
+                    for doc in docs:
+                        if 'imagem_base64' in doc:
+                            del doc['imagem_base64']
+                
+                all_data[col_name] = docs
+                estatisticas[f"total_{col_name}"] = len(docs)
+            except Exception as col_error:
+                logger.warning(f"Erro ao exportar {col_name}: {col_error}")
+                all_data[col_name] = []
+                estatisticas[f"total_{col_name}"] = 0
+        
+        pos = all_data.get('purchase_orders', [])
+        total_items = sum(len(po.get('items', [])) for po in pos)
+        itens_com_rastreio = sum(1 for po in pos for item in po.get('items', []) if item.get('codigo_rastreio'))
+        
+        backup = {
+            "backup_info": {
+                "data_export": datetime.now().isoformat(),
+                "versao": "4.1",
+                "sistema": "FIEP - Sistema de Gestão de OCs",
+                "tipo": "BACKUP_DADOS",
+                "nota": "Backup completo sem PDFs",
+                "collections_exportadas": collection_names,
+                "estatisticas": {
+                    **estatisticas,
+                    "total_itens_em_ocs": total_items,
+                    "itens_com_rastreio": itens_com_rastreio
+                }
+            },
+            **all_data
+        }
+        
+        json_str = json.dumps(backup, ensure_ascii=False, default=str)
+        filename = f"backup_fiep_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        
+        logger.info(f"Backup gerado: {len(json_str)} bytes")
+        
+        return Response(
+            content=json_str,
+            media_type="application/json",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Content-Type": "application/json; charset=utf-8",
+                "Access-Control-Allow-Origin": "*"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Erro ao gerar backup direto: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Erro: {str(e)}")
+
 # Endpoint alternativo para backup em JSON puro (sem compressão) - para debug
 @api_router.get("/backup/download-json")
 async def download_backup_json(current_user: dict = Depends(require_admin)):
