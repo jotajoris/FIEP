@@ -320,7 +320,7 @@ const Dashboard = () => {
     const loadingDiv = document.createElement('div');
     loadingDiv.id = 'backup-loading';
     loadingDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;';
-    loadingDiv.innerHTML = '<div style="background:white;padding:2rem;border-radius:12px;text-align:center;"><div style="font-size:3rem;margin-bottom:1rem;">⏳</div><h3>Gerando Backup...</h3><p id="backup-progress" style="color:#666;">Conectando ao servidor...</p></div>';
+    loadingDiv.innerHTML = '<div style="background:white;padding:2rem;border-radius:12px;text-align:center;max-width:400px;"><div style="font-size:3rem;margin-bottom:1rem;">⏳</div><h3>Gerando Backup...</h3><p id="backup-progress" style="color:#666;">Baixando dados...</p></div>';
     document.body.appendChild(loadingDiv);
     
     const updateProgress = (msg) => {
@@ -333,33 +333,33 @@ const Dashboard = () => {
       if (el) el.remove();
     };
     
-    // Usar URL RELATIVA para funcionar em qualquer ambiente
+    // Usar URL relativa
     const backupUrl = `${window.location.origin}/api/backup/download`;
-    console.log('Backup URL:', backupUrl);
     
-    // Usar XMLHttpRequest
+    // Usar XMLHttpRequest com responseType 'text' (mais compatível com streaming)
     const xhr = new XMLHttpRequest();
     xhr.open('GET', backupUrl, true);
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-    xhr.responseType = 'arraybuffer';
+    xhr.responseType = 'text'; // Mudado para text
     
     xhr.onprogress = (e) => {
-      if (e.lengthComputable) {
-        const pct = Math.round((e.loaded / e.total) * 100);
-        updateProgress(`Baixando... ${pct}%`);
-      } else if (e.loaded > 0) {
+      if (e.loaded > 0) {
         updateProgress(`Baixando... ${Math.round(e.loaded / 1024)} KB`);
       }
     };
     
     xhr.onload = function() {
-      console.log('XHR onload - status:', xhr.status, 'response size:', xhr.response?.byteLength);
+      console.log('Status:', xhr.status, 'Response length:', xhr.responseText?.length);
       
-      if (xhr.status === 200 && xhr.response && xhr.response.byteLength > 0) {
+      if (xhr.status === 200 && xhr.responseText && xhr.responseText.length > 100) {
         updateProgress('Preparando arquivo...');
         
         try {
-          const blob = new Blob([xhr.response], { type: 'application/json' });
+          // Verificar se é JSON válido
+          JSON.parse(xhr.responseText);
+          
+          // Criar blob do texto
+          const blob = new Blob([xhr.responseText], { type: 'application/json' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
@@ -375,44 +375,34 @@ const Dashboard = () => {
           
           removeLoading();
           
-          const sizeMB = (xhr.response.byteLength / 1024 / 1024).toFixed(2);
-          alert(`✅ Backup baixado com sucesso!\n\n📦 Tamanho: ${sizeMB} MB`);
+          const sizeMB = (xhr.responseText.length / 1024 / 1024).toFixed(2);
+          alert(`✅ Backup baixado!\n\n📦 Tamanho: ${sizeMB} MB`);
           
         } catch (err) {
           removeLoading();
-          console.error('Erro ao processar:', err);
-          alert('❌ Erro ao processar backup: ' + err.message);
+          console.error('Erro JSON:', err, xhr.responseText?.substring(0, 500));
+          alert('❌ Erro: resposta inválida do servidor.');
         }
       } else {
         removeLoading();
-        // Tentar ler mensagem de erro
-        let errorMsg = `Status: ${xhr.status}`;
-        if (xhr.response) {
-          try {
-            const decoder = new TextDecoder('utf-8');
-            const text = decoder.decode(xhr.response);
-            errorMsg += ` - ${text.substring(0, 200)}`;
-          } catch(e) {}
-        }
-        console.error('Erro no backup:', errorMsg);
-        alert(`❌ Erro ao baixar backup.\n\n${errorMsg}`);
+        const preview = xhr.responseText?.substring(0, 200) || '(vazio)';
+        console.error('Erro backup:', xhr.status, preview);
+        alert(`❌ Erro ao baixar backup.\n\nStatus: ${xhr.status}\nResposta: ${preview}`);
       }
     };
     
     xhr.onerror = function() {
       removeLoading();
-      console.error('XHR onerror - readyState:', xhr.readyState, 'status:', xhr.status);
-      alert(`❌ Erro de conexão.\n\nURL: ${backupUrl}\nVerifique o console para mais detalhes.`);
+      console.error('XHR error');
+      alert('❌ Erro de conexão.');
     };
     
     xhr.ontimeout = function() {
       removeLoading();
-      alert('❌ Tempo limite excedido (5 min). Tente novamente.');
+      alert('❌ Tempo limite excedido.');
     };
     
     xhr.timeout = 300000;
-    
-    updateProgress('Iniciando download...');
     xhr.send();
   };
 
