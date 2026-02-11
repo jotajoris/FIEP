@@ -3785,108 +3785,80 @@ async def export_backup(current_user: dict = Depends(require_admin)):
 
 @api_router.get("/backup/download")
 async def download_backup(token: str = None, current_user: dict = Depends(require_admin)):
-    """Download backup SEM PDFs - inclui todos os dados exceto arquivos PDF/imagens base64"""
+    """Download backup OTIMIZADO - gera rápido para evitar timeout"""
     from datetime import datetime
     from fastapi.responses import Response
     import json
     
     try:
-        logger.info("Iniciando geração de backup (sem PDFs)...")
+        logger.info("Gerando backup otimizado...")
         
-        # Obter lista de TODAS as collections no banco
-        collection_names = await db.list_collection_names()
-        logger.info(f"Collections encontradas: {collection_names}")
-        
-        # Dicionário para armazenar todos os dados
-        all_data = {}
-        estatisticas = {}
-        
-        # Campos a REMOVER do backup (PDFs e imagens grandes)
+        # Campos a REMOVER (dados pesados)
         campos_remover = ['pdf_original', 'nf_pdf', 'imagem_base64']
         
-        # Exportar TODAS as collections dinamicamente
-        for col_name in collection_names:
-            try:
-                # Buscar todos os documentos da collection (sem limite)
-                docs = await db[col_name].find({}, {"_id": 0}).to_list(None)
-                
-                # Limpar campos pesados das OCs
-                if col_name == 'purchase_orders':
-                    for doc in docs:
-                        for campo in campos_remover:
-                            if campo in doc:
-                                del doc[campo]
-                
-                # Limpar imagens base64 da collection de imagens
-                if col_name == 'imagens_itens':
-                    for doc in docs:
-                        if 'imagem_base64' in doc:
-                            del doc['imagem_base64']
-                        # Manter apenas a URL
-                
-                all_data[col_name] = docs
-                estatisticas[f"total_{col_name}"] = len(docs)
-                logger.info(f"  {col_name}: {len(docs)} documentos exportados")
-            except Exception as col_error:
-                logger.warning(f"Erro ao exportar {col_name}: {col_error}")
-                all_data[col_name] = []
-                estatisticas[f"total_{col_name}"] = 0
+        # Buscar dados de forma otimizada (sem _id e sem campos pesados)
+        projection = {"_id": 0}
+        for campo in campos_remover:
+            projection[campo] = 0
         
-        # Estatísticas adicionais específicas
-        pos = all_data.get('purchase_orders', [])
+        # Buscar OCs sem PDFs
+        pos = await db.purchase_orders.find({}, projection).to_list(None)
+        
+        # Buscar outras collections essenciais (menor quantidade de dados)
+        users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(None)
+        reference_items = await db.reference_items.find({}, {"_id": 0}).to_list(None)
+        limites = await db.limites_contrato.find({}, {"_id": 0}).to_list(None)
+        estoque = await db.estoque_manual.find({}, {"_id": 0}).to_list(None)
+        configuracoes = await db.configuracoes.find({}, {"_id": 0}).to_list(None)
+        custos = await db.custos_diversos.find({}, {"_id": 0}).to_list(None)
+        
+        # Estatísticas
         total_items = sum(len(po.get('items', [])) for po in pos)
+        itens_rastreio = sum(1 for po in pos for item in po.get('items', []) if item.get('codigo_rastreio'))
         
-        # Contar itens com código de rastreio
-        itens_com_rastreio = 0
-        for po in pos:
-            for item in po.get('items', []):
-                if item.get('codigo_rastreio'):
-                    itens_com_rastreio += 1
-        
-        # Estrutura do backup
         backup = {
             "backup_info": {
                 "data_export": datetime.now().isoformat(),
-                "versao": "4.1",
-                "sistema": "FIEP - Sistema de Gestão de OCs",
-                "tipo": "BACKUP_DADOS",
-                "nota": "Backup sem PDFs e imagens base64 - apenas dados estruturados",
-                "collections_exportadas": collection_names,
+                "versao": "4.2",
+                "sistema": "FIEP",
                 "estatisticas": {
-                    **estatisticas,
-                    "total_itens_em_ocs": total_items,
-                    "itens_com_rastreio": itens_com_rastreio
+                    "ocs": len(pos),
+                    "itens": total_items,
+                    "rastreios": itens_rastreio,
+                    "usuarios": len(users),
+                    "referencias": len(reference_items),
+                    "limites": len(limites),
+                    "estoque": len(estoque)
                 }
             },
-            **all_data
+            "purchase_orders": pos,
+            "users": users,
+            "reference_items": reference_items,
+            "limites_contrato": limites,
+            "estoque_manual": estoque,
+            "configuracoes": configuracoes,
+            "custos_diversos": custos
         }
         
-        logger.info(f"Backup montado. Serializando JSON...")
+        # Serializar sem indentação (menor tamanho)
+        json_str = json.dumps(backup, ensure_ascii=False, default=str, separators=(',', ':'))
         
-        # Criar arquivo JSON (sem compressão para evitar problemas)
-        json_str = json.dumps(backup, ensure_ascii=False, default=str, indent=2)
-        
-        logger.info(f"JSON criado: {len(json_str)} bytes")
-        
-        # Nome do arquivo
-        filename = f"backup_fiep_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        logger.info(f"Backup gerado: {len(json_str)} bytes")
         
         return Response(
             content=json_str,
             media_type="application/json",
             headers={
-                "Content-Disposition": f'attachment; filename="{filename}"',
-                "Content-Type": "application/json; charset=utf-8",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Expose-Headers": "Content-Disposition"
+                "Content-Disposition": f'attachment; filename="backup_fiep_{datetime.now().strftime("%Y%m%d")}.json"',
+                "Content-Type": "application/json; charset=utf-8"
             }
         )
         
     except Exception as e:
-        logger.error(f"Erro ao gerar backup: {e}")
+        logger.error(f"Erro backup: {e}")
         import traceback
         logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=f"Erro ao gerar backup: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Endpoint de download direto via link (sem necessidade de JavaScript fetch)
 @api_router.get("/backup/direct")
