@@ -3785,80 +3785,78 @@ async def export_backup(current_user: dict = Depends(require_admin)):
 
 @api_router.get("/backup/download")
 async def download_backup(token: str = None, current_user: dict = Depends(require_admin)):
-    """Download backup OTIMIZADO - gera rápido para evitar timeout"""
+    """Download backup com streaming para evitar timeout"""
     from datetime import datetime
-    from fastapi.responses import Response
+    from fastapi.responses import StreamingResponse
     import json
     
-    try:
-        logger.info("Gerando backup otimizado...")
-        
-        # Campos a REMOVER (dados pesados)
-        campos_remover = ['pdf_original', 'nf_pdf', 'imagem_base64']
-        
-        # Buscar dados de forma otimizada (sem _id e sem campos pesados)
-        projection = {"_id": 0}
-        for campo in campos_remover:
-            projection[campo] = 0
-        
-        # Buscar OCs sem PDFs
-        pos = await db.purchase_orders.find({}, projection).to_list(None)
-        
-        # Buscar outras collections essenciais (menor quantidade de dados)
-        users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(None)
-        reference_items = await db.reference_items.find({}, {"_id": 0}).to_list(None)
-        limites = await db.limites_contrato.find({}, {"_id": 0}).to_list(None)
-        estoque = await db.estoque_manual.find({}, {"_id": 0}).to_list(None)
-        configuracoes = await db.configuracoes.find({}, {"_id": 0}).to_list(None)
-        custos = await db.custos_diversos.find({}, {"_id": 0}).to_list(None)
-        
-        # Estatísticas
-        total_items = sum(len(po.get('items', [])) for po in pos)
-        itens_rastreio = sum(1 for po in pos for item in po.get('items', []) if item.get('codigo_rastreio'))
-        
-        backup = {
-            "backup_info": {
-                "data_export": datetime.now().isoformat(),
-                "versao": "4.2",
-                "sistema": "FIEP",
-                "estatisticas": {
-                    "ocs": len(pos),
-                    "itens": total_items,
-                    "rastreios": itens_rastreio,
-                    "usuarios": len(users),
-                    "referencias": len(reference_items),
-                    "limites": len(limites),
-                    "estoque": len(estoque)
-                }
-            },
-            "purchase_orders": pos,
-            "users": users,
-            "reference_items": reference_items,
-            "limites_contrato": limites,
-            "estoque_manual": estoque,
-            "configuracoes": configuracoes,
-            "custos_diversos": custos
-        }
-        
-        # Serializar sem indentação (menor tamanho)
-        json_str = json.dumps(backup, ensure_ascii=False, default=str, separators=(',', ':'))
-        
-        logger.info(f"Backup gerado: {len(json_str)} bytes")
-        
-        return Response(
-            content=json_str,
-            media_type="application/json",
-            headers={
-                "Content-Disposition": f'attachment; filename="backup_fiep_{datetime.now().strftime("%Y%m%d")}.json"',
-                "Content-Type": "application/json; charset=utf-8"
+    async def generate_backup():
+        """Gera backup em streaming"""
+        try:
+            # Campos a remover
+            campos_remover = ['pdf_original', 'nf_pdf', 'imagem_base64']
+            projection = {"_id": 0}
+            for campo in campos_remover:
+                projection[campo] = 0
+            
+            # Buscar dados
+            pos = await db.purchase_orders.find({}, projection).to_list(None)
+            users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(None)
+            reference_items = await db.reference_items.find({}, {"_id": 0}).to_list(None)
+            limites = await db.limites_contrato.find({}, {"_id": 0}).to_list(None)
+            estoque = await db.estoque_manual.find({}, {"_id": 0}).to_list(None)
+            configuracoes = await db.configuracoes.find({}, {"_id": 0}).to_list(None)
+            custos = await db.custos_diversos.find({}, {"_id": 0}).to_list(None)
+            
+            total_items = sum(len(po.get('items', [])) for po in pos)
+            itens_rastreio = sum(1 for po in pos for item in po.get('items', []) if item.get('codigo_rastreio'))
+            
+            backup = {
+                "backup_info": {
+                    "data_export": datetime.now().isoformat(),
+                    "versao": "4.2",
+                    "estatisticas": {
+                        "ocs": len(pos),
+                        "itens": total_items,
+                        "rastreios": itens_rastreio,
+                        "usuarios": len(users),
+                        "referencias": len(reference_items),
+                        "limites": len(limites),
+                        "estoque": len(estoque)
+                    }
+                },
+                "purchase_orders": pos,
+                "users": users,
+                "reference_items": reference_items,
+                "limites_contrato": limites,
+                "estoque_manual": estoque,
+                "configuracoes": configuracoes,
+                "custos_diversos": custos
             }
-        )
-        
-    except Exception as e:
-        logger.error(f"Erro backup: {e}")
-        import traceback
-        logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=str(e))
+            
+            json_str = json.dumps(backup, ensure_ascii=False, default=str, separators=(',', ':'))
+            
+            # Enviar em chunks de 64KB
+            chunk_size = 65536
+            for i in range(0, len(json_str), chunk_size):
+                yield json_str[i:i + chunk_size]
+                
+        except Exception as e:
+            logger.error(f"Erro no streaming: {e}")
+            yield json.dumps({"error": str(e)})
+    
+    logger.info("Iniciando backup streaming...")
+    
+    return StreamingResponse(
+        generate_backup(),
+        media_type="application/json",
+        headers={
+            "Content-Disposition": f'attachment; filename="backup_fiep_{datetime.now().strftime("%Y%m%d")}.json"',
+            "Content-Type": "application/json; charset=utf-8",
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no"
+        }
+    )
 
 # Endpoint de download direto via link (sem necessidade de JavaScript fetch)
 @api_router.get("/backup/direct")
